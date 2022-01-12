@@ -1,0 +1,51 @@
+{
+    "name": "crwlr/crawler",
+    "description": "Web crawling and scraping library.",
+    "type": "library",
+    "keywords": [
+        "crwlr",
+        "crawl",
+        "crawler",
+        "crawling",
+        "scrape",
+        "scraping",
+        "scraper",
+        "web",
+        "bot"
+    ],
+    "homepage": "https://www.crwlr.software/packages/crawler",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christian Olear",
+            "homepage": "https://www.otsch.codes",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/crwlrsoft/crawler/issues",
+        "source": "https://github.com/crwlrsoft/crawler",
+        "docs": "https://www.crwlr.software/packages/crawler"
+    },
+    "require": {
+        "ext-dom": "*",
+        "php": "^8.0",
+        "crwlr/robots-txt": "^0.1.0",
+        "crwlr/url": "^1.0",
+        "php-http/guzzle7-adapter": "^1.0",
+        "psr/log": "^1.1",
+        "symfony/dom-crawler": "^6.0",
+        "symfony/css-selector": "^6.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^1.21"
+    },
+    "autoload": {
+        "psr-4": {
+            "Crwlr\\Crawler\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "@php vendor/bin/pest"
+    }
+}
