@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\UserAgent;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class Loader implements LoaderInterface
@@ -47,6 +48,29 @@ abstract class Loader implements LoaderInterface
         $this->addHookCallback('afterLoad', $callback);
     }
 
+    /**
+     * Can be implemented in a child class to check if it is allowed to load a certain uri (e.g. check robots.txt)
+     * Throw a LoadingException when it's not allowed and $throwsException is set to true.
+     */
+    protected function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
+    {
+        return true;
+    }
+
+    /**
+     * Can be implemented in a child class to track how long a request waited for its response.
+     */
+    protected function trackRequestStart(): void
+    {
+    }
+
+    /**
+     * Can be implemented in a child class to track how long a request waited for its response.
+     */
+    protected function trackRequestEnd(): void
+    {
+    }
+
     protected function callHook(string $hook, ...$arguments): void
     {
         $arguments[] = $this->logger;
@@ -56,6 +80,16 @@ abstract class Loader implements LoaderInterface
                 call_user_func($callback, ...$arguments);
             }
         }
+    }
+
+    protected function userAgent(): UserAgent
+    {
+        return $this->userAgent;
+    }
+
+    protected function logger(): LoggerInterface
+    {
+        return $this->logger;
     }
 
     private function addHookCallback(string $hook, callable $callback)

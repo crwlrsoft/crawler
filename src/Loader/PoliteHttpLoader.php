@@ -2,29 +2,29 @@
 
 namespace Crwlr\Crawler\Loader;
 
+use Crwlr\Crawler\Loader\Traits\CheckRobotsTxt;
 use Crwlr\Crawler\Loader\Traits\WaitPolitely;
 use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class PoliteHttpLoader extends HttpLoader
 {
-    use WaitPolitely;
+    use WaitPolitely, CheckRobotsTxt;
 
-    public function load(RequestInterface $request): ?ResponseInterface
+    public function load(mixed $subject): ?ResponseInterface
     {
         $this->waitUntilNextRequestCanBeSent();
 
-        return parent::load($request);
+        return parent::load($subject);
     }
 
     /**
      * @throws ClientExceptionInterface
      */
-    public function loadOrFail(RequestInterface $request): ResponseInterface
+    public function loadOrFail(mixed $subject): ResponseInterface
     {
         $this->waitUntilNextRequestCanBeSent();
 
-        return parent::loadOrFail($request);
+        return parent::loadOrFail($subject);
     }
 }

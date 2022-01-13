@@ -30,33 +30,21 @@ trait WaitPolitely
      */
     private float $minWaitTime = 0.01;
 
-    private float $currentRequestStartedAtTimestamp = 0.0;
+    /**
+     * Filled when trackRequestStart() is called.
+     * Reset when trackRequestEnd() is called.
+     */
+    private float $currentRequestStartTimestamp = 0.0;
 
     /**
-     * The timestamp when the previous response was received.
+     * The timestamp when the latest response was fully received.
      */
-    protected float $previousResponseTimestamp = 0.0;
+    protected float $latestResponseTimestamp = 0.0;
 
     /**
      * The time between the request was sent and the response was received of the latest request.
      */
-    protected float $previousResponseTime = 0.0;
-
-    public function trackStartSendingRequest(): void
-    {
-        $this->currentRequestStartedAtTimestamp = $this->time();
-    }
-
-    public function trackRequestFinished(): void
-    {
-        if ($this->currentRequestStartedAtTimestamp === 0.0) {
-            return;
-        }
-
-        $this->previousResponseTimestamp = $this->time();
-        $this->previousResponseTime = $this->previousResponseTimestamp - $this->currentRequestStartedAtTimestamp;
-        $this->currentRequestStartedAtTimestamp = 0.0;
-    }
+    protected float $latestRequestResponseDuration = 0.0;
 
     public function setWaitXTimesOfPreviousResponseTime(float $from, float $to): void
     {
@@ -73,9 +61,25 @@ trait WaitPolitely
         $this->minWaitTime = $minWaitTime;
     }
 
+    protected function trackRequestStart(): void
+    {
+        $this->currentRequestStartTimestamp = $this->time();
+    }
+
+    protected function trackRequestEnd(): void
+    {
+        if ($this->currentRequestStartTimestamp === 0.0) {
+            return;
+        }
+
+        $this->latestResponseTimestamp = $this->time();
+        $this->latestRequestResponseDuration = $this->latestResponseTimestamp - $this->currentRequestStartTimestamp;
+        $this->currentRequestStartTimestamp = 0.0;
+    }
+
     protected function waitUntilNextRequestCanBeSent(): void
     {
-        if ($this->previousResponseTime === 0.0) {
+        if ($this->latestRequestResponseDuration === 0.0) {
             return;
         }
 
@@ -98,13 +102,13 @@ trait WaitPolitely
 
     private function calcWaitUntilTimestamp(): float
     {
-        $waitTime = $this->getWaitXTimesOfPreviousResponseTime() * $this->previousResponseTime;
+        $waitTime = $this->getWaitXTimesOfPreviousResponseTime() * $this->latestRequestResponseDuration;
 
         if ($waitTime < $this->minWaitTime) {
             $waitTime = $this->minWaitTime;
         }
 
-        return $this->previousResponseTimestamp + $waitTime;
+        return $this->latestResponseTimestamp + $waitTime;
     }
 
     private function getWaitXTimesOfPreviousResponseTime(): float

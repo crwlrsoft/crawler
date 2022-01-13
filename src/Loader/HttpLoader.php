@@ -3,6 +3,10 @@
 namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\UserAgent;
+use Crwlr\Url\Exceptions\InvalidUrlException;
+use Crwlr\Url\Url;
+use GuzzleHttp\Psr7\Request;
+use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -10,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class HttpLoader extends Loader implements HttpLoaderInterface
+class HttpLoader extends Loader implements LoaderInterface
 {
     protected ClientInterface $httpClient;
 
@@ -31,8 +35,14 @@ class HttpLoader extends Loader implements HttpLoaderInterface
         });
     }
 
-    public function load(RequestInterface $request): ?ResponseInterface
+    public function load(mixed $subject): ?ResponseInterface
     {
+        $request = $this->validateSubjectType($subject);
+
+        if (!$this->isAllowedToBeLoaded($request->getUri())) {
+            return null;
+        }
+
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
         $this->callHook('beforeLoad', $request);
 
@@ -56,8 +66,10 @@ class HttpLoader extends Loader implements HttpLoaderInterface
     /**
      * @throws ClientExceptionInterface
      */
-    public function loadOrFail(RequestInterface $request): ResponseInterface
+    public function loadOrFail(mixed $subject): ResponseInterface
     {
+        $request = $this->validateSubjectType($subject);
+        $this->isAllowedToBeLoaded($request->getUri(), true);
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
         $this->trackRequestStart();
         $response = $this->httpClient->sendRequest($request);
@@ -69,22 +81,15 @@ class HttpLoader extends Loader implements HttpLoaderInterface
     }
 
     /**
-     * Call a method that tracks when a request was sent when the WaitPolitely trait is used.
+     * @throws InvalidArgumentException
+     * @throws InvalidUrlException
      */
-    private function trackRequestStart(): void
+    protected function validateSubjectType(RequestInterface|string $requestOrUri): RequestInterface
     {
-        if (method_exists($this, 'trackStartSendingRequest')) {
-            $this->trackStartSendingRequest();
+        if (is_string($requestOrUri)) {
+            return new Request('GET', Url::parsePsr7($requestOrUri));
         }
-    }
 
-    /**
-     * Call a method that tracks when a request was finished when the WaitPolitely trait is used.
-     */
-    private function trackRequestEnd(): void
-    {
-        if (method_exists($this, 'trackRequestFinished')) {
-            $this->trackRequestFinished();
-        }
+        return $requestOrUri;
     }
 }
