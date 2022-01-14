@@ -2,7 +2,9 @@
 
 namespace Crwlr\Crawler;
 
-abstract class Collection
+use Iterator;
+
+abstract class Collection implements Iterator
 {
     public function __construct(protected array $items)
     {
