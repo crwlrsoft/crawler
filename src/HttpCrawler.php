@@ -4,7 +4,7 @@ namespace Crwlr\Crawler;
 
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Loader\PoliteHttpLoader;
-use Http\Adapter\Guzzle7\Client;
+use GuzzleHttp\Client;
 use Psr\Http\Client\ClientInterface;
 
 abstract class HttpCrawler extends Crawler

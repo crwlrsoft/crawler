@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
-use Crwlr\Crawler\HttpResponse;
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Url\Url;
@@ -22,13 +22,13 @@ class GetLinks extends Step
     {
         $inputValue = $input->get();
 
-        if ($inputValue instanceof HttpResponse) {
-            $this->baseUri = Url::parse($inputValue->request->getUri());
+        if ($inputValue instanceof RequestResponseAggregate) {
+            $this->baseUri = Url::parse($inputValue->effectiveUri());
 
             return new Crawler($inputValue->response->getBody()->getContents());
         }
 
-        throw new InvalidArgumentException('Input must be an instance of the PSR-7 ResponseInterface');
+        throw new InvalidArgumentException('Input must be an instance of RequestResponseAggregate.');
     }
 
     public function invoke(Input $input): array

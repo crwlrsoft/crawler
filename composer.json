@@ -32,10 +32,11 @@
         "php": "^8.0",
         "crwlr/robots-txt": "^0.1.0",
         "crwlr/url": "^1.0",
-        "php-http/guzzle7-adapter": "^1.0",
         "psr/log": "^1.1",
         "symfony/dom-crawler": "^6.0",
-        "symfony/css-selector": "^6.0"
+        "symfony/css-selector": "^6.0",
+        "psr/simple-cache": "^3.0",
+        "guzzlehttp/guzzle": "^7.4"
     },
     "require-dev": {
         "pestphp/pest": "^1.21"

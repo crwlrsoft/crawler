@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler\Loader;
 
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\UserAgent;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
@@ -35,7 +37,7 @@ class HttpLoader extends Loader implements LoaderInterface
         });
     }
 
-    public function load(mixed $subject): ?ResponseInterface
+    public function load(mixed $subject): ?RequestResponseAggregate
     {
         $request = $this->validateSubjectType($subject);
 
@@ -47,12 +49,22 @@ class HttpLoader extends Loader implements LoaderInterface
         $this->callHook('beforeLoad', $request);
 
         try {
-            $this->trackRequestStart();
-            $response = $this->httpClient->sendRequest($request);
-            $this->trackRequestEnd(); // Don't move to finally so hooks don't run before it.
-            $this->callHook('onSuccess', $request, $response);
+            if ($this->cache && $this->cache->has(HttpResponseCacheItem::cacheKeyFromRequest($request))) {
+                $this->logger->info('Found ' . $request->getUri() . ' in cache.');
+                $responseCacheItem = $this->cache->get(HttpResponseCacheItem::cacheKeyFromRequest($request));
 
-            return $response;
+                return $responseCacheItem->aggregate();
+            }
+
+            $requestResponseAggregate = $this->handleRedirects($request);
+            $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
+
+            if ($this->cache) {
+                $responseCacheItem = new HttpResponseCacheItem($requestResponseAggregate);
+                $this->cache->set($responseCacheItem->cacheKey(), $responseCacheItem);
+            }
+
+            return $requestResponseAggregate;
         } catch (Throwable $exception) {
             $this->trackRequestEnd(); // Don't move to finally so hooks don't run before it.
             $this->callHook('onError', $request, $exception);
@@ -66,18 +78,43 @@ class HttpLoader extends Loader implements LoaderInterface
     /**
      * @throws ClientExceptionInterface
      */
-    public function loadOrFail(mixed $subject): ResponseInterface
+    public function loadOrFail(mixed $subject): RequestResponseAggregate
     {
         $request = $this->validateSubjectType($subject);
         $this->isAllowedToBeLoaded($request->getUri(), true);
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
+        $requestResponseAggregate = $this->handleRedirects($request);
+        $this->callHook('onSuccess', $request, $requestResponseAggregate);
+        $this->callHook('afterLoad', $request);
+
+        return $requestResponseAggregate;
+    }
+
+    /**
+     * @throws ClientExceptionInterface
+     */
+    private function handleRedirects(
+        RequestInterface $request,
+        ?RequestResponseAggregate $aggregate = null
+    ): ?RequestResponseAggregate {
         $this->trackRequestStart();
         $response = $this->httpClient->sendRequest($request);
         $this->trackRequestEnd();
-        $this->callHook('onSuccess', $request, $response);
-        $this->callHook('afterLoad', $request);
 
-        return $response;
+        if (!$aggregate) {
+            $aggregate = new RequestResponseAggregate($request, $response);
+        } else {
+            $aggregate->setResponse($response);
+        }
+
+        if ($aggregate->isRedirect()) {
+            $this->logger()->info('Load redirect to: ' . $aggregate->effectiveUri());
+            $newRequest = $request->withUri(Url::parsePsr7($aggregate->effectiveUri()));
+
+            return $this->handleRedirects($newRequest, $aggregate);
+        }
+
+        return $aggregate;
     }
 
     /**

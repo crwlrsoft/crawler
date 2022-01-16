@@ -5,16 +5,10 @@ namespace Crwlr\Crawler\Loader;
 use Crwlr\Crawler\UserAgent;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 
 abstract class Loader implements LoaderInterface
 {
-    /**
-     * This user agent should be set for every request sent by this loader.
-     */
-    protected UserAgent $userAgent;
-
-    protected LoggerInterface $logger;
-
     protected array $hooks = [
         'beforeLoad' => null,
         'onSuccess' => null,
@@ -22,10 +16,11 @@ abstract class Loader implements LoaderInterface
         'afterLoad' => null,
     ];
 
-    public function __construct(UserAgent $userAgent, LoggerInterface $logger)
-    {
-        $this->userAgent = $userAgent;
-        $this->logger = $logger;
+    public function __construct(
+        protected UserAgent $userAgent,
+        protected LoggerInterface $logger,
+        protected ?CacheInterface $cache = null,
+    ) {
     }
 
     public function beforeLoad(callable $callback)
@@ -46,6 +41,11 @@ abstract class Loader implements LoaderInterface
     public function afterLoad(callable $callback)
     {
         $this->addHookCallback('afterLoad', $callback);
+    }
+
+    public function setCache(CacheInterface $cache): void
+    {
+        $this->cache = $cache;
     }
 
     /**

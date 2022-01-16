@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Closure;
-use Crwlr\Crawler\HttpResponse;
 use Crwlr\Crawler\Input;
 use Crwlr\Url\Psr\Uri;
 use Crwlr\Url\Url;
@@ -76,7 +75,7 @@ class Http extends LoadingStep
         }
 
         return $this->output(
-            new HttpResponse($this->request, $this->loader->load($request)),
+            $this->loader->load($request),
             $input
         );
     }

@@ -2,10 +2,9 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
-use Crwlr\Crawler\HttpResponse;
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Step;
-use Crwlr\Url\Url;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DomCrawler\Crawler;
@@ -47,7 +46,7 @@ class QuerySelectorAll extends Step
             return new Crawler($inputValue->getBody()->getContents());
         }
 
-        if ($inputValue instanceof HttpResponse) {
+        if ($inputValue instanceof RequestResponseAggregate) {
             return new Crawler($inputValue->response->getBody()->getContents());
         }
 

@@ -9,8 +9,8 @@ class Results extends Collection
      */
     public function allToArray(): array
     {
-        return array_map(function ($result) {
+        return array_map(function (Result $result) {
             return $result->toArray();
-        }, $this->items);
+        }, $this->all());
     }
 }
