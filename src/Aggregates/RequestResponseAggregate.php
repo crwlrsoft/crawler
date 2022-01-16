@@ -51,6 +51,13 @@ class RequestResponseAggregate
 
     private function addRedirectUri(): void
     {
-        $this->redirects[] = Url::parse($this->effectiveUri())->resolve($this->response->getHeaderLine('Location'));
+        $redirectUri = Url::parse($this->effectiveUri())
+            ->resolve($this->response->getHeaderLine('Location'))
+            ->__toString();
+
+        // Add it only if different from the previous one.
+        if ($redirectUri !== end($this->redirects)) {
+            $this->redirects[] = $redirectUri;
+        }
     }
 }

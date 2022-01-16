@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Cache;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -26,6 +27,10 @@ class HttpResponseCacheItem
         $this->responseStatusCode = $requestResponseAggregate->response->getStatusCode();
         $this->responseHeaders = $requestResponseAggregate->response->getHeaders();
         $this->responseBody = $requestResponseAggregate->response->getBody()->getContents();
+
+        // Reading the response body to a string empties it in the response object, so add it again.
+        $bodyStream = Utils::streamFor($this->responseBody);
+        $requestResponseAggregate->setResponse($requestResponseAggregate->response->withBody($bodyStream));
     }
 
     public static function fromSerialized(string $serialized): self
@@ -42,7 +47,7 @@ class HttpResponseCacheItem
         ];
         $serialized = serialize($requestData);
 
-        return md5($serialized);
+        return hash("crc32b", $serialized);
     }
 
     public function cacheKey(): string
