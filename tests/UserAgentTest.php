@@ -1,5 +1,7 @@
 <?php
 
+namespace tests;
+
 use Crwlr\Crawler\UserAgent;
 
 test('Manually create UserAgent instance', function () {
