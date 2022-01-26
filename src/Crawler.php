@@ -133,15 +133,4 @@ abstract class Crawler
 
         return false;
     }
-
-    /*private function arrayContainsOnlyStringElements(array $array): bool
-    {
-        foreach ($array as $value) {
-            if (!is_string($value)) {
-                return false;
-            }
-        }
-
-        return true;
-    }*/
 }

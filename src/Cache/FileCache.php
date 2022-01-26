@@ -31,7 +31,14 @@ class FileCache implements CacheInterface
 
     public function clear(): bool
     {
-        // TODO: Implement clear() method.
+        foreach (scandir($this->basePath) as $file) {
+            if ($file !== '.' && $file !== '..') {
+                if (!$this->delete($file)) {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
