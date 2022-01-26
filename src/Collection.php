@@ -20,9 +20,9 @@ abstract class Collection implements Iterator
         return current($this->items);
     }
 
-    public function next(): mixed
+    public function next(): void
     {
-        return next($this->items);
+        next($this->items);
     }
 
     public function key(): int|string
