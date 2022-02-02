@@ -92,7 +92,7 @@ trait WaitPolitely
 
         $wait = $waitUntil - $now;
         $this->logger->info('Wait ' . round($wait, 3) . 's for politeness.');
-        usleep($wait * 1000000);
+        usleep((int) ($wait * 1000000));
     }
 
     protected function time(): float
