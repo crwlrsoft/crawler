@@ -2,28 +2,58 @@
 
 namespace Crwlr\Crawler;
 
+use Crwlr\Crawler\Exceptions\MissingLoaderException;
+use Crwlr\Crawler\Exceptions\MissingUserAgentException;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\StepInterface;
 use Psr\Log\LoggerInterface;
 
-abstract class Crawler
+class Crawler
 {
-    protected ?LoggerInterface $logger = null;
+    protected ?UserAgent $userAgent = null;
     protected ?LoaderInterface $loader = null;
+    protected ?LoggerInterface $logger = null;
 
     /**
      * @var array|StepInterface[]
      */
     protected array $steps = [];
 
-    abstract public function userAgent(): UserAgent;
+    public function setUserAgent(UserAgent|string $userAgent): void
+    {
+        $this->userAgent = is_string($userAgent) ? new UserAgent($userAgent) : $userAgent;
+    }
 
     /**
-     * @return LoaderInterface
+     * @throws MissingUserAgentException
      */
-    abstract public function loader(): LoaderInterface;
+    public function userAgent(): UserAgent
+    {
+        if (!$this->userAgent) {
+            throw new MissingUserAgentException('You must set a UserAgent.');
+        }
+
+        return $this->userAgent();
+    }
+
+    public function setLoader(LoaderInterface $loader): void
+    {
+        $this->loader = $loader;
+    }
+
+    /**
+     * @throws MissingLoaderException
+     */
+    public function loader(): LoaderInterface
+    {
+        if (!$this->loader) {
+            throw new MissingLoaderException('You must set a Loader.');
+        }
+
+        return $this->loader;
+    }
 
     public function addStep(StepInterface $step): void
     {
@@ -34,6 +64,11 @@ abstract class Crawler
         }
 
         $this->steps[] = $step;
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
     }
 
     public function logger(): LoggerInterface
