@@ -2,49 +2,70 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
-use Closure;
 use Crwlr\Crawler\Input;
-use Crwlr\Url\Psr\Uri;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Utils;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 class Http extends LoadingStep
 {
     protected RequestInterface $request;
-    protected ?Closure $beforeInvokeCallback;
 
-    public function __construct(RequestInterface $request, ?Closure $beforeInvokeCallback = null)
-    {
-        $this->request = $request;
-        $this->beforeInvokeCallback = $beforeInvokeCallback;
+    public function __construct(
+        string $method,
+        array $headers = [],
+        string|StreamInterface|null $body = null,
+        string $httpVersion = '1.1',
+    ) {
+        if (is_string($body)) {
+            $body = Utils::streamFor($body);
+        }
+
+        $this->request = new Request($method, '/', $headers, $body, $httpVersion);
     }
 
-    public static function get(?Closure $beforeInvokeCallback = null): self
+    public static function get(array $headers = [], string $httpVersion = '1.1'): self
     {
-        return new self(self::getRequestObjectWithMethod('GET'), $beforeInvokeCallback);
+        return new self('GET', $headers, null, $httpVersion);
     }
 
-    public static function post(?Closure $beforeInvokeCallback = null): self
-    {
-        return new self(self::getRequestObjectWithMethod('POST'), $beforeInvokeCallback);
+    public static function post(
+        array $headers = [],
+        string|StreamInterface|null $body = null,
+        string $httpVersion = '1.1',
+    ): self {
+        return new self('POST', $headers, $body, $httpVersion);
     }
 
-    public static function put(?Closure $beforeInvokeCallback = null): self
+    public static function put(
+        array $headers = [],
+        string|StreamInterface|null $body = null,
+        string $httpVersion = '1.1',
+    ): self
     {
-        return new self(self::getRequestObjectWithMethod('PUT'), $beforeInvokeCallback);
+        return new self('PUT', $headers, $body, $httpVersion);
     }
 
-    public static function patch(?Closure $beforeInvokeCallback = null): self
+    public static function patch(
+        array $headers = [],
+        string|StreamInterface|null $body = null,
+        string $httpVersion = '1.1',
+    ): self
     {
-        return new self(self::getRequestObjectWithMethod('PATCH'), $beforeInvokeCallback);
+        return new self('PATCH', $headers, $body, $httpVersion);
     }
 
-    public static function delete(?Closure $beforeInvokeCallback = null): self
+    public static function delete(
+        array $headers = [],
+        string|StreamInterface|null $body = null,
+        string $httpVersion = '1.1',
+    ): self
     {
-        return new self(self::getRequestObjectWithMethod('DELETE'), $beforeInvokeCallback);
+        return new self('DELETE', $headers, $body, $httpVersion);
     }
 
     public function validateAndSanitizeInput(Input $input): UriInterface
@@ -66,47 +87,9 @@ class Http extends LoadingStep
     {
         $request = $this->request->withUri($input->get());
 
-        if ($this->beforeInvokeCallback) {
-            $callbackReturnValue = call_user_func($this->beforeInvokeCallback, $request);
-
-            if ($callbackReturnValue instanceof RequestInterface) {
-                $request = $callbackReturnValue;
-            }
-        }
-
         return $this->output(
             $this->loader->load($request),
             $input
         );
-    }
-
-    /*protected function withMethod(string $method): static
-    {
-        return new static($this->request->withMethod($method));
-    }
-
-    public function withHeader(string $name, string $value): static
-    {
-        return new static($this->request->withHeader($name, $value));
-    }
-
-    public function withAddedHeader(string $name, string $value): static
-    {
-        return new static($this->request->withHeader($name, $value));
-    }
-
-    public function withBody(string|StreamInterface $body): static
-    {
-        return new static($this->request->withBody($body));
-    }
-
-    public function withProtocolVersion(string $protocolVersion): static
-    {
-        return new static($this->request->withProtocolVersion($protocolVersion));
-    }*/
-
-    protected static function getRequestObjectWithMethod(string $method = 'GET'): RequestInterface
-    {
-        return new Request('GET', new Uri('/')); // uri is just a placeholder, is set in invoke method.
     }
 }
