@@ -144,3 +144,15 @@ HTML;
     $result = reset($results);
     expect($result->get())->toBe('bar');
 });
+
+test('It gets the first element when multiple elements match', function () {
+    $html = <<<HTML
+<div class="element">foo</div><div class="element">bar</div><div class="element">baz</div>
+HTML;
+    $querySelectorStep = new QuerySelector('.element');
+    $querySelectorStep->addLogger(new CliLogger());
+    $input = new Input($html);
+    $results = $querySelectorStep->invokeStep($input);
+    $result = reset($results);
+    expect($result->get())->toBe('foo');
+});
