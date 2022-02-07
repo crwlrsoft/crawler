@@ -68,7 +68,7 @@ class Http extends LoadingStep
         return new self('DELETE', $headers, $body, $httpVersion);
     }
 
-    public function validateAndSanitizeInput(Input $input): UriInterface
+    protected function validateAndSanitizeInput(Input $input): UriInterface
     {
         $inputValue = $input->get();
 
@@ -83,7 +83,7 @@ class Http extends LoadingStep
         throw new InvalidArgumentException('Input must be string or an instance of the PSR-7 UriInterface');
     }
 
-    public function invoke(Input $input): array
+    protected function invoke(Input $input): array
     {
         $request = $this->request->withUri($input->get());
 

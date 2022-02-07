@@ -18,7 +18,7 @@ class GetLinks extends Step
     {
     }
 
-    public function validateAndSanitizeInput(Input $input): Crawler
+    protected function validateAndSanitizeInput(Input $input): Crawler
     {
         $inputValue = $input->get();
 
@@ -31,7 +31,7 @@ class GetLinks extends Step
         throw new InvalidArgumentException('Input must be an instance of RequestResponseAggregate.');
     }
 
-    public function invoke(Input $input): array
+    protected function invoke(Input $input): array
     {
         $domCrawler = $input->get();
 

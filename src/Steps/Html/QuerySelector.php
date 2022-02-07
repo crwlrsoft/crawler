@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Step;
 use InvalidArgumentException;
@@ -10,11 +11,28 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class QuerySelector extends Step
 {
-    private string $getWhat = 'text';
-    private ?string $argument;
+    protected ?string $argument = null;
 
-    public function __construct(private string $selector)
+    public function __construct(
+        protected string $selector,
+        protected string $getWhat = 'text',
+    ) {
+    }
+
+    public function html(): self
     {
+        $this->getWhat = 'html';
+        $this->argument = null;
+
+        return $this;
+    }
+
+    public function text(): self
+    {
+        $this->getWhat = 'text';
+        $this->argument = null;
+
+        return $this;
     }
 
     public function innerText(): self
@@ -33,11 +51,18 @@ class QuerySelector extends Step
         return $this;
     }
 
-    public function validateAndSanitizeInput(Input $input): Crawler
+    public function outerHtml(): self
+    {
+        $this->getWhat = 'outerHtml';
+        $this->argument = null;
+
+        return $this;
+    }
+
+    protected function validateAndSanitizeInput(Input $input): Crawler
     {
         $inputValue = $input->get();
 
-        // string, http response,
         if (is_string($inputValue)) {
             return new Crawler($inputValue);
         }
@@ -46,28 +71,27 @@ class QuerySelector extends Step
             return new Crawler($inputValue->getBody()->getContents());
         }
 
-        throw new InvalidArgumentException('Input must be string or an instance of the PSR-7 ResponseInterface');
+        if ($inputValue instanceof RequestResponseAggregate) {
+            return new Crawler($inputValue->response->getBody()->getContents());
+        }
+
+        throw new InvalidArgumentException('Input must be string, PSR-7 Response or RequestResponseAggregate.');
     }
 
-    public function invoke(Input $input): array
+    protected function invoke(Input $input): array
     {
-        $domCrawler = $input->get();
-        $element = $domCrawler->filter($this->selector)->first();
+        $getWhat = $this->getWhat;
+        $argument = $this->argument;
 
-        if ($element->count() === 0) {
-            return $this->output('', $input);
-        }
-
-        if ($this->argument) {
-            return $this->output(
-                $element->{$this->getWhat}($this->argument),
-                $input
-            );
-        }
-
-        return $this->output(
-            $element->{$this->getWhat}(),
-            $input
+        $this->logger->info(
+            'Select first element with CSS selector \'' . $this->selector . '\' and get ' . $getWhat . '(' .
+            ($argument ?? '') . ')'
         );
+
+        $resultNode = $input->get()->filter($this->selector)->first();
+
+        $result = $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
+
+        return $this->output($result, $input);
     }
 }
