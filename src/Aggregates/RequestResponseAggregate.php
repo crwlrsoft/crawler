@@ -49,10 +49,10 @@ class RequestResponseAggregate
         }
     }
 
-    private function addRedirectUri(): void
+    public function addRedirectUri(?string $redirectUri = null): void
     {
         $redirectUri = Url::parse($this->effectiveUri())
-            ->resolve($this->response->getHeaderLine('Location'))
+            ->resolve($redirectUri ?? $this->response->getHeaderLine('Location'))
             ->__toString();
 
         // Add it only if different from the previous one.

@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler\Cache;
 
+use DateInterval;
+use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 
 class FileCache implements CacheInterface
@@ -10,18 +12,27 @@ class FileCache implements CacheInterface
     {
     }
 
+    public function has(string $key): bool
+    {
+        return file_exists($this->basePath . '/' . $key);
+    }
+
     public function get(string $key, mixed $default = null): mixed
     {
-        if (file_exists($this->basePath . '/' . $key)) {
-            return unserialize(file_get_contents($this->basePath . '/' . $key));
+        if ($this->has($key)) {
+            return HttpResponseCacheItem::fromSerialized(file_get_contents($this->basePath . '/' . $key));
         }
 
         return $default;
     }
 
-    public function set(string $key, mixed $value, \DateInterval|int|null $ttl = null): bool
+    public function set(string $key, mixed $value, DateInterval|int|null $ttl = null): bool
     {
-        return file_put_contents($this->basePath . '/' . $key, serialize($value)) !== false;
+        if (!$value instanceof HttpResponseCacheItem) {
+            throw new InvalidArgumentException('This cache stores only HttpResponseCacheItem objects.');
+        }
+
+        return file_put_contents($this->basePath . '/' . $key, $value->serialize()) !== false;
     }
 
     public function delete(string $key): bool
@@ -44,21 +55,34 @@ class FileCache implements CacheInterface
 
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        return [];
+        $items = [];
+
+        foreach ($keys as $key) {
+            $items[$key] = $this->get($key, $default);
+        }
+
+        return $items;
     }
 
-    public function setMultiple(iterable $values, \DateInterval|int|null $ttl = null): bool
+    public function setMultiple(iterable $values, DateInterval|int|null $ttl = null): bool
     {
+        foreach ($values as $key => $value) {
+            if (!$this->set($key, $value, $ttl)) {
+                return false;
+            }
+        }
+
         return true;
     }
 
     public function deleteMultiple(iterable $keys): bool
     {
-        return true;
-    }
+        foreach ($keys as $key) {
+            if (!$this->delete($key)) {
+                return false;
+            }
+        }
 
-    public function has(string $key): bool
-    {
-        return file_exists($this->basePath . '/' . $key);
+        return true;
     }
 }

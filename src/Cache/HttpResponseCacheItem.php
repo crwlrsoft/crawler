@@ -5,69 +5,112 @@ namespace Crwlr\Crawler\Cache;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class HttpResponseCacheItem
 {
-    private string $requestMethod;
-    private string $requestUri;
-    private array $requestHeaders;
-    private string $effectiveUri;
-    private int $responseStatusCode;
-    private array $responseHeaders;
-    private string $responseBody;
+    private string $key;
 
-    public function __construct(RequestResponseAggregate $requestResponseAggregate) {
-        $this->requestMethod = $requestResponseAggregate->request->getMethod();
-        $this->requestUri = $requestResponseAggregate->requestedUri();
-        $this->requestHeaders = $requestResponseAggregate->request->getHeaders();
-        $this->effectiveUri = $requestResponseAggregate->effectiveUri();
-        $this->responseStatusCode = $requestResponseAggregate->response->getStatusCode();
-        $this->responseHeaders = $requestResponseAggregate->response->getHeaders();
-        $this->responseBody = $requestResponseAggregate->response->getBody()->getContents();
+    public function __construct(
+        private string $requestMethod,
+        private string $requestUri,
+        private array $requestHeaders,
+        private string $requestBody,
+        private string $effectiveUri,
+        private int $responseStatusCode,
+        private array $responseHeaders,
+        private string $responseBody,
+    ) {
+        $this->key = self::keyFromRequestData($this->requestProperties());
+    }
 
-        // Reading the response body to a string empties it in the response object, so add it again.
-        $bodyStream = Utils::streamFor($this->responseBody);
-        $requestResponseAggregate->setResponse($requestResponseAggregate->response->withBody($bodyStream));
+    public static function keyFromRequest(RequestInterface $request): string
+    {
+        return self::keyFromRequestData([
+            'requestMethod' => $request->getMethod(),
+            'requestUri' => $request->getUri()->__toString(),
+            'requestHeaders' => $request->getHeaders(),
+            'requestBody' => self::copyBody($request),
+        ]);
+    }
+
+    public static function fromAggregate(RequestResponseAggregate $aggregate): self
+    {
+        return new self(
+            $aggregate->request->getMethod(),
+            $aggregate->requestedUri(),
+            $aggregate->request->getHeaders(),
+            self::copyBody($aggregate->request),
+            $aggregate->effectiveUri(),
+            $aggregate->response->getStatusCode(),
+            $aggregate->response->getHeaders(),
+            self::copyBody($aggregate->response),
+        );
     }
 
     public static function fromSerialized(string $serialized): self
     {
-        return unserialize($serialized);
+        return self::fromArray(unserialize($serialized));
     }
 
-    public static function cacheKeyFromRequest(RequestInterface $request): string
+    public static function fromArray(array $array): self
     {
-        $requestData = [
-            'method' => $request->getMethod(),
-            'uri' => $request->getUri()->__toString(),
-            'headers' => $request->getHeaders(),
+        return new self(...$array);
+    }
+
+    /**
+     * When reading the body stream of an HTTP message to a string, you need to rewind the stream afterwards, otherwise
+     * it returns an empty string on a consecutive call.
+     */
+    public static function copyBody(MessageInterface $httpMessage): string
+    {
+        $httpMessage->getBody()->rewind();
+        $body = $httpMessage->getBody()->getContents();
+        $httpMessage->getBody()->rewind();
+
+        return $body;
+    }
+
+    public function key(): string
+    {
+        return $this->key;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'requestMethod' => $this->requestMethod,
+            'requestUri' => $this->requestUri,
+            'requestHeaders' => $this->requestHeaders,
+            'requestBody' => $this->requestBody,
+            'effectiveUri' => $this->effectiveUri,
+            'responseStatusCode' => $this->responseStatusCode,
+            'responseHeaders' => $this->responseHeaders,
+            'responseBody' => $this->responseBody,
         ];
-        $serialized = serialize($requestData);
-
-        return hash("crc32b", $serialized);
-    }
-
-    public function cacheKey(): string
-    {
-        return self::cacheKeyFromRequest($this->request());
     }
 
     public function serialize(): string
     {
-        return serialize($this);
+        return serialize($this->toArray());
     }
 
     public function aggregate(): RequestResponseAggregate
     {
-        return new RequestResponseAggregate($this->request(), $this->response());
+        $aggregate = new RequestResponseAggregate($this->request(), $this->response());
+
+        if ($this->effectiveUri() !== $aggregate->effectiveUri()) {
+            $aggregate->addRedirectUri($this->effectiveUri());
+        }
+
+        return $aggregate;
     }
 
     public function request(): RequestInterface
     {
-        return new Request($this->requestMethod, $this->requestUri, $this->requestHeaders);
+        return new Request($this->requestMethod, $this->requestUri, $this->requestHeaders, $this->requestBody);
     }
 
     public function response(): ResponseInterface
@@ -78,5 +121,22 @@ class HttpResponseCacheItem
     public function effectiveUri(): string
     {
         return $this->effectiveUri;
+    }
+
+    private static function keyFromRequestData(array $requestData): string
+    {
+        $serialized = serialize($requestData);
+
+        return md5($serialized);
+    }
+
+    private function requestProperties(): array
+    {
+        return [
+            'requestMethod' => $this->requestMethod,
+            'requestUri' => $this->requestUri,
+            'requestHeaders' => $this->requestHeaders,
+            'requestBody' => $this->requestBody,
+        ];
     }
 }

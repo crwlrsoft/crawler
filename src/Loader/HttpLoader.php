@@ -49,19 +49,23 @@ class HttpLoader extends Loader implements LoaderInterface
         $this->callHook('beforeLoad', $request);
 
         try {
-            if ($this->cache && $this->cache->has(HttpResponseCacheItem::cacheKeyFromRequest($request))) {
-                $this->logger->info('Found ' . $request->getUri() . ' in cache.');
-                $responseCacheItem = $this->cache->get(HttpResponseCacheItem::cacheKeyFromRequest($request));
+            if ($this->cache) {
+                $key = HttpResponseCacheItem::keyFromRequest($request);
 
-                return $responseCacheItem->aggregate();
+                if ($this->cache->has($key)) {
+                    $this->logger->info('Found ' . $request->getUri() . ' in cache.');
+                    $responseCacheItem = $this->cache->get($key);
+
+                    return $responseCacheItem->aggregate();
+                }
             }
 
             $requestResponseAggregate = $this->handleRedirects($request);
             $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
 
             if ($this->cache) {
-                $responseCacheItem = new HttpResponseCacheItem($requestResponseAggregate);
-                $this->cache->set($responseCacheItem->cacheKey(), $responseCacheItem);
+                $responseCacheItem = HttpResponseCacheItem::fromAggregate($requestResponseAggregate);
+                $this->cache->set($responseCacheItem->key(), $responseCacheItem);
             }
 
             return $requestResponseAggregate;
