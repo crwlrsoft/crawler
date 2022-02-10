@@ -5,6 +5,7 @@ namespace tests\Steps\Html;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Html\QuerySelector;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -25,7 +26,8 @@ HTML;
     $results = $querySelectorStep->invokeStep($input);
     expect($results)->toHaveCount(1);
     $firstResult = reset($results);
-    expect($firstResult->get())->toBe('yep');
+    expect($firstResult)->toBeInstanceOf(Output::class);
+    expect($firstResult->get())->toBe('yep'); // @phpstan-ignore-line
 });
 
 test('It works with PSR-7 Response object as input', function () {
@@ -38,7 +40,8 @@ HTML;
     $input = new Input($responseObject);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('yep');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('yep'); // @phpstan-ignore-line
 });
 
 test('It works with a RequestResponseAggregate object as input', function () {
@@ -53,7 +56,8 @@ HTML;
     $input = new Input($aggregate);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('yep');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('yep'); // @phpstan-ignore-line
 });
 
 test('You can get the (inner) html of an element', function ($setGetWhatVia) {
@@ -72,7 +76,8 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('<p>this is a paragraph</p>');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('<p>this is a paragraph</p>'); // @phpstan-ignore-line
 })->with(['argument', 'methodCall']);
 
 test('You can get the outer html of an element', function ($setGetWhatVia) {
@@ -91,7 +96,8 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('<div id="selectThis">yo</div>');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('<div id="selectThis">yo</div>'); // @phpstan-ignore-line
 })->with(['argument', 'methodCall']);
 
 test('You can get the text of an element', function ($setGetWhatVia) {
@@ -110,7 +116,8 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('one two');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('one two'); // @phpstan-ignore-line
 })->with(['argument', 'methodCall']);
 
 test('You can get the inner text of an element', function ($setGetWhatVia) {
@@ -129,7 +136,8 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('one');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('one'); // @phpstan-ignore-line
 })->with(['argument', 'methodCall']);
 
 test('You can get an attribute of an element', function () {
@@ -142,7 +150,8 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('bar');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('bar'); // @phpstan-ignore-line
 });
 
 test('It gets the first element when multiple elements match', function () {
@@ -154,5 +163,6 @@ HTML;
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
     $result = reset($results);
-    expect($result->get())->toBe('foo');
+    expect($result)->toBeInstanceOf(Output::class);
+    expect($result->get())->toBe('foo'); // @phpstan-ignore-line
 });

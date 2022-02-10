@@ -4,12 +4,13 @@ namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
+use Crwlr\Crawler\Output;
 use Psr\Log\LoggerInterface;
 
 final class Group implements GroupInterface
 {
     /**
-     * @var array
+     * @var StepInterface[]
      */
     private array $steps = [];
 
@@ -34,6 +35,10 @@ final class Group implements GroupInterface
         return $this;
     }
 
+    /**
+     * @param Input $input
+     * @return Output[]
+     */
     public function invokeStep(Input $input): array
     {
         $outputs = [];
@@ -45,7 +50,7 @@ final class Group implements GroupInterface
         return $outputs;
     }
 
-    public function addLogger(LoggerInterface $logger): self
+    public function addLogger(LoggerInterface $logger): static
     {
         $this->logger = $logger;
 

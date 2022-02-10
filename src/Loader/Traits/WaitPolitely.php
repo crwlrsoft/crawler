@@ -118,8 +118,8 @@ trait WaitPolitely
         }
 
         return rand(
-                $this->waitXTimesOfPreviousResponseTime['from'] * 1000000,
-                $this->waitXTimesOfPreviousResponseTime['to'] * 1000000
+                (int) $this->waitXTimesOfPreviousResponseTime['from'] * 1000000,
+                (int) $this->waitXTimesOfPreviousResponseTime['to'] * 1000000
             ) / 1000000;
     }
 }

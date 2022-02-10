@@ -7,5 +7,5 @@ use Crwlr\Crawler\Steps\StepInterface;
 
 interface LoadingStepInterface extends StepInterface
 {
-    public function addLoader(LoaderInterface $loader);
+    public function addLoader(LoaderInterface $loader): static;
 }

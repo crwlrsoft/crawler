@@ -1,0 +1,9 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        - "/Call to an undefined method Pest\\\\Expectation\\\\|Pest\\\\Support\\\\Extendable.*/"

@@ -7,6 +7,9 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
+use PHPUnit\Framework\TestCase;
+
+/** @var TestCase $this */
 
 test('You can add a logger and it is available within the invoke method', function () {
     $step = new class extends Step
@@ -56,7 +59,7 @@ test(
             ->resultResourceProperty('property');
         $output = $step->invokeStep(new Input('inputValue'));
         expect($output[0]->result)->toBeInstanceOf(Result::class);
-        expect($output[0]->result->toArray())->toBe(['property' => 'returnValue']);
+        expect($output[0]->result->toArray())->toBe(['property' => 'returnValue']); // @phpstan-ignore-line
     }
 );
 
@@ -75,7 +78,7 @@ test(
         $prevResult->setProperty('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
         expect($output[0]->result)->toBeInstanceOf(Result::class);
-        expect($output[0]->result->toArray())->toBe([
+        expect($output[0]->result->toArray())->toBe([ // @phpstan-ignore-line
             'prevProperty' => 'foobar',
             'property' => 'returnValue',
         ]);

@@ -9,6 +9,9 @@ use Psr\SimpleCache\CacheInterface;
 
 abstract class Loader implements LoaderInterface
 {
+    /**
+     * @var array|(null|callable[])[]
+     */
     protected array $hooks = [
         'beforeLoad' => null,
         'onSuccess' => null,
@@ -23,22 +26,22 @@ abstract class Loader implements LoaderInterface
     ) {
     }
 
-    public function beforeLoad(callable $callback)
+    public function beforeLoad(callable $callback): void
     {
         $this->addHookCallback('beforeLoad', $callback);
     }
 
-    public function onSuccess(callable $callback)
+    public function onSuccess(callable $callback): void
     {
         $this->addHookCallback('onSuccess', $callback);
     }
 
-    public function onError(callable $callback)
+    public function onError(callable $callback): void
     {
         $this->addHookCallback('onError', $callback);
     }
 
-    public function afterLoad(callable $callback)
+    public function afterLoad(callable $callback): void
     {
         $this->addHookCallback('afterLoad', $callback);
     }
@@ -71,7 +74,7 @@ abstract class Loader implements LoaderInterface
     {
     }
 
-    protected function callHook(string $hook, ...$arguments): void
+    protected function callHook(string $hook, mixed ...$arguments): void
     {
         $arguments[] = $this->logger;
 
@@ -92,7 +95,7 @@ abstract class Loader implements LoaderInterface
         return $this->logger;
     }
 
-    private function addHookCallback(string $hook, callable $callback)
+    private function addHookCallback(string $hook, callable $callback): void
     {
         if ($this->hooks[$hook] === null) {
             $this->hooks[$hook] = [$callback];

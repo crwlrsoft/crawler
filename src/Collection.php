@@ -4,12 +4,22 @@ namespace Crwlr\Crawler;
 
 use Iterator;
 
+/**
+ * @implements Iterator<mixed>
+ */
+
 abstract class Collection implements Iterator
 {
+    /**
+     * @param mixed[] $items
+     */
     public function __construct(protected array $items)
     {
     }
 
+    /**
+     * @return mixed[]
+     */
     public function all(): array
     {
         return $this->items;
@@ -25,7 +35,7 @@ abstract class Collection implements Iterator
         next($this->items);
     }
 
-    public function key(): int|string
+    public function key(): int|string|null
     {
         return key($this->items);
     }

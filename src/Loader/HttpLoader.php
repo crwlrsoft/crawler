@@ -105,7 +105,7 @@ class HttpLoader extends Loader implements LoaderInterface
     private function handleRedirects(
         RequestInterface $request,
         ?RequestResponseAggregate $aggregate = null
-    ): ?RequestResponseAggregate {
+    ): RequestResponseAggregate {
         $this->trackRequestStart();
         $response = $this->httpClient->sendRequest($request);
         $this->trackRequestEnd();

@@ -40,7 +40,11 @@
     },
     "require-dev": {
         "pestphp/pest": "^1.21",
-        "mockery/mockery": "^1.5"
+        "mockery/mockery": "^1.5",
+        "phpstan/phpstan": "^1.4",
+        "phpstan/phpstan-mockery": "^1.0",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan-phpunit": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -48,6 +52,7 @@
         }
     },
     "scripts": {
-        "test": "@php vendor/bin/pest"
+        "test": "@php vendor/bin/pest",
+        "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon"
     }
 }

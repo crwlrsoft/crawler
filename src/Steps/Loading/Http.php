@@ -15,6 +15,12 @@ class Http extends LoadingStep
 {
     protected RequestInterface $request;
 
+    /**
+     * @param string $method
+     * @param array|(string|string[])[] $headers
+     * @param string|StreamInterface|null $body
+     * @param string $httpVersion
+     */
     public function __construct(
         string $method,
         array $headers = [],
@@ -28,11 +34,17 @@ class Http extends LoadingStep
         $this->request = new Request($method, '/', $headers, $body, $httpVersion);
     }
 
+    /**
+     * @param array|(string|string[])[] $headers
+     */
     public static function get(array $headers = [], string $httpVersion = '1.1'): self
     {
         return new self('GET', $headers, null, $httpVersion);
     }
 
+    /**
+     * @param array|(string|string[])[] $headers
+     */
     public static function post(
         array $headers = [],
         string|StreamInterface|null $body = null,
@@ -41,6 +53,9 @@ class Http extends LoadingStep
         return new self('POST', $headers, $body, $httpVersion);
     }
 
+    /**
+     * @param array|(string|string[])[] $headers
+     */
     public static function put(
         array $headers = [],
         string|StreamInterface|null $body = null,
@@ -50,6 +65,9 @@ class Http extends LoadingStep
         return new self('PUT', $headers, $body, $httpVersion);
     }
 
+    /**
+     * @param array|(string|string[])[] $headers
+     */
     public static function patch(
         array $headers = [],
         string|StreamInterface|null $body = null,
@@ -59,6 +77,9 @@ class Http extends LoadingStep
         return new self('PATCH', $headers, $body, $httpVersion);
     }
 
+    /**
+     * @param array|(string|string[])[] $headers
+     */
     public static function delete(
         array $headers = [],
         string|StreamInterface|null $body = null,

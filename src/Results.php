@@ -5,7 +5,7 @@ namespace Crwlr\Crawler;
 class Results extends Collection
 {
     /**
-     * @return array[]
+     * @return mixed[]
      */
     public function allToArray(): array
     {

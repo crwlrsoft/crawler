@@ -3,6 +3,9 @@
 namespace tests\Logger;
 
 use Crwlr\Crawler\Logger\CliLogger;
+use PHPUnit\Framework\TestCase;
+
+/** @var TestCase $this */
 
 test('It prints a message', function () {
     $logger = new CliLogger();

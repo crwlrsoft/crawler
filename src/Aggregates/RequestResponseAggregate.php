@@ -35,6 +35,9 @@ class RequestResponseAggregate
         return $this->response->getStatusCode() >= 300 && $this->response->getStatusCode() < 400;
     }
 
+    /**
+     * @return string[]
+     */
     public function redirects(): array
     {
         return $this->redirects;

@@ -59,7 +59,8 @@ class CliLogger implements LoggerInterface
             throw new UnexpectedValueException('Unknown log level.');
         }
 
-        echo $this->printTimeAndLevel($level) . $message . "\n";
+        $this->printTimeAndLevel($level);
+        echo $message . "\n";
     }
 
     private function printTimeAndLevel(string $level): void

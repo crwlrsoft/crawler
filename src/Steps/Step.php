@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -14,6 +15,9 @@ abstract class Step implements StepInterface
     private ?string $resultResourceName = null;
     private ?string $resultResourcePropertyName = null;
 
+    /**
+     * @return mixed[]
+     */
     abstract protected function invoke(Input $input): array;
 
     /**
@@ -67,6 +71,9 @@ abstract class Step implements StepInterface
      *
      * It assures that steps always return an array, all values are wrapped in Output objects, and it handles building
      * Results.
+     *
+     * @return Output[]
+     * @throws Exception
      */
     protected function output(mixed $values, Input $input): array
     {
@@ -76,10 +83,19 @@ abstract class Step implements StepInterface
         foreach ($values as $value) {
             if ($this->resultResourceName) {
                 $result = new Result($this->resultResourceName);
+
+                if ($this->resultResourcePropertyName === null) {
+                    throw new Exception('No resource property defined');
+                }
+
                 $result->setProperty($this->resultResourcePropertyName, $value);
                 $outputs[] = new Output($value, $result);
             } else {
                 if ($this->resultResourcePropertyName) {
+                    if (!$input->result) {
+                        throw new Exception('Defined a resource property name but no resource was initialized yet!');
+                    }
+
                     $input->result->setProperty($this->resultResourcePropertyName, $value);
                 }
 

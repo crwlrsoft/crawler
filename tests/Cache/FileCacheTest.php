@@ -7,13 +7,18 @@ use Crwlr\Crawler\Cache\FileCache;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Psr\SimpleCache\InvalidArgumentException;
 
 function helper_cachedir(): string
 {
     return __DIR__ . '/cachedir';
 }
 
-function helper_addMultipleItemsToCache(array $items, FileCache $cache)
+/**
+ * @param mixed[] $items
+ * @throws InvalidArgumentException
+ */
+function helper_addMultipleItemsToCache(array $items, FileCache $cache): void
 {
     foreach ($items as $item) {
         $cache->set($item->key(), $item);
@@ -34,12 +39,16 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (scandir(helper_cachedir()) as $file) {
-        if ($file === '.' || $file === '..') {
-            continue;
-        }
+    $files = scandir(helper_cachedir());
 
-        unlink(helper_cachedir() . '/' . $file);
+    if (is_array($files)) {
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            unlink(helper_cachedir() . '/' . $file);
+        }
     }
 
     rmdir(helper_cachedir());
@@ -106,10 +115,9 @@ test('It gets multiple items', function () {
 
     $items = $cache->getMultiple([$cacheItem1->key(), $cacheItem2->key(), $cacheItem3->key()]);
 
-    expect($items)->toHaveCount(3);
-    expect($items[$cacheItem1->key()]->request()->getUri()->__toString())->toBe('/foo');
-    expect($items[$cacheItem2->key()]->request()->getUri()->__toString())->toBe('/bar');
-    expect($items[$cacheItem3->key()]->request()->getUri()->__toString())->toBe('/baz');
+    expect(reset($items)->request()->getUri()->__toString())->toBe('/foo');
+    expect(next($items)->request()->getUri()->__toString())->toBe('/bar');
+    expect(next($items)->request()->getUri()->__toString())->toBe('/baz');
 });
 
 test('It sets multiple items', function () {

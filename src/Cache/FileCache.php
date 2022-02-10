@@ -2,8 +2,9 @@
 
 namespace Crwlr\Crawler\Cache;
 
+use Crwlr\Crawler\Cache\Exceptions\InvalidArgumentException;
+use Crwlr\Crawler\Cache\Exceptions\ReadingCacheFailedException;
 use DateInterval;
-use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 
 class FileCache implements CacheInterface
@@ -17,10 +18,20 @@ class FileCache implements CacheInterface
         return file_exists($this->basePath . '/' . $key);
     }
 
+    /**
+     * @throws ReadingCacheFailedException
+     * @throws InvalidArgumentException
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         if ($this->has($key)) {
-            return HttpResponseCacheItem::fromSerialized(file_get_contents($this->basePath . '/' . $key));
+            $fileContent = file_get_contents($this->basePath . '/' . $key);
+
+            if ($fileContent === false) {
+                throw new ReadingCacheFailedException('Failed to read file ' . $this->basePath . '/' . $key);
+            }
+
+            return HttpResponseCacheItem::fromSerialized($fileContent);
         }
 
         return $default;
@@ -42,10 +53,14 @@ class FileCache implements CacheInterface
 
     public function clear(): bool
     {
-        foreach (scandir($this->basePath) as $file) {
-            if ($file !== '.' && $file !== '..') {
-                if (!$this->delete($file)) {
-                    return false;
+        $allFiles = scandir($this->basePath);
+
+        if (is_array($allFiles)) {
+            foreach ($allFiles as $file) {
+                if ($file !== '.' && $file !== '..') {
+                    if (!$this->delete($file)) {
+                        return false;
+                    }
                 }
             }
         }
@@ -53,6 +68,11 @@ class FileCache implements CacheInterface
         return true;
     }
 
+    /**
+     * @return iterable|mixed[]
+     * @throws InvalidArgumentException
+     * @throws ReadingCacheFailedException
+     */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         $items = [];
@@ -64,6 +84,10 @@ class FileCache implements CacheInterface
         return $items;
     }
 
+    /**
+     * @param iterable|mixed[] $values
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     public function setMultiple(iterable $values, DateInterval|int|null $ttl = null): bool
     {
         foreach ($values as $key => $value) {

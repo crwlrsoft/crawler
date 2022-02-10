@@ -3,6 +3,9 @@
 namespace tests;
 
 use Crwlr\Crawler\UserAgent;
+use PHPUnit\Framework\TestCase;
+
+/** @var TestCase $this */
 
 test('Manually create UserAgent instance', function () {
     $userAgent = new UserAgent('SomeBot');
