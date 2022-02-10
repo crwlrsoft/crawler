@@ -1,0 +1,80 @@
+#!/usr/bin/env php
+<?php
+
+run('composer test', 'Unit tests');
+run('composer cs', 'PHP Coding Standards Fixer');
+run('composer stan', 'PHPStan');
+exit(0);
+
+function run(string $command, ?string $descriptiveName = null)
+{
+    printLine(blue('RUN ' . ($descriptiveName ?? $command) . '...'));
+    exec($command, $output, $returnCode);
+    handleFail($output, $returnCode);
+    showSummary($output);
+}
+
+function handleFail($output, $returnCode)
+{
+    if ($returnCode !== 0) {
+        printLine(red('Failed:'));
+        printLines($output);
+        printLine(red('Aborting commit...'));
+        exit(1);
+    }
+}
+
+function showSummary(array $output)
+{
+    printBlankLine();
+    printLine(green('Summary:'));
+    outputLastNotEmptyLine($output);
+    printBlankLine();
+}
+
+function outputLastNotEmptyLine(array $output)
+{
+    while (count($output) > 0) {
+        $lastLine = array_pop($output);
+
+        if (trim($lastLine) !== '') {
+            printLine($lastLine);
+            return;
+        }
+    }
+}
+
+function printLine(string $string)
+{
+    echo $string . PHP_EOL;
+}
+
+function printLines(array $lines)
+{
+    echo implode(PHP_EOL, $lines) . PHP_EOL;
+}
+
+function printBlankLine()
+{
+    printLine('');
+}
+
+function red(string $string): string
+{
+    return color('0;31', $string);
+}
+
+function green(string $string): string
+{
+    return color('0;32', $string);
+}
+
+function blue(string $string): string
+{
+    return color('0;34', $string);
+}
+
+function color(string $colorCode, string $string): string
+{
+    return "\e[" . $colorCode . "m" . $string . "\e[0m";
+}

@@ -1,0 +1,8 @@
+#!/usr/bin/env php
+<?php
+
+$src = __DIR__ . '/../git-hooks/pre-commit';
+$dest = __DIR__ . '/../.git/hooks/pre-commit';
+
+copy($src, $dest);
+chmod($dest, 0755);

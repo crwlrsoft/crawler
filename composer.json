@@ -56,6 +56,7 @@
         "test": "@php vendor/bin/pest",
         "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon",
         "cs": "@php vendor/bin/php-cs-fixer fix -v --dry-run",
-        "cs-fix": "@php vendor/bin/php-cs-fixer fix -v"
+        "cs-fix": "@php vendor/bin/php-cs-fixer fix -v",
+        "add-git-hooks": "@php bin/add-git-hooks"
     }
 }
