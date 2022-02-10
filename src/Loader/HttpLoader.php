@@ -4,9 +4,11 @@ namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
+use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\UserAgent;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -20,11 +22,14 @@ class HttpLoader extends Loader implements LoaderInterface
 {
     protected ClientInterface $httpClient;
 
-    public function __construct(UserAgent $userAgent, ClientInterface $httpClient, ?LoggerInterface $logger = null)
-    {
-        parent::__construct($userAgent, $logger);
+    public function __construct(
+        UserAgent $userAgent,
+        ?ClientInterface $httpClient = null,
+        ?LoggerInterface $logger = null
+    ) {
+        parent::__construct($userAgent, $logger ?? new CliLogger());
 
-        $this->httpClient = $httpClient;
+        $this->httpClient = $httpClient ?? new Client();
 
         $this->onSuccess(function (RequestInterface $request, ResponseInterface $response, LoggerInterface $logger) {
             $logger->info('Loaded ' . $request->getUri()->__toString());
