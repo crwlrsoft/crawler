@@ -39,7 +39,8 @@
         "guzzlehttp/guzzle": "^7.4"
     },
     "require-dev": {
-        "pestphp/pest": "^1.21"
+        "pestphp/pest": "^1.21",
+        "mockery/mockery": "^1.5"
     },
     "autoload": {
         "psr-4": {

@@ -16,6 +16,9 @@ abstract class Step implements StepInterface
 
     abstract protected function invoke(Input $input): array;
 
+    /**
+     * Calls the validateAndSanitizeInput method and assures that the invoke method receives valid, sanitized input.
+     */
     final public function invokeStep(Input $input): array
     {
         $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
@@ -23,9 +26,11 @@ abstract class Step implements StepInterface
         return $this->invoke($validInput);
     }
 
-    final public function addLogger(LoggerInterface $logger): void
+    final public function addLogger(LoggerInterface $logger): static
     {
         $this->logger = $logger;
+
+        return $this;
     }
 
     public function initResultResource(string $resultResourceName): static

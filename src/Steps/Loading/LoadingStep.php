@@ -9,8 +9,10 @@ abstract class LoadingStep extends Step implements LoadingStepInterface
 {
     protected LoaderInterface $loader;
 
-    public function addLoader(LoaderInterface $loader)
+    public function addLoader(LoaderInterface $loader): static
     {
         $this->loader = $loader;
+
+        return $this;
     }
 }

@@ -6,7 +6,8 @@ use Crwlr\Crawler\Exceptions\MissingLoaderException;
 use Crwlr\Crawler\Exceptions\MissingUserAgentException;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
-use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
+use Crwlr\Crawler\Steps\Group;
+use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\StepInterface;
 use Psr\Log\LoggerInterface;
 
@@ -35,7 +36,7 @@ class Crawler
             throw new MissingUserAgentException('You must set a UserAgent.');
         }
 
-        return $this->userAgent();
+        return $this->userAgent;
     }
 
     public function setLoader(LoaderInterface $loader): void
@@ -55,17 +56,6 @@ class Crawler
         return $this->loader;
     }
 
-    public function addStep(StepInterface $step): void
-    {
-        $step->addLogger($this->logger());
-
-        if ($step instanceof LoadingStepInterface) {
-            $step->addLoader($this->loader());
-        }
-
-        $this->steps[] = $step;
-    }
-
     public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
@@ -78,6 +68,30 @@ class Crawler
         }
 
         return $this->logger;
+    }
+
+    public function addStep(StepInterface $step): static
+    {
+        $step->addLogger($this->logger());
+
+        if (method_exists($step, 'addLoader')) {
+            $step->addLoader($this->loader());
+        }
+
+        $this->steps[] = $step;
+
+        return $this;
+    }
+
+    public function addGroup(?GroupInterface $group = null): GroupInterface
+    {
+        if (!$group) {
+            $group = new Group();
+        }
+
+        $this->addStep($group);
+
+        return $group;
     }
 
     /**
@@ -104,10 +118,10 @@ class Crawler
     }
 
     /**
-     * @param string|string[] $input
+     * @param mixed $input
      * @return Input[]
      */
-    private function prepareInput(string|array $input): array
+    private function prepareInput(mixed $input): array
     {
         if (!is_array($input)) {
             return [new Input($input)];
