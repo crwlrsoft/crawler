@@ -9,8 +9,7 @@ use Crwlr\Crawler\Collection;
  */
 function helper_getCollection(array $array): Collection
 {
-    return new class($array) extends Collection
-    {
+    return new class($array) extends Collection {
     };
 }
 

@@ -60,8 +60,7 @@ class Http extends LoadingStep
         array $headers = [],
         string|StreamInterface|null $body = null,
         string $httpVersion = '1.1',
-    ): self
-    {
+    ): self {
         return new self('PUT', $headers, $body, $httpVersion);
     }
 
@@ -72,8 +71,7 @@ class Http extends LoadingStep
         array $headers = [],
         string|StreamInterface|null $body = null,
         string $httpVersion = '1.1',
-    ): self
-    {
+    ): self {
         return new self('PATCH', $headers, $body, $httpVersion);
     }
 
@@ -84,8 +82,7 @@ class Http extends LoadingStep
         array $headers = [],
         string|StreamInterface|null $body = null,
         string $httpVersion = '1.1',
-    ): self
-    {
+    ): self {
         return new self('DELETE', $headers, $body, $httpVersion);
     }
 

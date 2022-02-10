@@ -153,7 +153,7 @@ class Crawler
 
         if ($this->outputsContainResults($outputs)) {
             foreach ($outputs as $output) {
-                if (!in_array($output->result, $results)) {
+                if (!in_array($output->result, $results, true)) {
                     $results[] = $output->result;
                 }
             }

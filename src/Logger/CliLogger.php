@@ -55,7 +55,7 @@ class CliLogger implements LoggerInterface
             throw new InvalidArgumentException('Level must be string.');
         }
 
-        if (!in_array($level, ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
+        if (!in_array($level, ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'], true)) {
             throw new UnexpectedValueException('Unknown log level.');
         }
 

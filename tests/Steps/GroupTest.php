@@ -16,7 +16,7 @@ test('The factory method returns a Group object instance', function () {
     expect(Group::new())->toBeInstanceOf(Group::class);
 });
 
-test('You can add a step and it passes on the logger', function() {
+test('You can add a step and it passes on the logger', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
     $step->shouldNotReceive('addLoader');
@@ -61,7 +61,7 @@ test('It returns the results of all steps when invoked', function () {
     $step2->shouldReceive('invokeStep')->once()->andReturn([new Output('2')]);
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('addLogger')->once();
-    $step3->shouldReceive('invokeStep')->once()->andReturn([new Output('3')]);;
+    $step3->shouldReceive('invokeStep')->once()->andReturn([new Output('3')]);
 
     $group = new Group();
     $group->addLogger(new CliLogger());

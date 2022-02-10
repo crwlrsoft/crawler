@@ -44,7 +44,8 @@
         "phpstan/phpstan": "^1.4",
         "phpstan/phpstan-mockery": "^1.0",
         "phpstan/extension-installer": "^1.1",
-        "phpstan/phpstan-phpunit": "^1.0"
+        "phpstan/phpstan-phpunit": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.6"
     },
     "autoload": {
         "psr-4": {
@@ -53,6 +54,8 @@
     },
     "scripts": {
         "test": "@php vendor/bin/pest",
-        "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon"
+        "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon",
+        "cs": "@php vendor/bin/php-cs-fixer fix -v --dry-run",
+        "cs-fix": "@php vendor/bin/php-cs-fixer fix -v"
     }
 }
