@@ -2,12 +2,12 @@
 
 namespace Crwlr\Crawler\Loader\Traits;
 
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\UserAgent;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Crwlr\RobotsTxt\RobotsTxt;
 use Crwlr\Url\Url;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 
@@ -58,10 +58,10 @@ trait CheckRobotsTxt
      */
     protected function loadRobotsTxtContent(string $uri): ?string
     {
-        $response = $this->load($uri);
+        $aggregate = $this->load($uri);
 
-        if ($response instanceof ResponseInterface) {
-            return $response->getBody()->getContents();
+        if ($aggregate instanceof RequestResponseAggregate) {
+            return $aggregate->response->getBody()->getContents();
         }
 
         return null;
