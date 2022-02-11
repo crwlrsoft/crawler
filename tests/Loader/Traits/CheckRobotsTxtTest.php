@@ -1,6 +1,6 @@
 <?php
 
-namespace tests\Loader;
+namespace tests\Loader\Traits;
 
 use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Loader\Traits\CheckRobotsTxt;

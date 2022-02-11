@@ -178,12 +178,12 @@ test('It calls request start and end tracking methods', function (string $loadin
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
     $httpLoader = new class(new UserAgent('Foo'), $httpClient) extends HttpLoader {
-        public function trackRequestStart(): void
+        public function trackRequestStart(?float $microtime = null): void
         {
             $this->logger()->info('track request start');
         }
 
-        public function trackRequestEnd(): void
+        public function trackRequestEnd(?float $microtime = null): void
         {
             $this->logger()->info('track request end');
         }

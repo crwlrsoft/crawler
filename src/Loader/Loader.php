@@ -67,14 +67,14 @@ abstract class Loader implements LoaderInterface
     /**
      * Can be implemented in a child class to track how long a request waited for its response.
      */
-    protected function trackRequestStart(): void
+    protected function trackRequestStart(?float $microtime = null): void
     {
     }
 
     /**
      * Can be implemented in a child class to track how long a request waited for its response.
      */
-    protected function trackRequestEnd(): void
+    protected function trackRequestEnd(?float $microtime = null): void
     {
     }
 

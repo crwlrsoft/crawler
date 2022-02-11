@@ -61,18 +61,18 @@ trait WaitPolitely
         $this->minWaitTime = $minWaitTime;
     }
 
-    protected function trackRequestStart(): void
+    protected function trackRequestStart(?float $microtime = null): void
     {
-        $this->currentRequestStartTimestamp = $this->time();
+        $this->currentRequestStartTimestamp = $microtime ?? $this->time();
     }
 
-    protected function trackRequestEnd(): void
+    protected function trackRequestEnd(?float $microtime = null): void
     {
         if ($this->currentRequestStartTimestamp === 0.0) {
             return;
         }
 
-        $this->latestResponseTimestamp = $this->time();
+        $this->latestResponseTimestamp = $microtime ?? $this->time();
         $this->latestRequestResponseDuration = $this->latestResponseTimestamp - $this->currentRequestStartTimestamp;
         $this->currentRequestStartTimestamp = 0.0;
     }
@@ -91,7 +91,7 @@ trait WaitPolitely
         }
 
         $wait = $waitUntil - $now;
-        $this->logger->info('Wait ' . round($wait, 3) . 's for politeness.');
+        $this->logger->info('Wait ' . round($wait, 4) . 's for politeness.');
         usleep((int) ($wait * 1000000));
     }
 
@@ -118,8 +118,8 @@ trait WaitPolitely
         }
 
         return rand(
-            (int) $this->waitXTimesOfPreviousResponseTime['from'] * 1000000,
-            (int) $this->waitXTimesOfPreviousResponseTime['to'] * 1000000
+            (int) ($this->waitXTimesOfPreviousResponseTime['from'] * 1000000),
+            (int) ($this->waitXTimesOfPreviousResponseTime['to'] * 1000000)
         ) / 1000000;
     }
 }
