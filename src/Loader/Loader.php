@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Loader;
 
+use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\UserAgent;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
@@ -9,6 +10,9 @@ use Psr\SimpleCache\CacheInterface;
 
 abstract class Loader implements LoaderInterface
 {
+    protected LoggerInterface $logger;
+    protected ?CacheInterface $cache = null;
+
     /**
      * @var array|(null|callable[])[]
      */
@@ -21,9 +25,9 @@ abstract class Loader implements LoaderInterface
 
     public function __construct(
         protected UserAgent $userAgent,
-        protected LoggerInterface $logger,
-        protected ?CacheInterface $cache = null,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new CliLogger();
     }
 
     public function beforeLoad(callable $callback): void

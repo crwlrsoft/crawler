@@ -4,7 +4,7 @@ namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
-use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\UserAgent;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
@@ -18,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class HttpLoader extends Loader implements LoaderInterface
+class HttpLoader extends Loader
 {
     protected ClientInterface $httpClient;
 
@@ -27,7 +27,7 @@ class HttpLoader extends Loader implements LoaderInterface
         ?ClientInterface $httpClient = null,
         ?LoggerInterface $logger = null
     ) {
-        parent::__construct($userAgent, $logger ?? new CliLogger());
+        parent::__construct($userAgent, $logger);
 
         $this->httpClient = $httpClient ?? new Client();
 
@@ -54,21 +54,20 @@ class HttpLoader extends Loader implements LoaderInterface
         $this->callHook('beforeLoad', $request);
 
         try {
-            if ($this->cache) {
-                $key = HttpResponseCacheItem::keyFromRequest($request);
+            $requestResponseAggregate = $this->getFromCache($request);
+            $isFromCache = $requestResponseAggregate !== null;
 
-                if ($this->cache->has($key)) {
-                    $this->logger->info('Found ' . $request->getUri() . ' in cache.');
-                    $responseCacheItem = $this->cache->get($key);
-
-                    return $responseCacheItem->aggregate();
-                }
+            if (!$requestResponseAggregate) {
+                $requestResponseAggregate  = $this->handleRedirects($request);
             }
 
-            $requestResponseAggregate = $this->handleRedirects($request);
-            $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
+            if ($requestResponseAggregate->response->getStatusCode() < 400) {
+                $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
+            } else {
+                $this->callHook('onError', $request, $requestResponseAggregate->response);
+            }
 
-            if ($this->cache) {
+            if (!$isFromCache && $this->cache) {
                 $responseCacheItem = HttpResponseCacheItem::fromAggregate($requestResponseAggregate);
                 $this->cache->set($responseCacheItem->key(), $responseCacheItem);
             }
@@ -86,17 +85,56 @@ class HttpLoader extends Loader implements LoaderInterface
 
     /**
      * @throws ClientExceptionInterface
+     * @throws LoadingException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function loadOrFail(mixed $subject): RequestResponseAggregate
     {
         $request = $this->validateSubjectType($subject);
         $this->isAllowedToBeLoaded($request->getUri(), true);
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
-        $requestResponseAggregate = $this->handleRedirects($request);
-        $this->callHook('onSuccess', $request, $requestResponseAggregate);
+
+        $requestResponseAggregate = $this->getFromCache($request);
+        $isFromCache = $requestResponseAggregate !== null;
+
+        if (!$requestResponseAggregate) {
+            $requestResponseAggregate = $this->handleRedirects($request);
+        }
+
+        if ($requestResponseAggregate->response->getStatusCode() >= 400) {
+            throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
+        }
+
+        $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
         $this->callHook('afterLoad', $request);
 
+        if (!$isFromCache && $this->cache) {
+            $responseCacheItem = HttpResponseCacheItem::fromAggregate($requestResponseAggregate);
+            $this->cache->set($responseCacheItem->key(), $responseCacheItem);
+        }
+
         return $requestResponseAggregate;
+    }
+
+    /**
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    protected function getFromCache(RequestInterface $request): ?RequestResponseAggregate
+    {
+        if (!$this->cache) {
+            return null;
+        }
+
+        $key = HttpResponseCacheItem::keyFromRequest($request);
+
+        if ($this->cache->has($key)) {
+            $this->logger->info('Found ' . $request->getUri()->__toString() . ' in cache.');
+            $responseCacheItem = $this->cache->get($key);
+
+            return $responseCacheItem->aggregate();
+        }
+
+        return null;
     }
 
     /**
