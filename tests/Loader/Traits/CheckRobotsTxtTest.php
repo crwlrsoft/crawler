@@ -9,16 +9,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
-
-function helper_getDummyRobotsTxtResponse(?string $forDomain = null): Response
-{
-    return new Response(
-        200,
-        [],
-        "User-agent: FooBot\n" .
-        "Disallow: " . ($forDomain ? '/' . $forDomain . '/secret' : 'secret')
-    );
-}
+use function tests\helper_getDummyRobotsTxtResponse;
 
 test(
     'It automatically loads an authority\'s robots.txt, parses it and checks if a certain uri is allowed',

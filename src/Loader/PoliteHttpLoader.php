@@ -3,9 +3,11 @@
 namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Traits\CheckRobotsTxt;
 use Crwlr\Crawler\Loader\Traits\WaitPolitely;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class PoliteHttpLoader extends HttpLoader
 {
@@ -20,6 +22,8 @@ class PoliteHttpLoader extends HttpLoader
 
     /**
      * @throws ClientExceptionInterface
+     * @throws LoadingException
+     * @throws InvalidArgumentException
      */
     public function loadOrFail(mixed $subject): RequestResponseAggregate
     {

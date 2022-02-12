@@ -60,6 +60,10 @@ trait CheckRobotsTxt
     {
         $aggregate = $this->load($uri);
 
+        if (method_exists($this, 'waitUntilNextRequestCanBeSent')) {
+            $this->waitUntilNextRequestCanBeSent();
+        }
+
         if ($aggregate instanceof RequestResponseAggregate) {
             return $aggregate->response->getBody()->getContents();
         }
