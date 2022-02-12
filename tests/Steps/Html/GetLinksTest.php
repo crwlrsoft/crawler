@@ -67,7 +67,7 @@ test('When selector matches on a non-link element it\'s ignored', function () {
     $links = $step->invokeStep(new Input(
         new RequestResponseAggregate(
             new Request('GET', 'https://www.otsch.codes'),
-            new Response(200, [], '<a class="link" href="/foo">Foo</a><span class="link">Bar</span>')
+            new Response(200, [], '<a class="link" href="foo">Foo</a><span class="link">Bar</span>')
         )
     ));
 

@@ -8,7 +8,7 @@ use Mockery;
 use Psr\SimpleCache\CacheInterface;
 
 test('You can set multiple hook callbacks for one type and they are executed when called', function (string $hookName) {
-    $loader = new class(new UserAgent('FooBot'), $hookName) extends Loader {
+    $loader = new class (new UserAgent('FooBot'), $hookName) extends Loader {
         public function __construct(UserAgent $userAgent, private string $hookName)
         {
             parent::__construct($userAgent);
@@ -51,7 +51,7 @@ test('You can set multiple hook callbacks for one type and they are executed whe
 ]);
 
 test('You can set a cache and use it in the load function', function () {
-    $loader = new class(new UserAgent('FooBot')) extends Loader {
+    $loader = new class (new UserAgent('FooBot')) extends Loader {
         public function load(mixed $subject): mixed
         {
             if ($this->cache) {

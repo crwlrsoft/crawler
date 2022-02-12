@@ -19,7 +19,7 @@ test(
             return $request->getUri()->__toString() === 'https://www.crwlr.software/robots.txt';
         })->andReturn(helper_getDummyRobotsTxtResponse());
         $client->shouldReceive('sendRequest')->once()->andReturn(new Response());
-        $loader = new class(new UserAgent('FooBot'), $client) extends HttpLoader {
+        $loader = new class (new UserAgent('FooBot'), $client) extends HttpLoader {
             use CheckRobotsTxt;
         };
 
@@ -47,7 +47,7 @@ test(
             return $request->getUri()->__toString() === 'https://www.otsch.codes/robots.txt';
         })->andReturn(helper_getDummyRobotsTxtResponse('otsch.codes'));
         $client->shouldReceive('sendRequest')->times(3)->andReturn(new Response());
-        $loader = new class(new UserAgent('FooBot'), $client) extends HttpLoader {
+        $loader = new class (new UserAgent('FooBot'), $client) extends HttpLoader {
             use CheckRobotsTxt;
         };
 

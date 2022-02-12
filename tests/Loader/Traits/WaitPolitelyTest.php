@@ -19,7 +19,7 @@ function helper_getLoaderWhereFirstRequestTakes100Milliseconds(): HttpLoader
     // Built here so it won't take time to build a new response in the load method for the timing tests.
     $response = new RequestResponseAggregate(new Request('GET', '/'), new Response());
 
-    return new class(new UserAgent('FooBot'), $response) extends HttpLoader {
+    return new class (new UserAgent('FooBot'), $response) extends HttpLoader {
         use WaitPolitely;
 
         public function __construct(

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /** @var TestCase $this */
 
 test('You can add a logger and it is available within the invoke method', function () {
-    $step = new class extends Step {
+    $step = new class () extends Step {
         protected function invoke(Input $input): array
         {
             $this->logger->info('logging works');
@@ -29,7 +29,7 @@ test('You can add a logger and it is available within the invoke method', functi
 test(
     'The output method returns an array and wraps the return values in Output objects by default without Result objects',
     function () {
-        $step = new class extends Step {
+        $step = new class () extends Step {
             protected function invoke(Input $input): array
             {
                 return $this->output('returnValue', $input);
@@ -46,7 +46,7 @@ test(
 test(
     'The output method creates a Result object that is added to the Output object when you define a result resource',
     function () {
-        $step = new class extends Step {
+        $step = new class () extends Step {
             protected function invoke(Input $input): array
             {
                 return $this->output('returnValue', $input);
@@ -63,7 +63,7 @@ test(
 test(
     'The output method appends properties to a result object that was already included with the Input object',
     function () {
-        $step = new class extends Step {
+        $step = new class () extends Step {
             protected function invoke(Input $input): array
             {
                 return $this->output('returnValue', $input);
@@ -82,7 +82,7 @@ test(
 );
 
 test('The invokeStep method calls the validateAndSanitizeInput method', function () {
-    $step = new class extends Step {
+    $step = new class () extends Step {
         public function validateAndSanitizeInput(Input $input): mixed
         {
             return $input->get() . ' validated and sanitized';

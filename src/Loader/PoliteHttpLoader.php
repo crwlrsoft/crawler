@@ -11,7 +11,8 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class PoliteHttpLoader extends HttpLoader
 {
-    use WaitPolitely, CheckRobotsTxt;
+    use WaitPolitely;
+    use CheckRobotsTxt;
 
     public function load(mixed $subject): ?RequestResponseAggregate
     {

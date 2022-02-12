@@ -7,7 +7,7 @@ use Crwlr\Crawler\Result;
 
 function helper_getIoInstance(mixed $value, ?Result $result = null): Io
 {
-    return new class($value, $result) extends Io {
+    return new class ($value, $result) extends Io {
     };
 }
 

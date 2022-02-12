@@ -117,7 +117,7 @@ test('It throws an Exception when request fails in loadOrFail method', function 
 test('You can implement logic to disallow certain request', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-    $httpLoader = new class(new UserAgent('Foo'), $httpClient) extends HttpLoader {
+    $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
         public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
         {
             return $uri->__toString() === '/foo';
@@ -136,7 +136,7 @@ test(
     function () {
         $httpClient = Mockery::mock(ClientInterface::class);
         $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-        $httpLoader = new class(new UserAgent('Foo'), $httpClient) extends HttpLoader {
+        $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
             public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
             {
                 if ($throwsException) {
@@ -177,7 +177,7 @@ test('It automatically handles redirects', function (string $loadingMethod) {
 test('It calls request start and end tracking methods', function (string $loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
-    $httpLoader = new class(new UserAgent('Foo'), $httpClient) extends HttpLoader {
+    $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
         public function trackRequestStart(?float $microtime = null): void
         {
             $this->logger()->info('track request start');
