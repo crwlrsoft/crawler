@@ -1,6 +1,6 @@
 <?php
 
-namespace tests\Steps\Http;
+namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\HttpLoader;
