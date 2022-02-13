@@ -10,10 +10,13 @@ use Crwlr\Crawler\UserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
+
+/** @var TestCase $this */
 
 test('It accepts url string as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
@@ -190,7 +193,7 @@ test('It calls request start and end tracking methods', function (string $loadin
     };
     $httpLoader->load('https://www.twitter.com');
 
-    $output = $this->getActualOutput(); // @phpstan-ignore-line
+    $output = $this->getActualOutput();
     expect($output)->toContain('track request start');
     expect($output)->toContain('track request end');
 })->with(['load', 'loadOrFail']);
@@ -201,7 +204,7 @@ test('It automatically logs loading success message', function ($loadingMethod) 
     $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
     $httpLoader->{$loadingMethod}(new Request('GET', 'https://phpstan.org/'));
 
-    $output = $this->getActualOutput(); // @phpstan-ignore-line
+    $output = $this->getActualOutput();
     expect($output)->toContain('Loaded https://phpstan.org/');
 })->with(['load', 'loadOrFail']);
 
@@ -211,7 +214,7 @@ test('It automatically logs loading error message in normal load method', functi
     $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
     $httpLoader->load(new Request('GET', 'https://phpstan.org/'));
 
-    $output = $this->getActualOutput(); // @phpstan-ignore-line
+    $output = $this->getActualOutput();
     expect($output)->toContain('Failed to load https://phpstan.org/');
 });
 

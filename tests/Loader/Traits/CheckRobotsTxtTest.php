@@ -8,8 +8,11 @@ use Crwlr\Crawler\UserAgent;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use function tests\helper_getDummyRobotsTxtResponse;
+
+/** @var TestCase $this */
 
 test(
     'It automatically loads an authority\'s robots.txt, parses it and checks if a certain uri is allowed',
@@ -25,13 +28,13 @@ test(
 
         $loader->load('https://www.crwlr.software/packages');
 
-        $output = $this->getActualOutput(); // @phpstan-ignore-line
+        $output = $this->getActualOutput();
         expect($output)->toContain('Loaded https://www.crwlr.software/robots.txt');
         expect($output)->toContain('Loaded https://www.crwlr.software/packages');
 
         $loader->load('https://www.crwlr.software/secret');
 
-        $output = $this->getActualOutput(); // @phpstan-ignore-line
+        $output = $this->getActualOutput();
         expect($output)->toContain('Crawler ist not allowed to load https://www.crwlr.software/secret');
     }
 );
@@ -57,7 +60,7 @@ test(
         $loader->load('https://www.crwlr.software/blog');
         $loader->load('https://www.otsch.codes/otsch.codes/secret');
 
-        $output = $this->getActualOutput(); // @phpstan-ignore-line
+        $output = $this->getActualOutput();
         // Check that it loaded both robots.txt files
         expect($output)->toContain('Loaded https://www.crwlr.software/robots.txt');
         expect($output)->toContain('Loaded https://www.otsch.codes/robots.txt');
