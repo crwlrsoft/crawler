@@ -160,7 +160,7 @@ class Crawler
         } else {
             foreach ($outputs as $output) {
                 $result = new Result();
-                $result->setProperty('unnamed', $output->get());
+                $result->set('unnamed', $output->get());
                 $results[] = $result;
             }
         }

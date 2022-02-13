@@ -88,7 +88,7 @@ abstract class Step implements StepInterface
                     throw new Exception('No resource property defined');
                 }
 
-                $result->setProperty($this->resultResourcePropertyName, $value);
+                $result->set($this->resultResourcePropertyName, $value);
                 $outputs[] = new Output($value, $result);
             } else {
                 if ($this->resultResourcePropertyName) {
@@ -96,7 +96,7 @@ abstract class Step implements StepInterface
                         throw new Exception('Defined a resource property name but no resource was initialized yet!');
                     }
 
-                    $input->result->setProperty($this->resultResourcePropertyName, $value);
+                    $input->result->set($this->resultResourcePropertyName, $value);
                 }
 
                 $outputs[] = new Output($value, $input->result);

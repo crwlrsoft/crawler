@@ -18,7 +18,7 @@ class Result
         return $this->resourceName;
     }
 
-    public function setProperty(string $key, mixed $value): void
+    public function set(string $key, mixed $value): void
     {
         if (array_key_exists($key, $this->data)) {
             if (is_array($this->data[$key])) {
@@ -29,6 +29,15 @@ class Result
         } else {
             $this->data[$key] = $value;
         }
+    }
+
+    public function get(string $key, mixed $default = null): mixed
+    {
+        if (array_key_exists($key, $this->data)) {
+            return $this->data[$key];
+        }
+
+        return $default;
     }
 
     /**

@@ -71,7 +71,7 @@ test(
         };
         $step->resultResourceProperty('property');
         $prevResult = new Result('someResource');
-        $prevResult->setProperty('prevProperty', 'foobar');
+        $prevResult->set('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
         expect($output[0]->result)->toBeInstanceOf(Result::class);
         expect($output[0]->result->toArray())->toBe([ // @phpstan-ignore-line
