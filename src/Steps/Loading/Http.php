@@ -5,7 +5,6 @@ namespace Crwlr\Crawler\Steps\Loading;
 use Crwlr\Crawler\Input;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Utils;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -27,10 +26,6 @@ class Http extends LoadingStep
         string|StreamInterface|null $body = null,
         string $httpVersion = '1.1',
     ) {
-        if (is_string($body)) {
-            $body = Utils::streamFor($body);
-        }
-
         $this->request = new Request($method, '/', $headers, $body, $httpVersion);
     }
 
