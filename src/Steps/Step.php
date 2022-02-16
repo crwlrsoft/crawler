@@ -12,6 +12,9 @@ use Psr\Log\LoggerInterface;
 abstract class Step implements StepInterface
 {
     protected LoggerInterface $logger;
+    protected bool $repeat = false;
+    protected ?int $maxRepetitions;
+    protected bool $allowResultDuplicates = false;
     private ?string $resultResourceName = null;
     private ?string $resultResourcePropertyName = null;
 
@@ -25,6 +28,29 @@ abstract class Step implements StepInterface
      */
     final public function invokeStep(Input $input): array
     {
+        if ($this->repeat === true) {
+            $inputs = [$input];
+            $outputs = [];
+            $repetitions = 0;
+
+            while (!empty($output) && $repetitions < $this->maxRepetitions) {
+                $newInputs = [];
+
+                foreach ($inputs as $input) {
+                    $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
+                    $output = $this->invoke($validInput);
+
+                    if (!empty($output)) {
+                        array_push($outputs, ...$output);
+                        array_push($newInputs, ...$output);
+                    }
+
+                    $repetitions++;
+                }
+            }
+
+            return $outputs;
+        }
         $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
 
         return $this->invoke($validInput);
@@ -47,6 +73,17 @@ abstract class Step implements StepInterface
     public function resultResourceProperty(string $propertyName): static
     {
         $this->resultResourcePropertyName = $propertyName;
+
+        return $this;
+    }
+
+    public function repeatWithOutputUntilNoMoreResults(
+        ?int $maxRepetitions = 100,
+        bool $allowDuplicateResults = false
+    ): static {
+        $this->repeat = true;
+        $this->maxRepetitions = $maxRepetitions;
+        $this->allowResultDuplicates = $allowDuplicateResults;
 
         return $this;
     }

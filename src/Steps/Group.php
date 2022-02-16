@@ -7,20 +7,22 @@ use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Psr\Log\LoggerInterface;
 
-final class Group implements GroupInterface
+abstract class Group implements GroupInterface
 {
     /**
      * @var StepInterface[]
      */
-    private array $steps = [];
+    protected array $steps = [];
 
     protected LoggerInterface $logger;
     protected ?LoaderInterface $loader;
 
-    public static function new(): self
-    {
-        return new self();
-    }
+    abstract public static function new(): GroupInterface;
+
+    /**
+     * @return Output[]
+     */
+    abstract public function invokeStep(Input $input): array;
 
     public function addStep(StepInterface $step): self
     {
@@ -33,21 +35,6 @@ final class Group implements GroupInterface
         $this->steps[] = $step;
 
         return $this;
-    }
-
-    /**
-     * @param Input $input
-     * @return Output[]
-     */
-    public function invokeStep(Input $input): array
-    {
-        $outputs = [];
-
-        foreach ($this->steps as $step) {
-            array_push($outputs, ...$step->invokeStep($input));
-        }
-
-        return $outputs;
     }
 
     public function addLogger(LoggerInterface $logger): static

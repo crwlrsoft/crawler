@@ -80,7 +80,7 @@ test('You can add step groups and the Crawler class passes on its Logger and Loa
     $crawler->addGroup($group);
 });
 
-test('You can add step groups and they are invoked when the Crawler is run', function () {
+test('You can add a parallel step group and it is invoked when the Crawler is run', function () {
     $group = Mockery::mock(GroupInterface::class);
     $group->shouldReceive('invokeStep')->once()->andReturn([new Output('👍🏻')]);
     $group->shouldReceive('addLogger')->once();

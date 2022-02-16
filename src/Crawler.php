@@ -6,7 +6,6 @@ use Crwlr\Crawler\Exceptions\MissingLoaderException;
 use Crwlr\Crawler\Exceptions\MissingUserAgentException;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
-use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\StepInterface;
 use Psr\Log\LoggerInterface;
@@ -83,15 +82,11 @@ class Crawler
         return $this;
     }
 
-    public function addGroup(?GroupInterface $group = null): GroupInterface
+    public function addGroup(GroupInterface $group): static
     {
-        if (!$group) {
-            $group = new Group();
-        }
-
         $this->addStep($group);
 
-        return $group;
+        return $this;
     }
 
     /**
