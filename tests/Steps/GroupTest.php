@@ -5,11 +5,13 @@ namespace tests\Steps;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgent;
+use Generator;
 use Mockery;
 
 class DummyGroup extends Group
@@ -19,9 +21,9 @@ class DummyGroup extends Group
         return new self();
     }
 
-    public function invokeStep(Input $input): array
+    public function invokeStep(Input $input): Generator
     {
-        return [];
+        yield new Output('');
     }
 }
 

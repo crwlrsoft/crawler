@@ -8,34 +8,36 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
 use PHPUnit\Framework\TestCase;
+use function tests\helper_generatorToArray;
+use function tests\helper_traverseIterable;
 
 /** @var TestCase $this */
 
 test('You can add a logger and it is available within the invoke method', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): array
+        protected function invoke(Input $input): string
         {
             $this->logger->info('logging works');
-
-            return $this->output('something', $input);
+            return 'something';
         }
     };
     $step->addLogger(new CliLogger());
-    $step->invokeStep(new Input('test'));
+    helper_traverseIterable($step->invokeStep(new Input('test')));
     $output = $this->getActualOutput();
     expect($output)->toContain('logging works');
 });
 
 test(
-    'The output method returns an array and wraps the return values in Output objects by default without Result objects',
+    'The invokeStep method wraps the values returned by invoke in Output objects by default without Result objects',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): array
+            protected function invoke(Input $input): string
             {
-                return $this->output('returnValue', $input);
+                return 'returnValue';
             }
         };
         $output = $step->invokeStep(new Input('inputValue'));
+        $output = iterator_to_array($output);
         expect($output)->toHaveCount(1);
         expect($output[0])->toBeInstanceOf(Output::class);
         expect($output[0]->get())->toBe('returnValue');
@@ -44,39 +46,63 @@ test(
 );
 
 test(
-    'The output method creates a Result object that is added to the Output object when you define a result resource',
+    'The invokeStep method creates a Result object that is added to the Output when you define a result resource',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): array
+            protected function invoke(Input $input): string
             {
-                return $this->output('returnValue', $input);
+                return 'returnValue';
             }
         };
         $step->initResultResource('someResource')
             ->resultResourceProperty('property');
         $output = $step->invokeStep(new Input('inputValue'));
+        $output = helper_generatorToArray($output);
+
         expect($output[0]->result)->toBeInstanceOf(Result::class);
         expect($output[0]->result->toArray())->toBe(['property' => 'returnValue']); // @phpstan-ignore-line
     }
 );
 
 test(
-    'The output method appends properties to a result object that was already included with the Input object',
+    'The invokeStep method appends properties to a result object that was already included with the Input object',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): array
+            protected function invoke(Input $input): string
             {
-                return $this->output('returnValue', $input);
+                return 'returnValue';
             }
         };
         $step->resultResourceProperty('property');
         $prevResult = new Result('someResource');
         $prevResult->set('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
+        $output = helper_generatorToArray($output);
         expect($output[0]->result)->toBeInstanceOf(Result::class);
         expect($output[0]->result->toArray())->toBe([ // @phpstan-ignore-line
             'prevProperty' => 'foobar',
             'property' => 'returnValue',
+        ]);
+    }
+);
+
+test(
+    'The invokeStep method also passes on Result objects through further steps when they don\'t define further ' .
+    'result resource properties',
+    function () {
+        $step = new class () extends Step {
+            protected function invoke(Input $input): string
+            {
+                return 'returnValue';
+            }
+        };
+        $prevResult = new Result('someResource');
+        $prevResult->set('prevProperty', 'foobar');
+        $output = $step->invokeStep(new Input('inputValue', $prevResult));
+        $output = helper_generatorToArray($output);
+        expect($output[0]->result)->toBeInstanceOf(Result::class);
+        expect($output[0]->result->toArray())->toBe([ // @phpstan-ignore-line
+            'prevProperty' => 'foobar',
         ]);
     }
 );
@@ -88,11 +114,12 @@ test('The invokeStep method calls the validateAndSanitizeInput method', function
             return $input->get() . ' validated and sanitized';
         }
 
-        protected function invoke(Input $input): array
+        protected function invoke(Input $input): string
         {
-            return $this->output($input->get(), $input);
+            return $input->get();
         }
     };
     $output = $step->invokeStep(new Input('inputValue'));
+    $output = iterator_to_array($output);
     expect($output[0]->get())->toBe('inputValue validated and sanitized');
 });

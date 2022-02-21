@@ -7,6 +7,8 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Url\Url;
 use DOMElement;
+use Exception;
+use Generator;
 use InvalidArgumentException;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -31,7 +33,12 @@ class GetLinks extends Step
         throw new InvalidArgumentException('Input must be an instance of RequestResponseAggregate.');
     }
 
-    protected function invoke(Input $input): array
+    /**
+     * @param Input $input
+     * @return Generator<string>
+     * @throws Exception
+     */
+    protected function invoke(Input $input): Generator
     {
         $domCrawler = $input->get();
 
@@ -43,24 +50,14 @@ class GetLinks extends Step
             $this->logger->info('Select all links in document.');
         }
 
-        $links = $domCrawler->filter($selector);
-
-        if ($links->count() === 0) {
-            return $this->output([], $input);
-        }
-
-        $absoluteLinks = [];
-
-        foreach ($links as $link) {
+        foreach ($domCrawler->filter($selector) as $link) {
             /** @var DOMElement $link */
             if ($link->nodeName !== 'a') {
                 $this->logger->warning('Selector selected <' . $link->nodeName . '> html element. Ignored it.');
                 continue;
             }
 
-            $absoluteLinks[] = $this->baseUri->resolve($link->getAttribute('href'))->__toString();
+            yield $this->baseUri->resolve($link->getAttribute('href'))->__toString();
         }
-
-        return $this->output($absoluteLinks, $input);
     }
 }

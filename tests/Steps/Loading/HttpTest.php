@@ -10,13 +10,14 @@ use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
+use function tests\helper_traverseIterable;
 
 test('It can be invoked with a string as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
     $loader->shouldReceive('load')->once();
     $step = new Http('GET');
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://www.foo.bar/baz'));
+    helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
 });
 
 test('It can be invoked with a PSR-7 Uri object as input', function () {
@@ -24,14 +25,14 @@ test('It can be invoked with a PSR-7 Uri object as input', function () {
     $loader->shouldReceive('load')->once();
     $step = new Http('GET');
     $step->addLoader($loader);
-    $step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/')));
+    helper_traverseIterable($step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/'))));
 });
 
 test('It throws an InvalidArgumentExpection when invoked with something else as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
     $step = new Http('GET');
     $step->addLoader($loader);
-    $step->invokeStep(new Input(new stdClass()));
+    helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
 })->throws(InvalidArgumentException::class);
 
 test('You can set the request method via constructor', function (string $httpMethod) {
@@ -41,7 +42,7 @@ test('You can set the request method via constructor', function (string $httpMet
     })->once();
     $step = new Http($httpMethod);
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://www.foo.bar/baz'));
+    helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
 })->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
 test('You can set request headers via constructor', function () {
@@ -71,7 +72,7 @@ test('You can set request headers via constructor', function () {
     })->once();
     $step = new Http('GET', $headers);
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://www.crwlr.software/packages/url'));
+    helper_traverseIterable($step->invokeStep(new Input('https://www.crwlr.software/packages/url')));
 });
 
 test('You can set request body via constructor', function () {
@@ -82,7 +83,7 @@ test('You can set request body via constructor', function () {
     })->once();
     $step = new Http('PATCH', [], $body);
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://github.com/'));
+    helper_traverseIterable($step->invokeStep(new Input('https://github.com/')));
 });
 
 test('You can set the http version for the request via constructor', function (string $httpVersion) {
@@ -93,7 +94,7 @@ test('You can set the http version for the request via constructor', function (s
     })->once();
     $step = new Http('PATCH', [], 'body', $httpVersion);
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://packagist.org/packages/crwlr/url'));
+    helper_traverseIterable($step->invokeStep(new Input('https://packagist.org/packages/crwlr/url')));
 })->with(['1.0', '1.1', '2.0']);
 
 test('It has static methods to create instances with all the different http methods', function (string $httpMethod) {
@@ -103,5 +104,5 @@ test('It has static methods to create instances with all the different http meth
     })->once();
     $step = Http::{strtolower($httpMethod)}();
     $step->addLoader($loader);
-    $step->invokeStep(new Input('https://dev.to/otsch'));
+    helper_traverseIterable($step->invokeStep(new Input('https://dev.to/otsch')));
 })->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);

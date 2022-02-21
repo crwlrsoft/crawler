@@ -8,6 +8,9 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\ParallelGroup;
 use Crwlr\Crawler\Steps\StepInterface;
 use Mockery;
+use function tests\helper_generatorToArray;
+use function tests\helper_getGenerator;
+use function tests\helper_traverseIterable;
 
 test('The factory method returns a Group object instance', function () {
     expect(ParallelGroup::new())->toBeInstanceOf(ParallelGroup::class);
@@ -27,24 +30,25 @@ test('You can add multiple steps and invokeStep calls all of them', function () 
     $group = new ParallelGroup();
     $group->addLogger(new CliLogger());
     $group->addStep($step1)->addStep($step2)->addStep($step3);
-    $group->invokeStep(new Input('foo'));
+    helper_traverseIterable($group->invokeStep(new Input('foo')));
 });
 
 test('It returns the results of all steps when invoked', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
-    $step1->shouldReceive('invokeStep')->once()->andReturn([new Output('1')]);
+    $step1->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('1')]));
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
-    $step2->shouldReceive('invokeStep')->once()->andReturn([new Output('2')]);
+    $step2->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('2')]));
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('addLogger')->once();
-    $step3->shouldReceive('invokeStep')->once()->andReturn([new Output('3')]);
+    $step3->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('3')]));
 
     $group = new ParallelGroup();
     $group->addLogger(new CliLogger());
     $group->addStep($step1)->addStep($step2)->addStep($step3);
     $result = $group->invokeStep(new Input('foo'));
+    $result = helper_generatorToArray($result);
 
     expect($result)->toBeArray();
     expect($result)->toHaveCount(3);

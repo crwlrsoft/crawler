@@ -24,6 +24,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($inputString);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     expect($results)->toHaveCount(1);
     $firstResult = reset($results);
     expect($firstResult)->toBeInstanceOf(Output::class);
@@ -39,6 +40,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($responseObject);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('yep'); // @phpstan-ignore-line
@@ -55,6 +57,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($aggregate);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('yep'); // @phpstan-ignore-line
@@ -75,6 +78,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('<p>this is a paragraph</p>'); // @phpstan-ignore-line
@@ -95,6 +99,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('<div id="selectThis">yo</div>'); // @phpstan-ignore-line
@@ -115,6 +120,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('one two'); // @phpstan-ignore-line
@@ -135,6 +141,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('one'); // @phpstan-ignore-line
@@ -149,6 +156,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('bar'); // @phpstan-ignore-line
@@ -162,6 +170,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = iterator_to_array($results);
     $result = reset($results);
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('foo'); // @phpstan-ignore-line

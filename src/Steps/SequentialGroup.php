@@ -2,8 +2,11 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use AppendIterator;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
+use Generator;
+use NoRewindIterator;
 
 final class SequentialGroup extends Group
 {
@@ -14,36 +17,36 @@ final class SequentialGroup extends Group
 
     /**
      * @param Input $input
-     * @return Output[]
+     * @return Generator<Output>
      */
-    public function invokeStep(Input $input): array
+    public function invokeStep(Input $input): Generator
     {
         $inputs = [$input];
-        $outputs = [];
 
         foreach ($this->steps as $step) {
-            $nextInputs = [];
+            $outputs = new AppendIterator();
 
             foreach ($inputs as $input) {
-                $stepOutput = $step->invokeStep($input);
-                array_push($outputs, ...$stepOutput);
-                array_push($nextInputs, ...$stepOutput);
+                if ($input instanceof Output) {
+                    $input = new Input($input);
+                }
+
+                $outputs->append(new NoRewindIterator($step->invokeStep($input)));
             }
 
-            $inputs = $this->outputsToInputs($nextInputs);
+            $inputs = [];
+
+            foreach ($outputs as $output) {
+                if ($output === null) {
+                    continue;
+                }
+
+                yield $output;
+
+                if ($step !== end($this->steps)) {
+                    $inputs[] = $output;
+                }
+            }
         }
-
-        return $outputs;
-    }
-
-    /**
-     * @param array|Output[] $outputs
-     * @return Input[]
-     */
-    private function outputsToInputs(array $outputs): array
-    {
-        return array_map(function ($output) {
-            return new Input($output);
-        }, $outputs);
     }
 }

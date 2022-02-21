@@ -10,7 +10,7 @@ class Io
     {
         $this->value = $value instanceof Io ? $value->get() : $value;
 
-        if (!$result && $value instanceof Io) {
+        if (!$this->result && $value instanceof Io) {
             $this->result = $value->result;
         }
     }

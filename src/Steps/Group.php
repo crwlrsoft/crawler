@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
+use Generator;
 use Psr\Log\LoggerInterface;
 
 abstract class Group implements GroupInterface
@@ -20,9 +21,9 @@ abstract class Group implements GroupInterface
     abstract public static function new(): GroupInterface;
 
     /**
-     * @return Output[]
+     * @return Generator<Output>
      */
-    abstract public function invokeStep(Input $input): array;
+    abstract public function invokeStep(Input $input): Generator;
 
     public function addStep(StepInterface $step): self
     {
@@ -49,5 +50,16 @@ abstract class Group implements GroupInterface
         $this->loader = $loader;
 
         return $this;
+    }
+
+    public function resultDefined(): bool
+    {
+        foreach ($this->steps as $step) {
+            if ($step->resultDefined()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

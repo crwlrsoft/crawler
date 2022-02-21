@@ -10,6 +10,8 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use stdClass;
+use function tests\helper_generatorToArray;
+use function tests\helper_traverseIterable;
 
 test('It works with a RequestResponseAggregate as input', function () {
     $step = new GetLinks();
@@ -21,16 +23,16 @@ test('It works with a RequestResponseAggregate as input', function () {
         )
     ));
 
-    expect($links)->toBeArray();
-    expect($links)->toHaveCount(1);
-    $link = reset($links)->get(); // @phpstan-ignore-line
-    expect($link)->toBe('https://www.example.com/blog');
+    expect($links)->toBeIterable();
+    expect($links->current()->get())->toBe('https://www.example.com/blog');
+    $links->next();
+    expect($links->current())->toBeNull();
 });
 
 test('It does not work with something else as input', function () {
     $step = new GetLinks();
     $step->addLogger(new CliLogger());
-    $step->invokeStep(new Input(new stdClass()));
+    helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
 })->throws(InvalidArgumentException::class);
 
 test('When passing a CSS selector it only selects matching links', function () {
@@ -54,7 +56,7 @@ HTML
         )
     ));
 
-    expect($links)->toBeArray();
+    $links = helper_generatorToArray($links);
     expect($links)->toHaveCount(3);
     expect(reset($links)->get())->toBe('https://www.example.com/company/jobs'); // @phpstan-ignore-line
     expect(next($links)->get())->toBe('https://www.example.com/company/numbers'); // @phpstan-ignore-line
@@ -71,7 +73,7 @@ test('When selector matches on a non-link element it\'s ignored', function () {
         )
     ));
 
-    expect($links)->toBeArray();
+    $links = iterator_to_array($links);
     expect($links)->toHaveCount(1);
     expect(reset($links)->get())->toBe('https://www.otsch.codes/foo'); // @phpstan-ignore-line
 });

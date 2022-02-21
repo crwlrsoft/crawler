@@ -2,12 +2,14 @@
 
 namespace Crwlr\Crawler;
 
+use AppendIterator;
 use Crwlr\Crawler\Exceptions\MissingLoaderException;
 use Crwlr\Crawler\Exceptions\MissingUserAgentException;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\StepInterface;
+use Generator;
 use Psr\Log\LoggerInterface;
 
 class Crawler
@@ -91,25 +93,33 @@ class Crawler
 
     /**
      * @param mixed $input
-     * @return Results
+     * @return Generator<Result>
      */
-    public function run(mixed $input): Results
+    public function run(mixed $input): Generator
     {
         $inputs = $this->prepareInput($input);
-        $outputs = [];
 
-        foreach ($this->steps as $key => $step) {
-            if ($key > 0) {
-                $inputs = $this->outputsToInputs($outputs);
-                $outputs = [];
-            }
+        foreach ($this->steps as $step) {
+            $nextIterationInputs = new AppendIterator();
 
             foreach ($inputs as $input) {
-                array_push($outputs, ...$step->invokeStep($input));
+                if ($input instanceof Output) {
+                    $input = new Input($input);
+                }
+
+                $nextIterationInputs->append($step->invokeStep($input));
+            }
+
+            if ($step !== end($this->steps)) {
+                $inputs = $nextIterationInputs;
+            } else {
+                $outputs = $nextIterationInputs;
             }
         }
 
-        return $this->returnResults($outputs);
+        if (isset($outputs) && $outputs instanceof AppendIterator) {
+            yield from $this->returnResults($outputs);
+        }
     }
 
     /**
@@ -128,49 +138,39 @@ class Crawler
     }
 
     /**
-     * @param array|Output[] $outputs
-     * @return Input[]
+     * @param AppendIterator<Output> $outputs
+     * @return Generator<Result>
      */
-    private function outputsToInputs(array $outputs): array
+    private function returnResults(AppendIterator $outputs): Generator
     {
-        return array_map(function ($output) {
-            return new Input($output);
-        }, $outputs);
-    }
+        if ($this->anyResultResourcesDefinedInSteps()) {
+            $results = [];
 
-    /**
-     * @param array|Output[] $outputs
-     * @return Results
-     */
-    private function returnResults(array $outputs): Results
-    {
-        $results = [];
-
-        if ($this->outputsContainResults($outputs)) {
             foreach ($outputs as $output) {
-                if (!in_array($output->result, $results, true)) {
+                if ($output->result !== null && !in_array($output->result, $results, true)) {
                     $results[] = $output->result;
                 }
+            }
+
+            // yield results only when iterated over final outputs, because that could still add properties to result
+            // resources.
+            foreach ($results as $result) {
+                yield $result;
             }
         } else {
             foreach ($outputs as $output) {
                 $result = new Result();
                 $result->set('unnamed', $output->get());
-                $results[] = $result;
+
+                yield $result;
             }
         }
-
-        return new Results($results);
     }
 
-    /**
-     * @param array|Output[] $outputs
-     * @return bool
-     */
-    private function outputsContainResults(array $outputs): bool
+    private function anyResultResourcesDefinedInSteps(): bool
     {
-        foreach ($outputs as $output) {
-            if ($output->result) {
+        foreach ($this->steps as $step) {
+            if ($step->resultDefined()) {
                 return true;
             }
         }

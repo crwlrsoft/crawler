@@ -78,7 +78,11 @@ class QuerySelector extends Step
         throw new InvalidArgumentException('Input must be string, PSR-7 Response or RequestResponseAggregate.');
     }
 
-    protected function invoke(Input $input): array
+    /**
+     * @param Input $input
+     * @return string|mixed
+     */
+    protected function invoke(Input $input): mixed
     {
         $getWhat = $this->getWhat;
         $argument = $this->argument;
@@ -90,8 +94,6 @@ class QuerySelector extends Step
 
         $resultNode = $input->get()->filter($this->selector)->first();
 
-        $result = $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
-
-        return $this->output($result, $input);
+        return $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
     }
 }

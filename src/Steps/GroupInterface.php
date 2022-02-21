@@ -8,4 +8,5 @@ interface GroupInterface extends StepInterface
 {
     public function addStep(StepInterface $step): self;
     public function addLoader(LoaderInterface $loader): self;
+    public function resultDefined(): bool;
 }

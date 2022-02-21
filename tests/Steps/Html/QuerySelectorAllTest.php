@@ -5,6 +5,7 @@ namespace tests\Steps\Html;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Html\QuerySelectorAll;
+use function tests\helper_generatorToArray;
 
 test('Returns all matching elements', function () {
     $html = <<<HTML
@@ -14,6 +15,7 @@ HTML;
     $querySelectorStep->addLogger(new CliLogger());
     $input = new Input($html);
     $results = $querySelectorStep->invokeStep($input);
+    $results = helper_generatorToArray($results);
     expect($results)->toHaveCount(3);
     expect($results[0]->get())->toBe('foo');
     expect($results[1]->get())->toBe('bar');

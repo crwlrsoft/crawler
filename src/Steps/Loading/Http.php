@@ -2,8 +2,10 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Url\Url;
+use Exception;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
@@ -81,6 +83,9 @@ class Http extends LoadingStep
         return new self('DELETE', $headers, $body, $httpVersion);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function validateAndSanitizeInput(Input $input): UriInterface
     {
         $inputValue = $input->get();
@@ -96,13 +101,13 @@ class Http extends LoadingStep
         throw new InvalidArgumentException('Input must be string or an instance of the PSR-7 UriInterface');
     }
 
-    protected function invoke(Input $input): array
+    /**
+     * @throws Exception
+     */
+    protected function invoke(Input $input): ?RequestResponseAggregate
     {
         $request = $this->request->withUri($input->get());
 
-        return $this->output(
-            $this->loader->load($request),
-            $input
-        );
+        return $this->loader->load($request);
     }
 }

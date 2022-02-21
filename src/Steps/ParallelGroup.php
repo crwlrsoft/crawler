@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
+use Generator;
 
 final class ParallelGroup extends Group
 {
@@ -14,16 +15,12 @@ final class ParallelGroup extends Group
 
     /**
      * @param Input $input
-     * @return Output[]
+     * @return Generator<Output>
      */
-    public function invokeStep(Input $input): array
+    public function invokeStep(Input $input): Generator
     {
-        $outputs = [];
-
         foreach ($this->steps as $step) {
-            array_push($outputs, ...$step->invokeStep($input));
+            yield from $step->invokeStep($input);
         }
-
-        return $outputs;
     }
 }

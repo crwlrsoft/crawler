@@ -6,6 +6,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Exception;
+use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -14,46 +15,43 @@ abstract class Step implements StepInterface
     protected LoggerInterface $logger;
     protected bool $repeat = false;
     protected ?int $maxRepetitions;
-    protected bool $allowResultDuplicates = false;
+    protected int $repetitions = 0;
     private ?string $resultResourceName = null;
     private ?string $resultResourcePropertyName = null;
 
-    /**
-     * @return mixed[]
-     */
-    abstract protected function invoke(Input $input): array;
+    abstract protected function invoke(Input $input): mixed;
 
     /**
      * Calls the validateAndSanitizeInput method and assures that the invoke method receives valid, sanitized input.
+     *
+     * @return Generator<Output>
+     * @throws Exception
      */
-    final public function invokeStep(Input $input): array
+    final public function invokeStep(Input $input): Generator
     {
         if ($this->repeat === true) {
             $inputs = [$input];
-            $outputs = [];
-            $repetitions = 0;
 
-            while (!empty($output) && $repetitions < $this->maxRepetitions) {
-                $newInputs = [];
+            foreach ($inputs as $input) {
+                $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
 
-                foreach ($inputs as $input) {
-                    $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
-                    $output = $this->invoke($validInput);
+                foreach ($this->invoke($validInput) as $output) {
+                    foreach ($this->output($output, $validInput) as $outputElement) {
+                        yield $outputElement;
 
-                    if (!empty($output)) {
-                        array_push($outputs, ...$output);
-                        array_push($newInputs, ...$output);
+                        yield from $this->invokeStep(new Input($outputElement));
                     }
-
-                    $repetitions++;
                 }
             }
+        } else {
+            $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
+            $stepOutput = $this->invoke($validInput);
+            $stepOutput = is_iterable($stepOutput) ? $stepOutput : [$stepOutput];
 
-            return $outputs;
+            foreach ($stepOutput as $stepOutputElement) {
+                yield from $this->output($stepOutputElement, $validInput);
+            }
         }
-        $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
-
-        return $this->invoke($validInput);
     }
 
     final public function addLogger(LoggerInterface $logger): static
@@ -77,13 +75,16 @@ abstract class Step implements StepInterface
         return $this;
     }
 
-    public function repeatWithOutputUntilNoMoreResults(
-        ?int $maxRepetitions = 100,
-        bool $allowDuplicateResults = false
-    ): static {
+    public function resultDefined(): bool
+    {
+        return $this->resultResourceName !== null || $this->resultResourcePropertyName !== null;
+    }
+
+    // TODO: check this
+    public function repeatWithOutputUntilNoMoreResults(?int $maxRepetitions = 100): static
+    {
         $this->repeat = true;
         $this->maxRepetitions = $maxRepetitions;
-        $this->allowResultDuplicates = $allowDuplicateResults;
 
         return $this;
     }
@@ -109,13 +110,12 @@ abstract class Step implements StepInterface
      * It assures that steps always return an array, all values are wrapped in Output objects, and it handles building
      * Results.
      *
-     * @return Output[]
+     * @return Generator<Output>
      * @throws Exception
      */
-    protected function output(mixed $values, Input $input): array
+    protected function output(mixed $values, Input $input): iterable
     {
-        $outputs = [];
-        $values = is_array($values) ? $values : [$values];
+        $values = is_iterable($values) ? $values : [$values];
 
         foreach ($values as $value) {
             if ($this->resultResourceName) {
@@ -126,7 +126,8 @@ abstract class Step implements StepInterface
                 }
 
                 $result->set($this->resultResourcePropertyName, $value);
-                $outputs[] = new Output($value, $result);
+
+                yield new Output($value, $result);
             } else {
                 if ($this->resultResourcePropertyName) {
                     if (!$input->result) {
@@ -136,10 +137,8 @@ abstract class Step implements StepInterface
                     $input->result->set($this->resultResourcePropertyName, $value);
                 }
 
-                $outputs[] = new Output($value, $input->result);
+                yield new Output($value, $input->result);
             }
         }
-
-        return $outputs;
     }
 }
