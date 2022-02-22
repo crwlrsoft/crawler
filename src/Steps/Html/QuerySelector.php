@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Step;
+use Generator;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DomCrawler\Crawler;
@@ -80,9 +81,9 @@ class QuerySelector extends Step
 
     /**
      * @param Input $input
-     * @return string|mixed
+     * @return Generator<string|mixed>
      */
-    protected function invoke(Input $input): mixed
+    protected function invoke(Input $input): Generator
     {
         $getWhat = $this->getWhat;
         $argument = $this->argument;
@@ -94,6 +95,6 @@ class QuerySelector extends Step
 
         $resultNode = $input->get()->filter($this->selector)->first();
 
-        return $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
+        yield $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
     }
 }

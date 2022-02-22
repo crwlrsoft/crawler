@@ -14,12 +14,15 @@ abstract class Step implements StepInterface
 {
     protected LoggerInterface $logger;
     protected bool $repeat = false;
-    protected ?int $maxRepetitions;
+    protected int $maxRepetitions = 100;
     protected int $repetitions = 0;
     private ?string $resultResourceName = null;
     private ?string $resultResourcePropertyName = null;
 
-    abstract protected function invoke(Input $input): mixed;
+    /**
+     * @return Generator<mixed>
+     */
+    abstract protected function invoke(Input $input): Generator;
 
     /**
      * Calls the validateAndSanitizeInput method and assures that the invoke method receives valid, sanitized input.
@@ -34,22 +37,28 @@ abstract class Step implements StepInterface
 
             foreach ($inputs as $input) {
                 $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
+                $this->repetitions++;
 
                 foreach ($this->invoke($validInput) as $output) {
-                    foreach ($this->output($output, $validInput) as $outputElement) {
-                        yield $outputElement;
+                    $output = $this->output($output, $validInput);
 
-                        yield from $this->invokeStep(new Input($outputElement));
+                    yield $output;
+
+                    if ($this->repetitions < $this->maxRepetitions) {
+                        yield from $this->invokeStep(new Input($output));
+                    } else {
+                        $this->logger->warning(
+                            'Stop repeating step as max repitions of ' . $this->maxRepetitions . ' are reached.'
+                        );
                     }
                 }
             }
         } else {
             $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
-            $stepOutput = $this->invoke($validInput);
-            $stepOutput = is_iterable($stepOutput) ? $stepOutput : [$stepOutput];
 
-            foreach ($stepOutput as $stepOutputElement) {
-                yield from $this->output($stepOutputElement, $validInput);
+            foreach ($this->invoke($validInput) as $output) {
+                $output = $this->output($output, $validInput);
+                yield $output;
             }
         }
     }
@@ -80,8 +89,7 @@ abstract class Step implements StepInterface
         return $this->resultResourceName !== null || $this->resultResourcePropertyName !== null;
     }
 
-    // TODO: check this
-    public function repeatWithOutputUntilNoMoreResults(?int $maxRepetitions = 100): static
+    public function repeatWithOutputUntilNoMoreResults(int $maxRepetitions = 100): static
     {
         $this->repeat = true;
         $this->maxRepetitions = $maxRepetitions;
@@ -110,35 +118,30 @@ abstract class Step implements StepInterface
      * It assures that steps always return an array, all values are wrapped in Output objects, and it handles building
      * Results.
      *
-     * @return Generator<Output>
      * @throws Exception
      */
-    protected function output(mixed $values, Input $input): iterable
+    protected function output(mixed $value, Input $input): Output
     {
-        $values = is_iterable($values) ? $values : [$values];
+        if ($this->resultResourceName) {
+            $result = new Result($this->resultResourceName);
 
-        foreach ($values as $value) {
-            if ($this->resultResourceName) {
-                $result = new Result($this->resultResourceName);
-
-                if ($this->resultResourcePropertyName === null) {
-                    throw new Exception('No resource property defined');
-                }
-
-                $result->set($this->resultResourcePropertyName, $value);
-
-                yield new Output($value, $result);
-            } else {
-                if ($this->resultResourcePropertyName) {
-                    if (!$input->result) {
-                        throw new Exception('Defined a resource property name but no resource was initialized yet!');
-                    }
-
-                    $input->result->set($this->resultResourcePropertyName, $value);
-                }
-
-                yield new Output($value, $input->result);
+            if ($this->resultResourcePropertyName === null) {
+                throw new Exception('No resource property defined');
             }
+
+            $result->set($this->resultResourcePropertyName, $value);
+
+            return new Output($value, $result);
         }
+
+        if ($this->resultResourcePropertyName) {
+            if (!$input->result) {
+                throw new Exception('Defined a resource property name but no resource was initialized yet!');
+            }
+
+            $input->result->set($this->resultResourcePropertyName, $value);
+        }
+
+        return new Output($value, $input->result);
     }
 }

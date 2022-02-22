@@ -7,18 +7,35 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
+use Generator;
 use PHPUnit\Framework\TestCase;
 use function tests\helper_generatorToArray;
 use function tests\helper_traverseIterable;
+
+function helper_getNumberIncrementingStep(): Step
+{
+    return new class () extends Step {
+        /**
+         * @return Generator<int>
+         */
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get() + 1;
+        }
+    };
+}
 
 /** @var TestCase $this */
 
 test('You can add a logger and it is available within the invoke method', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
             $this->logger->info('logging works');
-            return 'something';
+            yield 'something';
         }
     };
     $step->addLogger(new CliLogger());
@@ -31,9 +48,12 @@ test(
     'The invokeStep method wraps the values returned by invoke in Output objects by default without Result objects',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): string
+            /**
+             * @return Generator<string>
+             */
+            protected function invoke(Input $input): Generator
             {
-                return 'returnValue';
+                yield 'returnValue';
             }
         };
         $output = $step->invokeStep(new Input('inputValue'));
@@ -49,9 +69,12 @@ test(
     'The invokeStep method creates a Result object that is added to the Output when you define a result resource',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): string
+            /**
+             * @return Generator<string>
+             */
+            protected function invoke(Input $input): Generator
             {
-                return 'returnValue';
+                yield 'returnValue';
             }
         };
         $step->initResultResource('someResource')
@@ -68,9 +91,12 @@ test(
     'The invokeStep method appends properties to a result object that was already included with the Input object',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): string
+            /**
+             * @return Generator<string>
+             */
+            protected function invoke(Input $input): Generator
             {
-                return 'returnValue';
+                yield 'returnValue';
             }
         };
         $step->resultResourceProperty('property');
@@ -91,9 +117,12 @@ test(
     'result resource properties',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): string
+            /**
+             * @return Generator<string>
+             */
+            protected function invoke(Input $input): Generator
             {
-                return 'returnValue';
+                yield 'returnValue';
             }
         };
         $prevResult = new Result('someResource');
@@ -109,17 +138,92 @@ test(
 
 test('The invokeStep method calls the validateAndSanitizeInput method', function () {
     $step = new class () extends Step {
-        public function validateAndSanitizeInput(Input $input): mixed
+        protected function validateAndSanitizeInput(Input $input): string
         {
             return $input->get() . ' validated and sanitized';
         }
 
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return $input->get();
+            yield $input->get();
         }
     };
     $output = $step->invokeStep(new Input('inputValue'));
     $output = iterator_to_array($output);
     expect($output[0]->get())->toBe('inputValue validated and sanitized');
 });
+
+test('It is possible that a step does not produce any output at all', function () {
+    $step = new class () extends Step {
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
+        {
+            if ($input->get() === 'foo') {
+                yield 'bar';
+            }
+        }
+    };
+
+    $output = $step->invokeStep(new Input('lol'));
+    $output = helper_generatorToArray($output);
+    expect($output)->toHaveCount(0);
+
+    $output = $step->invokeStep(new Input('foo'));
+    $output = helper_generatorToArray($output);
+    expect($output)->toHaveCount(1);
+    expect($output[0]->get())->toBe('bar');
+});
+
+test('The step repeats invoking itself with previous output as input until there is no output anymore', function () {
+    $step = new class () extends Step {
+        private int $invokeCount = 0;
+
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
+        {
+            $this->invokeCount++;
+
+            if ($this->invokeCount < 4) {
+                yield $input->get() . ' - ' . $this->invokeCount;
+            }
+        }
+    };
+    $step->repeatWithOutputUntilNoMoreResults();
+    $step->addLogger(new CliLogger());
+    $output = $step->invokeStep(new Input('input'));
+    $output = helper_generatorToArray($output);
+
+    expect($output)->toBeArray();
+    expect($output[0]->get())->toBe('input - 1');
+    expect($output[1]->get())->toBe('input - 1 - 2');
+    expect($output[2]->get())->toBe('input - 1 - 2 - 3');
+});
+
+test('A step repeating itself by default has a limit of 100 max repetitions, then it stops', function () {
+    $step = helper_getNumberIncrementingStep();
+    $step->repeatWithOutputUntilNoMoreResults();
+    $step->addLogger(new CliLogger());
+    $output = $step->invokeStep(new Input(1));
+    $output = helper_generatorToArray($output);
+
+    expect($output)->toBeArray();
+    expect($output)->toHaveCount(100);
+});
+
+test('You can also set your own max repetition limit for a self repeating step', function ($limit) {
+    $step = helper_getNumberIncrementingStep();
+    $step->repeatWithOutputUntilNoMoreResults($limit);
+    $step->addLogger(new CliLogger());
+    $output = $step->invokeStep(new Input(1));
+    $output = helper_generatorToArray($output);
+
+    expect($output)->toBeArray();
+    expect($output)->toHaveCount($limit);
+})->with([134, 500, 1000, 10000]);

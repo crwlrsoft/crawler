@@ -6,6 +6,7 @@ use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Input;
 use Crwlr\Url\Url;
 use Exception;
+use Generator;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
@@ -102,12 +103,13 @@ class Http extends LoadingStep
     }
 
     /**
+     * @return Generator<RequestResponseAggregate|null>
      * @throws Exception
      */
-    protected function invoke(Input $input): ?RequestResponseAggregate
+    protected function invoke(Input $input): Generator
     {
         $request = $this->request->withUri($input->get());
 
-        return $this->loader->load($request);
+        yield $this->loader->load($request);
     }
 }

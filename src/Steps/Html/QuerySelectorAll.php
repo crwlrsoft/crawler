@@ -4,16 +4,17 @@ namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Crawler\Input;
 use Exception;
+use Generator;
 use Symfony\Component\DomCrawler\Crawler;
 
 class QuerySelectorAll extends QuerySelector
 {
     /**
      * @param Input $input
-     * @return array|mixed
+     * @return Generator<array|mixed>
      * @throws Exception
      */
-    protected function invoke(Input $input): mixed
+    protected function invoke(Input $input): Generator
     {
         $getWhat = $this->getWhat;
         $argument = $this->argument;
@@ -23,12 +24,16 @@ class QuerySelectorAll extends QuerySelector
             ($argument ?? '') . ')'
         );
 
-        return $input->get()->filter($this->selector)->each(function (Crawler $node) use ($getWhat, $argument) {
+        $elements = $input->get()->filter($this->selector)->each(function (Crawler $node) use ($getWhat, $argument) {
             if ($argument) {
                 return $node->{$getWhat}($argument);
             }
 
             return $node->{$getWhat}();
         });
+
+        foreach ($elements as $element) {
+            yield $element;
+        }
     }
 }

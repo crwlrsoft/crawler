@@ -116,36 +116,48 @@ test('Result objects are created when defined and passed on through all the step
     $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
 
     $step = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return 'yo';
+            yield 'yo';
         }
     };
 
     $crawler->addStep($step->initResultResource('someResource')->resultResourceProperty('prop1'));
 
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return 'lo';
+            yield 'lo';
         }
     };
 
     $crawler->addStep($step2->resultResourceProperty('prop2'));
 
     $step3 = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return 'foo';
+            yield 'foo';
         }
     };
 
     $crawler->addStep($step3);
 
     $step4 = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return 'bar';
+            yield 'bar';
         }
     };
 
@@ -167,20 +179,23 @@ test('When final steps return an array you get all values in the defined Result 
     $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
 
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): string
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
         {
-            return 'Donald';
+            yield 'Donald';
         }
     };
     $crawler->addStep($step1->initResultResource('Ducks')->resultResourceProperty('parent'));
 
     $step2 = new class () extends Step {
         /**
-         * @return string[]
+         * @return Generator<array<string>>
          */
-        protected function invoke(Input $input): array
+        protected function invoke(Input $input): Generator
         {
-            return ['Tick', 'Trick', 'Track'];
+            yield ['Tick', 'Trick', 'Track'];
         }
     };
     $crawler->addStep($step2->resultResourceProperty('children'));
