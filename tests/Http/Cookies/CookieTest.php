@@ -1,10 +1,10 @@
 <?php
 
-namespace tests\Http;
+namespace tests\Http\Cookies;
 
 use Crwlr\Crawler\Exceptions\InvalidCookieException;
-use Crwlr\Crawler\Http\Cookie;
-use Crwlr\Crawler\Http\Date;
+use Crwlr\Crawler\Http\Cookies\Cookie;
+use Crwlr\Crawler\Http\Cookies\Date;
 use Crwlr\Url\Url;
 use Psr\Http\Message\UriInterface;
 
@@ -43,7 +43,7 @@ test('It automatically sets the domain based on the received from url when no at
 test('It parses an expires attribute when included', function () {
     $cookie = new Cookie(
         'https://www.otsch.codes/blog',
-        'otschcodes_session=cook13; expires=Wed, 23 Feb 2022 10:13:41 GMT'
+        'otschcodes_session=cook13; expires=Wed, 23-Feb-2022 10:13:41 GMT'
     );
     expect($cookie->expires())->toBeInstanceOf(Date::class);
     expect($cookie->expires()->dateTime()->format('Y-m-d H:i'))->toBe('2022-02-23 10:13'); // @phpstan-ignore-line

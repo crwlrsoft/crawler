@@ -3,80 +3,61 @@
 namespace Crwlr\Crawler;
 
 use AppendIterator;
-use Crwlr\Crawler\Exceptions\MissingLoaderException;
-use Crwlr\Crawler\Exceptions\MissingUserAgentException;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
 
-class Crawler
+abstract class Crawler
 {
-    protected ?UserAgent $userAgent = null;
-    protected ?LoaderInterface $loader = null;
-    protected ?LoggerInterface $logger = null;
+    protected UserAgentInterface $userAgent;
+    protected LoaderInterface $loader;
+    protected LoggerInterface $logger;
 
     /**
      * @var array|StepInterface[]
      */
     protected array $steps = [];
 
-    public function setUserAgent(UserAgent|string $userAgent): void
+    public function __construct()
     {
-        $this->userAgent = is_string($userAgent) ? new UserAgent($userAgent) : $userAgent;
+        $this->userAgent = $this->userAgent();
+        $this->logger = $this->logger();
+        $this->loader = $this->loader($this->userAgent, $this->logger);
     }
 
-    /**
-     * @throws MissingUserAgentException
-     */
-    public function userAgent(): UserAgent
-    {
-        if (!$this->userAgent) {
-            throw new MissingUserAgentException('You must set a UserAgent.');
-        }
+    abstract protected function userAgent(): UserAgentInterface;
+    abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
 
+    protected function logger(): LoggerInterface
+    {
+        return new CliLogger();
+    }
+
+    public function getUserAgent(): UserAgentInterface
+    {
         return $this->userAgent;
     }
 
-    public function setLoader(LoaderInterface $loader): void
+    public function getLogger(): LoggerInterface
     {
-        $this->loader = $loader;
-    }
-
-    /**
-     * @throws MissingLoaderException
-     */
-    public function loader(): LoaderInterface
-    {
-        if (!$this->loader) {
-            throw new MissingLoaderException('You must set a Loader.');
-        }
-
-        return $this->loader;
-    }
-
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger = $logger;
-    }
-
-    public function logger(): LoggerInterface
-    {
-        if (!$this->logger) {
-            $this->logger = new CliLogger();
-        }
-
         return $this->logger;
+    }
+
+    public function getLoader(): LoaderInterface
+    {
+        return $this->loader;
     }
 
     public function addStep(StepInterface $step): static
     {
-        $step->addLogger($this->logger());
+        $step->addLogger($this->logger);
 
         if (method_exists($step, 'addLoader')) {
-            $step->addLoader($this->loader());
+            $step->addLoader($this->loader);
         }
 
         $this->steps[] = $step;

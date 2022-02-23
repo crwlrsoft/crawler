@@ -3,7 +3,7 @@
 namespace Crwlr\Crawler\Loader;
 
 use Crwlr\Crawler\Logger\CliLogger;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -24,7 +24,7 @@ abstract class Loader implements LoaderInterface
     ];
 
     public function __construct(
-        protected UserAgent $userAgent,
+        protected UserAgentInterface $userAgent,
         ?LoggerInterface $logger = null,
     ) {
         $this->logger = $logger ?? new CliLogger();
@@ -89,7 +89,7 @@ abstract class Loader implements LoaderInterface
         }
     }
 
-    protected function userAgent(): UserAgent
+    protected function userAgent(): UserAgentInterface
     {
         return $this->userAgent;
     }

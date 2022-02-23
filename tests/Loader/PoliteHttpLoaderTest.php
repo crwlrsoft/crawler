@@ -4,7 +4,7 @@ namespace tests\Loader;
 
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\PoliteHttpLoader;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -28,7 +28,7 @@ test('It waits politely in load method', function ($loadingMethod) {
         return $response;
     });
     $client->shouldReceive('sendRequest')->once()->andReturn(new Response());
-    $loader = new PoliteHttpLoader(new UserAgent('PoliteBot'), $client);
+    $loader = new PoliteHttpLoader(new BotUserAgent('PoliteBot'), $client);
 
     $before = microtime(true);
     $loader->{$loadingMethod}('foo');
@@ -40,7 +40,7 @@ test('It waits politely in load method', function ($loadingMethod) {
 test('It respects robots.txt rules in load method', function () {
     $client = Mockery::mock(Client::class);
     $client->shouldReceive('sendRequest')->once()->andReturn(helper_getDummyRobotsTxtResponse());
-    $loader = new PoliteHttpLoader(new UserAgent('FooBot'), $client);
+    $loader = new PoliteHttpLoader(new BotUserAgent('FooBot'), $client);
 
     $loader->load('https://www.crwlr.software/secret');
 
@@ -52,7 +52,7 @@ test('It respects robots.txt rules in load method', function () {
 test('It respects robots.txt rules in loadOrFail method', function () {
     $client = Mockery::mock(Client::class);
     $client->shouldReceive('sendRequest')->once()->andReturn(helper_getDummyRobotsTxtResponse());
-    $loader = new PoliteHttpLoader(new UserAgent('FooBot'), $client);
+    $loader = new PoliteHttpLoader(new BotUserAgent('FooBot'), $client);
 
     $loader->loadOrFail('https://www.crwlr.software/secret');
 })->throws(LoadingException::class);

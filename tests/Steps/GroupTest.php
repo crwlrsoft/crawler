@@ -10,7 +10,7 @@ use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\StepInterface;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Generator;
 use Mockery;
 
@@ -42,6 +42,6 @@ test('It also passes on the loader to the step when addLoader method exists in s
     $step->shouldReceive('addLoader')->once();
     $group = new DummyGroup();
     $group->addLogger(new CliLogger());
-    $group->addLoader(new HttpLoader(new UserAgent('MyBot')));
+    $group->addLoader(new HttpLoader(new BotUserAgent('MyBot')));
     $group->addStep($step);
 });

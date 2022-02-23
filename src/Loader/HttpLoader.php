@@ -5,9 +5,11 @@ namespace Crwlr\Crawler\Loader;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\Http\Cookies\CookieJar;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
@@ -21,9 +23,11 @@ use Throwable;
 class HttpLoader extends Loader
 {
     protected ClientInterface $httpClient;
+    protected CookieJar $cookieJar;
+    protected bool $useCookies = true;
 
     public function __construct(
-        UserAgent $userAgent,
+        UserAgentInterface $userAgent,
         ?ClientInterface $httpClient = null,
         ?LoggerInterface $logger = null
     ) {
@@ -40,6 +44,8 @@ class HttpLoader extends Loader
                 'Failed to load ' . $request->getUri()->__toString() . ': ' . $exception->getMessage()
             );
         });
+
+        $this->cookieJar = new CookieJar();
     }
 
     public function load(mixed $subject): ?RequestResponseAggregate
@@ -50,7 +56,7 @@ class HttpLoader extends Loader
             return null;
         }
 
-        $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
+        $request = $this->prepareRequest($request);
         $this->callHook('beforeLoad', $request);
 
         try {
@@ -92,8 +98,8 @@ class HttpLoader extends Loader
     {
         $request = $this->validateSubjectType($subject);
         $this->isAllowedToBeLoaded($request->getUri(), true);
-        $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
-
+        $request = $this->prepareRequest($request);
+        $this->callHook('beforeLoad', $request);
         $requestResponseAggregate = $this->getFromCache($request);
         $isFromCache = $requestResponseAggregate !== null;
 
@@ -114,6 +120,13 @@ class HttpLoader extends Loader
         }
 
         return $requestResponseAggregate;
+    }
+
+    public function dontUseCookies(): static
+    {
+        $this->useCookies = false;
+
+        return $this;
     }
 
     /**
@@ -138,6 +151,27 @@ class HttpLoader extends Loader
     }
 
     /**
+     * @throws InvalidArgumentException
+     * @throws InvalidUrlException
+     */
+    protected function validateSubjectType(RequestInterface|string $requestOrUri): RequestInterface
+    {
+        if (is_string($requestOrUri)) {
+            return new Request('GET', Url::parsePsr7($requestOrUri));
+        }
+
+        return $requestOrUri;
+    }
+
+    protected function prepareRequest(RequestInterface $request): RequestInterface
+    {
+        $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
+        $request = $this->addCookiesToRequest($request);
+
+        return $request;
+    }
+
+    /**
      * @throws ClientExceptionInterface
      */
     private function handleRedirects(
@@ -154,6 +188,8 @@ class HttpLoader extends Loader
             $aggregate->setResponse($response);
         }
 
+        $this->addCookiesToJar($aggregate);
+
         if ($aggregate->isRedirect()) {
             $this->logger()->info('Load redirect to: ' . $aggregate->effectiveUri());
             $newRequest = $request->withUri(Url::parsePsr7($aggregate->effectiveUri()));
@@ -164,16 +200,27 @@ class HttpLoader extends Loader
         return $aggregate;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     * @throws InvalidUrlException
-     */
-    protected function validateSubjectType(RequestInterface|string $requestOrUri): RequestInterface
+    private function addCookiesToJar(RequestResponseAggregate $aggregate): void
     {
-        if (is_string($requestOrUri)) {
-            return new Request('GET', Url::parsePsr7($requestOrUri));
+        if ($this->useCookies) {
+            try {
+                $this->cookieJar->addFrom($aggregate->effectiveUri(), $aggregate->response);
+            } catch (Exception $exception) {
+                $this->logger->warning('Problem when adding cookies to the Jar: ' . $exception->getMessage());
+            }
+        }
+    }
+
+    private function addCookiesToRequest(RequestInterface $request): RequestInterface
+    {
+        if (!$this->useCookies) {
+            return $request;
         }
 
-        return $requestOrUri;
+        foreach ($this->cookieJar->getFor($request->getUri()) as $cookie) {
+            $request = $request->withAddedHeader('Cookie', $cookie->__toString());
+        }
+
+        return $request;
     }
 }

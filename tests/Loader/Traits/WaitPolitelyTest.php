@@ -5,7 +5,7 @@ namespace tests\Loader\Traits;
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Loader\Traits\WaitPolitely;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Client\ClientInterface;
@@ -19,11 +19,11 @@ function helper_getLoaderWhereFirstRequestTakes100Milliseconds(): HttpLoader
     // Built here so it won't take time to build a new response in the load method for the timing tests.
     $response = new RequestResponseAggregate(new Request('GET', '/'), new Response());
 
-    return new class (new UserAgent('FooBot'), $response) extends HttpLoader {
+    return new class (new BotUserAgent('FooBot'), $response) extends HttpLoader {
         use WaitPolitely;
 
         public function __construct(
-            UserAgent $userAgent,
+            BotUserAgent $userAgent,
             private RequestResponseAggregate $response,
             ?ClientInterface $httpClient = null,
             ?LoggerInterface $logger = null

@@ -6,7 +6,7 @@ use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\HttpLoader;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -21,7 +21,7 @@ use stdClass;
 test('It accepts url string as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $httpLoader->load('https://www.crwlr.software');
     $httpLoader->loadOrFail('https://www.crwlr.software');
 });
@@ -29,14 +29,14 @@ test('It accepts url string as argument to load', function () {
 test('It accepts RequestInterface as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $httpLoader->load(new Request('GET', 'https://www.crwlr.software'));
     $httpLoader->loadOrFail(new Request('GET', 'https://www.crwlr.software'));
 });
 
 test('It does not accept other argument types for the load method', function ($loadMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $httpLoader->{$loadMethod}(new stdClass());
 })->with(['load', 'loadOrFail'])->expectError();
 
@@ -53,7 +53,7 @@ test(
             $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response($responseStatusCode));
         }
 
-        $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+        $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
         $beforeLoadWasCalled = false;
         $httpLoader->beforeLoad(function () use (& $beforeLoadWasCalled) {
             $beforeLoadWasCalled = true;
@@ -72,7 +72,7 @@ test(
 test('It calls the onSuccess hook on a successful response', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response($responseStatusCode));
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $onSuccessWasCalled = false;
     $httpLoader->onSuccess(function () use (& $onSuccessWasCalled) {
         $onSuccessWasCalled = true;
@@ -89,7 +89,7 @@ test('It calls the onSuccess hook on a successful response', function ($response
 test('It calls the onError hook on a failed request', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response($responseStatusCode));
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $onErrorWasCalled = false;
     $httpLoader->onError(function () use (& $onErrorWasCalled) {
         $onErrorWasCalled = true;
@@ -102,7 +102,7 @@ test('It calls the onError hook on a failed request', function ($responseStatusC
 test('It throws an Exception when request fails in loadOrFail method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(400));
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $onErrorWasCalled = false;
     $httpLoader->onError(function () use (& $onErrorWasCalled) {
         $onErrorWasCalled = true;
@@ -120,7 +120,7 @@ test('It throws an Exception when request fails in loadOrFail method', function 
 test('You can implement logic to disallow certain request', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-    $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
+    $httpLoader = new class (new BotUserAgent('Foo'), $httpClient) extends HttpLoader {
         public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
         {
             return $uri->__toString() === '/foo';
@@ -139,7 +139,7 @@ test(
     function () {
         $httpClient = Mockery::mock(ClientInterface::class);
         $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-        $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
+        $httpLoader = new class (new BotUserAgent('Foo'), $httpClient) extends HttpLoader {
             public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
             {
                 if ($throwsException) {
@@ -168,7 +168,7 @@ test('It automatically handles redirects', function (string $loadingMethod) {
             new Response(301, ['Location' => 'https://www.redirect.com']),
             new Response(200, [], 'YES')
         );
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $requestResponseAggregate = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
 
     /** @var RequestResponseAggregate $requestResponseAggregate */
@@ -180,7 +180,7 @@ test('It automatically handles redirects', function (string $loadingMethod) {
 test('It calls request start and end tracking methods', function (string $loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
-    $httpLoader = new class (new UserAgent('Foo'), $httpClient) extends HttpLoader {
+    $httpLoader = new class (new BotUserAgent('Foo'), $httpClient) extends HttpLoader {
         public function trackRequestStart(?float $microtime = null): void
         {
             $this->logger()->info('track request start');
@@ -201,7 +201,7 @@ test('It calls request start and end tracking methods', function (string $loadin
 test('It automatically logs loading success message', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $httpLoader->{$loadingMethod}(new Request('GET', 'https://phpstan.org/'));
 
     $output = $this->getActualOutput();
@@ -211,7 +211,7 @@ test('It automatically logs loading success message', function ($loadingMethod) 
 test('It automatically logs loading error message in normal load method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(500));
-    $httpLoader = new HttpLoader(new UserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $httpLoader->load(new Request('GET', 'https://phpstan.org/'));
 
     $output = $this->getActualOutput();
@@ -226,7 +226,7 @@ test('It automatically adds the User-Agent header before sending', function () {
             return str_contains($request->getHeaderLine('User-Agent'), 'FooBot');
         })
         ->andReturn(new Response());
-    $httpLoader = new HttpLoader(new UserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->load('https://www.facebook.com');
 });
 
@@ -238,7 +238,7 @@ test('It tries to get responses from cache', function () {
     $cache->shouldReceive('get')
         ->once()
         ->andReturn(new RequestResponseAggregate(new Request('GET', '/'), new Response()));
-    $httpLoader = new HttpLoader(new UserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->load('https://www.facebook.com');
 });
@@ -250,7 +250,7 @@ test('It fails when it gets a failed response from cache', function () {
     $cache->shouldReceive('get')
         ->once()
         ->andReturn(new RequestResponseAggregate(new Request('GET', '/'), new Response(404)));
-    $httpLoader = new HttpLoader(new UserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
 
     $onErrorWasCalled = false;
@@ -271,7 +271,7 @@ test('It fails when it gets a failed response from cache in loadOrFail', functio
         ->andReturn(HttpResponseCacheItem::fromAggregate(
             new RequestResponseAggregate(new Request('GET', 'facebook'), new Response(404))
         ));
-    $httpLoader = new HttpLoader(new UserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->loadOrFail('https://www.facebook.com');
 })->throws(LoadingException::class);
@@ -282,7 +282,7 @@ test('It adds loaded responses to the cache when it has a cache', function ($loa
     $cache = Mockery::mock(CacheInterface::class);
     $cache->shouldReceive('has')->once()->andReturn(false);
     $cache->shouldReceive('set')->once();
-    $httpLoader = new HttpLoader(new UserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->{$loadingMethod}('https://laravel.com/');
 })->with(['load', 'loadOrFail']);

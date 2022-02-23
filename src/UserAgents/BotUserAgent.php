@@ -1,27 +1,27 @@
 <?php
 
-namespace Crwlr\Crawler;
+namespace Crwlr\Crawler\UserAgents;
 
-class UserAgent
+class BotUserAgent implements BotUserAgentInterface
 {
     /**
      * @param string $productToken  The name of the Crawler/Bot
      * @param string|null $infoUri  Uri where site owners can find information about your crawler.
      * @param string|null $version  In case you want to communicate infos about different versions of your crawler.
      */
-    final public function __construct(
-        public string $productToken,
-        public ?string $infoUri = null,
-        public ?string $version = null
+    public function __construct(
+        protected string $productToken,
+        protected ?string $infoUri = null,
+        protected ?string $version = null
     ) {
     }
 
-    public static function make(string $productToken, ?string $crawlerInfoUri = null, ?string $version = null): static
+    public static function make(string $productToken, ?string $crawlerInfoUri = null, ?string $version = null): self
     {
-        return new static($productToken, $crawlerInfoUri, $version);
+        return new self($productToken, $crawlerInfoUri, $version);
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $botUserAgent = 'Mozilla/5.0 (compatible; ' . $this->productToken;
 
@@ -34,5 +34,10 @@ class UserAgent
         }
 
         return $botUserAgent . ')';
+    }
+
+    public function productToken(): string
+    {
+        return $this->productToken;
     }
 }

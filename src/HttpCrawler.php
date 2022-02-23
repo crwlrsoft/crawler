@@ -4,18 +4,16 @@ namespace Crwlr\Crawler;
 
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Loader\PoliteHttpLoader;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use GuzzleHttp\Client;
 use Psr\Http\Client\ClientInterface;
+use Psr\Log\LoggerInterface;
 
 abstract class HttpCrawler extends Crawler
 {
-    public function loader(): LoaderInterface
+    public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
-        if (!$this->loader) {
-            $this->loader = new PoliteHttpLoader($this->userAgent(), $this->httpClient(), $this->logger());
-        }
-
-        return $this->loader;
+        return new PoliteHttpLoader($userAgent, $this->httpClient(), $logger);
     }
 
     /**

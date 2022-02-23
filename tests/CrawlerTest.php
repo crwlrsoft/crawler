@@ -4,27 +4,33 @@ namespace tests;
 
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Loader\PoliteHttpLoader;
-use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Mockery;
+use Psr\Log\LoggerInterface;
 
 function helper_getDummyCrawler(): Crawler
 {
-    $crawler = new Crawler();
-    $userAgent = new UserAgent('FooBot');
-    $crawler->setUserAgent($userAgent);
-    $crawler->setLoader(new PoliteHttpLoader($userAgent));
-    $crawler->setLogger(new CliLogger());
+    return new class () extends Crawler {
+        public function userAgent(): UserAgentInterface
+        {
+            return new BotUserAgent('FooBot');
+        }
 
-    return $crawler;
+        public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+        {
+            return Mockery::mock(PoliteHttpLoader::class);
+        }
+    };
 }
 
 /**
@@ -38,35 +44,10 @@ function helper_getGenerator(array $array): Generator
     }
 }
 
-test('You can set a UserAgent', function () {
-    $userAgent = new UserAgent('FooBot');
-    $crawler = new Crawler();
-    $crawler->setUserAgent($userAgent);
-
-    expect($crawler->userAgent())->toBe($userAgent);
-});
-
-test('You can set a Loader', function () {
-    $loader = new PoliteHttpLoader(new UserAgent('FooBot'));
-    $crawler = new Crawler();
-    $crawler->setLoader($loader);
-
-    expect($crawler->loader())->toBe($loader);
-});
-
-test('You can set a Logger', function () {
-    $logger = new CliLogger();
-    $crawler = new Crawler();
-    $crawler->setLogger($logger);
-
-    expect($crawler->logger())->toBe($logger);
-});
-
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
     $crawler->addStep($step);
 
     $step = Mockery::mock(LoadingStepInterface::class);
@@ -81,7 +62,6 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $step->shouldReceive('addLogger')->once();
     $step->shouldReceive('resultDefined')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
     $crawler->addStep($step);
 
     $results = $crawler->run('randomInput');
@@ -93,7 +73,6 @@ test('You can add step groups and the Crawler class passes on its Logger and Loa
     $group->shouldReceive('addLogger')->once();
     $group->shouldReceive('addLoader')->once();
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
     $crawler->addGroup($group);
 });
 
@@ -104,7 +83,6 @@ test('You can add a parallel step group and it is invoked when the Crawler is ru
     $group->shouldReceive('addLoader')->once();
     $group->shouldReceive('resultDefined')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
     $crawler->addGroup($group);
 
     $results = $crawler->run('randomInput');
@@ -113,7 +91,6 @@ test('You can add a parallel step group and it is invoked when the Crawler is ru
 
 test('Result objects are created when defined and passed on through all the steps', function () {
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
 
     $step = new class () extends Step {
         /**
@@ -176,7 +153,6 @@ test('Result objects are created when defined and passed on through all the step
 
 test('When final steps return an array you get all values in the defined Result resource', function () {
     $crawler = helper_getDummyCrawler();
-    $crawler->setLoader(Mockery::mock(PoliteHttpLoader::class));
 
     $step1 = new class () extends Step {
         /**

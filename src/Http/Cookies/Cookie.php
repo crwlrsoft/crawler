@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Http;
+namespace Crwlr\Crawler\Http\Cookies;
 
 use Crwlr\Crawler\Exceptions\InvalidCookieException;
 use Crwlr\Url\Psr\Uri;
@@ -15,6 +15,7 @@ class Cookie
     private string $cookieValue;
     private ?Date $expires = null;
     private ?int $maxAge = null;
+    private int $receivedAtTimestamp = 0;
     private string $domain;
     private bool $domainSetViaAttribute = false;
     private ?string $path = null;
@@ -45,6 +46,29 @@ class Cookie
         $this->parseSetCookieHeader($this->setCookieHeader);
     }
 
+    public function shouldBeSentTo(string|UriInterface|Url $url): bool
+    {
+        $url = $url instanceof Url ? $url : Url::parse($url);
+        $urlHost = $url->host() ?? '';
+
+        if (
+            !str_contains($urlHost, $this->domain()) ||
+            ($this->hasHostPrefix() && $urlHost !== $this->receivedFromHost) ||
+            ($this->secure() && $url->scheme() !== 'https' && !in_array($urlHost, ['localhost', '127.0.0.1'], true)) ||
+            ($this->path() && !$this->pathMatches($url)) ||
+            $this->isExpired()
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function __toString(): string
+    {
+        return $this->name() . '=' . $this->value();
+    }
+
     public function receivedFromUrl(): UriInterface
     {
         return new Uri($this->receivedFromUrl);
@@ -68,6 +92,25 @@ class Cookie
     public function maxAge(): ?int
     {
         return $this->maxAge;
+    }
+
+    public function isExpired(): bool
+    {
+        if (!$this->expires() && !$this->maxAge()) {
+            return false;
+        }
+
+        $nowTimestamp = time();
+
+        if ($this->expires() instanceof Date && $nowTimestamp >= $this->expires()->dateTime()->getTimestamp()) {
+            return true;
+        }
+
+        if ($this->maxAge() > 0 && $nowTimestamp > ($this->receivedAtTimestamp + $this->maxAge())) {
+            return true;
+        }
+
+        return false;
     }
 
     public function domain(): string
@@ -186,6 +229,7 @@ class Cookie
     private function setMaxAge(string $value): void
     {
         $this->maxAge = (int) $value;
+        $this->receivedAtTimestamp = time();
     }
 
     /**
@@ -238,5 +282,18 @@ class Cookie
         }
 
         $this->sameSite = ucfirst($value);
+    }
+
+    private function pathMatches(Url $url): bool
+    {
+        $path = $this->path() ?? '';
+        $urlPath = $url->path() ?? '';
+
+        return str_starts_with($urlPath, $path) &&
+            (
+                $urlPath === $path ||
+                $path === '/' ||
+                str_starts_with($urlPath, $path . '/')
+            );
     }
 }

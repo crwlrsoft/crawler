@@ -1,8 +1,9 @@
 <?php
 
-namespace Crwlr\Crawler\Http;
+namespace Crwlr\Crawler\Http\Cookies;
 
 use DateTime;
+use DateTimeInterface;
 use InvalidArgumentException;
 
 class Date
@@ -19,7 +20,7 @@ class Date
     public function dateTime(): DateTime
     {
         if (!$this->dateTime instanceof DateTime) {
-            $dateTime = DateTime::createFromFormat('l, d M Y H:i:s e', $this->httpDateString);
+            $dateTime = DateTime::createFromFormat(DateTimeInterface::COOKIE, $this->httpDateString);
 
             if (!$dateTime instanceof DateTime) {
                 throw new InvalidArgumentException('Can\'t parse date string ' . $this->httpDateString);

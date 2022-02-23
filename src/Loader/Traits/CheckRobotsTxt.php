@@ -4,10 +4,12 @@ namespace Crwlr\Crawler\Loader\Traits;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgentInterface;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Crwlr\RobotsTxt\RobotsTxt;
 use Crwlr\Url\Url;
+use Exception;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +23,7 @@ trait CheckRobotsTxt
     protected array $robotsTxts = [];
 
     abstract public function load(mixed $subject): mixed;
-    abstract protected function userAgent(): UserAgent;
+    abstract protected function userAgent(): UserAgentInterface;
     abstract protected function logger(): LoggerInterface;
 
     /**
@@ -35,7 +37,11 @@ trait CheckRobotsTxt
 
         $parsedRobotsTxt = $this->getParsedRobotsTxtFor($uri);
 
-        if ($parsedRobotsTxt && !$parsedRobotsTxt->isAllowed($uri, $this->userAgent()->productToken)) {
+        if (!$this->userAgent() instanceof BotUserAgentInterface) {
+            throw new Exception('CheckRobotsTxt trait only works with a BotUserAgent');
+        }
+
+        if ($parsedRobotsTxt && !$parsedRobotsTxt->isAllowed($uri, $this->userAgent()->productToken())) {
             $message = 'Crawler ist not allowed to load ' . $uri . ' according to the robots.txt file.';
             $this->logger()->warning($message);
 

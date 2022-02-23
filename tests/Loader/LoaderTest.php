@@ -3,13 +3,13 @@
 namespace tests\Loader;
 
 use Crwlr\Crawler\Loader\Loader;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Mockery;
 use Psr\SimpleCache\CacheInterface;
 
 test('You can set multiple hook callbacks for one type and they are executed when called', function (string $hookName) {
-    $loader = new class (new UserAgent('FooBot'), $hookName) extends Loader {
-        public function __construct(UserAgent $userAgent, private string $hookName)
+    $loader = new class (new BotUserAgent('FooBot'), $hookName) extends Loader {
+        public function __construct(BotUserAgent $userAgent, private string $hookName)
         {
             parent::__construct($userAgent);
         }
@@ -51,12 +51,10 @@ test('You can set multiple hook callbacks for one type and they are executed whe
 ]);
 
 test('You can set a cache and use it in the load function', function () {
-    $loader = new class (new UserAgent('FooBot')) extends Loader {
-        public function load(mixed $subject): mixed
+    $loader = new class (new BotUserAgent('FooBot')) extends Loader {
+        public function load(mixed $subject): string
         {
-            if ($this->cache) {
-                $this->cache->get('foo');
-            }
+            $this->cache?->get('foo');
 
             return 'something';
         }

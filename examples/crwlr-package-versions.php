@@ -8,18 +8,20 @@ use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
-use Crwlr\Crawler\UserAgent;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Psr\Log\LoggerInterface;
 
 class MyCrawler extends HttpCrawler
 {
-    public function userAgent(): UserAgent
+    public function userAgent(): UserAgentInterface
     {
-        return UserAgent::make('CrwlrBot');
+        return BotUserAgent::make('CrwlrBot');
     }
 
-    public function loader(): LoaderInterface
+    public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
-        $loader = parent::loader();
+        $loader = parent::loader($userAgent, $logger);
         /** @var HttpLoader $loader */
         $loader->setCache(new FileCache(__DIR__ . '/../cachedir'));
 
