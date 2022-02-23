@@ -33,17 +33,6 @@ function helper_getDummyCrawler(): Crawler
     };
 }
 
-/**
- * @param mixed[] $array
- * @return Generator<mixed>
- */
-function helper_getGenerator(array $array): Generator
-{
-    foreach ($array as $element) {
-        yield $element;
-    }
-}
-
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
@@ -58,7 +47,7 @@ test('You can add steps and the Crawler class passes on its Logger and also its 
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
     $step = Mockery::mock(StepInterface::class);
-    $step->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('👍🏻')]));
+    $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
     $step->shouldReceive('addLogger')->once();
     $step->shouldReceive('resultDefined')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
@@ -78,7 +67,7 @@ test('You can add step groups and the Crawler class passes on its Logger and Loa
 
 test('You can add a parallel step group and it is invoked when the Crawler is run', function () {
     $group = Mockery::mock(GroupInterface::class);
-    $group->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('👍🏻')]));
+    $group->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
     $group->shouldReceive('addLogger')->once();
     $group->shouldReceive('addLoader')->once();
     $group->shouldReceive('resultDefined')->once()->andReturn(false);

@@ -27,6 +27,17 @@ function helper_traverseIterable(iterable $iterable): void
 }
 
 /**
+ * @param mixed[] $array
+ * @return Generator<mixed>
+ */
+function helper_arrayToGenerator(array $array): Generator
+{
+    foreach ($array as $element) {
+        yield $element;
+    }
+}
+
+/**
  * @param Generator<mixed> $generator
  * @return mixed[]
  */

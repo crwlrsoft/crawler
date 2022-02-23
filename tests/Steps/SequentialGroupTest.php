@@ -8,8 +8,8 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\SequentialGroup;
 use Crwlr\Crawler\Steps\StepInterface;
 use Mockery;
+use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
-use function tests\helper_getGenerator;
 use function tests\helper_traverseIterable;
 
 test('The factory method returns a Group object instance', function () {
@@ -19,10 +19,10 @@ test('The factory method returns a Group object instance', function () {
 test('You can add multiple steps and all steps where the previous step has an output are called', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
-    $step1->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('one')]));
+    $step1->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('one')]));
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
-    $step2->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([]));
+    $step2->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([]));
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('addLogger')->once();
     $step3->shouldNotReceive('invokeStep');
@@ -36,13 +36,13 @@ test('You can add multiple steps and all steps where the previous step has an ou
 test('It returns the results of all steps when invoked', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
-    $step1->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('foo')]));
+    $step1->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('foo')]));
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
-    $step2->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('bar')]));
+    $step2->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('bar')]));
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('addLogger')->once();
-    $step3->shouldReceive('invokeStep')->once()->andReturn(helper_getGenerator([new Output('baz')]));
+    $step3->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('baz')]));
 
     $group = new SequentialGroup();
     $group->addLogger(new CliLogger());
@@ -65,12 +65,12 @@ test('One step\'s output is the next step\'s input', function () {
     $step1->shouldReceive('addLogger')->once();
     $step1->shouldReceive('invokeStep')->withArgs(function (Input $input) {
         return $input->get() === 'Initial Input';
-    })->once()->andReturn(helper_getGenerator([new Output('Step 1')]));
+    })->once()->andReturn(helper_arrayToGenerator([new Output('Step 1')]));
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
     $step2->shouldReceive('invokeStep')->withArgs(function (Input $input) {
         return $input->get() === 'Step 1';
-    })->once()->andReturn(helper_getGenerator([new Output('Step 2')]));
+    })->once()->andReturn(helper_arrayToGenerator([new Output('Step 2')]));
 
     $group = new SequentialGroup();
     $group->addLogger(new CliLogger());
