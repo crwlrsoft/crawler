@@ -15,14 +15,27 @@ class CookieJar
     private array $jar = [];
 
     /**
+     * @param string $domain
+     * @return Cookie[]
+     */
+    public function allByDomain(string $domain): array
+    {
+        if (array_key_exists($domain, $this->jar)) {
+            return $this->jar[$domain];
+        }
+
+        return [];
+    }
+
+    /**
      * @throws InvalidCookieException
      */
-    public function addFrom(string|UriInterface $url, ResponseInterface $response): void
+    public function addFrom(string|UriInterface|Url $url, ResponseInterface $response): void
     {
         $cookieHeaders = $response->getHeader('set-cookie');
 
         if (!empty($cookieHeaders)) {
-            $url = Url::parse($url);
+            $url = !$url instanceof Url ? Url::parse($url) : $url;
 
             foreach ($cookieHeaders as $cookieHeader) {
                 $cookie = new Cookie($url, $cookieHeader);
