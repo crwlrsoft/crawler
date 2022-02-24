@@ -12,6 +12,7 @@ use GuzzleHttp\Psr7\Response;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
@@ -286,3 +287,71 @@ test('It adds loaded responses to the cache when it has a cache', function ($loa
     $httpLoader->setCache($cache);
     $httpLoader->{$loadingMethod}('https://laravel.com/');
 })->with(['load', 'loadOrFail']);
+
+test('By default it uses the cookie jar and passes on cookies', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/';
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/blog' &&
+            $cookiesHeader === ['cookie1=foo'];
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo', 'cookie2=bar']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/contact' &&
+            $cookiesHeader === ['cookie1=foo', 'cookie2=bar'];
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo2', 'cookie2=bar2', 'cookie3=baz']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/packages' &&
+            $cookiesHeader === ['cookie1=foo2', 'cookie2=bar2', 'cookie3=baz'];
+    })->andReturn(new Response());
+
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader->load('https://www.crwlr.software/');
+    $httpLoader->load('https://www.crwlr.software/blog');
+    $httpLoader->loadOrFail('https://www.crwlr.software/contact');
+    $httpLoader->loadOrFail('https://www.crwlr.software/packages');
+});
+
+test('You can turn off using the cookie jar', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/';
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/blog' && $cookiesHeader === [];
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo', 'cookie2=bar']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/contact' && $cookiesHeader === [];
+    })->andReturn(new Response(200, ['Set-Cookie' => ['cookie1=foo2', 'cookie2=bar2', 'cookie3=baz']]));
+
+    $httpClient->shouldReceive('sendRequest')->withArgs(function (RequestInterface $request) {
+        $cookiesHeader = $request->getHeader('Cookie');
+
+        return $request->getUri()->__toString() === 'https://www.crwlr.software/packages' && $cookiesHeader === [];
+    })->andReturn(new Response());
+
+    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader->dontUseCookies();
+    $httpLoader->load('https://www.crwlr.software/');
+    $httpLoader->load('https://www.crwlr.software/blog');
+    $httpLoader->loadOrFail('https://www.crwlr.software/contact');
+    $httpLoader->loadOrFail('https://www.crwlr.software/packages');
+});
