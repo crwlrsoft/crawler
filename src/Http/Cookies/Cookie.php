@@ -34,15 +34,13 @@ class Cookie
 
         if (
             !is_string($this->receivedFromUrl->host()) ||
-            empty($this->receivedFromUrl->host()) ||
-            !is_string($this->receivedFromUrl->domain()) ||
-            empty($this->receivedFromUrl->domain())
+            empty($this->receivedFromUrl->host())
         ) {
             throw new InvalidCookieException('Url where cookie was received from has no host or domain');
         }
 
         $this->receivedFromHost = $this->receivedFromUrl->host();
-        $this->setDomain($this->receivedFromUrl->domain());
+        $this->setDomain($this->receivedFromUrl->domain() ?? $this->receivedFromUrl->host());
         $this->parseSetCookieHeader($this->setCookieHeader);
     }
 
@@ -96,7 +94,7 @@ class Cookie
 
     public function isExpired(): bool
     {
-        if (!$this->expires() && !$this->maxAge()) {
+        if ($this->expires() === null && $this->maxAge() === null) {
             return false;
         }
 
@@ -106,7 +104,10 @@ class Cookie
             return true;
         }
 
-        if ($this->maxAge() > 0 && $nowTimestamp > ($this->receivedAtTimestamp + $this->maxAge())) {
+        if (
+            $this->maxAge() !== null &&
+            ($this->maxAge() <= 0 || $nowTimestamp > ($this->receivedAtTimestamp + $this->maxAge()))
+        ) {
             return true;
         }
 
@@ -168,7 +169,7 @@ class Cookie
             $this->parseAttribute($attribute);
         }
 
-        $this->checkCookiePrefixes();
+        $this->checkPrefixes();
     }
 
     private function parseAttribute(string $attribute): void
@@ -198,15 +199,19 @@ class Cookie
      * @see https://datatracker.ietf.org/doc/html/draft-west-cookie-prefixes#section-3
      * @throws InvalidCookieException
      */
-    private function checkCookiePrefixes(): void
+    private function checkPrefixes(): void
     {
         if ($this->hasSecurePrefix() || $this->hasHostPrefix()) {
             if (!$this->isReceivedSecure()) {
-                throw new InvalidCookieException('Cookie is prefixed with __Secure- but was not sent via https');
+                throw new InvalidCookieException(
+                    'Cookie is prefixed with __Secure- or __Host- but was not sent via https'
+                );
             }
 
             if (!$this->secure()) {
-                throw new InvalidCookieException('Cookie starts with __Secure- prefix but Secure flag was not sent');
+                throw new InvalidCookieException(
+                    'Cookie is prefixed with __Secure- or __Host- but Secure flag was not sent'
+                );
             }
         }
 
