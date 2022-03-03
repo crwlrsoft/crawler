@@ -175,3 +175,15 @@ HTML;
     expect($result)->toBeInstanceOf(Output::class);
     expect($result->get())->toBe('foo'); // @phpstan-ignore-line
 });
+
+test('It yields nothing when there is no match and there\'s no error', function () {
+    $html = <<<HTML
+<div class="element">foo</div><div class="element">bar</div><div class="element">baz</div>
+HTML;
+    $querySelectorStep = new QuerySelector('.elephpant');
+    $querySelectorStep->addLogger(new CliLogger());
+    $input = new Input($html);
+    $results = $querySelectorStep->invokeStep($input);
+    expect($results)->toBeIterable();
+    expect($results)->toHaveCount(0);
+});

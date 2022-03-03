@@ -95,6 +95,8 @@ class QuerySelector extends Step
 
         $resultNode = $input->get()->filter($this->selector)->first();
 
-        yield $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
+        if ($resultNode->count() > 0) {
+            yield $argument ? $resultNode->{$getWhat}($argument) : $resultNode->{$getWhat}();
+        }
     }
 }
