@@ -41,10 +41,10 @@ final class SequentialGroup extends Group
                     continue;
                 }
 
-                yield $output;
-
                 if ($step !== end($this->steps)) {
                     $inputs[] = $output;
+                } else {
+                    yield $output;
                 }
             }
         }

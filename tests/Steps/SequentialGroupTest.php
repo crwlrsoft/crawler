@@ -33,7 +33,7 @@ test('You can add multiple steps and all steps where the previous step has an ou
     helper_traverseIterable($group->invokeStep(new Input('foo')));
 });
 
-test('It returns the results of all steps when invoked', function () {
+test('It returns the results of the last step when invoked', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
     $step1->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('foo')]));
@@ -51,13 +51,9 @@ test('It returns the results of all steps when invoked', function () {
     $result = helper_generatorToArray($result);
 
     expect($result)->toBeArray();
-    expect($result)->toHaveCount(3);
+    expect($result)->toHaveCount(1);
     expect($result[0])->toBeInstanceOf(Output::class);
-    expect($result[0]->get())->toBe('foo');
-    expect($result[1])->toBeInstanceOf(Output::class);
-    expect($result[1]->get())->toBe('bar');
-    expect($result[2])->toBeInstanceOf(Output::class);
-    expect($result[2]->get())->toBe('baz');
+    expect($result[0]->get())->toBe('baz');
 });
 
 test('One step\'s output is the next step\'s input', function () {
