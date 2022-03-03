@@ -238,7 +238,9 @@ test('It tries to get responses from cache', function () {
     $cache->shouldReceive('has')->once()->andReturn(true);
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(new RequestResponseAggregate(new Request('GET', '/'), new Response()));
+        ->andReturn(HttpResponseCacheItem::fromAggregate(
+            new RequestResponseAggregate(new Request('GET', '/'), new Response())
+        ));
     $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->load('https://www.facebook.com');
@@ -250,7 +252,9 @@ test('It fails when it gets a failed response from cache', function () {
     $cache->shouldReceive('has')->once()->andReturn(true);
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(new RequestResponseAggregate(new Request('GET', '/'), new Response(404)));
+        ->andReturn(HttpResponseCacheItem::fromAggregate(
+            new RequestResponseAggregate(new Request('GET', '/'), new Response(404))
+        ));
     $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
 

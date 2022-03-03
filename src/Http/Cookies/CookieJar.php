@@ -27,6 +27,11 @@ class CookieJar
         return [];
     }
 
+    public function flush(): void
+    {
+        $this->jar = [];
+    }
+
     /**
      * @throws InvalidCookieException
      */

@@ -39,10 +39,17 @@ class HttpLoader extends Loader
             $logger->info('Loaded ' . $request->getUri()->__toString());
         });
 
-        $this->onError(function (RequestInterface $request, $exception, $logger) {
-            $logger->error(
-                'Failed to load ' . $request->getUri()->__toString() . ': ' . $exception->getMessage()
-            );
+        $this->onError(function (RequestInterface $request, Exception|ResponseInterface $exceptionOrResponse, $logger) {
+            $logMessage = 'Failed to load ' . $request->getUri()->__toString() . ': ';
+
+            if ($exceptionOrResponse instanceof ResponseInterface) {
+                $logMessage .= 'got response ' . $exceptionOrResponse->getStatusCode() . ' - ' .
+                    $exceptionOrResponse->getReasonPhrase();
+            } else {
+                $logMessage .= $exceptionOrResponse->getMessage();
+            }
+
+            $logger->error($logMessage);
         });
 
         $this->cookieJar = new CookieJar();
@@ -127,6 +134,11 @@ class HttpLoader extends Loader
         $this->useCookies = false;
 
         return $this;
+    }
+
+    public function flushCookies(): void
+    {
+        $this->cookieJar->flush();
     }
 
     /**
