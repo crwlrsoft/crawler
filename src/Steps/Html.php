@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Html\GetLinks;
 use Crwlr\Crawler\Steps\Html\QuerySelector;
 use Crwlr\Crawler\Steps\Html\QuerySelectorAll;
@@ -16,6 +17,11 @@ class Html
     public static function querySelectorAll(string $selector): QuerySelectorAll
     {
         return new QuerySelectorAll($selector);
+    }
+
+    public static function getLink(?string $selector = null): GetLink
+    {
+        return new GetLink($selector);
     }
 
     public static function getLinks(?string $selector = null): GetLinks
