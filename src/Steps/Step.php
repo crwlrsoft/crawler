@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
@@ -14,6 +15,9 @@ abstract class Step implements StepInterface
 {
     protected LoggerInterface $logger;
     protected bool $repeat = false;
+    protected bool $repeatWithInput = false;
+    protected bool $repeatWithOutput = false;
+    protected ?Closure $inputMutationCallback = null;
     protected int $maxRepetitions = 100;
     protected int $repetitions = 0;
     private ?string $resultResourceName = null;
@@ -45,7 +49,18 @@ abstract class Step implements StepInterface
                     yield $output;
 
                     if ($this->repetitions < $this->maxRepetitions) {
-                        yield from $this->invokeStep(new Input($output));
+                        if ($this->repeatWithInput && $this->inputMutationCallback) {
+                            $newInput = new Input(
+                                $this->inputMutationCallback->call($this, $validInput),
+                                $validInput->result
+                            );
+                        } elseif ($this->repeatWithInput) {
+                            $newInput = $validInput;
+                        } else {
+                            $newInput = new Input($output);
+                        }
+
+                        yield from $this->invokeStep($newInput);
                     } else {
                         $this->logger->warning(
                             'Stop repeating step as max repitions of ' . $this->maxRepetitions . ' are reached.'
@@ -58,6 +73,7 @@ abstract class Step implements StepInterface
 
             foreach ($this->invoke($validInput) as $output) {
                 $output = $this->output($output, $validInput);
+
                 yield $output;
             }
         }
@@ -92,6 +108,19 @@ abstract class Step implements StepInterface
     public function repeatWithOutputUntilNoMoreResults(int $maxRepetitions = 100): static
     {
         $this->repeat = true;
+        $this->repeatWithOutput = true;
+        $this->maxRepetitions = $maxRepetitions;
+
+        return $this;
+    }
+
+    public function repeatWithInputUntilNoMoreResults(
+        int $maxRepetitions = 100,
+        ?Closure $inputMutationCallback = null
+    ): static {
+        $this->repeat = true;
+        $this->repeatWithInput = true;
+        $this->inputMutationCallback = $inputMutationCallback;
         $this->maxRepetitions = $maxRepetitions;
 
         return $this;

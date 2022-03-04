@@ -92,6 +92,46 @@ test(
     }
 );
 
+test('Using the input method, you set the input data for the first step', function () {
+    $crawler = new class () extends Crawler {
+        protected function userAgent(): UserAgentInterface
+        {
+            return new BotUserAgent('CrwlrBot');
+        }
+
+        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+        {
+            return Mockery::mock(LoaderInterface::class);
+        }
+    };
+
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+
+    $crawler->input('https://www.example.com');
+    $crawler->addStep($step);
+    $results = helper_generatorToArray($crawler->run());
+    expect($results[0]->toArray()['unnamed'])->toBe('https://www.example.com');
+
+    $crawler->input(['https://www.crwl.io', 'https://www.otsch.codes']);
+    $results = helper_generatorToArray($crawler->run());
+    expect($results[0]->toArray()['unnamed'])->toBe('https://www.crwl.io');
+    expect($results[1]->toArray()['unnamed'])->toBe('https://www.otsch.codes');
+});
+
+test('The static loop method wraps a Step in a LoopStep object', function () {
+    $step = Mockery::mock(StepInterface::class);
+    $step->shouldReceive('invokeStep')->withArgs(function (Input $input) {
+        return $input->get() === 'foo';
+    });
+    $loop = Crawler::loop($step);
+    $loop->invokeStep(new Input('foo'));
+});
+
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
@@ -111,8 +151,9 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $step->shouldReceive('resultDefined')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
     $crawler->addStep($step);
+    $crawler->input('randomInput');
 
-    $results = $crawler->run('randomInput');
+    $results = $crawler->run();
     $results->current();
 });
 
@@ -132,8 +173,9 @@ test('You can add a parallel step group and it is invoked when the Crawler is ru
     $group->shouldReceive('resultDefined')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
     $crawler->addGroup($group);
+    $crawler->input('randomInput');
 
-    $results = $crawler->run('randomInput');
+    $results = $crawler->run();
     $results->current();
 });
 
@@ -187,8 +229,9 @@ test('Result objects are created when defined and passed on through all the step
     };
 
     $crawler->addStep($step4);
+    $crawler->input('randomInput');
 
-    $results = $crawler->run('randomInput');
+    $results = $crawler->run();
     $results = helper_generatorToArray($results);
 
     expect($results[0])->toBeInstanceOf(Result::class);
@@ -223,8 +266,9 @@ test('When final steps return an array you get all values in the defined Result 
         }
     };
     $crawler->addStep($step2->resultResourceProperty('children'));
+    $crawler->input('randomInput');
 
-    $results = $crawler->run('randomInput');
+    $results = $crawler->run();
 
     expect($results->current()->toArray())->toBe([
         'parent' => 'Donald',

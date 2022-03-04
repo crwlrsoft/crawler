@@ -6,8 +6,10 @@ use AppendIterator;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\GroupInterface;
+use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Exception;
 use Generator;
 use Psr\Log\LoggerInterface;
 
@@ -16,6 +18,7 @@ abstract class Crawler
     protected UserAgentInterface $userAgent;
     protected LoaderInterface $loader;
     protected LoggerInterface $logger;
+    protected mixed $input = null;
 
     /**
      * @var array|StepInterface[]
@@ -32,9 +35,9 @@ abstract class Crawler
     abstract protected function userAgent(): UserAgentInterface;
     abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
 
-    protected function logger(): LoggerInterface
+    public static function loop(StepInterface $step): LoopStep
     {
-        return new CliLogger();
+        return new LoopStep($step);
     }
 
     public function getUserAgent(): UserAgentInterface
@@ -50,6 +53,13 @@ abstract class Crawler
     public function getLoader(): LoaderInterface
     {
         return $this->loader;
+    }
+
+    public function input(mixed $input): static
+    {
+        $this->input = $input;
+
+        return $this;
     }
 
     public function addStep(StepInterface $step): static
@@ -73,12 +83,12 @@ abstract class Crawler
     }
 
     /**
-     * @param mixed $input
      * @return Generator<Result>
+     * @throws Exception
      */
-    public function run(mixed $input): Generator
+    public function run(): Generator
     {
-        $inputs = $this->prepareInput($input);
+        $inputs = $this->prepareInput();
 
         foreach ($this->steps as $step) {
             $nextIterationInputs = new AppendIterator();
@@ -103,19 +113,28 @@ abstract class Crawler
         }
     }
 
-    /**
-     * @param mixed $input
-     * @return Input[]
-     */
-    private function prepareInput(mixed $input): array
+    protected function logger(): LoggerInterface
     {
-        if (!is_array($input)) {
-            return [new Input($input)];
+        return new CliLogger();
+    }
+
+    /**
+     * @return Input[]
+     * @throws Exception
+     */
+    private function prepareInput(): array
+    {
+        if ($this->input === null) {
+            throw new Exception('No initial input');
+        }
+
+        if (!is_array($this->input)) {
+            return [new Input($this->input)];
         }
 
         return array_map(function ($input) {
             return new Input($input);
-        }, $input);
+        }, $this->input);
     }
 
     /**
