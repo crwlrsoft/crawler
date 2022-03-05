@@ -9,7 +9,6 @@ use Crwlr\Crawler\Loader\PoliteHttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
-use Crwlr\Crawler\Steps\GroupInterface;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\Step;
@@ -157,26 +156,23 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $results->current();
 });
 
-test('You can add step groups and the Crawler class passes on its Logger and Loader', function () {
-    $group = Mockery::mock(GroupInterface::class);
-    $group->shouldReceive('addLogger')->once();
-    $group->shouldReceive('addLoader')->once();
+test('You can add a step group as a step and all it\'s steps are invoked when the Crawler is run', function () {
     $crawler = helper_getDummyCrawler();
-    $crawler->addGroup($group);
-});
-
-test('You can add a parallel step group and it is invoked when the Crawler is run', function () {
-    $group = Mockery::mock(GroupInterface::class);
-    $group->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
-    $group->shouldReceive('addLogger')->once();
-    $group->shouldReceive('addLoader')->once();
-    $group->shouldReceive('resultDefined')->once()->andReturn(false);
-    $crawler = helper_getDummyCrawler();
-    $crawler->addGroup($group);
-    $crawler->input('randomInput');
-
-    $results = $crawler->run();
-    $results->current();
+    $step1 = Mockery::mock(StepInterface::class);
+    $step1->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['foo']));
+    $step1->shouldReceive('addLogger');
+    $step2 = Mockery::mock(StepInterface::class);
+    $step2->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['bar']));
+    $step2->shouldReceive('addLogger');
+    $step3 = Mockery::mock(StepInterface::class);
+    $step3->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['baz']));
+    $step3->shouldReceive('addLogger');
+    $crawler->addStep(
+        Crawler::group()
+            ->addStep($step1)
+            ->addStep($step2)
+            ->addStep($step3)
+    );
 });
 
 test('Result objects are created when defined and passed on through all the steps', function () {

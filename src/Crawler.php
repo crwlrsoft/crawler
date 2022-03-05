@@ -5,7 +5,7 @@ namespace Crwlr\Crawler;
 use AppendIterator;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
-use Crwlr\Crawler\Steps\GroupInterface;
+use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -40,6 +40,11 @@ abstract class Crawler
         return new LoopStep($step);
     }
 
+    public static function group(): Group
+    {
+        return new Group();
+    }
+
     public function getUserAgent(): UserAgentInterface
     {
         return $this->userAgent;
@@ -71,13 +76,6 @@ abstract class Crawler
         }
 
         $this->steps[] = $step;
-
-        return $this;
-    }
-
-    public function addGroup(GroupInterface $group): static
-    {
-        $this->addStep($group);
 
         return $this;
     }

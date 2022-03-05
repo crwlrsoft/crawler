@@ -8,28 +8,34 @@ use Crwlr\Crawler\Output;
 use Generator;
 use Psr\Log\LoggerInterface;
 
-abstract class Group implements GroupInterface
+final class Group implements StepInterface
 {
     /**
      * @var StepInterface[]
      */
     protected array $steps = [];
 
-    protected LoggerInterface $logger;
-    protected ?LoaderInterface $loader;
-
-    abstract public static function new(): GroupInterface;
+    protected ?LoggerInterface $logger = null;
+    protected ?LoaderInterface $loader = null;
 
     /**
+     * @param Input $input
      * @return Generator<Output>
      */
-    abstract public function invokeStep(Input $input): Generator;
+    public function invokeStep(Input $input): Generator
+    {
+        foreach ($this->steps as $step) {
+            yield from $step->invokeStep($input);
+        }
+    }
 
     public function addStep(StepInterface $step): self
     {
-        $step->addLogger($this->logger);
+        if ($this->logger instanceof LoggerInterface) {
+            $step->addLogger($this->logger);
+        }
 
-        if (method_exists($step, 'addLoader')) {
+        if (method_exists($step, 'addLoader') && $this->loader instanceof LoaderInterface) {
             $step->addLoader($this->loader);
         }
 
@@ -42,12 +48,22 @@ abstract class Group implements GroupInterface
     {
         $this->logger = $logger;
 
+        foreach ($this->steps as $step) {
+            $step->addLogger($logger);
+        }
+
         return $this;
     }
 
     public function addLoader(LoaderInterface $loader): self
     {
         $this->loader = $loader;
+
+        foreach ($this->steps as $step) {
+            if (method_exists($step, 'addLoader')) {
+                $step->addLoader($loader);
+            }
+        }
 
         return $this;
     }
