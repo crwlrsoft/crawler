@@ -68,6 +68,13 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
+    public function resultResourceProperty(string $propertyName): static
+    {
+        $this->step->resultResourceProperty($propertyName);
+
+        return $this;
+    }
+
     public function resultDefined(): bool
     {
         return $this->step->resultDefined();

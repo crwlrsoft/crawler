@@ -11,6 +11,7 @@ use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Exception;
 use Generator;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 abstract class Crawler
@@ -67,8 +68,22 @@ abstract class Crawler
         return $this;
     }
 
-    public function addStep(StepInterface $step): static
+    /**
+     * @param string|StepInterface $stepOrResultPropertyName
+     * @param StepInterface|null $step
+     * @return $this
+     * @throws InvalidArgumentException
+     */
+    public function addStep(string|StepInterface $stepOrResultPropertyName, ?StepInterface $step = null): static
     {
+        if (is_string($stepOrResultPropertyName) && $step === null) {
+            throw new InvalidArgumentException('No StepInterface object provided');
+        } elseif (is_string($stepOrResultPropertyName)) {
+            $step->resultResourceProperty($stepOrResultPropertyName);
+        } else {
+            $step = $stepOrResultPropertyName;
+        }
+
         $step->addLogger($this->logger);
 
         if (method_exists($step, 'addLoader')) {

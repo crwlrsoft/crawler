@@ -9,13 +9,8 @@ class Result
      */
     private array $data = [];
 
-    public function __construct(private string $resourceName = 'Result')
+    public function __construct()
     {
-    }
-
-    public function name(): string
-    {
-        return $this->resourceName;
     }
 
     public function set(string $key, mixed $value): void

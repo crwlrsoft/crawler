@@ -188,7 +188,7 @@ test('Result objects are created when defined and passed on through all the step
         }
     };
 
-    $crawler->addStep($step->initResultResource('someResource')->resultResourceProperty('prop1'));
+    $crawler->addStep($step->resultResourceProperty('prop1'));
 
     $step2 = new class () extends Step {
         /**
@@ -231,7 +231,6 @@ test('Result objects are created when defined and passed on through all the step
     $results = helper_generatorToArray($results);
 
     expect($results[0])->toBeInstanceOf(Result::class);
-    expect($results[0]->name())->toBe('someResource');
     expect($results[0]->toArray())->toBe([
         'prop1' => 'yo',
         'prop2' => 'lo',
@@ -250,7 +249,7 @@ test('When final steps return an array you get all values in the defined Result 
             yield 'Donald';
         }
     };
-    $crawler->addStep($step1->initResultResource('Ducks')->resultResourceProperty('parent'));
+    $crawler->addStep($step1->resultResourceProperty('parent'));
 
     $step2 = new class () extends Step {
         /**

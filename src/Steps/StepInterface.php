@@ -15,5 +15,6 @@ interface StepInterface
      */
     public function invokeStep(Input $input): Generator;
     public function addLogger(LoggerInterface $logger): static;
+    public function resultResourceProperty(string $propertyName): static;
     public function resultDefined(): bool;
 }

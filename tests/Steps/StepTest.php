@@ -66,7 +66,7 @@ test(
 );
 
 test(
-    'The invokeStep method creates a Result object that is added to the Output when you define a result resource',
+    'The invokeStep method creates a Result object that is added to the Output when you set a property name',
     function () {
         $step = new class () extends Step {
             /**
@@ -77,8 +77,7 @@ test(
                 yield 'returnValue';
             }
         };
-        $step->initResultResource('someResource')
-            ->resultResourceProperty('property');
+        $step->resultResourceProperty('property');
         $output = $step->invokeStep(new Input('inputValue'));
         $output = helper_generatorToArray($output);
 
@@ -100,7 +99,7 @@ test(
             }
         };
         $step->resultResourceProperty('property');
-        $prevResult = new Result('someResource');
+        $prevResult = new Result();
         $prevResult->set('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
         $output = helper_generatorToArray($output);
@@ -125,7 +124,7 @@ test(
                 yield 'returnValue';
             }
         };
-        $prevResult = new Result('someResource');
+        $prevResult = new Result();
         $prevResult->set('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
         $output = helper_generatorToArray($output);

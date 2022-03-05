@@ -6,6 +6,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Generator;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 final class Group implements StepInterface
@@ -13,10 +14,11 @@ final class Group implements StepInterface
     /**
      * @var StepInterface[]
      */
-    protected array $steps = [];
+    private array $steps = [];
 
-    protected ?LoggerInterface $logger = null;
-    protected ?LoaderInterface $loader = null;
+    private ?LoggerInterface $logger = null;
+    private ?LoaderInterface $loader = null;
+    private bool $combine = false;
 
     /**
      * @param Input $input
@@ -25,12 +27,26 @@ final class Group implements StepInterface
     public function invokeStep(Input $input): Generator
     {
         foreach ($this->steps as $step) {
-            yield from $step->invokeStep($input);
+            $outputs = $step->invokeStep($input);
+
+            if (!$this->combine) {
+                yield from $outputs;
+            } else {
+                // TODO
+            }
         }
     }
 
-    public function addStep(StepInterface $step): self
+    public function addStep(string|StepInterface $stepOrResultPropertyName, ?StepInterface $step = null): self
     {
+        if (is_string($stepOrResultPropertyName) && $step === null) {
+            throw new InvalidArgumentException('No StepInterface object provided');
+        } elseif (is_string($stepOrResultPropertyName)) {
+            $step->resultResourceProperty($stepOrResultPropertyName);
+        } else {
+            $step = $stepOrResultPropertyName;
+        }
+
         if ($this->logger instanceof LoggerInterface) {
             $step->addLogger($this->logger);
         }
@@ -65,6 +81,18 @@ final class Group implements StepInterface
             }
         }
 
+        return $this;
+    }
+
+    public function combineToSingleOutput(): self
+    {
+        $this->combine = true;
+
+        return $this;
+    }
+
+    public function resultResourceProperty(string $propertyName): static
+    {
         return $this;
     }
 

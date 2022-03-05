@@ -86,13 +86,6 @@ abstract class Step implements StepInterface
         return $this;
     }
 
-    public function initResultResource(string $resultResourceName): static
-    {
-        $this->resultResourceName = $resultResourceName;
-
-        return $this;
-    }
-
     public function resultResourceProperty(string $propertyName): static
     {
         $this->resultResourcePropertyName = $propertyName;
@@ -151,21 +144,9 @@ abstract class Step implements StepInterface
      */
     protected function output(mixed $value, Input $input): Output
     {
-        if ($this->resultResourceName) {
-            $result = new Result($this->resultResourceName);
-
-            if ($this->resultResourcePropertyName === null) {
-                throw new Exception('No resource property defined');
-            }
-
-            $result->set($this->resultResourcePropertyName, $value);
-
-            return new Output($value, $result);
-        }
-
         if ($this->resultResourcePropertyName) {
             if (!$input->result) {
-                throw new Exception('Defined a resource property name but no resource was initialized yet!');
+                $input->result = new Result();
             }
 
             $input->result->set($this->resultResourcePropertyName, $value);
