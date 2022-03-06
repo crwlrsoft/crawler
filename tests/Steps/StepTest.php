@@ -77,7 +77,7 @@ test(
                 yield 'returnValue';
             }
         };
-        $step->resultResourceProperty('property');
+        $step->setResultKey('property');
         $output = $step->invokeStep(new Input('inputValue'));
         $output = helper_generatorToArray($output);
 
@@ -98,7 +98,7 @@ test(
                 yield 'returnValue';
             }
         };
-        $step->resultResourceProperty('property');
+        $step->setResultKey('property');
         $prevResult = new Result();
         $prevResult->set('prevProperty', 'foobar');
         $output = $step->invokeStep(new Input('inputValue', $prevResult));
@@ -177,52 +177,3 @@ test('It is possible that a step does not produce any output at all', function (
     expect($output)->toHaveCount(1);
     expect($output[0]->get())->toBe('bar');
 });
-
-test('The step repeats invoking itself with previous output as input until there is no output anymore', function () {
-    $step = new class () extends Step {
-        private int $invokeCount = 0;
-
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(Input $input): Generator
-        {
-            $this->invokeCount++;
-
-            if ($this->invokeCount < 4) {
-                yield $input->get() . ' - ' . $this->invokeCount;
-            }
-        }
-    };
-    $step->repeatWithOutputUntilNoMoreResults();
-    $step->addLogger(new CliLogger());
-    $output = $step->invokeStep(new Input('input'));
-    $output = helper_generatorToArray($output);
-
-    expect($output)->toBeArray();
-    expect($output[0]->get())->toBe('input - 1');
-    expect($output[1]->get())->toBe('input - 1 - 2');
-    expect($output[2]->get())->toBe('input - 1 - 2 - 3');
-});
-
-test('A step repeating itself by default has a limit of 100 max repetitions, then it stops', function () {
-    $step = helper_getNumberIncrementingStep();
-    $step->repeatWithOutputUntilNoMoreResults();
-    $step->addLogger(new CliLogger());
-    $output = $step->invokeStep(new Input(1));
-    $output = helper_generatorToArray($output);
-
-    expect($output)->toBeArray();
-    expect($output)->toHaveCount(100);
-});
-
-test('You can also set your own max repetition limit for a self repeating step', function ($limit) {
-    $step = helper_getNumberIncrementingStep();
-    $step->repeatWithOutputUntilNoMoreResults($limit);
-    $step->addLogger(new CliLogger());
-    $output = $step->invokeStep(new Input(1));
-    $output = helper_generatorToArray($output);
-
-    expect($output)->toBeArray();
-    expect($output)->toHaveCount($limit);
-})->with([134, 500, 1000, 10000]);

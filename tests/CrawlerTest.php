@@ -147,7 +147,7 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
     $step->shouldReceive('addLogger')->once();
-    $step->shouldReceive('resultDefined')->once()->andReturn(false);
+    $step->shouldReceive('getResultKey')->once()->andReturn(null);
     $crawler = helper_getDummyCrawler();
     $crawler->addStep($step);
     $crawler->input('randomInput');
@@ -188,7 +188,7 @@ test('Result objects are created when defined and passed on through all the step
         }
     };
 
-    $crawler->addStep($step->resultResourceProperty('prop1'));
+    $crawler->addStep($step->setResultKey('prop1'));
 
     $step2 = new class () extends Step {
         /**
@@ -200,7 +200,7 @@ test('Result objects are created when defined and passed on through all the step
         }
     };
 
-    $crawler->addStep($step2->resultResourceProperty('prop2'));
+    $crawler->addStep($step2->setResultKey('prop2'));
 
     $step3 = new class () extends Step {
         /**
@@ -249,7 +249,7 @@ test('When final steps return an array you get all values in the defined Result 
             yield 'Donald';
         }
     };
-    $crawler->addStep($step1->resultResourceProperty('parent'));
+    $crawler->addStep($step1->setResultKey('parent'));
 
     $step2 = new class () extends Step {
         /**
@@ -260,7 +260,7 @@ test('When final steps return an array you get all values in the defined Result 
             yield ['Tick', 'Trick', 'Track'];
         }
     };
-    $crawler->addStep($step2->resultResourceProperty('children'));
+    $crawler->addStep($step2->setResultKey('children'));
     $crawler->input('randomInput');
 
     $results = $crawler->run();

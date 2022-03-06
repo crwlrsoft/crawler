@@ -7,10 +7,13 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
+use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
@@ -92,15 +95,104 @@ test('It returns the results of all steps when invoked', function () {
     $group = new Group();
     $group->addLogger(new CliLogger());
     $group->addStep($step1)->addStep($step2)->addStep($step3);
-    $result = $group->invokeStep(new Input('foo'));
-    $result = helper_generatorToArray($result);
+    $output = $group->invokeStep(new Input('foo'));
+    $output = helper_generatorToArray($output);
 
-    expect($result)->toBeArray();
-    expect($result)->toHaveCount(3);
-    expect($result[0])->toBeInstanceOf(Output::class);
-    expect($result[0]->get())->toBe('1');
-    expect($result[1])->toBeInstanceOf(Output::class);
-    expect($result[1]->get())->toBe('2');
-    expect($result[2])->toBeInstanceOf(Output::class);
-    expect($result[2]->get())->toBe('3');
+    expect($output)->toBeArray();
+    expect($output)->toHaveCount(3);
+    expect($output[0])->toBeInstanceOf(Output::class);
+    expect($output[0]->get())->toBe('1');
+    expect($output[1])->toBeInstanceOf(Output::class);
+    expect($output[1]->get())->toBe('2');
+    expect($output[2])->toBeInstanceOf(Output::class);
+    expect($output[2]->get())->toBe('3');
 });
+
+test(
+    'It combines the outputs of all it\'s steps into one output containing an array when combineToSingleOutput is used',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'lorem';
+            }
+        };
+        $step2 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'ipsum';
+                yield 'dolor';
+            }
+        };
+        $step3 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'sit';
+            }
+        };
+
+        $group = new Group();
+        $group->addLogger(new CliLogger());
+        $group->addStep($step1)->addStep($step2)->addStep($step3);
+        $group->combineToSingleOutput();
+        $output = $group->invokeStep(new Input('gogogo'));
+        $output = helper_generatorToArray($output);
+
+        expect($output)->toBeArray();
+        expect($output)->toHaveCount(1);
+        expect($output[0])->toBeInstanceOf(Output::class);
+        expect($output[0]->get())->toBe([
+            'lorem',
+            ['ipsum', 'dolor'],
+            'sit'
+        ]);
+    }
+);
+
+test(
+    'When mapping steps to the Result object and also combining to a single output, the resultKeys are also used in ' .
+    'the output array',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'ich';
+            }
+        };
+        $step2 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'bin';
+                yield 'ein';
+            }
+        };
+        $step3 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'berliner';
+            }
+        };
+
+        $group = new Group();
+        $group->addLogger(new CliLogger());
+        $group->addStep('foo', $step1)->addStep('bar', $step2)->addStep('baz', $step3);
+        $group->combineToSingleOutput();
+        $output = $group->invokeStep(new Input('https://www.gogo.go'));
+        $output = helper_generatorToArray($output);
+
+        expect($output)->toBeArray();
+        expect($output)->toHaveCount(1);
+        expect($output[0])->toBeInstanceOf(Output::class);
+        expect($output[0]->get())->toBe([
+            'foo' => 'ich',
+            'bar' => ['bin', 'ein'],
+            'baz' => 'berliner',
+        ]);
+        expect($output[0]->result)->toBeInstanceOf(Result::class);
+        expect($output[0]->result->toArray())->toBe([
+            'foo' => 'ich',
+            'bar' => ['bin', 'ein'],
+            'baz' => 'berliner',
+        ]);
+    }
+);

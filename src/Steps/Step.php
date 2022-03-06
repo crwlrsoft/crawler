@@ -14,14 +14,9 @@ use Psr\Log\LoggerInterface;
 abstract class Step implements StepInterface
 {
     protected LoggerInterface $logger;
-    protected bool $repeat = false;
-    protected bool $repeatWithInput = false;
-    protected bool $repeatWithOutput = false;
     protected ?Closure $inputMutationCallback = null;
-    protected int $maxRepetitions = 100;
-    protected int $repetitions = 0;
-    private ?string $resultResourceName = null;
-    private ?string $resultResourcePropertyName = null;
+    protected ?string $resultKey = null;
+    protected ?string $useInputKey = null;
 
     /**
      * @return Generator<mixed>
@@ -36,46 +31,18 @@ abstract class Step implements StepInterface
      */
     final public function invokeStep(Input $input): Generator
     {
-        if ($this->repeat === true) {
-            $inputs = [$input];
-
-            foreach ($inputs as $input) {
-                $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
-                $this->repetitions++;
-
-                foreach ($this->invoke($validInput) as $output) {
-                    $output = $this->output($output, $validInput);
-
-                    yield $output;
-
-                    if ($this->repetitions < $this->maxRepetitions) {
-                        if ($this->repeatWithInput && $this->inputMutationCallback) {
-                            $newInput = new Input(
-                                $this->inputMutationCallback->call($this, $validInput),
-                                $validInput->result
-                            );
-                        } elseif ($this->repeatWithInput) {
-                            $newInput = $validInput;
-                        } else {
-                            $newInput = new Input($output);
-                        }
-
-                        yield from $this->invokeStep($newInput);
-                    } else {
-                        $this->logger->warning(
-                            'Stop repeating step as max repitions of ' . $this->maxRepetitions . ' are reached.'
-                        );
-                    }
-                }
+        if ($this->useInputKey !== null) {
+            if (!array_key_exists($this->useInputKey, $input->get())) {
+                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
             }
-        } else {
-            $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
 
-            foreach ($this->invoke($validInput) as $output) {
-                $output = $this->output($output, $validInput);
+            $input = new Input($input->get()[$this->useInputKey], $input->result);
+        }
 
-                yield $output;
-            }
+        $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
+
+        foreach ($this->invoke($validInput) as $output) {
+            yield $this->output($output, $validInput);
         }
     }
 
@@ -86,35 +53,21 @@ abstract class Step implements StepInterface
         return $this;
     }
 
-    public function resultResourceProperty(string $propertyName): static
+    public function setResultKey(string $key): static
     {
-        $this->resultResourcePropertyName = $propertyName;
+        $this->resultKey = $key;
 
         return $this;
     }
 
-    public function resultDefined(): bool
+    public function getResultKey(): ?string
     {
-        return $this->resultResourceName !== null || $this->resultResourcePropertyName !== null;
+        return $this->resultKey;
     }
 
-    public function repeatWithOutputUntilNoMoreResults(int $maxRepetitions = 100): static
+    public function useInput(string $key): static
     {
-        $this->repeat = true;
-        $this->repeatWithOutput = true;
-        $this->maxRepetitions = $maxRepetitions;
-
-        return $this;
-    }
-
-    public function repeatWithInputUntilNoMoreResults(
-        int $maxRepetitions = 100,
-        ?Closure $inputMutationCallback = null
-    ): static {
-        $this->repeat = true;
-        $this->repeatWithInput = true;
-        $this->inputMutationCallback = $inputMutationCallback;
-        $this->maxRepetitions = $maxRepetitions;
+        $this->useInputKey = $key;
 
         return $this;
     }
@@ -144,12 +97,12 @@ abstract class Step implements StepInterface
      */
     protected function output(mixed $value, Input $input): Output
     {
-        if ($this->resultResourcePropertyName) {
+        if ($this->resultKey !== null) {
             if (!$input->result) {
                 $input->result = new Result();
             }
 
-            $input->result->set($this->resultResourcePropertyName, $value);
+            $input->result->set($this->resultKey, $value);
         }
 
         return new Output($value, $input->result);

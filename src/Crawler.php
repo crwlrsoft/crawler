@@ -69,19 +69,19 @@ abstract class Crawler
     }
 
     /**
-     * @param string|StepInterface $stepOrResultPropertyName
+     * @param string|StepInterface $stepOrResultKey
      * @param StepInterface|null $step
      * @return $this
      * @throws InvalidArgumentException
      */
-    public function addStep(string|StepInterface $stepOrResultPropertyName, ?StepInterface $step = null): static
+    public function addStep(string|StepInterface $stepOrResultKey, ?StepInterface $step = null): static
     {
-        if (is_string($stepOrResultPropertyName) && $step === null) {
+        if (is_string($stepOrResultKey) && $step === null) {
             throw new InvalidArgumentException('No StepInterface object provided');
-        } elseif (is_string($stepOrResultPropertyName)) {
-            $step->resultResourceProperty($stepOrResultPropertyName);
+        } elseif (is_string($stepOrResultKey)) {
+            $step->setResultKey($stepOrResultKey);
         } else {
-            $step = $stepOrResultPropertyName;
+            $step = $stepOrResultKey;
         }
 
         $step->addLogger($this->logger);
@@ -156,7 +156,7 @@ abstract class Crawler
      */
     private function returnResults(AppendIterator $outputs): Generator
     {
-        if ($this->anyResultResourcesDefinedInSteps()) {
+        if ($this->anyResultKeysDefinedInSteps()) {
             $results = [];
 
             foreach ($outputs as $output) {
@@ -180,10 +180,10 @@ abstract class Crawler
         }
     }
 
-    private function anyResultResourcesDefinedInSteps(): bool
+    private function anyResultKeysDefinedInSteps(): bool
     {
         foreach ($this->steps as $step) {
-            if ($step->resultDefined()) {
+            if ($step->getResultKey() !== null) {
                 return true;
             }
         }

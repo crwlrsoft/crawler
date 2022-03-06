@@ -54,6 +54,13 @@ final class LoopStep implements StepInterface
         }
     }
 
+    public function useInput(string $key): static
+    {
+        $this->step->useInput($key);
+
+        return $this;
+    }
+
     public function transformOutputToInput(Closure|StepInterface $transformer): self
     {
         $this->transformer = $transformer;
@@ -68,16 +75,16 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    public function resultResourceProperty(string $propertyName): static
+    public function setResultKey(string $key): static
     {
-        $this->step->resultResourceProperty($propertyName);
+        $this->step->setResultKey($key);
 
         return $this;
     }
 
-    public function resultDefined(): bool
+    public function getResultKey(): ?string
     {
-        return $this->step->resultDefined();
+        return $this->step->getResultKey();
     }
 
     private function outputToInput(Output $output): ?Input
