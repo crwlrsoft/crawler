@@ -252,3 +252,20 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     expect($results)->toBeArray();
     expect($results)->toHaveCount(0);
 });
+
+test('You can add and call an updateInputUsingOutput callback', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 1;
+        }
+    };
+    $step = new LoopStep($step);
+    $step->updateInputUsingOutput(function (Input $input, Output $output) {
+        return $input->get() . ' ' . $output->get();
+    });
+
+    $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
+    expect($updatedInput)->toBeInstanceOf(Input::class);
+    expect($updatedInput->get())->toBe('Boo Yah!');
+});

@@ -18,6 +18,7 @@ abstract class Step implements StepInterface
     protected ?string $resultKey = null;
     protected ?string $useInputKey = null;
     protected bool $yield = true;
+    protected ?Closure $updateInputUsingOutput = null;
 
     /**
      * @return Generator<mixed>
@@ -73,6 +74,31 @@ abstract class Step implements StepInterface
         $this->yield = false;
 
         return $this;
+    }
+
+    /**
+     * Callback that is called in a step group to adapt the input for further steps
+     *
+     * In groups all the steps are called with the same Input, but with this callback it's possible to adjust the input
+     * for the following steps.
+     */
+    public function updateInputUsingOutput(Closure $closure): static
+    {
+        $this->updateInputUsingOutput = $closure;
+
+        return $this;
+    }
+
+    /**
+     * If the user set a callback to update the input (see above) => call it.
+     */
+    public function callUpdateInputUsingOutput(Input $input, Output $output): Input
+    {
+        if ($this->updateInputUsingOutput instanceof Closure) {
+            return new Input($this->updateInputUsingOutput->call($this, $input, $output), $input->result);
+        }
+
+        return $input;
     }
 
     final public function addLogger(LoggerInterface $logger): static

@@ -55,9 +55,20 @@ final class Group implements StepInterface
             $outputs = $step->invokeStep($input);
 
             if (!$this->combine) {
-                yield from $outputs;
+                if (method_exists($step, 'callUpdateInputUsingOutput')) {
+                    foreach ($outputs as $output) {
+                        $input = $step->callUpdateInputUsingOutput($input, $output);
+                        yield $output;
+                    }
+                } else {
+                    yield from $outputs;
+                }
             } else {
                 foreach ($outputs as $output) {
+                    if (method_exists($step, 'callUpdateInputUsingOutput')) {
+                        $input = $step->callUpdateInputUsingOutput($input, $output);
+                    }
+
                     $combinedOutput[$step->getResultKey() ?? $key][] = $output->get();
                 }
             }

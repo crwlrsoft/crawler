@@ -196,3 +196,22 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     $output = helper_generatorToArray($step->invokeStep(new Input('yield')));
     expect($output)->toHaveCount(0);
 });
+
+test('You can add and call an updateInputUsingOutput callback', function () {
+    $step = new class () extends Step {
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
+        {
+            yield 'something';
+        }
+    };
+    $step->updateInputUsingOutput(function (Input $input, Output $output) {
+        return $input->get() . ' ' . $output->get();
+    });
+
+    $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
+    expect($updatedInput)->toBeInstanceOf(Input::class);
+    expect($updatedInput->get())->toBe('Boo Yah!');
+});

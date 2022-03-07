@@ -10,6 +10,7 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
+use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -238,4 +239,93 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
     expect($results)->toBeArray();
     expect($results)->toHaveCount(0);
+});
+
+test('You can update the input for further steps with the output of a step that is before those steps', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield ' rocks';
+        }
+    };
+    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
+        return $input->get() . $output->get();
+    });
+    $step2 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+
+    $group = new Group();
+    $group->addLogger(new CliLogger());
+    $group->addStep($step1)->addStep($step2);
+
+    $outputs = helper_generatorToArray($group->invokeStep(new Input('crwlr.software')));
+    expect($outputs)->toHaveCount(2);
+    expect($outputs[1]->get())->toBe('crwlr.software rocks');
+});
+
+test('Updating the input for further steps with output also works with loop steps', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield ' Jump!';
+        }
+    };
+    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
+        return $input->get() . $output->get();
+    });
+    $step1 = new LoopStep($step1);
+    $step1->maxIterations(2);
+    $step2 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+
+    $group = new Group();
+    $group->addLogger(new CliLogger());
+    $group->addStep($step1)->addStep($step2);
+
+    $outputs = helper_generatorToArray($group->invokeStep(new Input('The Mac Dad will make ya:')));
+    expect($outputs)->toHaveCount(3);
+    expect($outputs[2]->get())->toBe('The Mac Dad will make ya: Jump! Jump!');
+});
+
+test('Updating the input for further steps also works when combining the group output to a single output', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield ' Jump!';
+        }
+    };
+    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
+        return $input->get() . $output->get();
+    });
+    $step1 = new LoopStep($step1);
+    $step1->maxIterations(2);
+    $step2 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+
+    $group = new Group();
+    $group->addLogger(new CliLogger());
+    $group->addStep($step1)->addStep($step2);
+    $group->combineToSingleOutput();
+
+    $outputs = helper_generatorToArray($group->invokeStep(new Input('The Mac Dad will make ya:')));
+    expect($outputs)->toHaveCount(1);
+    expect($outputs[0]->get())->toBe([
+        [
+            ' Jump!',
+            ' Jump!',
+        ],
+        'The Mac Dad will make ya: Jump! Jump!'
+    ]);
 });

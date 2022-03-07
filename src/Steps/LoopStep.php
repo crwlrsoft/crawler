@@ -80,6 +80,33 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
+    /**
+     * Callback that is called in a step group to adapt the input for further steps
+     *
+     * In groups all the steps are called with the same Input, but with this callback it's possible to adjust the input
+     * for the following steps.
+     */
+    public function updateInputUsingOutput(Closure $closure): static
+    {
+        if (method_exists($this->step, 'updateInputUsingOutput')) {
+            $this->step->updateInputUsingOutput($closure);
+        }
+
+        return $this;
+    }
+
+    /**
+     * If the user set a callback to update the input (see above) => call it.
+     */
+    public function callUpdateInputUsingOutput(Input $input, Output $output): Input
+    {
+        if (method_exists($this->step, 'callUpdateInputUsingOutput')) {
+            return $this->step->callUpdateInputUsingOutput($input, $output);
+        }
+
+        return $input;
+    }
+
     public function transformOutputToInput(Closure|StepInterface $transformer): self
     {
         $this->transformer = $transformer;
