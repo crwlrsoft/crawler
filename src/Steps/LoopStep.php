@@ -54,9 +54,9 @@ final class LoopStep implements StepInterface
         }
     }
 
-    public function useInput(string $key): static
+    public function useInputKey(string $key): static
     {
-        $this->step->useInput($key);
+        $this->step->useInputKey($key);
 
         return $this;
     }

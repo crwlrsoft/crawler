@@ -14,8 +14,9 @@ interface StepInterface
      * @return Generator<Output>
      */
     public function invokeStep(Input $input): Generator;
-    public function useInput(string $key): static;
+    public function useInputKey(string $key): static;
     public function setResultKey(string $key): static;
     public function getResultKey(): ?string;
+
     public function addLogger(LoggerInterface $logger): static;
 }

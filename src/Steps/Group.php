@@ -65,7 +65,7 @@ final class Group implements StepInterface
         }
     }
 
-    public function useInput(string $key): static
+    public function useInputKey(string $key): static
     {
         $this->useInputKey = $key;
 

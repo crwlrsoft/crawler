@@ -65,7 +65,7 @@ abstract class Step implements StepInterface
         return $this->resultKey;
     }
 
-    public function useInput(string $key): static
+    public function useInputKey(string $key): static
     {
         $this->useInputKey = $key;
 
