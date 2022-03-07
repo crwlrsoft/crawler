@@ -177,3 +177,22 @@ test('It is possible that a step does not produce any output at all', function (
     expect($output)->toHaveCount(1);
     expect($output[0]->get())->toBe('bar');
 });
+
+test('It doesn\'t yield anything when the dontYield method was called', function () {
+    $step = new class () extends Step {
+        /**
+         * @return Generator<string>
+         */
+        protected function invoke(Input $input): Generator
+        {
+            yield 'something';
+        }
+    };
+
+    $output = helper_generatorToArray($step->invokeStep(new Input('yield')));
+    expect($output)->toHaveCount(1);
+
+    $step->dontYield();
+    $output = helper_generatorToArray($step->invokeStep(new Input('yield')));
+    expect($output)->toHaveCount(0);
+});

@@ -196,3 +196,46 @@ test(
         ]);
     }
 );
+
+test('It doesn\'t yield anything when the dontYield method was called', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'something';
+        }
+    };
+    $step2 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as $number) {
+                yield $number;
+            }
+        }
+    };
+
+    $group = new Group();
+    $group->addLogger(new CliLogger());
+    $group->addStep('foo', $step1)->addStep('bar', $step2);
+
+    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
+    expect($results)->toBeArray();
+    expect($results)->toHaveCount(11);
+
+    $group->dontYield();
+    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
+    expect($results)->toBeArray();
+    expect($results)->toHaveCount(0);
+
+    // Also doesn't yield when a step is added after the dontYield() call
+    $newStep = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'something';
+        }
+    };
+    $group->addStep($newStep);
+
+    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
+    expect($results)->toBeArray();
+    expect($results)->toHaveCount(0);
+});

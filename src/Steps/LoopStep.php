@@ -19,13 +19,6 @@ final class LoopStep implements StepInterface
     {
     }
 
-    public function maxIterations(int $count): self
-    {
-        $this->maxIterations = $count;
-
-        return $this;
-    }
-
     public function invokeStep(Input $input): Generator
     {
         $inputs = [$input];
@@ -54,9 +47,35 @@ final class LoopStep implements StepInterface
         }
     }
 
+    public function maxIterations(int $count): self
+    {
+        $this->maxIterations = $count;
+
+        return $this;
+    }
+
+    public function setResultKey(string $key): static
+    {
+        $this->step->setResultKey($key);
+
+        return $this;
+    }
+
+    public function getResultKey(): ?string
+    {
+        return $this->step->getResultKey();
+    }
+
     public function useInputKey(string $key): static
     {
         $this->step->useInputKey($key);
+
+        return $this;
+    }
+
+    public function dontYield(): static
+    {
+        $this->step->dontYield();
 
         return $this;
     }
@@ -73,18 +92,6 @@ final class LoopStep implements StepInterface
         $this->step->addLogger($logger);
 
         return $this;
-    }
-
-    public function setResultKey(string $key): static
-    {
-        $this->step->setResultKey($key);
-
-        return $this;
-    }
-
-    public function getResultKey(): ?string
-    {
-        return $this->step->getResultKey();
     }
 
     private function outputToInput(Output $output): ?Input

@@ -17,6 +17,7 @@ abstract class Step implements StepInterface
     protected ?Closure $inputMutationCallback = null;
     protected ?string $resultKey = null;
     protected ?string $useInputKey = null;
+    protected bool $yield = true;
 
     /**
      * @return Generator<mixed>
@@ -42,13 +43,15 @@ abstract class Step implements StepInterface
         $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
 
         foreach ($this->invoke($validInput) as $output) {
-            yield $this->output($output, $validInput);
+            if ($this->yield) {
+                yield $this->output($output, $validInput);
+            }
         }
     }
 
-    final public function addLogger(LoggerInterface $logger): static
+    public function useInputKey(string $key): static
     {
-        $this->logger = $logger;
+        $this->useInputKey = $key;
 
         return $this;
     }
@@ -65,9 +68,16 @@ abstract class Step implements StepInterface
         return $this->resultKey;
     }
 
-    public function useInputKey(string $key): static
+    public function dontYield(): static
     {
-        $this->useInputKey = $key;
+        $this->yield = false;
+
+        return $this;
+    }
+
+    final public function addLogger(LoggerInterface $logger): static
+    {
+        $this->logger = $logger;
 
         return $this;
     }

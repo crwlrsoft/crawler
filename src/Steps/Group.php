@@ -20,6 +20,7 @@ final class Group implements StepInterface
 
     private ?LoggerInterface $logger = null;
     private ?LoaderInterface $loader = null;
+    private bool $yield = true;
     private bool $combine = false;
     private ?string $useInputKey = null;
 
@@ -47,6 +48,10 @@ final class Group implements StepInterface
         }
 
         foreach ($this->steps as $key => $step) {
+            if (!$this->yield) {
+                $step->dontYield();
+            }
+
             $outputs = $step->invokeStep($input);
 
             if (!$this->combine) {
@@ -70,6 +75,32 @@ final class Group implements StepInterface
         $this->useInputKey = $key;
 
         return $this;
+    }
+
+    public function dontYield(): static
+    {
+        $this->yield = false;
+
+        return $this;
+    }
+
+    public function combineToSingleOutput(): self
+    {
+        $this->combine = true;
+
+        return $this;
+    }
+
+    // TODO: what to do here? When setting a result key for a group, should all steps add their outputs to that one
+    // property?
+    public function setResultKey(string $key): static
+    {
+        return $this;
+    }
+
+    public function getResultKey(): ?string
+    {
+        return null;
     }
 
     public function addStep(string|StepInterface $stepOrResultKey, ?StepInterface $step = null): self
@@ -117,23 +148,6 @@ final class Group implements StepInterface
         }
 
         return $this;
-    }
-
-    public function combineToSingleOutput(): self
-    {
-        $this->combine = true;
-
-        return $this;
-    }
-
-    public function setResultKey(string $key): static
-    {
-        return $this;
-    }
-
-    public function getResultKey(): ?string
-    {
-        return null;
     }
 
     private function anyResultKeysDefinedInSteps(): bool

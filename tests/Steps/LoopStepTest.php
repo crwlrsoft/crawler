@@ -232,3 +232,23 @@ test(
         expect($results[5]->get())->toBe('Dolor');
     }
 );
+
+test('It doesn\'t yield anything when the dontYield method was called', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'something';
+        }
+    };
+    $loopStep = new LoopStep($step);
+    $loopStep->maxIterations(10);
+
+    $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
+    expect($results)->toBeArray();
+    expect($results)->toHaveCount(10);
+
+    $loopStep->dontYield();
+    $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
+    expect($results)->toBeArray();
+    expect($results)->toHaveCount(0);
+});
