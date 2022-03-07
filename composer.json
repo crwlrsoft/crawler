@@ -55,7 +55,7 @@
         }
     },
     "scripts": {
-        "test": "@php vendor/bin/pest --parallel --processes=5",
+        "test": "@php vendor/bin/pest --parallel",
         "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon",
         "cs": "@php vendor/bin/php-cs-fixer fix -v --dry-run",
         "cs-fix": "@php vendor/bin/php-cs-fixer fix -v",
