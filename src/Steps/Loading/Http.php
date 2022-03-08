@@ -9,14 +9,11 @@ use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 class Http extends LoadingStep
 {
-    protected RequestInterface $request;
-
     /**
      * @param string $method
      * @param array|(string|string[])[] $headers
@@ -24,12 +21,11 @@ class Http extends LoadingStep
      * @param string $httpVersion
      */
     public function __construct(
-        string $method,
-        array $headers = [],
-        string|StreamInterface|null $body = null,
-        string $httpVersion = '1.1',
+        protected readonly string $method,
+        protected readonly array $headers = [],
+        protected readonly string|StreamInterface|null $body = null,
+        protected readonly string $httpVersion = '1.1',
     ) {
-        $this->request = new Request($method, '/', $headers, $body, $httpVersion);
     }
 
     /**
@@ -108,7 +104,7 @@ class Http extends LoadingStep
      */
     protected function invoke(Input $input): Generator
     {
-        $request = $this->request->withUri($input->get());
+        $request = new Request($this->method, $input->get(), $this->headers, $this->body, $this->httpVersion);
 
         yield $this->loader->load($request);
     }
