@@ -43,6 +43,10 @@ final class LoopStep implements StepInterface
                 }
             }
 
+            if (!empty($inputs)) {
+                $inputs = [end($inputs)];
+            }
+
             $i++;
         }
     }

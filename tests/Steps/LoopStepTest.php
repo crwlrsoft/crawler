@@ -190,7 +190,7 @@ test('You can set a logger and it\'s passed on to the wrapped step that is loope
 });
 
 test(
-    'When the step yields multiple outputs, it loops with and outputs each one of them',
+    'When the step yields multiple outputs, it outputs all and loops with the last output of each iteration',
     function () {
         $step = Mockery::mock(StepInterface::class);
 
@@ -199,27 +199,14 @@ test(
             helper_arrayToGenerator([new Output('foo'), new Output('bar'), new Output('baz')])
         );
 
-        // Looping calls with outputs of first call, first one has no output, second has one and third has two outputs
-        // again
-        $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
-            return $input->get() === 'foo';
-        })->andReturn(helper_arrayToGenerator([]));
-        $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
-            return $input->get() === 'bar';
-        })->andReturn(helper_arrayToGenerator([new Output('Lorem')]));
+        // Looping call with last output of first invoke call
         $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
             return $input->get() === 'baz';
-        })->andReturn(helper_arrayToGenerator([new Output('Ipsum'), new Output('Dolor')]));
+        })->andReturn(helper_arrayToGenerator([new Output('Lorem'), new Output('Ipsum')]));
 
-        // 3 calls again resulting from the outputs of the second and third call from previous block
-        $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
-            return $input->get() === 'Lorem';
-        })->andReturn(helper_arrayToGenerator([]));
+        // And another call with the last output of the second iteration
         $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
             return $input->get() === 'Ipsum';
-        })->andReturn(helper_arrayToGenerator([]));
-        $step->shouldReceive('invokeStep')->once()->withArgs(function (Input $input) {
-            return $input->get() === 'Dolor';
         })->andReturn(helper_arrayToGenerator([]));
 
         $loopStep = new LoopStep($step);
@@ -229,7 +216,6 @@ test(
         expect($results[2]->get())->toBe('baz');
         expect($results[3]->get())->toBe('Lorem');
         expect($results[4]->get())->toBe('Ipsum');
-        expect($results[5]->get())->toBe('Dolor');
     }
 );
 
