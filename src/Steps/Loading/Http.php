@@ -21,7 +21,7 @@ class Http extends LoadingStep
      * @param string $httpVersion
      */
     public function __construct(
-        protected readonly string $method,
+        protected readonly string $method = 'GET',
         protected readonly array $headers = [],
         protected readonly string|StreamInterface|null $body = null,
         protected readonly string $httpVersion = '1.1',
