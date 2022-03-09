@@ -134,13 +134,10 @@ abstract class Step implements StepInterface
     protected function output(mixed $value, Input $input): Output
     {
         if ($this->resultKey !== null) {
-            if (!$input->result) {
-                $input->result = new Result();
-            }
-
-            $input->result->set($this->resultKey, $value);
+            $result = $input->result ?? new Result();
+            $result->set($this->resultKey, $value);
         }
 
-        return new Output($value, $input->result);
+        return new Output($value, $result ?? $input->result);
     }
 }

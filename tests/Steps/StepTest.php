@@ -86,6 +86,21 @@ test(
     }
 );
 
+test('It doesn\'t add the result object to the Input object only to the Output', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'Stand with Ukraine!';
+        }
+    };
+    $step->setResultKey('property');
+    $input = new Input('inputValue');
+    $output = helper_generatorToArray($step->invokeStep($input));
+
+    expect($output[0]->result)->toBeInstanceOf(Result::class);
+    expect($input->result)->toBe(null);
+});
+
 test(
     'The invokeStep method appends properties to a result object that was already included with the Input object',
     function () {
