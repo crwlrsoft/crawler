@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1646933039">
-  <project timestamp="1646933039">
+<coverage generated="1646933959">
+  <project timestamp="1646933959">
     <file name="/home/runner/work/crawler/crawler/src/Aggregates/RequestResponseAggregate.php">
       <class name="Crwlr\Crawler\Aggregates\RequestResponseAggregate" namespace="global">
         <metrics complexity="11" methods="7" coveredmethods="7" conditionals="0" coveredconditionals="0" statements="14" coveredstatements="14" elements="21" coveredelements="21"/>
