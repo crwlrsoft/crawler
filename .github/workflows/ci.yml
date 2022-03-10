@@ -1,6 +1,6 @@
 name: CI (tests and code style)
 
-on: pull_request
+on: push
 
 jobs:
   cs:
