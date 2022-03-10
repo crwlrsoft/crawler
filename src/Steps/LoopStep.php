@@ -14,6 +14,8 @@ final class LoopStep implements StepInterface
 {
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $transformer = null;
+    private null|Closure $withInput = null;
+    //private null|Closure $stopIf = null;
 
     public function __construct(private StepInterface $step)
     {
@@ -22,32 +24,41 @@ final class LoopStep implements StepInterface
     public function invokeStep(Input $input): Generator
     {
         $inputs = [$input];
-        $i = 0;
 
-        while (!empty($inputs) && $i < $this->maxIterations) {
+        for ($i = 0; $i < $this->maxIterations && !empty($inputs); $i++) {
             $outputs = new AppendIterator();
 
             foreach ($inputs as $input) {
                 $outputs->append(new NoRewindIterator($this->step->invokeStep($input)));
             }
 
-            $inputs = [];
+            $inputsForNextIteration = [];
 
             foreach ($outputs as $output) {
                 yield $output;
 
-                $newInput = $this->outputToInput($output);
+                if ($this->withInput) {
+                    $newInputValue = $this->withInput->call($this, $inputs[0], $output);
 
-                if ($newInput !== null) {
-                    $inputs[] = $newInput;
+                    if ($newInputValue === null) {
+                        $inputsForNextIteration = [];
+                    } else {
+                        $inputsForNextIteration = [new Input($newInputValue, $inputs[0]->result)];
+                    }
+                } else {
+                    $newInput = $this->outputToInput($output);
+
+                    if ($newInput !== null) {
+                        $inputsForNextIteration[] = $newInput;
+                    }
                 }
             }
 
-            if (!empty($inputs)) {
-                $inputs = [end($inputs)];
-            }
+            $inputs = $inputsForNextIteration;
 
-            $i++;
+            if (!$this->withInput) {
+                $inputs = empty($inputsForNextIteration) ? [] : [end($inputsForNextIteration)];
+            }
         }
     }
 
@@ -57,6 +68,21 @@ final class LoopStep implements StepInterface
 
         return $this;
     }
+
+    public function withInput(Closure $closure): self
+    {
+        $this->withInput = $closure;
+
+        return $this;
+    }
+
+    // TODO
+//    public function stopIf(Closure $closure): self
+//    {
+//        $this->stopIf = $closure;
+//
+//        return $this;
+//    }
 
     public function setResultKey(string $key): static
     {

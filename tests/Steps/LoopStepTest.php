@@ -9,6 +9,7 @@ use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Generator;
+use Hoa\Stream\IStream\Out;
 use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
@@ -254,4 +255,57 @@ test('You can add and call an updateInputUsingOutput callback', function () {
     $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
     expect($updatedInput)->toBeInstanceOf(Input::class);
     expect($updatedInput->get())->toBe('Boo Yah!');
+});
+
+test('It loops reusing the same input that can be updated via a callback when withInput is used', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            $inputData = $input->get();
+
+            yield array_pop($inputData) + (array_pop($inputData) ?? 0);
+        }
+    };
+    $step = new LoopStep($step);
+    $step->withInput(function (Input $input, Output $output) {
+        $inputData = $input->get();
+        $inputData[] = $output->get();
+
+        return $inputData;
+    });
+    $step->maxIterations(10);
+
+    $results = helper_generatorToArray($step->invokeStep(new Input([1])));
+    expect($results[0]->get())->toBe(1);
+    expect($results[1]->get())->toBe(2);
+    expect($results[2]->get())->toBe(3);
+    expect($results[3]->get())->toBe(5);
+    expect($results[4]->get())->toBe(8);
+    expect($results[5]->get())->toBe(13);
+    expect($results[6]->get())->toBe(21);
+    expect($results[7]->get())->toBe(34);
+    expect($results[8]->get())->toBe(55);
+    expect($results[9]->get())->toBe(89);
+});
+
+test('It stops looping when the withInput callback returns null', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+    $step = new LoopStep($step);
+    $step->withInput(function (Input $input, Output $output) {
+        return $input->get() < 5 ? $input->get() + 1 : null;
+    });
+    $step->maxIterations(10);
+
+    $results = helper_generatorToArray($step->invokeStep(new Input(1)));
+    expect(count($results))->toBe(5);
+    expect($results[0]->get())->toBe(1);
+    expect($results[1]->get())->toBe(2);
+    expect($results[2]->get())->toBe(3);
+    expect($results[3]->get())->toBe(4);
+    expect($results[4]->get())->toBe(5);
 });
