@@ -309,3 +309,27 @@ test('It stops looping when the withInput callback returns null', function () {
     expect($results[3]->get())->toBe(4);
     expect($results[4]->get())->toBe(5);
 });
+
+test(
+    'It stops when the callback passed to the stopIf method returns true and it stops before yielding the output of ' .
+    'that iteration',
+    function () {
+        $step = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield $input->get() + 1;
+            }
+        };
+        $step = new LoopStep($step);
+        $step->maxIterations(10);
+        $step->stopIf(function (Input $input, Output $output) {
+            return $output->get() > 3;
+        });
+
+        $results = helper_generatorToArray($step->invokeStep(new Input(0)));
+        expect(count($results))->toBe(3);
+        expect($results[0]->get())->toBe(1);
+        expect($results[1]->get())->toBe(2);
+        expect($results[2]->get())->toBe(3);
+    }
+);

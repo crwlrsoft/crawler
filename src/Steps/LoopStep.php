@@ -2,12 +2,10 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use AppendIterator;
 use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
 use Generator;
-use NoRewindIterator;
 use Psr\Log\LoggerInterface;
 
 final class LoopStep implements StepInterface
@@ -15,7 +13,7 @@ final class LoopStep implements StepInterface
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $transformer = null;
     private null|Closure $withInput = null;
-    //private null|Closure $stopIf = null;
+    private null|Closure $stopIf = null;
 
     public function __construct(private StepInterface $step)
     {
@@ -23,42 +21,28 @@ final class LoopStep implements StepInterface
 
     public function invokeStep(Input $input): Generator
     {
-        $inputs = [$input];
+        for ($i = 0; $i < $this->maxIterations && !empty($input); $i++) {
+            $inputForNextIteration = null;
 
-        for ($i = 0; $i < $this->maxIterations && !empty($inputs); $i++) {
-            $outputs = new AppendIterator();
+            foreach ($this->step->invokeStep($input) as $output) {
+                if ($this->stopIf && $this->stopIf->call($this, $input, $output) === true) {
+                    break 2;
+                }
 
-            foreach ($inputs as $input) {
-                $outputs->append(new NoRewindIterator($this->step->invokeStep($input)));
-            }
-
-            $inputsForNextIteration = [];
-
-            foreach ($outputs as $output) {
                 yield $output;
 
                 if ($this->withInput) {
-                    $newInputValue = $this->withInput->call($this, $inputs[0], $output);
+                    $newInputValue = $this->withInput->call($this, $input, $output);
 
-                    if ($newInputValue === null) {
-                        $inputsForNextIteration = [];
-                    } else {
-                        $inputsForNextIteration = [new Input($newInputValue, $inputs[0]->result)];
+                    if ($newInputValue) {
+                        $inputForNextIteration = new Input($newInputValue, $input->result);
                     }
                 } else {
-                    $newInput = $this->outputToInput($output);
-
-                    if ($newInput !== null) {
-                        $inputsForNextIteration[] = $newInput;
-                    }
+                    $inputForNextIteration = $this->outputToInput($output) ?? $inputForNextIteration;
                 }
             }
 
-            $inputs = $inputsForNextIteration;
-
-            if (!$this->withInput) {
-                $inputs = empty($inputsForNextIteration) ? [] : [end($inputsForNextIteration)];
-            }
+            $input = $inputForNextIteration;
         }
     }
 
@@ -76,13 +60,12 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    // TODO
-//    public function stopIf(Closure $closure): self
-//    {
-//        $this->stopIf = $closure;
-//
-//        return $this;
-//    }
+    public function stopIf(Closure $closure): self
+    {
+        $this->stopIf = $closure;
+
+        return $this;
+    }
 
     public function setResultKey(string $key): static
     {
