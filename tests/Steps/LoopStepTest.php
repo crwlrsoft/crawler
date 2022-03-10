@@ -9,7 +9,6 @@ use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Generator;
-use Hoa\Stream\IStream\Out;
 use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
@@ -99,7 +98,7 @@ test('You can use a Closure to transform an iterations output to the input for t
         }
     };
     $loopStep = new LoopStep($step);
-    $loopStep->transformOutputToInput(function (Output $output) {
+    $loopStep->withInput(function (Input $input, Output $output) {
         $outputValue = $output->get();
 
         return (int) substr($outputValue, -1, 1);
@@ -113,7 +112,7 @@ test('You can use a Closure to transform an iterations output to the input for t
     expect($result[4]->get())->toBe('output 5');
 });
 
-test('You can use a step as output to input transformer', function () {
+test('You can use a Step to make the input for the next iteration from the output', function () {
     $step = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -123,7 +122,7 @@ test('You can use a step as output to input transformer', function () {
         }
     };
     $loopStep = new LoopStep($step);
-    $loopStep->transformOutputToInput(new class () extends Step {
+    $loopStep->withInput(new class () extends Step {
         protected function invoke(Input $input): Generator
         {
             yield (int) substr($input->get(), -1, 1);
@@ -138,7 +137,7 @@ test('You can use a step as output to input transformer', function () {
     expect($result[4]->get())->toBe('foo 5');
 });
 
-test('When the step has output but the transformer Closure returns null it stops looping', function () {
+test('When the step has output but the withInput Closure returns null it stops looping', function () {
     $step = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -148,7 +147,7 @@ test('When the step has output but the transformer Closure returns null it stops
         }
     };
     $loopStep = new LoopStep($step);
-    $loopStep->transformOutputToInput(function (Output $output) {
+    $loopStep->withInput(function (Input $input, Output $output) {
         return $output->get() < 2 ? $output->get() : null;
     });
     $loopStep->maxIterations(5);
@@ -158,7 +157,7 @@ test('When the step has output but the transformer Closure returns null it stops
     expect($result[1]->get())->toBe(2);
 });
 
-test('When the step has output but the transformer Step has no output it stops looping', function () {
+test('When the step has output but the withInput Step has no output it stops looping', function () {
     $step = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -168,7 +167,7 @@ test('When the step has output but the transformer Step has no output it stops l
         }
     };
     $loopStep = new LoopStep($step);
-    $loopStep->transformOutputToInput(new class () extends Step {
+    $loopStep->withInput(new class () extends Step {
         protected function invoke(Input $input): Generator
         {
             if ($input->get() < 2) {

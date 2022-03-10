@@ -11,8 +11,7 @@ use Psr\Log\LoggerInterface;
 final class LoopStep implements StepInterface
 {
     private int $maxIterations = 1000;
-    private null|Closure|StepInterface $transformer = null;
-    private null|Closure $withInput = null;
+    private null|Closure|StepInterface $withInput = null;
     private null|Closure $stopIf = null;
 
     public function __construct(private StepInterface $step)
@@ -31,15 +30,7 @@ final class LoopStep implements StepInterface
 
                 yield $output;
 
-                if ($this->withInput) {
-                    $newInputValue = $this->withInput->call($this, $input, $output);
-
-                    if ($newInputValue) {
-                        $inputForNextIteration = new Input($newInputValue, $input->result);
-                    }
-                } else {
-                    $inputForNextIteration = $this->outputToInput($output) ?? $inputForNextIteration;
-                }
+                $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
             }
 
             $input = $inputForNextIteration;
@@ -53,7 +44,7 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    public function withInput(Closure $closure): self
+    public function withInput(Closure|StepInterface $closure): self
     {
         $this->withInput = $closure;
 
@@ -120,13 +111,6 @@ final class LoopStep implements StepInterface
         return $input;
     }
 
-    public function transformOutputToInput(Closure|StepInterface $transformer): self
-    {
-        $this->transformer = $transformer;
-
-        return $this;
-    }
-
     public function addLogger(LoggerInterface $logger): static
     {
         $this->step->addLogger($logger);
@@ -134,16 +118,20 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    private function outputToInput(Output $output): ?Input
+    private function nextIterationInput(Input $input, Output $output): ?Input
     {
-        if ($this->transformer) {
-            if ($this->transformer instanceof Closure) {
-                $transformerResult = $this->transformer->call($this->step, $output);
+        if ($this->withInput) {
+            $newInputValue = null;
+
+            if ($this->withInput instanceof Closure) {
+                $newInputValue = $this->withInput->call($this->step, $input, $output);
             } else {
-                $transformerResult = $this->transformer->invokeStep(new Input($output))->current();
+                foreach ($this->withInput->invokeStep(new Input($output)) as $output) {
+                    $newInputValue = $output;
+                }
             }
 
-            return $transformerResult === null ? null : new Input($transformerResult);
+            return $newInputValue !== null ? new Input($newInputValue, $input->result) : null;
         }
 
         return new Input($output);
