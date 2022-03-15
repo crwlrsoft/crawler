@@ -3,11 +3,14 @@
 namespace tests\Steps;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
@@ -187,6 +190,13 @@ test('You can set a logger and it\'s passed on to the wrapped step that is loope
     $step->shouldReceive('addLogger')->once();
     $loopStep = new LoopStep($step);
     $loopStep->addLogger(new CliLogger());
+});
+
+test('You can set a loader and it\'s passed on to the wrapped step that is looped', function () {
+    $step = Mockery::mock(LoadingStepInterface::class);
+    $step->shouldReceive('addLoader')->once();
+    $loopStep = new LoopStep($step);
+    $loopStep->addLoader(new HttpLoader(new BotUserAgent('FooBot')));
 });
 
 test(

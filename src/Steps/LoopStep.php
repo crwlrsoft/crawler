@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps;
 
 use Closure;
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Generator;
 use Psr\Log\LoggerInterface;
@@ -114,6 +115,15 @@ final class LoopStep implements StepInterface
     public function addLogger(LoggerInterface $logger): static
     {
         $this->step->addLogger($logger);
+
+        return $this;
+    }
+
+    public function addLoader(LoaderInterface $loader): self
+    {
+        if (method_exists($this->step, 'addLoader')) {
+            $this->step->addLoader($loader);
+        }
 
         return $this;
     }
