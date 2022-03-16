@@ -17,7 +17,7 @@ abstract class Step implements StepInterface
     protected ?Closure $inputMutationCallback = null;
     protected ?string $resultKey = null;
     protected ?string $useInputKey = null;
-    protected bool $yield = true;
+    protected bool $cascades = true;
     protected ?Closure $updateInputUsingOutput = null;
 
     /**
@@ -44,9 +44,7 @@ abstract class Step implements StepInterface
         $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
 
         foreach ($this->invoke($validInput) as $output) {
-            if ($this->yield) {
-                yield $this->output($output, $validInput);
-            }
+            yield $this->output($output, $validInput);
         }
     }
 
@@ -69,11 +67,16 @@ abstract class Step implements StepInterface
         return $this->resultKey;
     }
 
-    public function dontYield(): static
+    public function dontCascade(): static
     {
-        $this->yield = false;
+        $this->cascades = false;
 
         return $this;
+    }
+
+    public function cascades(): bool
+    {
+        return $this->cascades;
     }
 
     /**

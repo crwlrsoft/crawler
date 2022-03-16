@@ -279,6 +279,20 @@ test('Result objects are created when defined and passed on through all the step
     ]);
 });
 
+it('doesn\'t pass on outputs of one step to the next one when dontCascade was called', function () {
+    $crawler = helper_getDummyCrawler();
+
+    $step1 = helper_getDummyStepYieldingInput();
+
+    $step1->dontCascade();
+
+    $step2 = Mockery::mock(StepInterface::class);
+
+    $step2->shouldNotReceive('invokeStep');
+
+    helper_traverseIterable($crawler->run());
+});
+
 test('When final steps return an array you get all values in the defined Result resource', function () {
     $crawler = helper_getDummyCrawler();
 

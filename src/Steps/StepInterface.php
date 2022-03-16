@@ -17,7 +17,8 @@ interface StepInterface
     public function useInputKey(string $key): static;
     public function setResultKey(string $key): static;
     public function getResultKey(): ?string;
-    public function dontYield(): static;
+    public function dontCascade(): static;
+    public function cascades(): bool;
 
     public function addLogger(LoggerInterface $logger): static;
 }

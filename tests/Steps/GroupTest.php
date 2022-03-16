@@ -67,14 +67,11 @@ test('The factory method returns a Group object instance', function () {
 
 test('You can add multiple steps and invokeStep calls all of them', function () {
     $step1 = Mockery::mock(StepInterface::class);
-    $step1->shouldReceive('addLogger')->once();
-    $step1->shouldReceive('invokeStep')->once();
+    $step1->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
     $step2 = Mockery::mock(StepInterface::class);
-    $step2->shouldReceive('addLogger')->once();
-    $step2->shouldReceive('invokeStep')->once();
+    $step2->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
     $step3 = Mockery::mock(StepInterface::class);
-    $step3->shouldReceive('addLogger')->once();
-    $step3->shouldReceive('invokeStep')->once();
+    $step3->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
 
     $group = new Group();
     $group->addLogger(new CliLogger());
@@ -85,12 +82,15 @@ test('You can add multiple steps and invokeStep calls all of them', function () 
 test('It returns the results of all steps when invoked', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
+    $step1->shouldReceive('cascades')->once()->andReturn(true);
     $step1->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('1')]));
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
+    $step2->shouldReceive('cascades')->once()->andReturn(true);
     $step2->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('2')]));
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('addLogger')->once();
+    $step3->shouldReceive('cascades')->once()->andReturn(true);
     $step3->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('3')]));
 
     $group = new Group();
@@ -198,7 +198,7 @@ test(
     }
 );
 
-test('It doesn\'t yield anything when the dontYield method was called', function () {
+test('It doesn\'t output anything when the dontCascade method was called', function () {
     $step1 = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -222,12 +222,12 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     expect($results)->toBeArray();
     expect($results)->toHaveCount(11);
 
-    $group->dontYield();
+    $group->dontCascade();
     $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
     expect($results)->toBeArray();
     expect($results)->toHaveCount(0);
 
-    // Also doesn't yield when a step is added after the dontYield() call
+    // Also doesn't yield when a step is added after the dontCascade() call
     $newStep = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -240,6 +240,69 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     expect($results)->toBeArray();
     expect($results)->toHaveCount(0);
 });
+
+test('It doesn\'t return the output of a step when the dontCascade method was called on that step', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'foo';
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'bar';
+        }
+    };
+
+    $step2->dontCascade();
+
+    $group = new Group();
+
+    $group->addLogger(new CliLogger())->addStep('foo', $step1)->addStep($step2);
+
+    $outputs = helper_generatorToArray($group->invokeStep(new Input('foo')));
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('foo');
+});
+
+test(
+    'It doesn\'t contain the output of a step when the dontCascade method was called on that step and the Group\'s ' .
+    'output is combined',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'abc';
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(Input $input): Generator
+            {
+                yield 'def';
+            }
+        };
+
+        $step2->dontCascade();
+
+        $group = new Group();
+
+        $group->addLogger(new CliLogger())
+            ->addStep('one', $step1)
+            ->addStep('two', $step2)
+            ->combineToSingleOutput();
+
+        $outputs = helper_generatorToArray($group->invokeStep(new Input('foo')));
+
+        expect($outputs)->toHaveCount(1);
+
+        expect($outputs[0]->get())->toBe(['one' => 'abc']);
+    }
+);
 
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
     $step1 = new class () extends Step {

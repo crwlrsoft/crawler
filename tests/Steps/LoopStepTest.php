@@ -205,6 +205,7 @@ test(
         $step = Mockery::mock(StepInterface::class);
 
         // Initial call returning 3 outputs
+        $step->shouldReceive('cascades')->andReturn(true);
         $step->shouldReceive('invokeStep')->once()->andReturn(
             helper_arrayToGenerator([new Output('foo'), new Output('bar'), new Output('baz')])
         );
@@ -229,7 +230,7 @@ test(
     }
 );
 
-test('It doesn\'t yield anything when the dontYield method was called', function () {
+test('It doesn\'t output anything when the dontCascade method was called', function () {
     $step = new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -243,7 +244,7 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     expect($results)->toBeArray();
     expect($results)->toHaveCount(10);
 
-    $loopStep->dontYield();
+    $loopStep->dontCascade();
     $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
     expect($results)->toBeArray();
     expect($results)->toHaveCount(0);

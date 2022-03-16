@@ -29,7 +29,9 @@ final class LoopStep implements StepInterface
                     break 2;
                 }
 
-                yield $output;
+                if ($this->step->cascades()) {
+                    yield $output;
+                }
 
                 $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
             }
@@ -78,11 +80,16 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    public function dontYield(): static
+    public function dontCascade(): static
     {
-        $this->step->dontYield();
+        $this->step->dontCascade();
 
         return $this;
+    }
+
+    public function cascades(): bool
+    {
+        return $this->step->cascades();
     }
 
     /**

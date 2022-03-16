@@ -20,7 +20,7 @@ final class Group implements StepInterface
 
     private ?LoggerInterface $logger = null;
     private ?LoaderInterface $loader = null;
-    private bool $yield = true;
+    private bool $cascades = true;
     private bool $combine = false;
     private ?string $useInputKey = null;
 
@@ -48,19 +48,18 @@ final class Group implements StepInterface
         }
 
         foreach ($this->steps as $key => $step) {
-            if (!$this->yield) {
-                $step->dontYield();
-            }
-
             $outputs = $step->invokeStep($input);
 
             if (!$this->combine) {
                 if (method_exists($step, 'callUpdateInputUsingOutput')) {
                     foreach ($outputs as $output) {
                         $input = $step->callUpdateInputUsingOutput($input, $output);
-                        yield $output;
+
+                        if ($this->cascades() && $step->cascades()) {
+                            yield $output;
+                        }
                     }
-                } else {
+                } elseif ($this->cascades() && $step->cascades()) {
                     yield from $outputs;
                 }
             } else {
@@ -69,12 +68,14 @@ final class Group implements StepInterface
                         $input = $step->callUpdateInputUsingOutput($input, $output);
                     }
 
-                    $combinedOutput[$step->getResultKey() ?? $key][] = $output->get();
+                    if ($step->cascades()) {
+                        $combinedOutput[$step->getResultKey() ?? $key][] = $output->get();
+                    }
                 }
             }
         }
 
-        if ($this->combine) {
+        if ($this->combine && $this->cascades()) {
             yield new Output(array_map(function ($output) {
                 return count($output) === 1 ? reset($output) : $output;
             }, $combinedOutput), $input->result);
@@ -88,11 +89,16 @@ final class Group implements StepInterface
         return $this;
     }
 
-    public function dontYield(): static
+    public function dontCascade(): static
     {
-        $this->yield = false;
+        $this->cascades = false;
 
         return $this;
+    }
+
+    public function cascades(): bool
+    {
+        return $this->cascades;
     }
 
     public function combineToSingleOutput(): self

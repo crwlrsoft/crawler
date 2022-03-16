@@ -193,11 +193,10 @@ test('It is possible that a step does not produce any output at all', function (
     expect($output[0]->get())->toBe('bar');
 });
 
-test('It doesn\'t yield anything when the dontYield method was called', function () {
+test('It still returns output from invokeStep when dontCascade was called', function () {
+    // Explanation: the Crawler (and Group) class has to take care of not cascading the output to the next step.
+    // But it still needs the output of a step that shouldn't cascade in some cases.
     $step = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
         protected function invoke(Input $input): Generator
         {
             yield 'something';
@@ -205,11 +204,14 @@ test('It doesn\'t yield anything when the dontYield method was called', function
     };
 
     $output = helper_generatorToArray($step->invokeStep(new Input('yield')));
+
     expect($output)->toHaveCount(1);
 
-    $step->dontYield();
+    $step->dontCascade();
+
     $output = helper_generatorToArray($step->invokeStep(new Input('yield')));
-    expect($output)->toHaveCount(0);
+
+    expect($output)->toHaveCount(1);
 });
 
 test('You can add and call an updateInputUsingOutput callback', function () {
