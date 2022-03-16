@@ -29,9 +29,30 @@ function helper_getDummyCrawler(): Crawler
 
         public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
         {
-            return Mockery::mock(PoliteHttpLoader::class);
+            return Mockery::mock(LoaderInterface::class);
         }
     };
+}
+
+function helper_getDummyStepYieldingInput(): Step
+{
+    return new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield $input->get();
+        }
+    };
+}
+
+function helper_getDummyCrawlerWithDummyStepYieldingInput(): Crawler
+{
+    $crawler = helper_getDummyCrawler();
+
+    $step = helper_getDummyStepYieldingInput();
+
+    $crawler->addStep($step);
+
+    return $crawler;
 }
 
 test(
@@ -91,35 +112,56 @@ test(
     }
 );
 
-test('Using the input method, you set the input data for the first step', function () {
-    $crawler = new class () extends Crawler {
-        protected function userAgent(): UserAgentInterface
-        {
-            return new BotUserAgent('CrwlrBot');
-        }
-
-        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
-        {
-            return Mockery::mock(LoaderInterface::class);
-        }
-    };
-
-    $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
-        {
-            yield $input->get();
-        }
-    };
+test('You can set a single input for the first step using the input method', function () {
+    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
 
     $crawler->input('https://www.example.com');
-    $crawler->addStep($step);
-    $results = helper_generatorToArray($crawler->run());
-    expect($results[0]->toArray()['unnamed'])->toBe('https://www.example.com');
 
-    $crawler->input(['https://www.crwl.io', 'https://www.otsch.codes']);
     $results = helper_generatorToArray($crawler->run());
+
+    expect($results[0]->toArray()['unnamed'])->toBe('https://www.example.com');
+});
+
+test('You can set multiple inputs by multiply calling the input method', function () {
+    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+
+    $crawler->input('https://www.crwl.io');
+
+    $crawler->input('https://www.otsch.codes');
+
+    $results = helper_generatorToArray($crawler->run());
+
     expect($results[0]->toArray()['unnamed'])->toBe('https://www.crwl.io');
+
     expect($results[1]->toArray()['unnamed'])->toBe('https://www.otsch.codes');
+});
+
+test('You can set multiple inputs using the inputs (plural) method', function () {
+    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+
+    $crawler->inputs(['https://www.crwl.io', 'https://www.otsch.codes']);
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results[0]->toArray()['unnamed'])->toBe('https://www.crwl.io');
+
+    expect($results[1]->toArray()['unnamed'])->toBe('https://www.otsch.codes');
+});
+
+test('Initial inputs are reset after the crawler was run', function () {
+    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+
+    $crawler->inputs(['https://www.crwl.io', 'https://www.otsch.codes']);
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(2);
+
+    $crawler->input('https://fetzi.dev/');
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(1);
 });
 
 test('The static loop method wraps a Step in a LoopStep object', function () {

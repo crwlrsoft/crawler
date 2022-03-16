@@ -19,7 +19,7 @@ abstract class Crawler
     protected UserAgentInterface $userAgent;
     protected LoaderInterface $loader;
     protected LoggerInterface $logger;
-    protected mixed $input = null;
+    protected mixed $inputs = [];
 
     /**
      * @var array|StepInterface[]
@@ -63,7 +63,17 @@ abstract class Crawler
 
     public function input(mixed $input): static
     {
-        $this->input = $input;
+        $this->inputs[] = $input;
+
+        return $this;
+    }
+
+    /**
+     * @param mixed[] $inputs
+     */
+    public function inputs(array $inputs): static
+    {
+        $this->inputs = array_merge($this->inputs, $inputs);
 
         return $this;
     }
@@ -124,6 +134,8 @@ abstract class Crawler
         if (isset($outputs) && $outputs instanceof AppendIterator) {
             yield from $this->returnResults($outputs);
         }
+
+        $this->inputs = [];
     }
 
     protected function logger(): LoggerInterface
@@ -137,17 +149,9 @@ abstract class Crawler
      */
     private function prepareInput(): array
     {
-        if ($this->input === null) {
-            throw new Exception('No initial input');
-        }
-
-        if (!is_array($this->input)) {
-            return [new Input($this->input)];
-        }
-
         return array_map(function ($input) {
             return new Input($input);
-        }, $this->input);
+        }, $this->inputs);
     }
 
     /**
