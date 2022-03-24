@@ -7,7 +7,7 @@ use Crwlr\Crawler\Loader\HttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
-use Crwlr\Crawler\Steps\LoopStep;
+use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -39,7 +39,7 @@ test(
                 }
             }
         };
-        $loopStep = new LoopStep($step);
+        $loopStep = new Loop($step);
         helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
         expect($step->_callCount)->toBe(5);
     }
@@ -64,7 +64,7 @@ test(
                 }
             }
         };
-        $loopStep = new LoopStep($step);
+        $loopStep = new Loop($step);
         helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
         expect($step->_callCount)->toBe($stopAt);
     }
@@ -86,7 +86,7 @@ test('You can set your own max iteration limit', function ($customLimit) {
             yield $this->_callCount;
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->maxIterations($customLimit);
     helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
     expect($step->_callCount)->toBe($customLimit);
@@ -101,7 +101,7 @@ test('You can use a Closure to transform an iterations output to the input for t
             yield 'output ' . ($input->get() + 1);
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->withInput(function (Input $input, Output $output) {
         $outputValue = $output->get();
 
@@ -125,7 +125,7 @@ test('You can use a Step to make the input for the next iteration from the outpu
             yield 'foo ' . ($input->get() + 1);
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->withInput(new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -150,7 +150,7 @@ test('When the step has output but the withInput Closure returns null it stops l
             yield $input->get() + 1;
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->withInput(function (Input $input, Output $output) {
         return $output->get() < 2 ? $output->get() : null;
     });
@@ -170,7 +170,7 @@ test('When the step has output but the withInput Step has no output it stops loo
             yield $input->get() + 1;
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->withInput(new class () extends Step {
         protected function invoke(Input $input): Generator
         {
@@ -189,14 +189,14 @@ test('When the step has output but the withInput Step has no output it stops loo
 test('You can set a logger and it\'s passed on to the wrapped step that is looped', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->addLogger(new CliLogger());
 });
 
 test('You can set a loader and it\'s passed on to the wrapped step that is looped', function () {
     $step = Mockery::mock(LoadingStepInterface::class);
     $step->shouldReceive('addLoader')->once();
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->addLoader(new HttpLoader(new BotUserAgent('FooBot')));
 });
 
@@ -221,7 +221,7 @@ test(
             return $input->get() === 'Ipsum';
         })->andReturn(helper_arrayToGenerator([]));
 
-        $loopStep = new LoopStep($step);
+        $loopStep = new Loop($step);
         $results = helper_generatorToArray($loopStep->invokeStep(new Input('test')));
         expect($results[0]->get())->toBe('foo');
         expect($results[1]->get())->toBe('bar');
@@ -238,7 +238,7 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
             yield 'something';
         }
     };
-    $loopStep = new LoopStep($step);
+    $loopStep = new Loop($step);
     $loopStep->maxIterations(10);
 
     $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
@@ -263,7 +263,7 @@ test('It immediately cascades outputs to the next step', function () {
         }
     };
 
-    $loopStep = (new LoopStep($step))->maxIterations(10);
+    $loopStep = (new Loop($step))->maxIterations(10);
 
     $anyOutputAtAll = false;
 
@@ -294,7 +294,7 @@ test(
             }
         };
 
-        $loopStep = (new LoopStep($step))->maxIterations(10);
+        $loopStep = (new Loop($step))->maxIterations(10);
 
         $loopStep->cascadeWhenFinished();
 
@@ -312,7 +312,7 @@ test('It resets deferred outputs when they are yielded', function () {
         }
     };
 
-    $loopStep = (new LoopStep($step))->maxIterations(10);
+    $loopStep = (new Loop($step))->maxIterations(10);
 
     $loopStep->cascadeWhenFinished();
 
@@ -332,7 +332,7 @@ test('You can add and call an updateInputUsingOutput callback', function () {
             yield 1;
         }
     };
-    $step = new LoopStep($step);
+    $step = new Loop($step);
     $step->updateInputUsingOutput(function (Input $input, Output $output) {
         return $input->get() . ' ' . $output->get();
     });
@@ -351,7 +351,7 @@ test('It loops reusing the same input that can be updated via a callback when wi
             yield array_pop($inputData) + (array_pop($inputData) ?? 0);
         }
     };
-    $step = new LoopStep($step);
+    $step = new Loop($step);
     $step->withInput(function (Input $input, Output $output) {
         $inputData = $input->get();
         $inputData[] = $output->get();
@@ -380,7 +380,7 @@ test('It stops looping when the withInput callback returns null', function () {
             yield $input->get();
         }
     };
-    $step = new LoopStep($step);
+    $step = new Loop($step);
     $step->withInput(function (Input $input, Output $output) {
         return $input->get() < 5 ? $input->get() + 1 : null;
     });
@@ -413,7 +413,7 @@ test(
 
         $firstCall = true;
 
-        $loopStep = (new LoopStep($step))
+        $loopStep = (new Loop($step))
             ->maxIterations(5)
             ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
                 expect($output)->toBeNull();
@@ -449,7 +449,7 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
 
     $firstCall = true;
 
-    $loopStep = (new LoopStep($step))
+    $loopStep = (new Loop($step))
         ->maxIterations(10)
         ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
             expect($output)->toBeNull();
@@ -487,7 +487,7 @@ test('It calls the withInput callback only once when callWithInputOnlyOnce was c
 
     $callbackCallCount = 0;
 
-    $loopStep = (new LoopStep($step))
+    $loopStep = (new Loop($step))
         ->maxIterations(10)
         ->withInput(function (Input $input, ?Output $output) use (& $callbackCallCount) {
             if ($output === null) {
@@ -517,7 +517,7 @@ test(
                 yield $input->get() + 1;
             }
         };
-        $step = new LoopStep($step);
+        $step = new Loop($step);
         $step->maxIterations(10);
         $step->stopIf(function (Input $input, Output $output) {
             return $output->get() > 3;

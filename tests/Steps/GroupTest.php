@@ -10,7 +10,7 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
-use Crwlr\Crawler\Steps\LoopStep;
+use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -340,7 +340,7 @@ test('Updating the input for further steps with output also works with loop step
     $step1->updateInputUsingOutput(function (Input $input, Output $output) {
         return $input->get() . $output->get();
     });
-    $step1 = new LoopStep($step1);
+    $step1 = new Loop($step1);
     $step1->maxIterations(2);
     $step2 = new class () extends Step {
         protected function invoke(Input $input): Generator
@@ -368,7 +368,7 @@ test('Updating the input for further steps also works when combining the group o
     $step1->updateInputUsingOutput(function (Input $input, Output $output) {
         return $input->get() . $output->get();
     });
-    $step1 = new LoopStep($step1);
+    $step1 = new Loop($step1);
     $step1->maxIterations(2);
     $step2 = new class () extends Step {
         protected function invoke(Input $input): Generator

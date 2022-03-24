@@ -6,7 +6,7 @@ use AppendIterator;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
-use Crwlr\Crawler\Steps\LoopStep;
+use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Exception;
@@ -36,9 +36,9 @@ abstract class Crawler
     abstract protected function userAgent(): UserAgentInterface;
     abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
 
-    public static function loop(StepInterface $step): LoopStep
+    public static function loop(StepInterface $step): Loop
     {
-        return new LoopStep($step);
+        return new Loop($step);
     }
 
     public static function group(): Group

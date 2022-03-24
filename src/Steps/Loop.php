@@ -9,7 +9,7 @@ use Crwlr\Crawler\Output;
 use Generator;
 use Psr\Log\LoggerInterface;
 
-final class LoopStep implements StepInterface
+final class Loop implements StepInterface
 {
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $withInput = null;
