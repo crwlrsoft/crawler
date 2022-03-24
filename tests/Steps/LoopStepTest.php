@@ -395,8 +395,7 @@ test('It stops looping when the withInput callback returns null', function () {
 });
 
 test(
-    'It still calls the withInput method with Input only when step has no output at all and stops if the callback ' .
-    'returns null',
+    'It calls the withInput method when there is no output but the callWithoutOutput param is set to true',
     function () {
         $step = new class () extends Step {
             public int $_callcount = 0;
@@ -425,13 +424,49 @@ test(
                 }
 
                 return null;
-            });
+            }, true);
 
         helper_traverseIterable($loopStep->invokeStep(new Input('yo')));
 
         expect($step->_callcount)->toBe(2);
     }
 );
+
+test('It also calls the withInput method without output when keepLoopingWithoutOutput is called', function () {
+    $step = new class () extends Step {
+        public int $_callcount = 0;
+
+        protected function invoke(Input $input): Generator
+        {
+            $this->_callcount++;
+
+            if ($input->get() === 'yield output') {
+                yield 'ok';
+            }
+        }
+    };
+
+    $firstCall = true;
+
+    $loopStep = (new LoopStep($step))
+        ->maxIterations(10)
+        ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
+            expect($output)->toBeNull();
+
+            if ($firstCall === true) {
+                $firstCall = false;
+
+                return $input->get();
+            }
+
+            return null;
+        })
+        ->keepLoopingWithoutOutput();
+
+    helper_traverseIterable($loopStep->invokeStep(new Input('don\'t yield output')));
+
+    expect($step->_callcount)->toBe(2);
+});
 
 test(
     'It stops when the callback passed to the stopIf method returns true and it stops before yielding the output of ' .

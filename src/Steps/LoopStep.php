@@ -13,6 +13,7 @@ final class LoopStep implements StepInterface
 {
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $withInput = null;
+    private bool $callWithInputWithoutOutput = false;
     private null|Closure $stopIf = null;
     private bool $cascadeWhenFinished = false;
 
@@ -29,9 +30,8 @@ final class LoopStep implements StepInterface
 
     public function invokeStep(Input $input): Generator
     {
-        $anyOutputYet = false;
-
         for ($i = 0; $i < $this->maxIterations; $i++) {
+            $anyOutput = false;
             $inputForNextIteration = null;
 
             foreach ($this->step->invokeStep($input) as $output) {
@@ -39,14 +39,14 @@ final class LoopStep implements StepInterface
                     break 2;
                 }
 
-                $anyOutputYet = true;
+                $anyOutput = true;
 
                 yield from $this->yieldOrDefer($output);
 
                 $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
             }
 
-            if (!$inputForNextIteration && $anyOutputYet === false) {
+            if (!$inputForNextIteration && $anyOutput === false && $this->callWithInputWithoutOutput) {
                 $inputForNextIteration = $this->nextIterationInput($input, null);
             }
 
@@ -67,9 +67,18 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    public function withInput(Closure|StepInterface $closure): self
+    public function withInput(Closure|StepInterface $closure, bool $callWithoutOutput = false): self
     {
         $this->withInput = $closure;
+
+        $this->callWithInputWithoutOutput = $callWithoutOutput;
+
+        return $this;
+    }
+
+    public function keepLoopingWithoutOutput(): self
+    {
+        $this->callWithInputWithoutOutput = true;
 
         return $this;
     }
