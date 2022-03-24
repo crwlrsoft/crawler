@@ -250,6 +250,80 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
     expect($results)->toHaveCount(0);
 });
 
+test('It immediately cascades outputs to the next step', function () {
+    $step = new class () extends Step {
+        public int $_iterationCount = 0;
+
+        protected function invoke(Input $input): Generator
+        {
+            $this->_iterationCount++;
+
+            yield 'love';
+        }
+    };
+
+    $loopStep = (new LoopStep($step))->maxIterations(10);
+
+    $anyOutputAtAll = false;
+
+    $i = 1;
+
+    foreach ($loopStep->invokeStep(new Input('peace')) as $output) {
+        $anyOutputAtAll = true;
+
+        expect($step->_iterationCount)->toBe($i);
+
+        $i++;
+    }
+
+    expect($anyOutputAtAll)->toBeTrue();
+});
+
+test(
+    'It only cascades outputs to the next step after it finished looping when cascadeWhenFinished is called',
+    function () {
+        $step = new class () extends Step {
+            public int $_iterationCount = 0;
+
+            protected function invoke(Input $input): Generator
+            {
+                $this->_iterationCount++;
+
+                yield 'happiness';
+            }
+        };
+
+        $loopStep = (new LoopStep($step))->maxIterations(10);
+
+        $loopStep->cascadeWhenFinished();
+
+        foreach ($loopStep->invokeStep(new Input('pew')) as $output) {
+            expect($step->_iterationCount)->toBe(10);
+        }
+    }
+);
+
+test('It resets deferred outputs when they are yielded', function () {
+    $step = new class () extends Step {
+        protected function invoke(Input $input): Generator
+        {
+            yield 'pew';
+        }
+    };
+
+    $loopStep = (new LoopStep($step))->maxIterations(10);
+
+    $loopStep->cascadeWhenFinished();
+
+    $results = helper_generatorToArray($loopStep->invokeStep(new Input('pew')));
+
+    expect($results)->toHaveCount(10);
+
+    $results = helper_generatorToArray($loopStep->invokeStep(new Input('pew')));
+
+    expect($results)->toHaveCount(10); // If it wouldn't reset the previous deferred outputs it would now be 20 outputs
+});
+
 test('You can add and call an updateInputUsingOutput callback', function () {
     $step = new class () extends Step {
         protected function invoke(Input $input): Generator
@@ -319,6 +393,45 @@ test('It stops looping when the withInput callback returns null', function () {
     expect($results[3]->get())->toBe(4);
     expect($results[4]->get())->toBe(5);
 });
+
+test(
+    'It still calls the withInput method with Input only when step has no output at all and stops if the callback ' .
+    'returns null',
+    function () {
+        $step = new class () extends Step {
+            public int $_callcount = 0;
+
+            protected function invoke(Input $input): Generator
+            {
+                $this->_callcount++;
+
+                if ($input->get() === true) {
+                    yield 'it';
+                }
+            }
+        };
+
+        $firstCall = true;
+
+        $loopStep = (new LoopStep($step))
+            ->maxIterations(5)
+            ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
+                expect($output)->toBeNull();
+
+                if ($firstCall === true) {
+                    $firstCall = false;
+
+                    return $input->get();
+                }
+
+                return null;
+            });
+
+        helper_traverseIterable($loopStep->invokeStep(new Input('yo')));
+
+        expect($step->_callcount)->toBe(2);
+    }
+);
 
 test(
     'It stops when the callback passed to the stopIf method returns true and it stops before yielding the output of ' .

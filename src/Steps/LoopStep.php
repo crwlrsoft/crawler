@@ -14,6 +14,14 @@ final class LoopStep implements StepInterface
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $withInput = null;
     private null|Closure $stopIf = null;
+    private bool $cascadeWhenFinished = false;
+
+    /**
+     * Use when cascadeWhenFinished() is used.
+     *
+     * @var mixed[]
+     */
+    private array $deferredOutputs = [];
 
     public function __construct(private StepInterface $step)
     {
@@ -21,23 +29,35 @@ final class LoopStep implements StepInterface
 
     public function invokeStep(Input $input): Generator
     {
-        for ($i = 0; $i < $this->maxIterations && !empty($input); $i++) {
+        $anyOutputYet = false;
+
+        for ($i = 0; $i < $this->maxIterations; $i++) {
             $inputForNextIteration = null;
 
             foreach ($this->step->invokeStep($input) as $output) {
-                if ($this->stopIf && $this->stopIf->call($this, $input, $output) === true) {
+                if ($this->stopIf && $this->stopIf->call($this->step, $input, $output) === true) {
                     break 2;
                 }
 
-                if ($this->step->cascades()) {
-                    yield $output;
-                }
+                $anyOutputYet = true;
+
+                yield from $this->yieldOrDefer($output);
 
                 $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
             }
 
+            if (!$inputForNextIteration && $anyOutputYet === false) {
+                $inputForNextIteration = $this->nextIterationInput($input, null);
+            }
+
+            if (!$inputForNextIteration) {
+                break;
+            }
+
             $input = $inputForNextIteration;
         }
+
+        yield from $this->yieldDeferredOutputs();
     }
 
     public function maxIterations(int $count): self
@@ -83,6 +103,13 @@ final class LoopStep implements StepInterface
     public function dontCascade(): static
     {
         $this->step->dontCascade();
+
+        return $this;
+    }
+
+    public function cascadeWhenFinished(): static
+    {
+        $this->cascadeWhenFinished = true;
 
         return $this;
     }
@@ -135,14 +162,27 @@ final class LoopStep implements StepInterface
         return $this;
     }
 
-    private function nextIterationInput(Input $input, Output $output): ?Input
+    private function yieldOrDefer(mixed $output): Generator
+    {
+        if (!$this->step->cascades()) {
+            return;
+        }
+
+        if ($this->cascadeWhenFinished) {
+            $this->deferredOutputs[] = $output;
+        } else {
+            yield $output;
+        }
+    }
+
+    private function nextIterationInput(Input $input, ?Output $output): ?Input
     {
         if ($this->withInput) {
             $newInputValue = null;
 
             if ($this->withInput instanceof Closure) {
                 $newInputValue = $this->withInput->call($this->step, $input, $output);
-            } else {
+            } elseif ($output) {
                 foreach ($this->withInput->invokeStep(new Input($output)) as $output) {
                     $newInputValue = $output;
                 }
@@ -152,5 +192,16 @@ final class LoopStep implements StepInterface
         }
 
         return new Input($output);
+    }
+
+    private function yieldDeferredOutputs(): Generator
+    {
+        if (!empty($this->deferredOutputs)) {
+            foreach ($this->deferredOutputs as $deferredOutput) {
+                yield $deferredOutput;
+            }
+
+            $this->deferredOutputs = [];
+        }
     }
 }
