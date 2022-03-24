@@ -13,6 +13,7 @@ final class LoopStep implements StepInterface
 {
     private int $maxIterations = 1000;
     private null|Closure|StepInterface $withInput = null;
+    private bool $callWithInputOnlyOnce = false;
     private bool $callWithInputWithoutOutput = false;
     private null|Closure $stopIf = null;
     private bool $cascadeWhenFinished = false;
@@ -43,7 +44,13 @@ final class LoopStep implements StepInterface
 
                 yield from $this->yieldOrDefer($output);
 
-                $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
+                if (!$this->callWithInputOnlyOnce) {
+                    $inputForNextIteration = $this->nextIterationInput($input, $output) ?? $inputForNextIteration;
+                }
+            }
+
+            if ($this->callWithInputOnlyOnce && $anyOutput && isset($output)) {
+                $inputForNextIteration = $this->nextIterationInput($input, $output);
             }
 
             if (!$inputForNextIteration && $anyOutput === false && $this->callWithInputWithoutOutput) {
@@ -72,6 +79,13 @@ final class LoopStep implements StepInterface
         $this->withInput = $closure;
 
         $this->callWithInputWithoutOutput = $callWithoutOutput;
+
+        return $this;
+    }
+
+    public function callWithInputOnlyOnce(): self
+    {
+        $this->callWithInputOnlyOnce = true;
 
         return $this;
     }

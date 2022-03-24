@@ -11,6 +11,7 @@ use Crwlr\Crawler\Steps\LoopStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Exception;
 use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
@@ -466,6 +467,44 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
     helper_traverseIterable($loopStep->invokeStep(new Input('don\'t yield output')));
 
     expect($step->_callcount)->toBe(2);
+});
+
+test('It calls the withInput callback only once when callWithInputOnlyOnce was called', function () {
+    $step = new class () extends Step {
+        public bool $firstCall = true;
+
+        protected function invoke(Input $input): Generator
+        {
+            if ($this->firstCall) {
+                foreach (['one', 'two', 'three'] as $value) {
+                    yield $value;
+                }
+
+                $this->firstCall = false;
+            }
+        }
+    };
+
+    $callbackCallCount = 0;
+
+    $loopStep = (new LoopStep($step))
+        ->maxIterations(10)
+        ->withInput(function (Input $input, ?Output $output) use (& $callbackCallCount) {
+            if ($output === null) {
+                throw new Exception('Expect real output');
+            }
+
+            expect($output->get())->toBe('three');
+
+            $callbackCallCount++;
+
+            return null;
+        })
+        ->callWithInputOnlyOnce();
+
+    helper_traverseIterable($loopStep->invokeStep(new Input('go')));
+
+    expect($callbackCallCount)->toBe(1);
 });
 
 test(
