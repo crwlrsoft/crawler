@@ -52,6 +52,10 @@ class Csv extends Step
 
     public function separator(string $separator): static
     {
+        if (strlen($separator) > 1) {
+            throw new InvalidArgumentException('CSV separator must be single character');
+        }
+
         $this->separator = $separator;
 
         return $this;
@@ -157,7 +161,7 @@ class Csv extends Step
             }
 
             if (!empty($line)) {
-                yield $this->mapRow(str_getcsv($line));
+                yield $this->mapRow(str_getcsv($line, $this->separator, $this->enclosure, $this->escape));
             }
         }
     }

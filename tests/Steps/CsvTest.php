@@ -248,4 +248,112 @@ it('skips the first line when parsing file when defined via constructor param', 
     expect($results[2]->get())->toBe(['fach-erste' => 'Sport', 'fach-dritte' => 'Kunst']);
 });
 
-// TODO: tests for separator, enclosure, escape
+it('uses a different separator when you set one', function () {
+    $string = <<<CSV
+        123|"CoDerOtsch"|Christian|Olear|35
+        234|"g3n1u5"|Albert|Einstein|143
+        345|"sWiFtY"|Taylor|Swift|32
+        CSV;
+
+    $results = helper_generatorToArray(
+        Csv::parseString([1 => 'username', 2 => 'firstname', 3 => 'surname'])
+            ->separator('|')
+            ->invokeStep(new Input($string))
+    );
+
+    expect($results)->toHaveCount(3);
+
+    expect($results[0]->get())->toBe(['username' => 'CoDerOtsch', 'firstname' => 'Christian', 'surname' => 'Olear']);
+
+    expect($results[1]->get())->toBe(['username' => 'g3n1u5', 'firstname' => 'Albert', 'surname' => 'Einstein']);
+
+    expect($results[2]->get())->toBe(['username' => 'sWiFtY', 'firstname' => 'Taylor', 'surname' => 'Swift']);
+});
+
+it('uses a different separator when you set one, when parsing a file', function () {
+    $results = helper_generatorToArray(
+        Csv::parseFile([1 => 'username', 4 => 'age'])
+            ->separator('*')
+            ->invokeStep(new Input(helper_csvFilePath('separator.csv')))
+    );
+
+    expect($results)->toHaveCount(3);
+
+    expect($results[0]->get())->toBe(['username' => 'CoDerOtsch', 'age' => '35']);
+
+    expect($results[1]->get())->toBe(['username' => 'g3n1u5', 'age' => '143']);
+
+    expect($results[2]->get())->toBe(['username' => 'sWiFtY', 'age' => '32']);
+});
+
+it('throws an InvalidArgumentException when you try to set a multi character separator', function () {
+    Csv::parseString([])->separator('***');
+})->throws(InvalidArgumentException::class);
+
+it('uses a different enclosure when you set one', function () {
+    $string = <<<CSV
+        123,/Fritattensuppe/,3.9
+        234,/Wiener Schnitzel vom Schwein/,12.7
+        345,/Semmelknödel mit Schwammerlsauce/,9.5
+        CSV;
+
+    $results = helper_generatorToArray(
+        Csv::parseString([1 => 'meal', 2 => 'price'])
+            ->enclosure('/')
+            ->invokeStep(new Input($string))
+    );
+
+    expect($results)->toHaveCount(3);
+
+    expect($results[0]->get())->toBe(['meal' => 'Fritattensuppe', 'price' => '3.9']);
+
+    expect($results[1]->get())->toBe(['meal' => 'Wiener Schnitzel vom Schwein', 'price' => '12.7']);
+
+    expect($results[2]->get())->toBe(['meal' => 'Semmelknödel mit Schwammerlsauce', 'price' => '9.5']);
+});
+
+it('uses a different enclosure when you set one, when parsing a file', function () {
+    $results = helper_generatorToArray(
+        Csv::parseFile([1 => 'meal', 2 => 'price'])
+            ->enclosure('?')
+            ->invokeStep(new Input(helper_csvFilePath('enclosure.csv')))
+    );
+
+    expect($results)->toHaveCount(3);
+
+    expect($results[0]->get())->toBe(['meal' => 'Kräftige Rindsuppe', 'price' => '4.5']);
+
+    expect($results[1]->get())->toBe(['meal' => 'Crispy Chicken Burger', 'price' => '12']);
+
+    expect($results[2]->get())->toBe(['meal' => 'Duett von Saibling und Forelle', 'price' => '21']);
+});
+
+it('uses a different escape character when you set one', function () {
+    $string = <<<CSV
+        123,"test &"escape&" test",test
+        CSV;
+
+    $results = helper_generatorToArray(
+        Csv::parseString([1 => 'escaped'])
+            ->escape('&')
+            ->invokeStep(new Input($string))
+    );
+
+    expect($results)->toHaveCount(1);
+
+    expect($results[0]->get())->toBe(['escaped' => 'test &"escape&" test']);
+});
+
+it('uses a different escape character when you set one, when parsing a file', function () {
+    $results = helper_generatorToArray(
+        Csv::parseFile([1 => 'escaped'])
+            ->escape('%')
+            ->invokeStep(new Input(helper_csvFilePath('escape.csv')))
+    );
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0]->get())->toBe(['escaped' => 'test %"escape%" test']);
+
+    expect($results[1]->get())->toBe(['escaped' => 'foo %"escape%" bar %"baz%" lorem']);
+});
