@@ -1,0 +1,126 @@
+<?php
+
+namespace tests\Steps;
+
+use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Steps\Json;
+use function tests\helper_generatorToArray;
+
+it('extracts data defined using dot notation', function () {
+    $jsonString = <<<JSON
+        {
+            "data": {
+                "target": {
+                    "foo": "bar",
+                    "bar": "foo",
+                    "baz": "yo"
+                }
+            }
+        }
+        JSON;
+
+    $output = helper_generatorToArray(
+        Json::get(['foo' => 'data.target.foo', 'baz' => 'data.target.baz'])
+            ->invokeStep(new Input($jsonString))
+    );
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'bar', 'baz' => 'yo']);
+});
+
+it('uses the array values in the mapping as output key when no string keys defined in the mapping array', function () {
+    $jsonString = <<<JSON
+        {
+            "data": {
+                "target": {
+                    "foo": "bar",
+                    "bar": "foo",
+                    "baz": "yo"
+                }
+            }
+        }
+        JSON;
+
+    $output = helper_generatorToArray(
+        Json::get(['data.target.foo', 'baz' => 'data.target.baz'])
+            ->invokeStep(new Input($jsonString))
+    );
+
+    expect($output[0]->get())->toBe(['data.target.foo' => 'bar', 'baz' => 'yo']);
+});
+
+it('can get items from a json array using a numeric key', function () {
+    $jsonString = <<<JSON
+        {
+            "data": {
+                "target": {
+                    "array": [
+                        { "name": "Adam" },
+                        { "name": "Eve" }
+                    ]
+                }
+            }
+        }
+        JSON;
+
+    $output = helper_generatorToArray(
+        Json::get(['name' => 'data.target.array.1.name'])
+            ->invokeStep(new Input($jsonString))
+    );
+
+    expect($output[0]->get())->toBe(['name' => 'Eve']);
+});
+
+test('Using the each method you can iterate over a json array and yield multiple results', function () {
+    $jsonString = <<<JSON
+        {
+            "list": {
+                "people": [
+                    { "name": "Peter", "age": { "years": 19 } },
+                    { "name": "Paul", "age": { "years": 22 } },
+                    { "name": "Mary", "age": { "years": 20 } }
+                ]
+            }
+        }
+        JSON;
+
+    $output = helper_generatorToArray(
+        Json::each('list.people', ['name' => 'name', 'age' => 'age.years'])
+            ->invokeStep(new Input($jsonString))
+    );
+
+    expect($output)->toHaveCount(3);
+
+    expect($output[0]->get())->toBe(['name' => 'Peter', 'age' => 19]);
+
+    expect($output[1]->get())->toBe(['name' => 'Paul', 'age' => 22]);
+
+    expect($output[2]->get())->toBe(['name' => 'Mary', 'age' => 20]);
+});
+
+test('When the root element is an array you can use each with empty string as param', function () {
+    $jsonString = <<<JSON
+        [
+            { "firstname": "Axel", "surname": "Klingmeier", "nickname": "Axel" },
+            { "firstname": "Lieselotte", "surname": "Schroll", "nickname": "Lilo" },
+            { "firstname": "Paula", "surname": "Monowitsch", "nickname": "Poppi" },
+            { "firstname": "Dominik", "surname": "Kascha", "nickname": "Dominik" }
+        ]
+        JSON;
+
+    $output = helper_generatorToArray(
+        Json::each('', ['nickname'])
+            ->invokeStep(new Input($jsonString))
+    );
+
+    expect($output)->toHaveCount(4);
+
+    expect($output[0]->get())->toBe(['nickname' => 'Axel']);
+
+    expect($output[1]->get())->toBe(['nickname' => 'Lilo']);
+
+    expect($output[2]->get())->toBe(['nickname' => 'Poppi']);
+
+    expect($output[3]->get())->toBe(['nickname' => 'Dominik']);
+});
