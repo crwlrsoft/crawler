@@ -2,30 +2,13 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use Crwlr\Crawler\Steps\Html\GetLink;
-use Crwlr\Crawler\Steps\Html\GetLinks;
-use Crwlr\Crawler\Steps\Html\QuerySelector;
-use Crwlr\Crawler\Steps\Html\QuerySelectorAll;
+use Crwlr\Crawler\Steps\Html\CssSelector;
+use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 
-class Html
+class Html extends Dom
 {
-    public static function querySelector(string $selector): QuerySelector
+    protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface
     {
-        return new QuerySelector($selector);
-    }
-
-    public static function querySelectorAll(string $selector): QuerySelectorAll
-    {
-        return new QuerySelectorAll($selector);
-    }
-
-    public static function getLink(?string $selector = null): GetLink
-    {
-        return new GetLink($selector);
-    }
-
-    public static function getLinks(?string $selector = null): GetLinks
-    {
-        return new GetLinks($selector);
+        return new CssSelector($query);
     }
 }
