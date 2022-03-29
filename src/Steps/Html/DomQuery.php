@@ -7,10 +7,10 @@ use Symfony\Component\DomCrawler\Crawler;
 abstract class DomQuery implements DomQueryInterface
 {
     public ?string $attributeName = null;
+    private SelectorTarget $target = SelectorTarget::Text;
 
     public function __construct(
-        public readonly string $query,
-        public SelectorTarget $target = SelectorTarget::Text
+        public readonly string $query
     ) {
     }
 
@@ -73,8 +73,8 @@ abstract class DomQuery implements DomQueryInterface
     {
         return trim(
             $this->attributeName ?
-                $filtered->{$this->target->name}($this->attributeName) :
-                $filtered->{$this->target->name}()
+                $filtered->attr($this->attributeName) :
+                $filtered->{strtolower($this->target->name)}()
         );
     }
 }
