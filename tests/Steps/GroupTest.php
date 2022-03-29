@@ -23,6 +23,7 @@ use function tests\helper_traverseIterable;
 test('You can add a step and it passes on the logger', function () {
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('addLogger')->once();
+    $step->shouldReceive('getResultKey');
     $step->shouldNotReceive('addLoader');
     $group = new Group();
     $group->addLogger(new CliLogger());
@@ -32,8 +33,10 @@ test('You can add a step and it passes on the logger', function () {
 test('It also passes on a new logger to all steps when the logger is added after the steps', function () {
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('addLogger')->once();
+    $step1->shouldReceive('getResultKey');
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('addLogger')->once();
+    $step2->shouldReceive('getResultKey');
     $group = new Group();
     $group->addStep($step1);
     $group->addStep($step2);
@@ -44,6 +47,7 @@ test('It also passes on the loader to the step when addLoader method exists in s
     $step = Mockery::mock(LoadingStepInterface::class);
     $step->shouldReceive('addLogger')->once();
     $step->shouldReceive('addLoader')->once();
+    $step->shouldReceive('getResultKey');
     $group = new Group();
     $group->addLogger(new CliLogger());
     $group->addLoader(new HttpLoader(new BotUserAgent('MyBot')));
@@ -53,8 +57,10 @@ test('It also passes on the loader to the step when addLoader method exists in s
 test('It also passes on a new loader to all steps when it is added after the steps', function () {
     $step1 = Mockery::mock(LoadingStepInterface::class);
     $step1->shouldReceive('addLoader')->once();
+    $step1->shouldReceive('getResultKey');
     $step2 = Mockery::mock(LoadingStepInterface::class);
     $step2->shouldReceive('addLoader')->once();
+    $step2->shouldReceive('getResultKey');
     $group = new Group();
     $group->addStep($step1);
     $group->addStep($step2);

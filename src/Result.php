@@ -15,6 +15,10 @@ class Result
 
     public function set(string $key, mixed $value): void
     {
+        if ($key === '') {
+            $key = $this->getUnnamedKey();
+        }
+
         if (array_key_exists($key, $this->data)) {
             if (is_array($this->data[$key])) {
                 $this->data[$key][] = $value;
@@ -41,5 +45,16 @@ class Result
     public function toArray(): array
     {
         return $this->data;
+    }
+
+    private function getUnnamedKey(): string
+    {
+        $i = 1;
+
+        while ($this->get('unnamed' . $i) !== null) {
+            $i++;
+        }
+
+        return 'unnamed' . $i;
     }
 }

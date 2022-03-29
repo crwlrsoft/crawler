@@ -189,7 +189,7 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
     $step->shouldReceive('addLogger')->once();
-    $step->shouldReceive('getResultKey')->once()->andReturn(null);
+    $step->shouldReceive('addsKeysToResult')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
     $crawler->addStep($step);
     $crawler->input('randomInput');
@@ -203,12 +203,15 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
     $step1 = Mockery::mock(StepInterface::class);
     $step1->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['foo']));
     $step1->shouldReceive('addLogger');
+    $step1->shouldReceive('getResultKey');
     $step2 = Mockery::mock(StepInterface::class);
     $step2->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['bar']));
     $step2->shouldReceive('addLogger');
+    $step2->shouldReceive('getResultKey');
     $step3 = Mockery::mock(StepInterface::class);
     $step3->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['baz']));
     $step3->shouldReceive('addLogger');
+    $step3->shouldReceive('getResultKey');
     $crawler->addStep(
         Crawler::group()
             ->addStep($step1)

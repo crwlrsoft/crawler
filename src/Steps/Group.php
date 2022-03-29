@@ -33,44 +33,20 @@ final class Group implements StepInterface
     {
         $combinedOutput = [];
 
-        if ($this->useInputKey !== null) {
-            if (!array_key_exists($this->useInputKey, $input->get())) {
-                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
-            }
-
-            $input = new Input($input->get()[$this->useInputKey], $input->result);
-        }
-
-        // If in this group there are result keys and there is no Result object created yet, add one,
-        // otherwise multiple Result object would be created.
-        if ($this->combine && $this->anyResultKeysDefinedInSteps() && !$input->result) {
-            $input = new Input($input->get(), new Result());
-        }
+        $input = $this->prepareInput($input);
 
         foreach ($this->steps as $key => $step) {
-            $outputs = $step->invokeStep($input);
-
-            if (!$this->combine) {
+            foreach ($step->invokeStep($input) as $output) {
                 if (method_exists($step, 'callUpdateInputUsingOutput')) {
-                    foreach ($outputs as $output) {
-                        $input = $step->callUpdateInputUsingOutput($input, $output);
-
-                        if ($this->cascades() && $step->cascades()) {
-                            yield $output;
-                        }
-                    }
-                } elseif ($this->cascades() && $step->cascades()) {
-                    yield from $outputs;
+                    $input = $step->callUpdateInputUsingOutput($input, $output);
                 }
-            } else {
-                foreach ($outputs as $output) {
-                    if (method_exists($step, 'callUpdateInputUsingOutput')) {
-                        $input = $step->callUpdateInputUsingOutput($input, $output);
-                    }
 
-                    if ($step->cascades()) {
-                        $combinedOutput[$step->getResultKey() ?? $key][] = $output->get();
-                    }
+                if ($this->combine && $step->cascades()) {
+                    $stepKey = $step->getResultKey() ?? $key;
+
+                    $combinedOutput = $this->addOutputToCombinedOutputs($output, $combinedOutput, $stepKey);
+                } elseif ($this->cascades() && $step->cascades()) {
+                    yield $output;
                 }
             }
         }
@@ -120,6 +96,22 @@ final class Group implements StepInterface
         return null;
     }
 
+    public function addKeysToResult(?array $keys = null): static
+    {
+        return $this; // TODO: same here...should it try to add every output of the group?
+    }
+
+    public function addsKeysToResult(): bool
+    {
+        foreach ($this->steps as $step) {
+            if ($step->addsKeysToResult()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function addStep(string|StepInterface $stepOrResultKey, ?StepInterface $step = null): self
     {
         if (is_string($stepOrResultKey) && $step === null) {
@@ -167,14 +159,64 @@ final class Group implements StepInterface
         return $this;
     }
 
-    private function anyResultKeysDefinedInSteps(): bool
+    /**
+     * @throws Exception
+     */
+    private function prepareInput(Input $input): Input
     {
-        foreach ($this->steps as $step) {
-            if ($step->getResultKey() !== null) {
-                return true;
+        $input = $this->getInputKeyToUse($input);
+
+        $input = $this->addResultToInputIfAnyResultKeysDefined($input);
+
+        return $input;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function getInputKeyToUse(Input $input): Input
+    {
+        if ($this->useInputKey !== null) {
+            if (!array_key_exists($this->useInputKey, $input->get())) {
+                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
             }
+
+            $input = new Input($input->get()[$this->useInputKey], $input->result);
         }
 
-        return false;
+        return $input;
+    }
+
+    /**
+     * If in this group there are result keys and there is no Result object created before invoking the steps,
+     * add one, because otherwise multiple Result objects would be created.
+     *
+     * @param Input $input
+     * @return Input
+     */
+    private function addResultToInputIfAnyResultKeysDefined(Input $input): Input
+    {
+        if ($this->combine && $this->addsKeysToResult() && !$input->result) {
+            $input = new Input($input->get(), new Result());
+        }
+
+        return $input;
+    }
+
+    /**
+     * @param mixed[] $combined
+     * @return mixed[]
+     */
+    private function addOutputToCombinedOutputs(mixed $output, array $combined, int|string $stepKey): array
+    {
+        if (is_array($output)) {
+            foreach ($output as $key => $value) {
+                $combined[$stepKey][$key][] = $value;
+            }
+        } else {
+            $combined[$stepKey][] = $output->get();
+        }
+
+        return $combined;
     }
 }
