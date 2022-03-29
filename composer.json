@@ -36,7 +36,8 @@
         "symfony/dom-crawler": "^6.0",
         "symfony/css-selector": "^6.0",
         "psr/simple-cache": "^1.0|^2.0|^3.0",
-        "guzzlehttp/guzzle": "^7.4"
+        "guzzlehttp/guzzle": "^7.4",
+        "adbario/php-dot-notation": "^3.1"
     },
     "require-dev": {
         "pestphp/pest": "^1.21",

@@ -51,3 +51,14 @@ function helper_generatorToArray(Generator $generator): array
 
     return $array;
 }
+
+function helper_getStepFilesContent(string $filePathInFilesFolder): string
+{
+    $content = file_get_contents(__DIR__ . '/Steps/_Files/' . $filePathInFilesFolder);
+
+    if ($content === false) {
+        return '';
+    }
+
+    return $content;
+}
