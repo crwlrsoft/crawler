@@ -35,7 +35,9 @@ test('string is valid input', function () {
 
     $domStep = helper_getDomStepInstance();
 
-    helper_traverseIterable($domStep::root()->invokeStep(new Input($html)));
+    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($html)));
+
+    expect($output[0]->get())->toBe([]);
 });
 
 test('ResponseInterface is a valid input', function () {
@@ -43,7 +45,9 @@ test('ResponseInterface is a valid input', function () {
 
     $domStep = helper_getDomStepInstance();
 
-    helper_traverseIterable($domStep::root()->invokeStep(new Input($response)));
+    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($response)));
+
+    expect($output[0]->get())->toBe([]);
 });
 
 test('RequestResponseAggregate is a valid input', function () {
@@ -51,7 +55,9 @@ test('RequestResponseAggregate is a valid input', function () {
 
     $domStep = helper_getDomStepInstance();
 
-    helper_traverseIterable($domStep::root()->invokeStep(new Input($aggregate)));
+    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($aggregate)));
+
+    expect($output[0]->get())->toBe([]);
 });
 
 test('For other inputs an InvalidArgumentException is thrown', function (mixed $input) {
