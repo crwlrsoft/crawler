@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
-use Crwlr\Crawler\Input;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -75,41 +74,38 @@ class Csv extends Step
         return $this;
     }
 
-    protected function validateAndSanitizeInput(Input $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        $inputValue = $input->get();
-
         if ($this->method === 'string') {
-            if ($inputValue instanceof RequestResponseAggregate) {
-                return $inputValue->response->getBody()->getContents();
+            if ($input instanceof RequestResponseAggregate) {
+                return $input->response->getBody()->getContents();
             }
 
             return $this->validateAndSanitizeStringOrStringable(
-                $inputValue,
+                $input,
                 'Input has to be string, stringable or RequestResponseAggregate'
             );
         } elseif ($this->method === 'file') {
-            return $this->validateAndSanitizeStringOrStringable($inputValue);
+            return $this->validateAndSanitizeStringOrStringable($input);
         } else {
             throw new InvalidArgumentException('Parse CSV method must be string or file');
         }
     }
 
     /**
+     * @param string $input
      * @throws Exception
      */
-    protected function invoke(Input $input): Generator
+    protected function invoke(mixed $input): Generator
     {
-        $inputValue = $input->get();
-
         if ($this->method === 'file') {
-            if (!file_exists($inputValue)) {
+            if (!file_exists($input)) {
                 throw new Exception('CSV file not found');
             }
 
-            yield from $this->readFile($input->get());
+            yield from $this->readFile($input);
         } elseif ($this->method === 'string') {
-            yield from $this->mapLines(explode(PHP_EOL, $inputValue));
+            yield from $this->mapLines(explode(PHP_EOL, $input));
         }
     }
 

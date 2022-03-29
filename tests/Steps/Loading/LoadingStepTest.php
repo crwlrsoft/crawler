@@ -14,9 +14,9 @@ test('You can add a loader', function () {
         /**
          * @return Generator<array<mixed>>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            $this->loader->load($input->get());
+            $this->loader->load($input);
             yield [];
         }
     };

@@ -113,20 +113,20 @@ test(
     'It combines the outputs of all it\'s steps into one output containing an array when combineToSingleOutput is used',
     function () {
         $step1 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'lorem';
             }
         };
         $step2 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'ipsum';
                 yield 'dolor';
             }
         };
         $step3 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'sit';
             }
@@ -155,20 +155,20 @@ test(
     'the output array',
     function () {
         $step1 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'ich';
             }
         };
         $step2 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'bin';
                 yield 'ein';
             }
         };
         $step3 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'berliner';
             }
@@ -200,13 +200,13 @@ test(
 
 test('It doesn\'t output anything when the dontCascade method was called', function () {
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'something';
         }
     };
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as $number) {
                 yield $number;
@@ -229,7 +229,7 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
 
     // Also doesn't yield when a step is added after the dontCascade() call
     $newStep = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'something';
         }
@@ -243,14 +243,14 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
 
 test('It doesn\'t return the output of a step when the dontCascade method was called on that step', function () {
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'foo';
         }
     };
 
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'bar';
         }
@@ -274,14 +274,14 @@ test(
     'output is combined',
     function () {
         $step1 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'abc';
             }
         };
 
         $step2 = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'def';
             }
@@ -306,18 +306,18 @@ test(
 
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield ' rocks';
         }
     };
-    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
-        return $input->get() . $output->get();
+    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . $output;
     });
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
 
@@ -332,20 +332,20 @@ test('You can update the input for further steps with the output of a step that 
 
 test('Updating the input for further steps with output also works with loop steps', function () {
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield ' Jump!';
         }
     };
-    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
-        return $input->get() . $output->get();
+    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . $output;
     });
     $step1 = new Loop($step1);
     $step1->maxIterations(2);
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
 
@@ -360,20 +360,20 @@ test('Updating the input for further steps with output also works with loop step
 
 test('Updating the input for further steps also works when combining the group output to a single output', function () {
     $step1 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield ' Jump!';
         }
     };
-    $step1->updateInputUsingOutput(function (Input $input, Output $output) {
-        return $input->get() . $output->get();
+    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . $output;
     });
     $step1 = new Loop($step1);
     $step1->maxIterations(2);
     $step2 = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
 

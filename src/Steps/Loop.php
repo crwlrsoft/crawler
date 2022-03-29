@@ -36,7 +36,7 @@ final class Loop implements StepInterface
             $inputForNextIteration = null;
 
             foreach ($this->step->invokeStep($input) as $output) {
-                if ($this->stopIf && $this->stopIf->call($this->step, $input, $output) === true) {
+                if ($this->stopIf && $this->stopIf->call($this->step, $input->get(), $output->get()) === true) {
                     break 2;
                 }
 
@@ -204,7 +204,7 @@ final class Loop implements StepInterface
             $newInputValue = null;
 
             if ($this->withInput instanceof Closure) {
-                $newInputValue = $this->withInput->call($this->step, $input, $output);
+                $newInputValue = $this->withInput->call($this->step, $input->get(), $output?->get());
             } elseif ($output) {
                 foreach ($this->withInput->invokeStep(new Input($output)) as $output) {
                     $newInputValue = $output;

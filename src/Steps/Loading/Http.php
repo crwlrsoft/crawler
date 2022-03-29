@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
-use Crwlr\Crawler\Input;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
@@ -83,16 +82,14 @@ class Http extends LoadingStep
     /**
      * @throws InvalidArgumentException
      */
-    protected function validateAndSanitizeInput(Input $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        $inputValue = $input->get();
-
-        if ($inputValue instanceof UriInterface) {
-            return $inputValue;
+        if ($input instanceof UriInterface) {
+            return $input;
         }
 
-        if (is_string($inputValue)) {
-            return Url::parsePsr7($inputValue);
+        if (is_string($input)) {
+            return Url::parsePsr7($input);
         }
 
         throw new InvalidArgumentException('Input must be string or an instance of the PSR-7 UriInterface');
@@ -102,9 +99,9 @@ class Http extends LoadingStep
      * @return Generator<RequestResponseAggregate|null>
      * @throws Exception
      */
-    protected function invoke(Input $input): Generator
+    protected function invoke(mixed $input): Generator
     {
-        $request = new Request($this->method, $input->get(), $this->headers, $this->body, $this->httpVersion);
+        $request = new Request($this->method, $input, $this->headers, $this->body, $this->httpVersion);
 
         yield $this->loader->load($request);
     }

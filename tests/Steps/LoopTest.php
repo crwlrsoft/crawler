@@ -24,12 +24,12 @@ test(
         $step = new class () extends Step {
             public int $_callCount = 0;
 
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 if ($this->_callCount === 0) {
-                    expect($input->get())->toBe('foo');
+                    expect($input)->toBe('foo');
                 } else {
-                    expect($input->get())->toBe($this->_callCount);
+                    expect($input)->toBe($this->_callCount);
                 }
 
                 $this->_callCount++;
@@ -55,7 +55,7 @@ test(
             {
             }
 
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 $this->_callCount++;
 
@@ -80,7 +80,7 @@ test('You can set your own max iteration limit', function ($customLimit) {
     $step = new class () extends Step {
         public int $_callCount = 0;
 
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             $this->_callCount++;
             yield $this->_callCount;
@@ -94,16 +94,16 @@ test('You can set your own max iteration limit', function ($customLimit) {
 
 test('You can use a Closure to transform an iterations output to the input for the next step', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            expect($input->get())->toBeInt();
+            expect($input)->toBeInt();
 
-            yield 'output ' . ($input->get() + 1);
+            yield 'output ' . ($input + 1);
         }
     };
     $loopStep = new Loop($step);
-    $loopStep->withInput(function (Input $input, Output $output) {
-        $outputValue = $output->get();
+    $loopStep->withInput(function (mixed $input, mixed $output) {
+        $outputValue = $output;
 
         return (int) substr($outputValue, -1, 1);
     });
@@ -118,18 +118,18 @@ test('You can use a Closure to transform an iterations output to the input for t
 
 test('You can use a Step to make the input for the next iteration from the output', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            expect($input->get())->toBeInt();
+            expect($input)->toBeInt();
 
-            yield 'foo ' . ($input->get() + 1);
+            yield 'foo ' . ($input + 1);
         }
     };
     $loopStep = new Loop($step);
     $loopStep->withInput(new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield (int) substr($input->get(), -1, 1);
+            yield (int) substr($input, -1, 1);
         }
     });
     $loopStep->maxIterations(5);
@@ -143,16 +143,16 @@ test('You can use a Step to make the input for the next iteration from the outpu
 
 test('When the step has output but the withInput Closure returns null it stops looping', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            expect($input->get())->toBeInt();
+            expect($input)->toBeInt();
 
-            yield $input->get() + 1;
+            yield $input + 1;
         }
     };
     $loopStep = new Loop($step);
-    $loopStep->withInput(function (Input $input, Output $output) {
-        return $output->get() < 2 ? $output->get() : null;
+    $loopStep->withInput(function (mixed $input, mixed $output) {
+        return $output < 2 ? $output : null;
     });
     $loopStep->maxIterations(5);
     $result = helper_generatorToArray($loopStep->invokeStep(new Input(0)));
@@ -163,19 +163,19 @@ test('When the step has output but the withInput Closure returns null it stops l
 
 test('When the step has output but the withInput Step has no output it stops looping', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            expect($input->get())->toBeInt();
+            expect($input)->toBeInt();
 
-            yield $input->get() + 1;
+            yield $input + 1;
         }
     };
     $loopStep = new Loop($step);
     $loopStep->withInput(new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            if ($input->get() < 2) {
-                yield $input->get();
+            if ($input < 2) {
+                yield $input;
             }
         }
     });
@@ -233,7 +233,7 @@ test(
 
 test('It doesn\'t output anything when the dontCascade method was called', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'something';
         }
@@ -255,7 +255,7 @@ test('It immediately cascades outputs to the next step', function () {
     $step = new class () extends Step {
         public int $_iterationCount = 0;
 
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             $this->_iterationCount++;
 
@@ -286,7 +286,7 @@ test(
         $step = new class () extends Step {
             public int $_iterationCount = 0;
 
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 $this->_iterationCount++;
 
@@ -306,7 +306,7 @@ test(
 
 test('It resets deferred outputs when they are yielded', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'pew';
         }
@@ -327,14 +327,14 @@ test('It resets deferred outputs when they are yielded', function () {
 
 test('You can add and call an updateInputUsingOutput callback', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 1;
         }
     };
     $step = new Loop($step);
-    $step->updateInputUsingOutput(function (Input $input, Output $output) {
-        return $input->get() . ' ' . $output->get();
+    $step->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . ' ' . $output;
     });
 
     $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
@@ -344,19 +344,16 @@ test('You can add and call an updateInputUsingOutput callback', function () {
 
 test('It loops reusing the same input that can be updated via a callback when withInput is used', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            $inputData = $input->get();
-
-            yield array_pop($inputData) + (array_pop($inputData) ?? 0);
+            yield array_pop($input) + (array_pop($input) ?? 0);
         }
     };
     $step = new Loop($step);
-    $step->withInput(function (Input $input, Output $output) {
-        $inputData = $input->get();
-        $inputData[] = $output->get();
+    $step->withInput(function (mixed $input, mixed $output) {
+        $input[] = $output;
 
-        return $inputData;
+        return $input;
     });
     $step->maxIterations(10);
 
@@ -375,14 +372,14 @@ test('It loops reusing the same input that can be updated via a callback when wi
 
 test('It stops looping when the withInput callback returns null', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
     $step = new Loop($step);
-    $step->withInput(function (Input $input, Output $output) {
-        return $input->get() < 5 ? $input->get() + 1 : null;
+    $step->withInput(function (mixed $input, mixed $output) {
+        return $input < 5 ? $input + 1 : null;
     });
     $step->maxIterations(10);
 
@@ -401,11 +398,11 @@ test(
         $step = new class () extends Step {
             public int $_callcount = 0;
 
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 $this->_callcount++;
 
-                if ($input->get() === true) {
+                if ($input === true) {
                     yield 'it';
                 }
             }
@@ -415,13 +412,13 @@ test(
 
         $loopStep = (new Loop($step))
             ->maxIterations(5)
-            ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
+            ->withInput(function (mixed $input, mixed $output) use (& $firstCall) {
                 expect($output)->toBeNull();
 
                 if ($firstCall === true) {
                     $firstCall = false;
 
-                    return $input->get();
+                    return $input;
                 }
 
                 return null;
@@ -437,11 +434,11 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
     $step = new class () extends Step {
         public int $_callcount = 0;
 
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             $this->_callcount++;
 
-            if ($input->get() === 'yield output') {
+            if ($input === 'yield output') {
                 yield 'ok';
             }
         }
@@ -451,13 +448,13 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
 
     $loopStep = (new Loop($step))
         ->maxIterations(10)
-        ->withInput(function (Input $input, ?Output $output) use (& $firstCall) {
+        ->withInput(function (mixed $input, mixed $output) use (& $firstCall) {
             expect($output)->toBeNull();
 
             if ($firstCall === true) {
                 $firstCall = false;
 
-                return $input->get();
+                return $input;
             }
 
             return null;
@@ -473,7 +470,7 @@ test('It calls the withInput callback only once when callWithInputOnlyOnce was c
     $step = new class () extends Step {
         public bool $firstCall = true;
 
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             if ($this->firstCall) {
                 foreach (['one', 'two', 'three'] as $value) {
@@ -489,12 +486,12 @@ test('It calls the withInput callback only once when callWithInputOnlyOnce was c
 
     $loopStep = (new Loop($step))
         ->maxIterations(10)
-        ->withInput(function (Input $input, ?Output $output) use (& $callbackCallCount) {
+        ->withInput(function (mixed $input, mixed $output) use (& $callbackCallCount) {
             if ($output === null) {
                 throw new Exception('Expect real output');
             }
 
-            expect($output->get())->toBe('three');
+            expect($output)->toBe('three');
 
             $callbackCallCount++;
 
@@ -512,15 +509,15 @@ test(
     'that iteration',
     function () {
         $step = new class () extends Step {
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
-                yield $input->get() + 1;
+                yield $input + 1;
             }
         };
         $step = new Loop($step);
         $step->maxIterations(10);
-        $step->stopIf(function (Input $input, Output $output) {
-            return $output->get() > 3;
+        $step->stopIf(function (mixed $input, mixed $output) {
+            return $output > 3;
         });
 
         $results = helper_generatorToArray($step->invokeStep(new Input(0)));

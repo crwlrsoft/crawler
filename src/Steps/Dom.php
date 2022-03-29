@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
-use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
@@ -85,30 +84,30 @@ abstract class Dom extends Step
         return $this;
     }
 
-    protected function validateAndSanitizeInput(Input $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        $inputValue = $input->get();
-
-        if (is_string($inputValue)) {
-            return new Crawler($inputValue);
+        if (is_string($input)) {
+            return new Crawler($input);
         }
 
-        if ($inputValue instanceof ResponseInterface) {
-            return new Crawler($inputValue->getBody()->getContents());
+        if ($input instanceof ResponseInterface) {
+            return new Crawler($input->getBody()->getContents());
         }
 
-        if ($inputValue instanceof RequestResponseAggregate) {
-            return new Crawler($inputValue->response->getBody()->getContents());
+        if ($input instanceof RequestResponseAggregate) {
+            return new Crawler($input->response->getBody()->getContents());
         }
 
         throw new InvalidArgumentException('Input must be string, PSR-7 Response or RequestResponseAggregate.');
     }
 
-    protected function invoke(Input $input): Generator
+    /**
+     * @param Crawler $input
+     * @throws Exception
+     */
+    protected function invoke(mixed $input): Generator
     {
-        $domCrawler = $input->get();
-
-        $base = $this->getBase($domCrawler);
+        $base = $this->getBase($input);
 
         if ($this->each) {
             foreach ($base as $element) {

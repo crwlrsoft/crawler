@@ -37,9 +37,9 @@ function helper_getDummyCrawler(): Crawler
 function helper_getDummyStepYieldingInput(): Step
 {
     return new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
 }
@@ -224,7 +224,7 @@ test('Result objects are created when defined and passed on through all the step
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'yo';
         }
@@ -236,7 +236,7 @@ test('Result objects are created when defined and passed on through all the step
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'lo';
         }
@@ -248,7 +248,7 @@ test('Result objects are created when defined and passed on through all the step
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'foo';
         }
@@ -260,7 +260,7 @@ test('Result objects are created when defined and passed on through all the step
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'bar';
         }
@@ -300,7 +300,7 @@ test('When final steps return an array you get all values in the defined Result 
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'Donald';
         }
@@ -311,7 +311,7 @@ test('When final steps return an array you get all values in the defined Result 
         /**
          * @return Generator<array<string>>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield ['Tick', 'Trick', 'Track'];
         }

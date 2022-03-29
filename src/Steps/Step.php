@@ -23,7 +23,7 @@ abstract class Step implements StepInterface
     /**
      * @return Generator<mixed>
      */
-    abstract protected function invoke(Input $input): Generator;
+    abstract protected function invoke(mixed $input): Generator;
 
     /**
      * Calls the validateAndSanitizeInput method and assures that the invoke method receives valid, sanitized input.
@@ -33,18 +33,16 @@ abstract class Step implements StepInterface
      */
     final public function invokeStep(Input $input): Generator
     {
-        if ($this->useInputKey !== null) {
-            if (!array_key_exists($this->useInputKey, $input->get())) {
-                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
-            }
-
-            $input = new Input($input->get()[$this->useInputKey], $input->result);
+        if ($this->useInputKey !== null && (is_array($input->get()) || !isset($input->get()[$this->useInputKey]))) {
+            throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
         }
 
-        $validInput = new Input($this->validateAndSanitizeInput($input), $input->result);
+        $inputValue = $this->useInputKey ? $input->get()[$this->useInputKey] : $input->get();
+
+        $validInput = $this->validateAndSanitizeInput($inputValue);
 
         foreach ($this->invoke($validInput) as $output) {
-            yield $this->output($output, $validInput);
+            yield $this->output($output, $input->result);
         }
     }
 
@@ -98,7 +96,7 @@ abstract class Step implements StepInterface
     public function callUpdateInputUsingOutput(Input $input, Output $output): Input
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
-            return new Input($this->updateInputUsingOutput->call($this, $input, $output), $input->result);
+            return new Input($this->updateInputUsingOutput->call($this, $input->get(), $output->get()), $input->result);
         }
 
         return $input;
@@ -121,9 +119,9 @@ abstract class Step implements StepInterface
      *
      * @throws InvalidArgumentException  Throw this if the input value is invalid for this step.
      */
-    protected function validateAndSanitizeInput(Input $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        return $input->get();
+        return $input;
     }
 
     /**
@@ -134,13 +132,13 @@ abstract class Step implements StepInterface
      *
      * @throws Exception
      */
-    protected function output(mixed $value, Input $input): Output
+    protected function output(mixed $value, ?Result $result = null): Output
     {
         if ($this->resultKey !== null) {
-            $result = $input->result ?? new Result();
+            $result = $result ?? new Result();
             $result->set($this->resultKey, $value);
         }
 
-        return new Output($value, $result ?? $input->result);
+        return new Output($value, $result);
     }
 }

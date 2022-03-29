@@ -18,9 +18,9 @@ function helper_getNumberIncrementingStep(): Step
         /**
          * @return Generator<int>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get() + 1;
+            yield $input + 1;
         }
     };
 }
@@ -32,7 +32,7 @@ test('You can add a logger and it is available within the invoke method', functi
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             $this->logger->info('logging works');
             yield 'something';
@@ -51,7 +51,7 @@ test(
             /**
              * @return Generator<string>
              */
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'returnValue';
             }
@@ -72,7 +72,7 @@ test(
             /**
              * @return Generator<string>
              */
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'returnValue';
             }
@@ -88,7 +88,7 @@ test(
 
 test('It doesn\'t add the result object to the Input object only to the Output', function () {
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'Stand with Ukraine!';
         }
@@ -108,7 +108,7 @@ test(
             /**
              * @return Generator<string>
              */
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'returnValue';
             }
@@ -134,7 +134,7 @@ test(
             /**
              * @return Generator<string>
              */
-            protected function invoke(Input $input): Generator
+            protected function invoke(mixed $input): Generator
             {
                 yield 'returnValue';
             }
@@ -152,17 +152,17 @@ test(
 
 test('The invokeStep method calls the validateAndSanitizeInput method', function () {
     $step = new class () extends Step {
-        protected function validateAndSanitizeInput(Input $input): string
+        protected function validateAndSanitizeInput(mixed $input): string
         {
-            return $input->get() . ' validated and sanitized';
+            return $input . ' validated and sanitized';
         }
 
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            yield $input->get();
+            yield $input;
         }
     };
     $output = $step->invokeStep(new Input('inputValue'));
@@ -175,9 +175,9 @@ test('It is possible that a step does not produce any output at all', function (
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
-            if ($input->get() === 'foo') {
+            if ($input === 'foo') {
                 yield 'bar';
             }
         }
@@ -197,7 +197,7 @@ test('It still returns output from invokeStep when dontCascade was called', func
     // Explanation: the Crawler (and Group) class has to take care of not cascading the output to the next step.
     // But it still needs the output of a step that shouldn't cascade in some cases.
     $step = new class () extends Step {
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'something';
         }
@@ -219,13 +219,13 @@ test('You can add and call an updateInputUsingOutput callback', function () {
         /**
          * @return Generator<string>
          */
-        protected function invoke(Input $input): Generator
+        protected function invoke(mixed $input): Generator
         {
             yield 'something';
         }
     };
-    $step->updateInputUsingOutput(function (Input $input, Output $output) {
-        return $input->get() . ' ' . $output->get();
+    $step->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . ' ' . $output;
     });
 
     $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));

@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps;
 
 use Adbar\Dot;
-use Crwlr\Crawler\Input;
 use Generator;
 
 class Json extends Step
@@ -31,9 +30,9 @@ class Json extends Step
         return new static($propertyMapping, $each);
     }
 
-    protected function invoke(Input $input): Generator
+    protected function invoke(mixed $input): Generator
     {
-        $array = json_decode($input->get(), true);
+        $array = json_decode($input, true);
 
         $dot = new Dot($array);
 
