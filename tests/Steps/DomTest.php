@@ -2,7 +2,7 @@
 
 namespace tests\Steps;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Html\CssSelector;
@@ -47,7 +47,7 @@ test('ResponseInterface is a valid input', function () {
 test('RequestResponseAggregate is a valid input', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root(),
-        new RequestResponseAggregate(new Request('GET', '/'), new Response())
+        new RespondedRequest(new Request('GET', '/'), new Response())
     );
 
     expect($output[0]->get())->toBe([]);

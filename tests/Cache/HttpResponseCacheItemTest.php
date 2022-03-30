@@ -2,7 +2,7 @@
 
 namespace tests\Cache;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -14,7 +14,7 @@ it('can be created from primitive values.', function () {
 });
 
 it('can be created from a RequestResponseAggregate', function () {
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response());
+    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
 
     $item = HttpResponseCacheItem::fromAggregate($aggregate);
 
@@ -120,7 +120,7 @@ test('You can serialize it', function () {
 });
 
 test('You can hydrate a RequestResponseAggregate from it', function () {
-    $aggregate = new RequestResponseAggregate(
+    $aggregate = new RespondedRequest(
         new Request('GET', '/yo', ['key' => 'val'], 'request body'),
         new Response(301, ['Location' => '/yolo'])
     );
@@ -151,7 +151,7 @@ test('You can hydrate a RequestResponseAggregate from it', function () {
 });
 
 test('You can hydrate a Request object from it', function () {
-    $aggregate = new RequestResponseAggregate(
+    $aggregate = new RespondedRequest(
         new Request('GET', '/foo', ['bar' => 'baz'], 'request body'),
         new Response()
     );
@@ -172,7 +172,7 @@ test('You can hydrate a Request object from it', function () {
 test('You can hydrate a Response object from it', function () {
     $response = new Response(404, ['header' => 'value'], 'response boddey');
 
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), $response);
+    $aggregate = new RespondedRequest(new Request('GET', '/'), $response);
 
     $item = HttpResponseCacheItem::fromAggregate($aggregate);
 

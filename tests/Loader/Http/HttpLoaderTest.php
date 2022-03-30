@@ -2,7 +2,7 @@
 
 namespace tests\Loader\Http;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
@@ -129,7 +129,7 @@ test('You can implement logic to disallow certain request', function () {
     };
 
     $response = $httpLoader->load('/foo');
-    expect($response)->toBeInstanceOf(RequestResponseAggregate::class);
+    expect($response)->toBeInstanceOf(RespondedRequest::class);
 
     $response = $httpLoader->load('/bar');
     expect($response)->toBeNull();
@@ -172,7 +172,7 @@ test('It automatically handles redirects', function (string $loadingMethod) {
     $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
     $requestResponseAggregate = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
 
-    /** @var RequestResponseAggregate $requestResponseAggregate */
+    /** @var RespondedRequest $requestResponseAggregate */
     expect($requestResponseAggregate->requestedUri())->toBe('https://www.crwlr.software/packages');
     expect($requestResponseAggregate->effectiveUri())->toBe('https://www.redirect.com');
     expect($requestResponseAggregate->response->getBody()->getContents())->toBe('YES');
@@ -239,7 +239,7 @@ test('It tries to get responses from cache', function () {
     $cache->shouldReceive('get')
         ->once()
         ->andReturn(HttpResponseCacheItem::fromAggregate(
-            new RequestResponseAggregate(new Request('GET', '/'), new Response())
+            new RespondedRequest(new Request('GET', '/'), new Response())
         ));
     $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
@@ -253,7 +253,7 @@ test('It fails when it gets a failed response from cache', function () {
     $cache->shouldReceive('get')
         ->once()
         ->andReturn(HttpResponseCacheItem::fromAggregate(
-            new RequestResponseAggregate(new Request('GET', '/'), new Response(404))
+            new RespondedRequest(new Request('GET', '/'), new Response(404))
         ));
     $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);
@@ -274,7 +274,7 @@ test('It fails when it gets a failed response from cache in loadOrFail', functio
     $cache->shouldReceive('get')
         ->once()
         ->andReturn(HttpResponseCacheItem::fromAggregate(
-            new RequestResponseAggregate(new Request('GET', 'facebook'), new Response(404))
+            new RespondedRequest(new Request('GET', 'facebook'), new Response(404))
         ));
     $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
     $httpLoader->setCache($cache);

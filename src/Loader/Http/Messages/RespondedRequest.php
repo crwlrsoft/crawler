@@ -1,12 +1,12 @@
 <?php
 
-namespace Crwlr\Crawler\Aggregates;
+namespace Crwlr\Crawler\Loader\Http\Messages;
 
 use Crwlr\Url\Url;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-class RequestResponseAggregate
+class RespondedRequest
 {
     /**
      * @var string[]

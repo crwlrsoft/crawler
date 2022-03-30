@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
@@ -94,7 +94,7 @@ abstract class Dom extends Step
             return new Crawler($input->getBody()->getContents());
         }
 
-        if ($input instanceof RequestResponseAggregate) {
+        if ($input instanceof RespondedRequest) {
             return new Crawler($input->response->getBody()->getContents());
         }
 

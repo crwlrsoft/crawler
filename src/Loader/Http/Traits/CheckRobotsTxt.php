@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http\Traits;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\UserAgents\BotUserAgentInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -70,7 +70,7 @@ trait CheckRobotsTxt
             $this->waitUntilNextRequestCanBeSent();
         }
 
-        if ($aggregate instanceof RequestResponseAggregate) {
+        if ($aggregate instanceof RespondedRequest) {
             return $aggregate->response->getBody()->getContents();
         }
 

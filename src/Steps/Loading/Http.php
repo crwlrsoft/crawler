@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
@@ -96,7 +96,7 @@ class Http extends LoadingStep
     }
 
     /**
-     * @return Generator<RequestResponseAggregate|null>
+     * @return Generator<RespondedRequest|null>
      * @throws Exception
      */
     protected function invoke(mixed $input): Generator

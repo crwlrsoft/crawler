@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -77,7 +77,7 @@ class Csv extends Step
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         if ($this->method === 'string') {
-            if ($input instanceof RequestResponseAggregate) {
+            if ($input instanceof RespondedRequest) {
                 return $input->response->getBody()->getContents();
             }
 

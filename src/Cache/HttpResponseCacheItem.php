@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Cache;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Exception;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -48,7 +48,7 @@ final class HttpResponseCacheItem
         ]);
     }
 
-    public static function fromAggregate(RequestResponseAggregate $aggregate): self
+    public static function fromAggregate(RespondedRequest $aggregate): self
     {
         return new self(
             $aggregate->request->getMethod(),
@@ -128,9 +128,9 @@ final class HttpResponseCacheItem
         return serialize($this->toArray());
     }
 
-    public function aggregate(): RequestResponseAggregate
+    public function aggregate(): RespondedRequest
     {
-        $aggregate = new RequestResponseAggregate($this->request(), $this->response());
+        $aggregate = new RespondedRequest($this->request(), $this->response());
 
         if ($this->effectiveUri() !== $aggregate->effectiveUri()) {
             $aggregate->addRedirectUri($this->effectiveUri());

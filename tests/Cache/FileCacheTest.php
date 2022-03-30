@@ -2,7 +2,7 @@
 
 namespace tests\Cache;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Cache\FileCache;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use GuzzleHttp\Psr7\Request;
@@ -28,7 +28,7 @@ function helper_addMultipleItemsToCache(array $items, FileCache $cache): void
 function helper_basicCacheItemWithRequestUrl(string $requestUrl): HttpResponseCacheItem
 {
     return HttpResponseCacheItem::fromAggregate(
-        new RequestResponseAggregate(new Request('GET', $requestUrl), new Response())
+        new RespondedRequest(new Request('GET', $requestUrl), new Response())
     );
 }
 
@@ -55,7 +55,7 @@ afterEach(function () {
 });
 
 test('It caches HttpResponseCacheItems', function () {
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response());
+    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
     $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
     $cache = new FileCache(helper_cachedir());
 
@@ -65,7 +65,7 @@ test('It caches HttpResponseCacheItems', function () {
 });
 
 test('It checks if it has a certain key', function () {
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response());
+    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
     $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
     $cache = new FileCache(helper_cachedir());
     $cache->set($cacheItem->key(), $cacheItem);
@@ -75,7 +75,7 @@ test('It checks if it has a certain key', function () {
 });
 
 test('It can delete a cache item', function () {
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response());
+    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
     $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
     $cache = new FileCache(helper_cachedir());
     $cache->set($cacheItem->key(), $cacheItem);

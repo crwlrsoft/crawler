@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
@@ -56,7 +56,7 @@ class HttpLoader extends Loader
         $this->cookieJar = new CookieJar();
     }
 
-    public function load(mixed $subject): ?RequestResponseAggregate
+    public function load(mixed $subject): ?RespondedRequest
     {
         $request = $this->validateSubjectType($subject);
 
@@ -102,7 +102,7 @@ class HttpLoader extends Loader
      * @throws LoadingException
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    public function loadOrFail(mixed $subject): RequestResponseAggregate
+    public function loadOrFail(mixed $subject): RespondedRequest
     {
         $request = $this->validateSubjectType($subject);
         $this->isAllowedToBeLoaded($request->getUri(), true);
@@ -145,7 +145,7 @@ class HttpLoader extends Loader
     /**
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    protected function getFromCache(RequestInterface $request): ?RequestResponseAggregate
+    protected function getFromCache(RequestInterface $request): ?RespondedRequest
     {
         if (!$this->cache) {
             return null;
@@ -188,15 +188,15 @@ class HttpLoader extends Loader
      * @throws ClientExceptionInterface
      */
     private function handleRedirects(
-        RequestInterface $request,
-        ?RequestResponseAggregate $aggregate = null
-    ): RequestResponseAggregate {
+        RequestInterface  $request,
+        ?RespondedRequest $aggregate = null
+    ): RespondedRequest {
         $this->trackRequestStart();
         $response = $this->httpClient->sendRequest($request);
         $this->trackRequestEnd();
 
         if (!$aggregate) {
-            $aggregate = new RequestResponseAggregate($request, $response);
+            $aggregate = new RespondedRequest($request, $response);
         } else {
             $aggregate->setResponse($response);
         }
@@ -213,7 +213,7 @@ class HttpLoader extends Loader
         return $aggregate;
     }
 
-    private function addCookiesToJar(RequestResponseAggregate $aggregate): void
+    private function addCookiesToJar(RespondedRequest $aggregate): void
     {
         if ($this->useCookies) {
             try {

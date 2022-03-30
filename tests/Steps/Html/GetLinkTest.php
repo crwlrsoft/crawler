@@ -2,7 +2,7 @@
 
 namespace tests\Steps\Html;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Html\GetLink;
@@ -15,7 +15,7 @@ use function tests\helper_traverseIterable;
 test('It works with a RequestResponseAggregate as input', function () {
     $step = (new GetLink())->addLogger(new CliLogger());
 
-    $link = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+    $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/foo/bar'),
         new Response(200, [], '<a href="/blog">link</a>')
     ));
@@ -34,7 +34,7 @@ test('It does not work with something else as input', function () {
 test('When called without selector it just returns the first link', function () {
     $step = (new GetLink())->addLogger(new CliLogger());
 
-    $link = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+    $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.crwlr.software/packages/url/'),
         new Response(
             200,
@@ -57,7 +57,7 @@ test('When passing a CSS selector it selects the first matching link', function 
         </div>
         HTML;
 
-    $link = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+    $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.foo.bar/company/about'),
         new Response(200, [], $responseHtml)
     ));
@@ -68,7 +68,7 @@ test('When passing a CSS selector it selects the first matching link', function 
 test('When selector matches on a non-link element it\'s ignored', function () {
     $step = (new GetLink('.link'))->addLogger(new CliLogger());
 
-    $link = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+    $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
         new Response(200, [], '<span class="link">not a link</span><a class="link" href="foo">link</a>')
     ));

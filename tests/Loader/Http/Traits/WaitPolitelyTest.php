@@ -2,7 +2,7 @@
 
 namespace tests\Loader\Http\Traits;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Traits\WaitPolitely;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -17,21 +17,21 @@ use Psr\Log\LoggerInterface;
 function helper_getLoaderWhereFirstRequestTakes100Milliseconds(): HttpLoader
 {
     // Built here so it won't take time to build a new response in the load method for the timing tests.
-    $response = new RequestResponseAggregate(new Request('GET', '/'), new Response());
+    $response = new RespondedRequest(new Request('GET', '/'), new Response());
 
     return new class (new BotUserAgent('FooBot'), $response) extends HttpLoader {
         use WaitPolitely;
 
         public function __construct(
-            BotUserAgent $userAgent,
-            private RequestResponseAggregate $response,
-            ?ClientInterface $httpClient = null,
-            ?LoggerInterface $logger = null
+            BotUserAgent             $userAgent,
+            private RespondedRequest $response,
+            ?ClientInterface         $httpClient = null,
+            ?LoggerInterface         $logger = null
         ) {
             parent::__construct($userAgent, $httpClient, $logger);
         }
 
-        public function load(mixed $subject): ?RequestResponseAggregate
+        public function load(mixed $subject): ?RespondedRequest
         {
             $this->waitUntilNextRequestCanBeSent();
 

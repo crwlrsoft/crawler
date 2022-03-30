@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Traits\CheckRobotsTxt;
 use Crwlr\Crawler\Loader\Http\Traits\WaitPolitely;
@@ -14,7 +14,7 @@ class PoliteHttpLoader extends HttpLoader
     use WaitPolitely;
     use CheckRobotsTxt;
 
-    public function load(mixed $subject): ?RequestResponseAggregate
+    public function load(mixed $subject): ?RespondedRequest
     {
         $this->waitUntilNextRequestCanBeSent();
 
@@ -26,7 +26,7 @@ class PoliteHttpLoader extends HttpLoader
      * @throws LoadingException
      * @throws InvalidArgumentException
      */
-    public function loadOrFail(mixed $subject): RequestResponseAggregate
+    public function loadOrFail(mixed $subject): RespondedRequest
     {
         $this->waitUntilNextRequestCanBeSent();
 

@@ -2,7 +2,7 @@
 
 namespace tests\Steps;
 
-use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Csv;
 use GuzzleHttp\Psr7\Request;
@@ -59,7 +59,7 @@ it('works with a RequestResponseAggregate as input', function () {
         234,"Jane Doe","+432345678"
         CSV;
 
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response(200, [], Utils::streamFor($body)));
+    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response(200, [], Utils::streamFor($body)));
 
     $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'name', 'phone']), $aggregate);
 
