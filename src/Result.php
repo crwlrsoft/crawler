@@ -9,10 +9,6 @@ class Result
      */
     private array $data = [];
 
-    public function __construct()
-    {
-    }
-
     public function set(string $key, mixed $value): void
     {
         if ($key === '') {
