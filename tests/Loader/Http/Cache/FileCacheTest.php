@@ -1,10 +1,10 @@
 <?php
 
-namespace tests\Cache;
+namespace tests\Loader\Http\Cache;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Cache\FileCache;
-use Crwlr\Crawler\Cache\HttpResponseCacheItem;
+use Crwlr\Crawler\Loader\Http\Cache\FileCache;
+use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\SimpleCache\InvalidArgumentException;

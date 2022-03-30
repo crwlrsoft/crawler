@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http\Cookies;
 
-use Crwlr\Crawler\Exceptions\InvalidCookieException;
+use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Psr\Uri;
 use Crwlr\Url\Url;
 use Psr\Http\Message\UriInterface;

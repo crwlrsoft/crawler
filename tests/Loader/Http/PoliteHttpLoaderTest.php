@@ -2,7 +2,7 @@
 
 namespace tests\Loader\Http;
 
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Client;

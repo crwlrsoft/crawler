@@ -2,7 +2,7 @@
 
 namespace tests\Loader\Http\Cookies;
 
-use Crwlr\Crawler\Exceptions\InvalidCookieException;
+use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
 use Crwlr\Crawler\Loader\Http\Cookies\Date;
 use Crwlr\Url\Url;

@@ -3,7 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Traits\CheckRobotsTxt;
 use Crwlr\Crawler\Loader\Http\Traits\WaitPolitely;
 use Psr\Http\Client\ClientExceptionInterface;

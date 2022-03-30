@@ -3,8 +3,8 @@
 namespace Crwlr\Crawler\Loader\Http;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Cache\HttpResponseCacheItem;
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;

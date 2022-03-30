@@ -3,7 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http\Traits;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\UserAgents\BotUserAgentInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;

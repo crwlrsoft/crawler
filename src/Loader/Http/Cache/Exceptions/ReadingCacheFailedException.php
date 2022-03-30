@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Cache\Exceptions;
+namespace Crwlr\Crawler\Loader\Http\Cache\Exceptions;
 
 use Exception;
 use Psr\SimpleCache\CacheException;

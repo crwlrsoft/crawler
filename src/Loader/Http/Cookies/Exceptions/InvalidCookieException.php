@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Exceptions;
+namespace Crwlr\Crawler\Loader\Http\Cookies\Exceptions;
 
 use Exception;
 

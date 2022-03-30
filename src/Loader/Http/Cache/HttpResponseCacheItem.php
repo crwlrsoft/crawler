@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Cache;
+namespace Crwlr\Crawler\Loader\Http\Cache;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Exception;

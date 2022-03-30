@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Loader;
 
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use InvalidArgumentException;
 
 interface LoaderInterface

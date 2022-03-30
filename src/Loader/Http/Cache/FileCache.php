@@ -1,9 +1,9 @@
 <?php
 
-namespace Crwlr\Crawler\Cache;
+namespace Crwlr\Crawler\Loader\Http\Cache;
 
-use Crwlr\Crawler\Cache\Exceptions\InvalidArgumentException;
-use Crwlr\Crawler\Cache\Exceptions\ReadingCacheFailedException;
+use Crwlr\Crawler\Loader\Http\Cache\Exceptions\InvalidArgumentException;
+use Crwlr\Crawler\Loader\Http\Cache\Exceptions\ReadingCacheFailedException;
 use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 

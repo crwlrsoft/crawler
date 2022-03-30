@@ -3,8 +3,8 @@
 namespace tests\Loader\Http;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Cache\HttpResponseCacheItem;
-use Crwlr\Crawler\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Psr7\Request;
