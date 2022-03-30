@@ -11,9 +11,12 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
+use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Generator;
 use Mockery;
 use Psr\Log\LoggerInterface;
 
@@ -276,4 +279,29 @@ test('When final steps return an array you get all values in the defined Result 
     $results->next();
 
     expect($results->current())->toBeNull();
+});
+
+it('automatically sends all results to the Store when you add one', function () {
+    $store = Mockery::mock(StoreInterface::class);
+
+    $store->shouldReceive('store')->times(3);
+
+    $crawler = helper_getDummyCrawler();
+
+    $crawler->input('gogogo');
+
+    $crawler->setStore($store);
+
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'one';
+            yield 'two';
+            yield 'three';
+        }
+    };
+
+    $crawler->addStep('number', $step);
+
+    helper_traverseIterable($crawler->run());
 });

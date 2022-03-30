@@ -8,6 +8,7 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Exception;
 use Generator;
@@ -17,14 +18,19 @@ use Psr\Log\LoggerInterface;
 abstract class Crawler
 {
     protected UserAgentInterface $userAgent;
+
     protected LoaderInterface $loader;
+
     protected LoggerInterface $logger;
+
     protected mixed $inputs = [];
 
     /**
      * @var array|StepInterface[]
      */
     protected array $steps = [];
+
+    private ?StoreInterface $store = null;
 
     public function __construct()
     {
@@ -59,6 +65,13 @@ abstract class Crawler
     public function getLoader(): LoaderInterface
     {
         return $this->loader;
+    }
+
+    public function setStore(StoreInterface $store): static
+    {
+        $this->store = $store;
+
+        return $this;
     }
 
     public function input(mixed $input): static
@@ -144,17 +157,6 @@ abstract class Crawler
     }
 
     /**
-     * @return Input[]
-     * @throws Exception
-     */
-    private function prepareInput(): array
-    {
-        return array_map(function ($input) {
-            return new Input($input);
-        }, $this->inputs);
-    }
-
-    /**
      * @param AppendIterator<Output> $outputs
      * @return Generator<Result>
      */
@@ -173,15 +175,31 @@ abstract class Crawler
             // resources.
             foreach ($results as $result) {
                 yield $result;
+
+                $this->store?->store($result);
             }
         } else {
             foreach ($outputs as $output) {
                 $result = new Result();
+
                 $result->set('unnamed', $output->get());
 
                 yield $result;
+
+                $this->store?->store($result);
             }
         }
+    }
+
+    /**
+     * @return Input[]
+     * @throws Exception
+     */
+    private function prepareInput(): array
+    {
+        return array_map(function ($input) {
+            return new Input($input);
+        }, $this->inputs);
     }
 
     private function anyResultKeysDefinedInSteps(): bool
