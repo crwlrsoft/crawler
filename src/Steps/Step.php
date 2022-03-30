@@ -88,7 +88,7 @@ abstract class Step implements StepInterface
     /**
      * @return bool
      */
-    public function addsKeysToResult(): bool
+    public function addsToOrCreatesResult(): bool
     {
         return $this->resultKey !== null || $this->addToResult !== false;
     }

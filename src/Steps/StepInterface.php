@@ -26,7 +26,7 @@ interface StepInterface
      */
     public function addKeysToResult(?array $keys = null): static;
 
-    public function addsKeysToResult(): bool;
+    public function addsToOrCreatesResult(): bool;
 
     public function dontCascade(): static;
 

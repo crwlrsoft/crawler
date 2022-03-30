@@ -123,9 +123,9 @@ final class Loop implements StepInterface
         return $this;
     }
 
-    public function addsKeysToResult(): bool
+    public function addsToOrCreatesResult(): bool
     {
-        return $this->step->addsKeysToResult();
+        return $this->step->addsToOrCreatesResult();
     }
 
     public function useInputKey(string $key): static

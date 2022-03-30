@@ -101,10 +101,10 @@ final class Group implements StepInterface
         return $this; // TODO: same here...should it try to add every output of the group?
     }
 
-    public function addsKeysToResult(): bool
+    public function addsToOrCreatesResult(): bool
     {
         foreach ($this->steps as $step) {
-            if ($step->addsKeysToResult()) {
+            if ($step->addsToOrCreatesResult()) {
                 return true;
             }
         }
@@ -196,7 +196,7 @@ final class Group implements StepInterface
      */
     private function addResultToInputIfAnyResultKeysDefined(Input $input): Input
     {
-        if ($this->combine && $this->addsKeysToResult() && !$input->result) {
+        if ($this->combine && $this->addsToOrCreatesResult() && !$input->result) {
             $input = new Input($input->get(), new Result());
         }
 

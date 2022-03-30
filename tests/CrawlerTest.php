@@ -189,7 +189,7 @@ test('You can add steps and they are invoked when the Crawler is run', function 
     $step = Mockery::mock(StepInterface::class);
     $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
     $step->shouldReceive('addLogger')->once();
-    $step->shouldReceive('addsKeysToResult')->once()->andReturn(false);
+    $step->shouldReceive('addsToOrCreatesResult')->once()->andReturn(false);
     $crawler = helper_getDummyCrawler();
     $crawler->addStep($step);
     $crawler->input('randomInput');

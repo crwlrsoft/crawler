@@ -187,7 +187,7 @@ abstract class Crawler
     private function anyResultKeysDefinedInSteps(): bool
     {
         foreach ($this->steps as $step) {
-            if ($step->addsKeysToResult()) {
+            if ($step->addsToOrCreatesResult()) {
                 return true;
             }
         }

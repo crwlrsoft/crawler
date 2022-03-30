@@ -2,8 +2,26 @@
 
 namespace tests;
 
+use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepInterface;
 use Generator;
 use GuzzleHttp\Psr7\Response;
+
+function helper_getValueReturningStep(mixed $value): Step
+{
+    return new class ($value) extends Step {
+        public function __construct(private mixed $value)
+        {
+        }
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield $this->value;
+        }
+    };
+}
 
 function helper_getDummyRobotsTxtResponse(?string $forDomain = null): Response
 {
@@ -50,6 +68,14 @@ function helper_generatorToArray(Generator $generator): array
     }
 
     return $array;
+}
+
+/**
+ * @return Output[]
+ */
+function helper_invokeStepWithInput(StepInterface $step, mixed $input = null): array
+{
+    return helper_generatorToArray($step->invokeStep(new Input($input ?? 'anything')));
 }
 
 function helper_getStepFilesContent(string $filePathInFilesFolder): string
