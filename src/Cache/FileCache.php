@@ -57,10 +57,8 @@ class FileCache implements CacheInterface
 
         if (is_array($allFiles)) {
             foreach ($allFiles as $file) {
-                if ($file !== '.' && $file !== '..') {
-                    if (!$this->delete($file)) {
-                        return false;
-                    }
+                if ($file !== '.' && $file !== '..' && !$this->delete($file)) {
+                    return false;
                 }
             }
         }
@@ -69,7 +67,7 @@ class FileCache implements CacheInterface
     }
 
     /**
-     * @return iterable|mixed[]
+     * @return iterable<mixed>
      * @throws InvalidArgumentException
      * @throws ReadingCacheFailedException
      */
@@ -85,7 +83,7 @@ class FileCache implements CacheInterface
     }
 
     /**
-     * @param iterable|mixed[] $values
+     * @param iterable<mixed> $values
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function setMultiple(iterable $values, DateInterval|int|null $ttl = null): bool

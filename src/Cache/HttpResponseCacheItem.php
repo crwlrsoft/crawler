@@ -93,7 +93,9 @@ final class HttpResponseCacheItem
     public static function copyBody(MessageInterface $httpMessage): string
     {
         $httpMessage->getBody()->rewind();
+
         $body = $httpMessage->getBody()->getContents();
+
         $httpMessage->getBody()->rewind();
 
         return $body;
@@ -157,6 +159,15 @@ final class HttpResponseCacheItem
      */
     private static function keyFromRequestData(array $requestData): string
     {
+        // Remove cookies when building the key, so cache doesn't depend on sessions
+        if (isset($requestData['requestHeaders']['Cookie'])) {
+            unset($requestData['requestHeaders']['Cookie']);
+        }
+
+        if (isset($requestData['requestHeaders']['cookie'])) {
+            unset($requestData['requestHeaders']['cookie']);
+        }
+
         $serialized = serialize($requestData);
 
         return md5($serialized);
