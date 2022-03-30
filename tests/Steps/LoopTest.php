@@ -569,3 +569,35 @@ test(
         expect($outputs[2]->get())->toBe(3);
     }
 );
+
+it('adds Results to the Outputs when you set a result key', function () {
+    $step = (new Loop(helper_getValueReturningStep('test')))
+        ->maxIterations(2)
+        ->setResultKey('resultKey');
+
+    $outputs = helper_invokeStepWithInput($step, 'test');
+
+    expect($outputs)->toHaveCount(2);
+
+    // I think doing this doesn't make much sense, as the Loop will always add the output to the same Result
+    // object, which is why it's an array ['test', 'test'] below.
+    expect($outputs[0]->result->get('resultKey'))->toBe(['test', 'test']); // @phpstan-ignore-line
+
+    expect($outputs[1]->result->get('resultKey'))->toBe(['test', 'test']); // @phpstan-ignore-line
+});
+
+it('adds Results to the Outputs when you call addKeysToResult', function () {
+    $step = (new Loop(helper_getValueReturningStep(['foo' => 'bar', 'yo' => 'lo'])))
+        ->maxIterations(2)
+        ->addKeysToResult();
+
+    $outputs = helper_invokeStepWithInput($step, 'test');
+
+    expect($outputs)->toHaveCount(2);
+
+    $expectedResultArray = ['foo' => ['bar', 'bar'], 'yo' => ['lo', 'lo']];
+
+    expect($outputs[0]->result->toArray())->toBe($expectedResultArray); // @phpstan-ignore-line
+
+    expect($outputs[1]->result->toArray())->toBe($expectedResultArray); // @phpstan-ignore-line
+});

@@ -319,3 +319,59 @@ test('Updating the input for further steps also works when combining the group o
         'The Mac Dad will make ya: Jump! Jump!'
     ]);
 });
+
+it('knows when at least one of the steps adds something to the final result', function () {
+    $step1 = helper_getValueReturningStep('Tick');
+
+    $step2 = helper_getValueReturningStep('Trick');
+
+    $step3 = helper_getValueReturningStep('Track');
+
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->addStep('foo', $step3);
+
+    expect($group->addsToOrCreatesResult())->toBe(true);
+
+    $outputs = helper_invokeStepWithInput($group, 'ducks');
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->result)->toBeNull();
+
+    expect($outputs[1]->result)->toBeNull();
+
+    expect($outputs[2]->result)->toBeInstanceOf(Result::class);
+
+    expect($outputs[2]->result->get('foo'))->toBe('Track'); // @phpstan-ignore-line
+});
+
+it('knows when at least one of the steps adds something to the final result when addKeysToResult is used', function () {
+    $step1 = helper_getValueReturningStep('Tick');
+
+    $step2 = helper_getValueReturningStep('Trick');
+
+    $step3 = helper_getValueReturningStep(['duck' => 'Track'])->addKeysToResult();
+
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->addStep($step3);
+
+    expect($group->addsToOrCreatesResult())->toBe(true);
+
+    $outputs = helper_invokeStepWithInput($group, 'ducks');
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->result)->toBeNull();
+
+    expect($outputs[1]->result)->toBeNull();
+
+    expect($outputs[2]->result)->toBeInstanceOf(Result::class);
+
+    expect($outputs[2]->result->get('duck'))->toBe('Track'); // @phpstan-ignore-line
+});
