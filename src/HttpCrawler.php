@@ -2,8 +2,8 @@
 
 namespace Crwlr\Crawler;
 
+use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
-use Crwlr\Crawler\Loader\PoliteHttpLoader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use GuzzleHttp\Client;
 use Psr\Http\Client\ClientInterface;

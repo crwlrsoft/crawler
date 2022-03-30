@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Loader\Traits;
+namespace Crwlr\Crawler\Loader\Http\Traits;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Exceptions\LoadingException;

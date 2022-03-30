@@ -3,7 +3,7 @@
 namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
-use Crwlr\Crawler\Loader\HttpLoader;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use InvalidArgumentException;

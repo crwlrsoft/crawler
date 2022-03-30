@@ -1,10 +1,10 @@
 <?php
 
-namespace tests\Loader\Traits;
+namespace tests\Loader\Http\Traits;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
-use Crwlr\Crawler\Loader\HttpLoader;
-use Crwlr\Crawler\Loader\Traits\WaitPolitely;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Traits\WaitPolitely;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;

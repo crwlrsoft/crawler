@@ -1,11 +1,11 @@
 <?php
 
-namespace Crwlr\Crawler\Loader;
+namespace Crwlr\Crawler\Loader\Http;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\Loader\Traits\CheckRobotsTxt;
-use Crwlr\Crawler\Loader\Traits\WaitPolitely;
+use Crwlr\Crawler\Loader\Http\Traits\CheckRobotsTxt;
+use Crwlr\Crawler\Loader\Http\Traits\WaitPolitely;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 

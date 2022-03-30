@@ -1,8 +1,8 @@
 <?php
 
-namespace tests\Http\Cookies;
+namespace tests\Loader\Http\Cookies;
 
-use Crwlr\Crawler\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Response;
 

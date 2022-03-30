@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Http\Cookies;
+namespace Crwlr\Crawler\Loader\Http\Cookies;
 
 use Crwlr\Crawler\Exceptions\InvalidCookieException;
 use Crwlr\Url\Url;

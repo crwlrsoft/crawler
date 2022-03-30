@@ -4,7 +4,7 @@ namespace tests\Steps;
 
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
-use Crwlr\Crawler\Loader\HttpLoader;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;

@@ -1,11 +1,12 @@
 <?php
 
-namespace Crwlr\Crawler\Loader;
+namespace Crwlr\Crawler\Loader\Http;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;

@@ -1,10 +1,10 @@
 <?php
 
-namespace tests\Http\Cookies;
+namespace tests\Loader\Http\Cookies;
 
 use Crwlr\Crawler\Exceptions\InvalidCookieException;
-use Crwlr\Crawler\Http\Cookies\Cookie;
-use Crwlr\Crawler\Http\Cookies\Date;
+use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
+use Crwlr\Crawler\Loader\Http\Cookies\Date;
 use Crwlr\Url\Url;
 use DateInterval;
 use DateTime;

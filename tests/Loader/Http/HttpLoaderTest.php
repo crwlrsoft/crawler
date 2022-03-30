@@ -1,11 +1,11 @@
 <?php
 
-namespace tests\Loader;
+namespace tests\Loader\Http;
 
 use Crwlr\Crawler\Aggregates\RequestResponseAggregate;
 use Crwlr\Crawler\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\Loader\HttpLoader;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;

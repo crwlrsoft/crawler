@@ -1,9 +1,9 @@
 <?php
 
-namespace tests\Loader;
+namespace tests\Loader\Http;
 
 use Crwlr\Crawler\Exceptions\LoadingException;
-use Crwlr\Crawler\Loader\PoliteHttpLoader;
+use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;

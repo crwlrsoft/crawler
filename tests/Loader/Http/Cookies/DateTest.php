@@ -1,8 +1,8 @@
 <?php
 
-namespace tests\Http\Cookies;
+namespace tests\Loader\Http\Cookies;
 
-use Crwlr\Crawler\Http\Cookies\Date;
+use Crwlr\Crawler\Loader\Http\Cookies\Date;
 use DateTimeZone;
 
 test('It can be created from a valid http header date format', function () {
