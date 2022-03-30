@@ -11,89 +11,84 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use stdClass;
 use function tests\helper_generatorToArray;
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test('It works with a RequestResponseAggregate as input', function () {
-    $step = new GetLinks();
-    $step->addLogger(new CliLogger());
-    $links = $step->invokeStep(new Input(
-        new RequestResponseAggregate(
-            new Request('GET', 'https://www.example.com/home'),
-            new Response(200, [], '<a href="/blog">link</a>')
-        )
+    $step = (new GetLinks())->addLogger(new CliLogger());
+
+    $links = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+        new Request('GET', 'https://www.example.com/home'),
+        new Response(200, [], '<a href="/blog">link</a>')
     ));
 
-    expect($links)->toBeIterable();
-    expect($links->current()->get())->toBe('https://www.example.com/blog');
-    $links->next();
-    expect($links->current())->toBeNull();
+    expect($links)->toHaveCount(1);
+
+    expect($links[0]->get())->toBe('https://www.example.com/blog');
 });
 
 test('It does not work with something else as input', function () {
     $step = new GetLinks();
+
     $step->addLogger(new CliLogger());
+
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
 })->throws(InvalidArgumentException::class);
 
 test('When called without selector it just gets all links', function () {
-    $step = new GetLinks();
-    $step->addLogger(new CliLogger());
-    $links = $step->invokeStep(new Input(
-        new RequestResponseAggregate(
-            new Request('GET', 'https://www.crwlr.software/packages/url/'),
-            new Response(
-                200,
-                [],
-                '<div><a href="v0.1">v0.1</a><a href="v1.0">v1.0</a><a href="v1.1">v1.1</a></div>'
-            )
+    $step = (new GetLinks())->addLogger(new CliLogger());
+
+    $links = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+        new Request('GET', 'https://www.crwlr.software/packages/url/'),
+        new Response(
+            200,
+            [],
+            '<div><a href="v0.1">v0.1</a><a href="v1.0">v1.0</a><a href="v1.1">v1.1</a></div>'
         )
     ));
 
-    $links = helper_generatorToArray($links);
     expect($links[0]->get())->toBe('https://www.crwlr.software/packages/url/v0.1');
+
     expect($links[1]->get())->toBe('https://www.crwlr.software/packages/url/v1.0');
+
     expect($links[2]->get())->toBe('https://www.crwlr.software/packages/url/v1.1');
 });
 
 test('When passing a CSS selector it only selects matching links', function () {
-    $step = new GetLinks('.matchingLink');
-    $step->addLogger(new CliLogger());
-    $links = $step->invokeStep(new Input(
-        new RequestResponseAggregate(
-            new Request('GET', 'https://www.example.com/company/about'),
-            new Response(
-                200,
-                [],
-                <<<HTML
-<div>
-    <a class="matchingLink" href="jobs">Jobs</a>
-    <a class="matchingLink" href="numbers">Numbers</a>
-    <a class="notMatchingLink" href="/products">Products</a>
-    <a class="matchingLink" href="/team">Team</a>
-</div>
-HTML
-            )
-        )
+    $step = (new GetLinks('.matchingLink'))->addLogger(new CliLogger());
+
+    $responseHtml = <<<HTML
+        <div>
+            <a class="matchingLink" href="jobs">Jobs</a>
+            <a class="matchingLink" href="numbers">Numbers</a>
+            <a class="notMatchingLink" href="/products">Products</a>
+            <a class="matchingLink" href="/team">Team</a>
+        </div>
+        HTML;
+
+    $links = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+        new Request('GET', 'https://www.example.com/company/about'),
+        new Response(200, [], $responseHtml)
     ));
 
-    $links = helper_generatorToArray($links);
     expect($links)->toHaveCount(3);
+
     expect(reset($links)->get())->toBe('https://www.example.com/company/jobs'); // @phpstan-ignore-line
+
     expect(next($links)->get())->toBe('https://www.example.com/company/numbers'); // @phpstan-ignore-line
+
     expect(next($links)->get())->toBe('https://www.example.com/team'); // @phpstan-ignore-line
 });
 
 test('When selector matches on a non-link element it\'s ignored', function () {
-    $step = new GetLinks('.link');
-    $step->addLogger(new CliLogger());
-    $links = $step->invokeStep(new Input(
-        new RequestResponseAggregate(
-            new Request('GET', 'https://www.otsch.codes'),
-            new Response(200, [], '<a class="link" href="foo">Foo</a><span class="link">Bar</span>')
-        )
+    $step = (new GetLinks('.link'))->addLogger(new CliLogger());
+
+    $links = helper_invokeStepWithInput($step, new RequestResponseAggregate(
+        new Request('GET', 'https://www.otsch.codes'),
+        new Response(200, [], '<a class="link" href="foo">Foo</a><span class="link">Bar</span>')
     ));
 
-    $links = iterator_to_array($links);
     expect($links)->toHaveCount(1);
-    expect(reset($links)->get())->toBe('https://www.otsch.codes/foo'); // @phpstan-ignore-line
+
+    expect($links[0]->get())->toBe('https://www.otsch.codes/foo');
 });

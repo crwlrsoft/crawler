@@ -13,8 +13,8 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use stdClass;
 use Symfony\Component\DomCrawler\Crawler;
-use function tests\helper_generatorToArray;
 use function tests\helper_getStepFilesContent;
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 /**
@@ -33,46 +33,34 @@ function helper_getDomStepInstance(array $mapping = []): Dom
 test('string is valid input', function () {
     $html = '<!DOCTYPE html><html><head></head><body><h1>Überschrift</h1></body>';
 
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($html)));
+    $output = helper_invokeStepWithInput(helper_getDomStepInstance()::root(), $html);
 
     expect($output[0]->get())->toBe([]);
 });
 
 test('ResponseInterface is a valid input', function () {
-    $response = new Response();
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($response)));
+    $output = helper_invokeStepWithInput(helper_getDomStepInstance()::root(), new Response());
 
     expect($output[0]->get())->toBe([]);
 });
 
 test('RequestResponseAggregate is a valid input', function () {
-    $aggregate = new RequestResponseAggregate(new Request('GET', '/'), new Response());
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray($domStep::root()->invokeStep(new Input($aggregate)));
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root(),
+        new RequestResponseAggregate(new Request('GET', '/'), new Response())
+    );
 
     expect($output[0]->get())->toBe([]);
 });
 
 test('For other inputs an InvalidArgumentException is thrown', function (mixed $input) {
-    $domStep = helper_getDomStepInstance();
-
-    helper_traverseIterable($domStep::root()->invokeStep(new Input($input)));
+    helper_traverseIterable(helper_getDomStepInstance()::root()->invokeStep(new Input($input)));
 })->throws(InvalidArgumentException::class)->with([123, 123.456, new stdClass()]);
 
 it('extracts one result from the root node when the root method is used', function () {
-    $html = helper_getStepFilesContent('Html/basic.html');
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::root()->extract(['matches' => '.match'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract(['matches' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
     );
 
     expect($output)->toHaveCount(1);
@@ -81,12 +69,9 @@ it('extracts one result from the root node when the root method is used', functi
 });
 
 it('extracts each matching result when the each method is used', function () {
-    $html = helper_getStepFilesContent('Html/basic.html');
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::each('.list .item')->extract(['match' => '.match'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::each('.list .item')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
     );
 
     expect($output)->toHaveCount(2);
@@ -97,12 +82,9 @@ it('extracts each matching result when the each method is used', function () {
 });
 
 it('extracts the first matching result when the first method is used', function () {
-    $html = helper_getStepFilesContent('Html/basic.html');
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::first('.list .item')->extract(['match' => '.match'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::first('.list .item')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
     );
 
     expect($output)->toHaveCount(1);
@@ -111,12 +93,9 @@ it('extracts the first matching result when the first method is used', function 
 });
 
 it('extracts the last matching result when the last method is used', function () {
-    $html = helper_getStepFilesContent('Html/basic.html');
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::last('.list .item')->extract(['match' => '.match'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::last('.list .item')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
     );
 
     expect($output)->toHaveCount(1);
@@ -145,12 +124,9 @@ test('The static xPath method returns an instance of XPathQuery using the provid
 });
 
 it('uses the keys of the provided mapping as keys in the returned output', function () {
-    $html = '<p class="foo">foo content</p><p class="bar">bar content</p><p class="baz">baz content</p>';
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::root()->extract(['foo' => '.foo', 'notBar' => '.bar', '.baz'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract(['foo' => '.foo', 'notBar' => '.bar', '.baz']),
+        '<p class="foo">foo content</p><p class="bar">bar content</p><p class="baz">baz content</p>'
     );
 
     expect($output)->toHaveCount(1);
@@ -159,12 +135,9 @@ it('uses the keys of the provided mapping as keys in the returned output', funct
 });
 
 it('trims the extracted data', function () {
-    $html = "<p class=\"foo\">  \n   foo content   \n   \n</p>";
-
-    $domStep = helper_getDomStepInstance();
-
-    $output = helper_generatorToArray(
-        $domStep::root()->extract(['foo' => '.foo'])->invokeStep(new Input($html))
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract(['foo' => '.foo']),
+        "<p class=\"foo\">  \n   foo content   \n   \n</p>"
     );
 
     expect($output)->toHaveCount(1);

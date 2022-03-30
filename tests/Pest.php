@@ -23,6 +23,16 @@ function helper_getValueReturningStep(mixed $value): Step
     };
 }
 
+function helper_getInputReturningStep(): Step
+{
+    return new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield $input;
+        }
+    };
+}
+
 function helper_getDummyRobotsTxtResponse(?string $forDomain = null): Response
 {
     return new Response(

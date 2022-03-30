@@ -11,11 +11,9 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
-use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
-use Generator;
 use Mockery;
 use Psr\Log\LoggerInterface;
 
@@ -34,21 +32,11 @@ function helper_getDummyCrawler(): Crawler
     };
 }
 
-function helper_getDummyStepYieldingInput(): Step
-{
-    return new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input;
-        }
-    };
-}
-
-function helper_getDummyCrawlerWithDummyStepYieldingInput(): Crawler
+function helper_getDummyCrawlerWithInputReturningStep(): Crawler
 {
     $crawler = helper_getDummyCrawler();
 
-    $step = helper_getDummyStepYieldingInput();
+    $step = helper_getInputReturningStep();
 
     $crawler->addStep($step);
 
@@ -113,7 +101,7 @@ test(
 );
 
 test('You can set a single input for the first step using the input method', function () {
-    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+    $crawler = helper_getDummyCrawlerWithInputReturningStep();
 
     $crawler->input('https://www.example.com');
 
@@ -123,7 +111,7 @@ test('You can set a single input for the first step using the input method', fun
 });
 
 test('You can set multiple inputs by multiply calling the input method', function () {
-    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+    $crawler = helper_getDummyCrawlerWithInputReturningStep();
 
     $crawler->input('https://www.crwl.io');
 
@@ -137,7 +125,7 @@ test('You can set multiple inputs by multiply calling the input method', functio
 });
 
 test('You can set multiple inputs using the inputs (plural) method', function () {
-    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+    $crawler = helper_getDummyCrawlerWithInputReturningStep();
 
     $crawler->inputs(['https://www.crwl.io', 'https://www.otsch.codes']);
 
@@ -149,7 +137,7 @@ test('You can set multiple inputs using the inputs (plural) method', function ()
 });
 
 test('Initial inputs are reset after the crawler was run', function () {
-    $crawler = helper_getDummyCrawlerWithDummyStepYieldingInput();
+    $crawler = helper_getDummyCrawlerWithInputReturningStep();
 
     $crawler->inputs(['https://www.crwl.io', 'https://www.otsch.codes']);
 
@@ -223,59 +211,28 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
 test('Result objects are created when defined and passed on through all the steps', function () {
     $crawler = helper_getDummyCrawler();
 
-    $step = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'yo';
-        }
-    };
+    $step = helper_getValueReturningStep('yo');
 
     $crawler->addStep($step->setResultKey('prop1'));
 
-    $step2 = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'lo';
-        }
-    };
+    $step2 = helper_getValueReturningStep('lo');
 
     $crawler->addStep($step2->setResultKey('prop2'));
 
-    $step3 = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'foo';
-        }
-    };
+    $step3 = helper_getValueReturningStep('foo');
 
     $crawler->addStep($step3);
 
-    $step4 = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'bar';
-        }
-    };
+    $step4 = helper_getValueReturningStep('bar');
 
     $crawler->addStep($step4);
+
     $crawler->input('randomInput');
 
-    $results = $crawler->run();
-    $results = helper_generatorToArray($results);
+    $results = helper_generatorToArray($crawler->run());
 
     expect($results[0])->toBeInstanceOf(Result::class);
+
     expect($results[0]->toArray())->toBe([
         'prop1' => 'yo',
         'prop2' => 'lo',
@@ -285,7 +242,7 @@ test('Result objects are created when defined and passed on through all the step
 it('doesn\'t pass on outputs of one step to the next one when dontCascade was called', function () {
     $crawler = helper_getDummyCrawler();
 
-    $step1 = helper_getDummyStepYieldingInput();
+    $step1 = helper_getInputReturningStep();
 
     $step1->dontCascade();
 
@@ -299,27 +256,14 @@ it('doesn\'t pass on outputs of one step to the next one when dontCascade was ca
 test('When final steps return an array you get all values in the defined Result resource', function () {
     $crawler = helper_getDummyCrawler();
 
-    $step1 = new class () extends Step {
-        /**
-         * @return Generator<string>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'Donald';
-        }
-    };
+    $step1 = helper_getValueReturningStep('Donald');
+
     $crawler->addStep($step1->setResultKey('parent'));
 
-    $step2 = new class () extends Step {
-        /**
-         * @return Generator<array<string>>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield ['Tick', 'Trick', 'Track'];
-        }
-    };
+    $step2 = helper_getValueReturningStep(['Tick', 'Trick', 'Track']);
+
     $crawler->addStep($step2->setResultKey('children'));
+
     $crawler->input('randomInput');
 
     $results = $crawler->run();
@@ -328,6 +272,8 @@ test('When final steps return an array you get all values in the defined Result 
         'parent' => 'Donald',
         'children' => ['Tick', 'Trick', 'Track'],
     ]);
+
     $results->next();
+
     expect($results->current())->toBeNull();
 });

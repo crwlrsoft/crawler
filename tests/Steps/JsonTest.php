@@ -2,12 +2,11 @@
 
 namespace tests\Steps;
 
-use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Json;
-use function tests\helper_generatorToArray;
+use function tests\helper_invokeStepWithInput;
 
 it('extracts data defined using dot notation', function () {
-    $jsonString = <<<JSON
+    $json = <<<JSON
         {
             "data": {
                 "target": {
@@ -19,10 +18,7 @@ it('extracts data defined using dot notation', function () {
         }
         JSON;
 
-    $output = helper_generatorToArray(
-        Json::get(['foo' => 'data.target.foo', 'baz' => 'data.target.baz'])
-            ->invokeStep(new Input($jsonString))
-    );
+    $output = helper_invokeStepWithInput(Json::get(['foo' => 'data.target.foo', 'baz' => 'data.target.baz']), $json);
 
     expect($output)->toHaveCount(1);
 
@@ -42,10 +38,7 @@ it('uses the array values in the mapping as output key when no string keys defin
         }
         JSON;
 
-    $output = helper_generatorToArray(
-        Json::get(['data.target.foo', 'baz' => 'data.target.baz'])
-            ->invokeStep(new Input($jsonString))
-    );
+    $output = helper_invokeStepWithInput(Json::get(['data.target.foo', 'baz' => 'data.target.baz']), $jsonString);
 
     expect($output[0]->get())->toBe(['data.target.foo' => 'bar', 'baz' => 'yo']);
 });
@@ -64,16 +57,13 @@ it('can get items from a json array using a numeric key', function () {
         }
         JSON;
 
-    $output = helper_generatorToArray(
-        Json::get(['name' => 'data.target.array.1.name'])
-            ->invokeStep(new Input($jsonString))
-    );
+    $output = helper_invokeStepWithInput(Json::get(['name' => 'data.target.array.1.name']), $jsonString);
 
     expect($output[0]->get())->toBe(['name' => 'Eve']);
 });
 
 test('Using the each method you can iterate over a json array and yield multiple results', function () {
-    $jsonString = <<<JSON
+    $json = <<<JSON
         {
             "list": {
                 "people": [
@@ -85,10 +75,7 @@ test('Using the each method you can iterate over a json array and yield multiple
         }
         JSON;
 
-    $output = helper_generatorToArray(
-        Json::each('list.people', ['name' => 'name', 'age' => 'age.years'])
-            ->invokeStep(new Input($jsonString))
-    );
+    $output = helper_invokeStepWithInput(Json::each('list.people', ['name' => 'name', 'age' => 'age.years']), $json);
 
     expect($output)->toHaveCount(3);
 
@@ -109,10 +96,7 @@ test('When the root element is an array you can use each with empty string as pa
         ]
         JSON;
 
-    $output = helper_generatorToArray(
-        Json::each('', ['nickname'])
-            ->invokeStep(new Input($jsonString))
-    );
+    $output = helper_invokeStepWithInput(Json::each('', ['nickname']), $jsonString);
 
     expect($output)->toHaveCount(4);
 

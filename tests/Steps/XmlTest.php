@@ -2,10 +2,9 @@
 
 namespace tests\Steps;
 
-use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Xml;
-use function tests\helper_generatorToArray;
+use function tests\helper_invokeStepWithInput;
 
 function helper_getXmlContent(string $fileName): string
 {
@@ -19,14 +18,9 @@ function helper_getXmlContent(string $fileName): string
 }
 
 it('extracts data from an XML document with XPath queries per default', function () {
-    $xml = helper_getXmlContent('bookstore.xml');
-
-    $output = helper_generatorToArray(
-        Xml::each('bookstore/book')->extract([
-            'title' => '//title',
-            'author' => '//author',
-            'year' => '//year',
-        ])->invokeStep(new Input($xml))
+    $output = helper_invokeStepWithInput(
+        Xml::each('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
+        helper_getXmlContent('bookstore.xml')
     );
 
     expect($output)->toHaveCount(4);
@@ -49,14 +43,13 @@ it('extracts data from an XML document with XPath queries per default', function
 });
 
 it('can also extract data using CSS selectors', function () {
-    $xml = helper_getXmlContent('bookstore.xml');
-
-    $output = helper_generatorToArray(
+    $output = helper_invokeStepWithInput(
         Xml::each(Dom::cssSelector('bookstore book'))->extract([
             'title' => Dom::cssSelector('title'),
             'author' => Dom::cssSelector('author'),
             'year' => Dom::cssSelector('year'),
-        ])->invokeStep(new Input($xml))
+        ]),
+        helper_getXmlContent('bookstore.xml')
     );
 
     expect($output)->toHaveCount(4);
@@ -71,14 +64,9 @@ it('can also extract data using CSS selectors', function () {
 });
 
 it('returns only one (compound) output when the root method is used', function () {
-    $xml = helper_getXmlContent('bookstore.xml');
-
-    $output = helper_generatorToArray(
-        Xml::root()->extract([
-            'title' => '//title',
-            'author' => '//author',
-            'year' => '//year',
-        ])->invokeStep(new Input($xml))
+    $output = helper_invokeStepWithInput(
+        Xml::root()->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
+        helper_getXmlContent('bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);
@@ -87,14 +75,9 @@ it('returns only one (compound) output when the root method is used', function (
 });
 
 it('extracts the data of the first matching element when the first method is used', function () {
-    $xml = helper_getXmlContent('bookstore.xml');
-
-    $output = helper_generatorToArray(
-        Xml::first('bookstore/book')->extract([
-            'title' => '//title',
-            'author' => '//author',
-            'year' => '//year',
-        ])->invokeStep(new Input($xml))
+    $output = helper_invokeStepWithInput(
+        Xml::first('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
+        helper_getXmlContent('bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);
@@ -105,14 +88,9 @@ it('extracts the data of the first matching element when the first method is use
 });
 
 it('extracts the data of the last matching element when the last method is used', function () {
-    $xml = helper_getXmlContent('bookstore.xml');
-
-    $output = helper_generatorToArray(
-        Xml::last('bookstore/book')->extract([
-            'title' => '//title',
-            'author' => '//author',
-            'year' => '//year',
-        ])->invokeStep(new Input($xml))
+    $output = helper_invokeStepWithInput(
+        Xml::last('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
+        helper_getXmlContent('bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);

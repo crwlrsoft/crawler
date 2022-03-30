@@ -18,6 +18,9 @@ use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
+use function tests\helper_getInputReturningStep;
+use function tests\helper_getValueReturningStep;
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test('You can add a step and it passes on the logger', function () {
@@ -118,12 +121,8 @@ test('It returns the results of all steps when invoked', function () {
 test(
     'It combines the outputs of all it\'s steps into one output containing an array when combineToSingleOutput is used',
     function () {
-        $step1 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'lorem';
-            }
-        };
+        $step1 = helper_getValueReturningStep('lorem');
+
         $step2 = new class () extends Step {
             protected function invoke(mixed $input): Generator
             {
@@ -131,28 +130,20 @@ test(
                 yield 'dolor';
             }
         };
-        $step3 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'sit';
-            }
-        };
+
+        $step3 = helper_getValueReturningStep('sit');
 
         $group = new Group();
-        $group->addLogger(new CliLogger());
-        $group->addStep($step1)->addStep($step2)->addStep($step3);
-        $group->combineToSingleOutput();
-        $output = $group->invokeStep(new Input('gogogo'));
-        $output = helper_generatorToArray($output);
 
-        expect($output)->toBeArray();
+        $group->addLogger(new CliLogger())->addStep($step1)->addStep($step2)->addStep($step3)->combineToSingleOutput();
+
+        $output = helper_invokeStepWithInput($group, 'gogogo');
+
         expect($output)->toHaveCount(1);
+
         expect($output[0])->toBeInstanceOf(Output::class);
-        expect($output[0]->get())->toBe([
-            'lorem',
-            ['ipsum', 'dolor'],
-            'sit'
-        ]);
+
+        expect($output[0]->get())->toBe(['lorem', ['ipsum', 'dolor'], 'sit']);
     }
 );
 
@@ -160,12 +151,8 @@ test(
     'When mapping steps to the Result object and also combining to a single output, the resultKeys are also used in ' .
     'the output array',
     function () {
-        $step1 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'ich';
-            }
-        };
+        $step1 = helper_getValueReturningStep('ich');
+
         $step2 = new class () extends Step {
             protected function invoke(mixed $input): Generator
             {
@@ -173,44 +160,35 @@ test(
                 yield 'ein';
             }
         };
-        $step3 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'berliner';
-            }
-        };
 
-        $group = new Group();
-        $group->addLogger(new CliLogger());
-        $group->addStep('foo', $step1)->addStep('bar', $step2)->addStep('baz', $step3);
-        $group->combineToSingleOutput();
-        $output = $group->invokeStep(new Input('https://www.gogo.go'));
-        $output = helper_generatorToArray($output);
+        $step3 = helper_getValueReturningStep('berliner');
 
-        expect($output)->toBeArray();
+        $group = (new Group())
+            ->addLogger(new CliLogger())
+            ->addStep('foo', $step1)
+            ->addStep('bar', $step2)
+            ->addStep('baz', $step3)
+            ->combineToSingleOutput();
+
+        $output = helper_invokeStepWithInput($group, 'https://www.gogo.go');
+
         expect($output)->toHaveCount(1);
+
         expect($output[0])->toBeInstanceOf(Output::class);
-        expect($output[0]->get())->toBe([
-            'foo' => 'ich',
-            'bar' => ['bin', 'ein'],
-            'baz' => 'berliner',
-        ]);
+
+        $expectedOutputAndResultArray = ['foo' => 'ich', 'bar' => ['bin', 'ein'], 'baz' => 'berliner'];
+
+        expect($output[0]->get())->toBe($expectedOutputAndResultArray);
+
         expect($output[0]->result)->toBeInstanceOf(Result::class);
-        expect($output[0]->result->toArray())->toBe([
-            'foo' => 'ich',
-            'bar' => ['bin', 'ein'],
-            'baz' => 'berliner',
-        ]);
+
+        expect($output[0]->result->toArray())->toBe($expectedOutputAndResultArray); // @phpstan-ignore-line
     }
 );
 
 test('It doesn\'t output anything when the dontCascade method was called', function () {
-    $step1 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'something';
-        }
-    };
+    $step1 = helper_getValueReturningStep('something');
+
     $step2 = new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
@@ -220,55 +198,34 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
         }
     };
 
-    $group = new Group();
-    $group->addLogger(new CliLogger());
-    $group->addStep('foo', $step1)->addStep('bar', $step2);
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep('foo', $step1)
+        ->addStep('bar', $step2);
 
-    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
-    expect($results)->toBeArray();
-    expect($results)->toHaveCount(11);
+    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(11);
 
     $group->dontCascade();
-    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
-    expect($results)->toBeArray();
-    expect($results)->toHaveCount(0);
+
+    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(0);
 
     // Also doesn't yield when a step is added after the dontCascade() call
-    $newStep = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'something';
-        }
-    };
-    $group->addStep($newStep);
+    $group->addStep(helper_getValueReturningStep('something'));
 
-    $results = helper_generatorToArray($group->invokeStep(new Input('foo')));
-    expect($results)->toBeArray();
-    expect($results)->toHaveCount(0);
+    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(0);
 });
 
 test('It doesn\'t return the output of a step when the dontCascade method was called on that step', function () {
-    $step1 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'foo';
-        }
-    };
+    $step1 = helper_getValueReturningStep('foo');
 
-    $step2 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'bar';
-        }
-    };
+    $step2 = helper_getValueReturningStep('bar')->dontCascade();
 
-    $step2->dontCascade();
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep('foo', $step1)
+        ->addStep($step2);
 
-    $group = new Group();
-
-    $group->addLogger(new CliLogger())->addStep('foo', $step1)->addStep($step2);
-
-    $outputs = helper_generatorToArray($group->invokeStep(new Input('foo')));
+    $outputs = helper_invokeStepWithInput($group, 'foo');
 
     expect($outputs)->toHaveCount(1);
 
@@ -279,30 +236,17 @@ test(
     'It doesn\'t contain the output of a step when the dontCascade method was called on that step and the Group\'s ' .
     'output is combined',
     function () {
-        $step1 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'abc';
-            }
-        };
+        $step1 = helper_getValueReturningStep('abc');
 
-        $step2 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'def';
-            }
-        };
+        $step2 = helper_getValueReturningStep('def')->dontCascade();
 
-        $step2->dontCascade();
-
-        $group = new Group();
-
-        $group->addLogger(new CliLogger())
+        $group = (new Group())
+            ->addLogger(new CliLogger())
             ->addStep('one', $step1)
             ->addStep('two', $step2)
             ->combineToSingleOutput();
 
-        $outputs = helper_generatorToArray($group->invokeStep(new Input('foo')));
+        $outputs = helper_invokeStepWithInput($group, 'foo');
 
         expect($outputs)->toHaveCount(1);
 
@@ -311,90 +255,67 @@ test(
 );
 
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
-    $step1 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield ' rocks';
-        }
-    };
-    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
-        return $input . $output;
-    });
-    $step2 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input;
-        }
-    };
+    $step1 = helper_getValueReturningStep(' rocks')
+        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
+            return $input . $output;
+        });
 
-    $group = new Group();
-    $group->addLogger(new CliLogger());
-    $group->addStep($step1)->addStep($step2);
+    $step2 = helper_getInputReturningStep();
 
-    $outputs = helper_generatorToArray($group->invokeStep(new Input('crwlr.software')));
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep($step1)
+        ->addStep($step2);
+
+    $outputs = helper_invokeStepWithInput($group, 'crwlr.software');
+
     expect($outputs)->toHaveCount(2);
+
     expect($outputs[1]->get())->toBe('crwlr.software rocks');
 });
 
 test('Updating the input for further steps with output also works with loop steps', function () {
-    $step1 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield ' Jump!';
-        }
-    };
-    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
-        return $input . $output;
-    });
-    $step1 = new Loop($step1);
-    $step1->maxIterations(2);
-    $step2 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input;
-        }
-    };
+    $step1 = helper_getValueReturningStep(' Jump!')
+        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
+            return $input . $output;
+        });
 
-    $group = new Group();
-    $group->addLogger(new CliLogger());
-    $group->addStep($step1)->addStep($step2);
+    $step1 = (new Loop($step1))->maxIterations(2);
 
-    $outputs = helper_generatorToArray($group->invokeStep(new Input('The Mac Dad will make ya:')));
+    $step2 = helper_getInputReturningStep();
+
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep($step1)
+        ->addStep($step2);
+
+    $outputs = helper_invokeStepWithInput($group, 'The Mac Dad will make ya:');
+
     expect($outputs)->toHaveCount(3);
+
     expect($outputs[2]->get())->toBe('The Mac Dad will make ya: Jump! Jump!');
 });
 
 test('Updating the input for further steps also works when combining the group output to a single output', function () {
-    $step1 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield ' Jump!';
-        }
-    };
-    $step1->updateInputUsingOutput(function (mixed $input, mixed $output) {
-        return $input . $output;
-    });
-    $step1 = new Loop($step1);
-    $step1->maxIterations(2);
-    $step2 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input;
-        }
-    };
+    $step1 = helper_getValueReturningStep(' Jump!')
+        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
+            return $input . $output;
+        });
 
-    $group = new Group();
-    $group->addLogger(new CliLogger());
-    $group->addStep($step1)->addStep($step2);
-    $group->combineToSingleOutput();
+    $step1 = (new Loop($step1))->maxIterations(2);
 
-    $outputs = helper_generatorToArray($group->invokeStep(new Input('The Mac Dad will make ya:')));
+    $group = (new Group())
+        ->addLogger(new CliLogger())
+        ->addStep($step1)
+        ->addStep(helper_getInputReturningStep())
+        ->combineToSingleOutput();
+
+    $outputs = helper_invokeStepWithInput($group, 'The Mac Dad will make ya:');
+
     expect($outputs)->toHaveCount(1);
+
     expect($outputs[0]->get())->toBe([
-        [
-            ' Jump!',
-            ' Jump!',
-        ],
+        [' Jump!', ' Jump!'],
         'The Mac Dad will make ya: Jump! Jump!'
     ]);
 });

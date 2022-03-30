@@ -15,7 +15,9 @@ use Exception;
 use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
-use function tests\helper_generatorToArray;
+use function tests\helper_getInputReturningStep;
+use function tests\helper_getValueReturningStep;
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test(
@@ -39,8 +41,11 @@ test(
                 }
             }
         };
+
         $loopStep = new Loop($step);
+
         helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
+
         expect($step->_callCount)->toBe(5);
     }
 );
@@ -64,8 +69,11 @@ test(
                 }
             }
         };
+
         $loopStep = new Loop($step);
+
         helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
+
         expect($step->_callCount)->toBe($stopAt);
     }
 )->with([
@@ -83,94 +91,116 @@ test('You can set your own max iteration limit', function ($customLimit) {
         protected function invoke(mixed $input): Generator
         {
             $this->_callCount++;
+
             yield $this->_callCount;
         }
     };
-    $loopStep = new Loop($step);
-    $loopStep->maxIterations($customLimit);
+
+    $loopStep = (new Loop($step))->maxIterations($customLimit);
+
     helper_traverseIterable($loopStep->invokeStep(new Input('foo')));
+
     expect($step->_callCount)->toBe($customLimit);
 })->with([10, 100, 100000]);
 
 test('You can use a Closure to transform an iterations output to the input for the next step', function () {
-    $step = new class () extends Step {
+    $loopStep = new Loop(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             expect($input)->toBeInt();
 
             yield 'output ' . ($input + 1);
         }
-    };
-    $loopStep = new Loop($step);
+    });
+
     $loopStep->withInput(function (mixed $input, mixed $output) {
         $outputValue = $output;
 
         return (int) substr($outputValue, -1, 1);
     });
+
     $loopStep->maxIterations(5);
-    $result = helper_generatorToArray($loopStep->invokeStep(new Input(0)));
-    expect($result[0]->get())->toBe('output 1');
-    expect($result[1]->get())->toBe('output 2');
-    expect($result[2]->get())->toBe('output 3');
-    expect($result[3]->get())->toBe('output 4');
-    expect($result[4]->get())->toBe('output 5');
+
+    $outputs = helper_invokeStepWithInput($loopStep, 0);
+
+    expect($outputs[0]->get())->toBe('output 1');
+
+    expect($outputs[1]->get())->toBe('output 2');
+
+    expect($outputs[2]->get())->toBe('output 3');
+
+    expect($outputs[3]->get())->toBe('output 4');
+
+    expect($outputs[4]->get())->toBe('output 5');
 });
 
 test('You can use a Step to make the input for the next iteration from the output', function () {
-    $step = new class () extends Step {
+    $loopStep = new Loop(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             expect($input)->toBeInt();
 
             yield 'foo ' . ($input + 1);
         }
-    };
-    $loopStep = new Loop($step);
+    });
+
     $loopStep->withInput(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield (int) substr($input, -1, 1);
         }
     });
+
     $loopStep->maxIterations(5);
-    $result = helper_generatorToArray($loopStep->invokeStep(new Input(0)));
-    expect($result[0]->get())->toBe('foo 1');
-    expect($result[1]->get())->toBe('foo 2');
-    expect($result[2]->get())->toBe('foo 3');
-    expect($result[3]->get())->toBe('foo 4');
-    expect($result[4]->get())->toBe('foo 5');
+
+    $outputs = helper_invokeStepWithInput($loopStep, 0);
+
+    expect($outputs[0]->get())->toBe('foo 1');
+
+    expect($outputs[1]->get())->toBe('foo 2');
+
+    expect($outputs[2]->get())->toBe('foo 3');
+
+    expect($outputs[3]->get())->toBe('foo 4');
+
+    expect($outputs[4]->get())->toBe('foo 5');
 });
 
 test('When the step has output but the withInput Closure returns null it stops looping', function () {
-    $step = new class () extends Step {
+    $loopStep = new Loop(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             expect($input)->toBeInt();
 
             yield $input + 1;
         }
-    };
-    $loopStep = new Loop($step);
+    });
+
     $loopStep->withInput(function (mixed $input, mixed $output) {
         return $output < 2 ? $output : null;
     });
+
     $loopStep->maxIterations(5);
-    $result = helper_generatorToArray($loopStep->invokeStep(new Input(0)));
-    expect($result)->toHaveCount(2);
-    expect($result[0]->get())->toBe(1);
-    expect($result[1]->get())->toBe(2);
+
+    $outputs = helper_invokeStepWithInput($loopStep, 0);
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0]->get())->toBe(1);
+
+    expect($outputs[1]->get())->toBe(2);
 });
 
 test('When the step has output but the withInput Step has no output it stops looping', function () {
-    $step = new class () extends Step {
+    $loopStep = new Loop(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             expect($input)->toBeInt();
 
             yield $input + 1;
         }
-    };
-    $loopStep = new Loop($step);
+    });
+
     $loopStep->withInput(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
@@ -179,24 +209,35 @@ test('When the step has output but the withInput Step has no output it stops loo
             }
         }
     });
+
     $loopStep->maxIterations(5);
-    $result = helper_generatorToArray($loopStep->invokeStep(new Input(0)));
-    expect($result)->toHaveCount(2);
-    expect($result[0]->get())->toBe(1);
-    expect($result[1]->get())->toBe(2);
+
+    $outputs = helper_invokeStepWithInput($loopStep, 0);
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0]->get())->toBe(1);
+
+    expect($outputs[1]->get())->toBe(2);
 });
 
 test('You can set a logger and it\'s passed on to the wrapped step that is looped', function () {
     $step = Mockery::mock(StepInterface::class);
+
     $step->shouldReceive('addLogger')->once();
+
     $loopStep = new Loop($step);
+
     $loopStep->addLogger(new CliLogger());
 });
 
 test('You can set a loader and it\'s passed on to the wrapped step that is looped', function () {
     $step = Mockery::mock(LoadingStepInterface::class);
+
     $step->shouldReceive('addLoader')->once();
+
     $loopStep = new Loop($step);
+
     $loopStep->addLoader(new HttpLoader(new BotUserAgent('FooBot')));
 });
 
@@ -207,6 +248,7 @@ test(
 
         // Initial call returning 3 outputs
         $step->shouldReceive('cascades')->andReturn(true);
+
         $step->shouldReceive('invokeStep')->once()->andReturn(
             helper_arrayToGenerator([new Output('foo'), new Output('bar'), new Output('baz')])
         );
@@ -222,33 +264,31 @@ test(
         })->andReturn(helper_arrayToGenerator([]));
 
         $loopStep = new Loop($step);
-        $results = helper_generatorToArray($loopStep->invokeStep(new Input('test')));
-        expect($results[0]->get())->toBe('foo');
-        expect($results[1]->get())->toBe('bar');
-        expect($results[2]->get())->toBe('baz');
-        expect($results[3]->get())->toBe('Lorem');
-        expect($results[4]->get())->toBe('Ipsum');
+
+        $outputs = helper_invokeStepWithInput($loopStep, 'test');
+
+        expect($outputs[0]->get())->toBe('foo');
+
+        expect($outputs[1]->get())->toBe('bar');
+
+        expect($outputs[2]->get())->toBe('baz');
+
+        expect($outputs[3]->get())->toBe('Lorem');
+
+        expect($outputs[4]->get())->toBe('Ipsum');
     }
 );
 
 test('It doesn\'t output anything when the dontCascade method was called', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'something';
-        }
-    };
-    $loopStep = new Loop($step);
-    $loopStep->maxIterations(10);
+    $step = helper_getValueReturningStep('something');
 
-    $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
-    expect($results)->toBeArray();
-    expect($results)->toHaveCount(10);
+    $loopStep = (new Loop($step))->maxIterations(10);
+
+    expect(helper_invokeStepWithInput($loopStep, 'foo'))->toHaveCount(10);
 
     $loopStep->dontCascade();
-    $results = helper_generatorToArray($loopStep->invokeStep(new Input('foo')));
-    expect($results)->toBeArray();
-    expect($results)->toHaveCount(0);
+
+    expect(helper_invokeStepWithInput($loopStep, 'foo'))->toHaveCount(0);
 });
 
 test('It immediately cascades outputs to the next step', function () {
@@ -305,91 +345,88 @@ test(
 );
 
 test('It resets deferred outputs when they are yielded', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'pew';
-        }
-    };
-
-    $loopStep = (new Loop($step))->maxIterations(10);
+    $loopStep = (new Loop(helper_getValueReturningStep('pew')))->maxIterations(10);
 
     $loopStep->cascadeWhenFinished();
 
-    $results = helper_generatorToArray($loopStep->invokeStep(new Input('pew')));
+    expect(helper_invokeStepWithInput($loopStep, 'pew'))->toHaveCount(10);
 
-    expect($results)->toHaveCount(10);
-
-    $results = helper_generatorToArray($loopStep->invokeStep(new Input('pew')));
-
-    expect($results)->toHaveCount(10); // If it wouldn't reset the previous deferred outputs it would now be 20 outputs
+    // If it wouldn't reset the previous deferred outputs it would now be 20 outputs
+    expect(helper_invokeStepWithInput($loopStep, 'pew'))->toHaveCount(10);
 });
 
 test('You can add and call an updateInputUsingOutput callback', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 1;
-        }
-    };
-    $step = new Loop($step);
-    $step->updateInputUsingOutput(function (mixed $input, mixed $output) {
-        return $input . ' ' . $output;
-    });
+    $step = (new Loop(helper_getValueReturningStep(1)))
+        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
+            return $input . ' ' . $output;
+        });
 
     $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
+
     expect($updatedInput)->toBeInstanceOf(Input::class);
+
     expect($updatedInput->get())->toBe('Boo Yah!');
 });
 
 test('It loops reusing the same input that can be updated via a callback when withInput is used', function () {
-    $step = new class () extends Step {
+    $step = new Loop(new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield array_pop($input) + (array_pop($input) ?? 0);
         }
-    };
-    $step = new Loop($step);
+    });
+
     $step->withInput(function (mixed $input, mixed $output) {
         $input[] = $output;
 
         return $input;
     });
+
     $step->maxIterations(10);
 
-    $results = helper_generatorToArray($step->invokeStep(new Input([1])));
-    expect($results[0]->get())->toBe(1);
-    expect($results[1]->get())->toBe(2);
-    expect($results[2]->get())->toBe(3);
-    expect($results[3]->get())->toBe(5);
-    expect($results[4]->get())->toBe(8);
-    expect($results[5]->get())->toBe(13);
-    expect($results[6]->get())->toBe(21);
-    expect($results[7]->get())->toBe(34);
-    expect($results[8]->get())->toBe(55);
-    expect($results[9]->get())->toBe(89);
+    $outputs = helper_invokeStepWithInput($step, [1]);
+
+    expect($outputs[0]->get())->toBe(1);
+
+    expect($outputs[1]->get())->toBe(2);
+
+    expect($outputs[2]->get())->toBe(3);
+
+    expect($outputs[3]->get())->toBe(5);
+
+    expect($outputs[4]->get())->toBe(8);
+
+    expect($outputs[5]->get())->toBe(13);
+
+    expect($outputs[6]->get())->toBe(21);
+
+    expect($outputs[7]->get())->toBe(34);
+
+    expect($outputs[8]->get())->toBe(55);
+
+    expect($outputs[9]->get())->toBe(89);
 });
 
 test('It stops looping when the withInput callback returns null', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input;
-        }
-    };
-    $step = new Loop($step);
-    $step->withInput(function (mixed $input, mixed $output) {
-        return $input < 5 ? $input + 1 : null;
-    });
-    $step->maxIterations(10);
+    $step = (new Loop(helper_getInputReturningStep()))
+        ->withInput(function (mixed $input, mixed $output) {
+            return $input < 5 ? $input + 1 : null;
+        })
+        ->maxIterations(10);
 
-    $results = helper_generatorToArray($step->invokeStep(new Input(1)));
-    expect(count($results))->toBe(5);
-    expect($results[0]->get())->toBe(1);
-    expect($results[1]->get())->toBe(2);
-    expect($results[2]->get())->toBe(3);
-    expect($results[3]->get())->toBe(4);
-    expect($results[4]->get())->toBe(5);
+    $outputs = helper_invokeStepWithInput($step, 1);
+
+    expect($outputs)->toHaveCount(5);
+
+    expect($outputs[0]->get())->toBe(1);
+
+    expect($outputs[1]->get())->toBe(2);
+
+    expect($outputs[2]->get())->toBe(3);
+
+    expect($outputs[3]->get())->toBe(4);
+
+    expect($outputs[4]->get())->toBe(5);
 });
 
 test(
@@ -508,22 +545,27 @@ test(
     'It stops when the callback passed to the stopIf method returns true and it stops before yielding the output of ' .
     'that iteration',
     function () {
-        $step = new class () extends Step {
+        $step = new Loop(new class () extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield $input + 1;
             }
-        };
-        $step = new Loop($step);
+        });
+
         $step->maxIterations(10);
+
         $step->stopIf(function (mixed $input, mixed $output) {
             return $output > 3;
         });
 
-        $results = helper_generatorToArray($step->invokeStep(new Input(0)));
-        expect(count($results))->toBe(3);
-        expect($results[0]->get())->toBe(1);
-        expect($results[1]->get())->toBe(2);
-        expect($results[2]->get())->toBe(3);
+        $outputs = helper_invokeStepWithInput($step, 0);
+
+        expect($outputs)->toHaveCount(3);
+
+        expect($outputs[0]->get())->toBe(1);
+
+        expect($outputs[1]->get())->toBe(2);
+
+        expect($outputs[2]->get())->toBe(3);
     }
 );
