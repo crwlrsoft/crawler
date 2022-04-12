@@ -3,6 +3,9 @@ parameters:
     paths:
         - src
         - tests
+    excludePaths:
+        analyse:
+            - tests/_Integration/_Server
     treatPhpDocTypesAsCertain: false
 
     ignoreErrors:

@@ -13,6 +13,7 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Exception;
 use Generator;
 use InvalidArgumentException;
+use NoRewindIterator;
 use Psr\Log\LoggerInterface;
 
 abstract class Crawler
@@ -134,7 +135,7 @@ abstract class Crawler
                     $input = new Input($input);
                 }
 
-                $nextIterationInputs->append($step->invokeStep($input));
+                $nextIterationInputs->append(new NoRewindIterator($step->invokeStep($input)));
             }
 
             if ($step !== end($this->steps)) {
