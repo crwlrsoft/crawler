@@ -7,29 +7,7 @@ use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
-use Symfony\Component\Process\Process;
 use function tests\helper_generatorToArray;
-
-class TestServerProcess
-{
-    public static ?Process $process = null;
-}
-
-beforeEach(function () {
-    if (!isset(TestServerProcess::$process)) {
-        TestServerProcess::$process = Process::fromShellCommandline(
-            'php -S localhost:8000 ' . __DIR__ . '/../../Server.php'
-        );
-
-        TestServerProcess::$process->start();
-
-        usleep(100000);
-    }
-});
-
-afterAll(function () {
-    TestServerProcess::$process?->stop(3, SIGINT);
-});
 
 it('gets all the links from a listing and gets data from the detail pages', function () {
     $crawler = new class () extends HttpCrawler {

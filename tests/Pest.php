@@ -8,6 +8,27 @@ use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Generator;
 use GuzzleHttp\Psr7\Response;
+use Symfony\Component\Process\Process;
+
+class TestServerProcess
+{
+    public static ?Process $process = null;
+}
+
+uses()
+    ->beforeEach(function () {
+        if (!isset(TestServerProcess::$process)) {
+            TestServerProcess::$process = Process::fromShellCommandline(
+                'php -S localhost:8000 ' . __DIR__ . '/_Integration/Server.php'
+            );
+
+            TestServerProcess::$process->start();
+
+            usleep(100000);
+        }
+    })
+    ->afterAll(fn () => TestServerProcess::$process?->stop(3, SIGINT))
+    ->in('_Integration');
 
 function helper_getValueReturningStep(mixed $value): Step
 {
