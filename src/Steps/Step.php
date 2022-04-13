@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 abstract class Step implements StepInterface
 {
-    protected LoggerInterface $logger;
+    protected ?LoggerInterface $logger = null;
 
     protected ?Closure $inputMutationCallback = null;
 

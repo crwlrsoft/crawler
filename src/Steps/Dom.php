@@ -133,6 +133,10 @@ abstract class Dom extends Step
             $mappedProperties[$key] = $domQuery->apply($domCrawler);
         }
 
+        $this->logger?->info(
+            'Extracted properties ' . implode(', ', array_keys($mappedProperties)) . ' from document.'
+        );
+
         return $mappedProperties;
     }
 

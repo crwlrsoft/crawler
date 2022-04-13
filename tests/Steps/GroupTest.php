@@ -76,45 +76,58 @@ test('The factory method returns a Group object instance', function () {
 
 test('You can add multiple steps and invokeStep calls all of them', function () {
     $step1 = Mockery::mock(StepInterface::class);
-    $step1->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
+    $step1->shouldReceive('cascades', 'invokeStep')->once();
     $step2 = Mockery::mock(StepInterface::class);
-    $step2->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
+    $step2->shouldReceive('cascades', 'invokeStep')->once();
     $step3 = Mockery::mock(StepInterface::class);
-    $step3->shouldReceive('addLogger', 'cascades', 'invokeStep')->once();
+    $step3->shouldReceive('cascades', 'invokeStep')->once();
 
     $group = new Group();
-    $group->addLogger(new CliLogger());
     $group->addStep($step1)->addStep($step2)->addStep($step3);
     helper_traverseIterable($group->invokeStep(new Input('foo')));
 });
 
 test('It returns the results of all steps when invoked', function () {
     $step1 = Mockery::mock(StepInterface::class);
-    $step1->shouldReceive('addLogger')->once();
+
     $step1->shouldReceive('cascades')->once()->andReturn(true);
+
     $step1->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('1')]));
+
     $step2 = Mockery::mock(StepInterface::class);
-    $step2->shouldReceive('addLogger')->once();
+
     $step2->shouldReceive('cascades')->once()->andReturn(true);
+
     $step2->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('2')]));
+
     $step3 = Mockery::mock(StepInterface::class);
-    $step3->shouldReceive('addLogger')->once();
+
     $step3->shouldReceive('cascades')->once()->andReturn(true);
+
     $step3->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('3')]));
 
     $group = new Group();
-    $group->addLogger(new CliLogger());
+
     $group->addStep($step1)->addStep($step2)->addStep($step3);
+
     $output = $group->invokeStep(new Input('foo'));
+
     $output = helper_generatorToArray($output);
 
     expect($output)->toBeArray();
+
     expect($output)->toHaveCount(3);
+
     expect($output[0])->toBeInstanceOf(Output::class);
+
     expect($output[0]->get())->toBe('1');
+
     expect($output[1])->toBeInstanceOf(Output::class);
+
     expect($output[1]->get())->toBe('2');
+
     expect($output[2])->toBeInstanceOf(Output::class);
+
     expect($output[2]->get())->toBe('3');
 });
 
@@ -135,7 +148,7 @@ test(
 
         $group = new Group();
 
-        $group->addLogger(new CliLogger())->addStep($step1)->addStep($step2)->addStep($step3)->combineToSingleOutput();
+        $group->addStep($step1)->addStep($step2)->addStep($step3)->combineToSingleOutput();
 
         $output = helper_invokeStepWithInput($group, 'gogogo');
 
@@ -164,7 +177,6 @@ test(
         $step3 = helper_getValueReturningStep('berliner');
 
         $group = (new Group())
-            ->addLogger(new CliLogger())
             ->addStep('foo', $step1)
             ->addStep('bar', $step2)
             ->addStep('baz', $step3)
@@ -199,7 +211,6 @@ test('It doesn\'t output anything when the dontCascade method was called', funct
     };
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep('foo', $step1)
         ->addStep('bar', $step2);
 
@@ -221,7 +232,6 @@ test('It doesn\'t return the output of a step when the dontCascade method was ca
     $step2 = helper_getValueReturningStep('bar')->dontCascade();
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep('foo', $step1)
         ->addStep($step2);
 
@@ -241,7 +251,6 @@ test(
         $step2 = helper_getValueReturningStep('def')->dontCascade();
 
         $group = (new Group())
-            ->addLogger(new CliLogger())
             ->addStep('one', $step1)
             ->addStep('two', $step2)
             ->combineToSingleOutput();
@@ -263,7 +272,6 @@ test('You can update the input for further steps with the output of a step that 
     $step2 = helper_getInputReturningStep();
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep($step1)
         ->addStep($step2);
 
@@ -285,7 +293,6 @@ test('Updating the input for further steps with output also works with loop step
     $step2 = helper_getInputReturningStep();
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep($step1)
         ->addStep($step2);
 
@@ -305,7 +312,6 @@ test('Updating the input for further steps also works when combining the group o
     $step1 = (new Loop($step1))->maxIterations(2);
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep($step1)
         ->addStep(helper_getInputReturningStep())
         ->combineToSingleOutput();
@@ -328,7 +334,6 @@ it('knows when at least one of the steps adds something to the final result', fu
     $step3 = helper_getValueReturningStep('Track');
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep($step1)
         ->addStep($step2)
         ->addStep('foo', $step3);
@@ -356,7 +361,6 @@ it('knows when at least one of the steps adds something to the final result when
     $step3 = helper_getValueReturningStep(['duck' => 'Track'])->addKeysToResult();
 
     $group = (new Group())
-        ->addLogger(new CliLogger())
         ->addStep($step1)
         ->addStep($step2)
         ->addStep($step3);

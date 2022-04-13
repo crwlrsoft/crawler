@@ -35,7 +35,7 @@ test('You can add a logger and it is available within the invoke method', functi
          */
         protected function invoke(mixed $input): Generator
         {
-            $this->logger->info('logging works');
+            $this->logger?->info('logging works');
 
             yield 'something';
         }

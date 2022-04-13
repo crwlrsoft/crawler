@@ -15,7 +15,7 @@ use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test('It works with a RequestResponseAggregate as input', function () {
-    $step = (new GetLinks())->addLogger(new CliLogger());
+    $step = (new GetLinks());
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.example.com/home'),
@@ -30,13 +30,11 @@ test('It works with a RequestResponseAggregate as input', function () {
 test('It does not work with something else as input', function () {
     $step = new GetLinks();
 
-    $step->addLogger(new CliLogger());
-
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
 })->throws(InvalidArgumentException::class);
 
 test('When called without selector it just gets all links', function () {
-    $step = (new GetLinks())->addLogger(new CliLogger());
+    $step = (new GetLinks());
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.crwlr.software/packages/url/'),
@@ -55,7 +53,7 @@ test('When called without selector it just gets all links', function () {
 });
 
 test('When passing a CSS selector it only selects matching links', function () {
-    $step = (new GetLinks('.matchingLink'))->addLogger(new CliLogger());
+    $step = (new GetLinks('.matchingLink'));
 
     $responseHtml = <<<HTML
         <div>
@@ -81,7 +79,7 @@ test('When passing a CSS selector it only selects matching links', function () {
 });
 
 test('When selector matches on a non-link element it\'s ignored', function () {
-    $step = (new GetLinks('.link'))->addLogger(new CliLogger());
+    $step = (new GetLinks('.link'));
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),

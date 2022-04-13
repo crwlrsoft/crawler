@@ -17,13 +17,13 @@ class GetLinks extends GetLink
     {
         $selector = $this->selector ?? 'a';
 
-        $this->logger->info(
+        $this->logger?->info(
             $this->selector === null ? 'Select all links in document.' : 'Select links with CSS selector: ' . $selector
         );
 
         foreach ($input->filter($selector) as $link) {
             if ($link->nodeName !== 'a') {
-                $this->logger->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
+                $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
                 continue;
             }
 
