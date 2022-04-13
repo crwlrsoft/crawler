@@ -4,7 +4,8 @@ use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
 $finder = Finder::create()
-    ->in([__DIR__ . '/src', __DIR__ . '/tests']);
+    ->exclude(['tests/_Integration/_Server', '.github', 'bin', 'examples', 'git-hooks'])
+    ->in(__DIR__);
 $config = new Config();
 
 return $config->setFinder($finder)

@@ -23,7 +23,11 @@ class GetLink extends Step
         if ($input instanceof RespondedRequest) {
             $this->baseUri = Url::parse($input->effectiveUri());
 
-            return new Crawler($input->response->getBody()->getContents());
+            $crawler = new Crawler($input->response->getBody()->getContents());
+
+            $input->response->getBody()->rewind();
+
+            return $crawler;
         }
 
         throw new InvalidArgumentException('Input must be an instance of RequestResponseAggregate.');
