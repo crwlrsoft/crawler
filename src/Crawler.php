@@ -53,6 +53,16 @@ abstract class Crawler
         return new Group();
     }
 
+    public static function setMemoryLimit(string $memoryLimit): false|string
+    {
+        return ini_set('memory_limit', $memoryLimit);
+    }
+
+    public static function getMemoryLimit(): false|string
+    {
+        return ini_get('memory_limit');
+    }
+
     public function getUserAgent(): UserAgentInterface
     {
         return $this->userAgent;

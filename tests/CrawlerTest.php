@@ -103,6 +103,28 @@ test(
     }
 );
 
+it('gives you the current memory limit', function () {
+    expect(Crawler::getMemoryLimit())->toBeString();
+});
+
+it('changes the current memory limit when allowed', function () {
+    $currentLimit = Crawler::getMemoryLimit();
+
+    if ($currentLimit === '512M') {
+        $newValue = '1G';
+    } else {
+        $newValue = '512M';
+    }
+
+    $setLimitReturnValue = Crawler::setMemoryLimit($newValue);
+
+    if ($setLimitReturnValue === false) {
+        expect(Crawler::getMemoryLimit())->toBe($currentLimit);
+    } else {
+        expect(Crawler::getMemoryLimit())->toBe($newValue);
+    }
+});
+
 test('You can set a single input for the first step using the input method', function () {
     $crawler = helper_getDummyCrawlerWithInputReturningStep();
 
