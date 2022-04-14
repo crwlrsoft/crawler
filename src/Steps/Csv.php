@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -78,12 +79,12 @@ class Csv extends Step
     {
         if ($this->method === 'string') {
             if ($input instanceof RespondedRequest) {
-                return $input->response->getBody()->getContents();
+                return Http::getBodyString($input);
             }
 
             return $this->validateAndSanitizeStringOrStringable(
                 $input,
-                'Input has to be string, stringable or RequestResponseAggregate'
+                'Input has to be string, stringable or RespondedRequest'
             );
         } elseif ($this->method === 'file') {
             return $this->validateAndSanitizeStringOrStringable($input);

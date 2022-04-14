@@ -6,6 +6,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -90,15 +91,11 @@ abstract class Dom extends Step
             return new Crawler($input);
         }
 
-        if ($input instanceof ResponseInterface) {
-            return new Crawler($input->getBody()->getContents());
+        if ($input instanceof ResponseInterface || $input instanceof RespondedRequest) {
+            return new Crawler(Http::getBodyString($input));
         }
 
-        if ($input instanceof RespondedRequest) {
-            return new Crawler($input->response->getBody()->getContents());
-        }
-
-        throw new InvalidArgumentException('Input must be string, PSR-7 Response or RequestResponseAggregate.');
+        throw new InvalidArgumentException('Input must be string, PSR-7 Response or RespondedRequest.');
     }
 
     /**

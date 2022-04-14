@@ -32,3 +32,7 @@ if (str_starts_with($route, '/paginated-listing')) {
 
     return include(__DIR__ . '/_Server/PaginatedListing.php');
 }
+
+if ($route === '/blog-post-with-json-ld') {
+    return include(__DIR__ . '/_Server/BlogPostWithJsonLd.php');
+}

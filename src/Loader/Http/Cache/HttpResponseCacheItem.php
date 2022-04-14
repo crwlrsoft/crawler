@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http\Cache;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -92,13 +93,7 @@ final class HttpResponseCacheItem
      */
     public static function copyBody(MessageInterface $httpMessage): string
     {
-        $httpMessage->getBody()->rewind();
-
-        $body = $httpMessage->getBody()->getContents();
-
-        $httpMessage->getBody()->rewind();
-
-        return $body;
+        return Http::getBodyString($httpMessage);
     }
 
     public function key(): string

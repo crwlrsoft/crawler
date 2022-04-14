@@ -8,6 +8,7 @@ use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -80,6 +81,23 @@ class Http extends LoadingStep
     }
 
     /**
+     * When using the contents of an Http Message Stream multiple times, it's important to not forget to rewind() it,
+     * otherwise you'll just get an empty string. So better just always use this helper.
+     */
+    public static function getBodyString(MessageInterface|RespondedRequest $message): string
+    {
+        $message = $message instanceof RespondedRequest ? $message->response : $message;
+
+        $message->getBody()->rewind();
+
+        $contents = $message->getBody()->getContents();
+
+        $message->getBody()->rewind();
+
+        return $contents;
+    }
+
+    /**
      * @throws InvalidArgumentException
      */
     protected function validateAndSanitizeInput(mixed $input): mixed
@@ -96,13 +114,17 @@ class Http extends LoadingStep
     }
 
     /**
-     * @return Generator<RespondedRequest|null>
+     * @return Generator<RespondedRequest>
      * @throws Exception
      */
     protected function invoke(mixed $input): Generator
     {
         $request = new Request($this->method, $input, $this->headers, $this->body, $this->httpVersion);
 
-        yield $this->loader->load($request);
+        $response = $this->loader->load($request);
+
+        if ($response !== null) {
+            yield $response;
+        }
     }
 }

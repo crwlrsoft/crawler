@@ -57,7 +57,8 @@
         }
     },
     "scripts": {
-        "test": "@php vendor/bin/pest --parallel",
+        "test": "@php vendor/bin/pest --parallel --exclude-group integration",
+        "test-integration": "@php vendor/bin/pest --group integration",
         "stan": "@php vendor/bin/phpstan analyse -c phpstan.neon",
         "cs": "@php vendor/bin/php-cs-fixer fix -v --dry-run",
         "cs-fix": "@php vendor/bin/php-cs-fixer fix -v",

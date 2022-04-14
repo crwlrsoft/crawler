@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Loader\Http\Traits;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgentInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
@@ -64,14 +65,14 @@ trait CheckRobotsTxt
      */
     protected function loadRobotsTxtContent(string $uri): ?string
     {
-        $aggregate = $this->load($uri);
+        $respondedRequest = $this->load($uri);
 
         if (method_exists($this, 'waitUntilNextRequestCanBeSent')) {
             $this->waitUntilNextRequestCanBeSent();
         }
 
-        if ($aggregate instanceof RespondedRequest) {
-            return $aggregate->response->getBody()->getContents();
+        if ($respondedRequest instanceof RespondedRequest) {
+            return Http::getBodyString($respondedRequest);
         }
 
         return null;

@@ -16,6 +16,7 @@ class TestServerProcess
 }
 
 uses()
+    ->group('integration')
     ->beforeEach(function () {
         if (!isset(TestServerProcess::$process)) {
             TestServerProcess::$process = Process::fromShellCommandline(
@@ -27,7 +28,11 @@ uses()
             usleep(100000);
         }
     })
-    ->afterAll(fn () => TestServerProcess::$process?->stop(3, SIGINT))
+    ->afterAll(function () {
+        TestServerProcess::$process?->stop(3, SIGINT);
+
+        TestServerProcess::$process = null;
+    })
     ->in('_Integration');
 
 function helper_getValueReturningStep(mixed $value): Step

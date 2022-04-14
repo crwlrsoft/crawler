@@ -68,25 +68,25 @@ class HttpLoader extends Loader
         $this->callHook('beforeLoad', $request);
 
         try {
-            $requestResponseAggregate = $this->getFromCache($request);
-            $isFromCache = $requestResponseAggregate !== null;
+            $respondedRequest = $this->getFromCache($request);
+            $isFromCache = $respondedRequest !== null;
 
-            if (!$requestResponseAggregate) {
-                $requestResponseAggregate  = $this->handleRedirects($request);
+            if (!$respondedRequest) {
+                $respondedRequest  = $this->handleRedirects($request);
             }
 
-            if ($requestResponseAggregate->response->getStatusCode() < 400) {
-                $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
+            if ($respondedRequest->response->getStatusCode() < 400) {
+                $this->callHook('onSuccess', $request, $respondedRequest->response);
             } else {
-                $this->callHook('onError', $request, $requestResponseAggregate->response);
+                $this->callHook('onError', $request, $respondedRequest->response);
             }
 
             if (!$isFromCache && $this->cache) {
-                $responseCacheItem = HttpResponseCacheItem::fromAggregate($requestResponseAggregate);
+                $responseCacheItem = HttpResponseCacheItem::fromAggregate($respondedRequest);
                 $this->cache->set($responseCacheItem->key(), $responseCacheItem);
             }
 
-            return $requestResponseAggregate;
+            return $respondedRequest;
         } catch (Throwable $exception) {
             $this->trackRequestEnd(); // Don't move to finally so hooks don't run before it.
             $this->callHook('onError', $request, $exception);
@@ -108,26 +108,26 @@ class HttpLoader extends Loader
         $this->isAllowedToBeLoaded($request->getUri(), true);
         $request = $this->prepareRequest($request);
         $this->callHook('beforeLoad', $request);
-        $requestResponseAggregate = $this->getFromCache($request);
-        $isFromCache = $requestResponseAggregate !== null;
+        $respondedRequest = $this->getFromCache($request);
+        $isFromCache = $respondedRequest !== null;
 
-        if (!$requestResponseAggregate) {
-            $requestResponseAggregate = $this->handleRedirects($request);
+        if (!$respondedRequest) {
+            $respondedRequest = $this->handleRedirects($request);
         }
 
-        if ($requestResponseAggregate->response->getStatusCode() >= 400) {
+        if ($respondedRequest->response->getStatusCode() >= 400) {
             throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
         }
 
-        $this->callHook('onSuccess', $request, $requestResponseAggregate->response);
+        $this->callHook('onSuccess', $request, $respondedRequest->response);
         $this->callHook('afterLoad', $request);
 
         if (!$isFromCache && $this->cache) {
-            $responseCacheItem = HttpResponseCacheItem::fromAggregate($requestResponseAggregate);
+            $responseCacheItem = HttpResponseCacheItem::fromAggregate($respondedRequest);
             $this->cache->set($responseCacheItem->key(), $responseCacheItem);
         }
 
-        return $requestResponseAggregate;
+        return $respondedRequest;
     }
 
     public function dontUseCookies(): static

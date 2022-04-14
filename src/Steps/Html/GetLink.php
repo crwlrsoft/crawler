@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Url\Url;
 use Exception;
@@ -23,14 +24,10 @@ class GetLink extends Step
         if ($input instanceof RespondedRequest) {
             $this->baseUri = Url::parse($input->effectiveUri());
 
-            $crawler = new Crawler($input->response->getBody()->getContents());
-
-            $input->response->getBody()->rewind();
-
-            return $crawler;
+            return new Crawler(Http::getBodyString($input));
         }
 
-        throw new InvalidArgumentException('Input must be an instance of RequestResponseAggregate.');
+        throw new InvalidArgumentException('Input must be an instance of RespondedRequest.');
     }
 
     /**
