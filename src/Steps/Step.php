@@ -15,8 +15,6 @@ abstract class Step implements StepInterface
 {
     protected ?LoggerInterface $logger = null;
 
-    protected ?Closure $inputMutationCallback = null;
-
     protected ?string $resultKey = null;
 
     /**
