@@ -46,6 +46,7 @@ out from the master branch.
 When you're making changes to this package please always run
 tests and linting. Commands:  
 `composer test`  
+`composer test-integration`
 `composer cs`
 `composer stan`
 
@@ -54,16 +55,20 @@ this repo that will run tests and linting. Add it to your local
 clone by running:  
 `composer add-git-hooks`
 
+The integration tests start a simple PHP web server for the
+testing purpose on port 8000. If you have anything else running
+on that port, the integration tests won't work.
+
 Also please don't forget to add new test cases if necessary.
 
 ### Documentation
 
-For any code change please don't forget to add an entry to the
-`CHANGELOG.md` file and in case it's necessary also change the
-`README.md` file.
+For any code change that changes/adds something for users of
+the package, please don't forget to add an entry to the
+`CHANGELOG.md` file.
 
 ## Appreciation
 
 When your pull request is merged I will show some love and tweet
-about it. Also if you meet me in person I will be glad to buy you
+about it. Also, if you meet me in person I will be glad to buy you
 a beer.
