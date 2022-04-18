@@ -12,4 +12,4 @@ You can find the documentation at
 ## Contributing
 
 If you consider contributing something to this package,
-read the contribution guide (CONTRIBUTING.md).
+read the [contribution guide (CONTRIBUTING.md)](CONTRIBUTING.md).
