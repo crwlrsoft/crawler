@@ -33,14 +33,6 @@ This package follows the
 You can run PHP CS Fixer via `composer cs` for a dry run or
 `composer cs-fix` to automatically fix code style issues.
 
-### Branching
-
-The repo contains branches for every minor version and a master
-branch up to date with the latest tagged version. For a bugfix
-please send your pull request to the branch of the latest version
-affected by the issue. If you're developing a new feature, branch
-out from the master branch.
-
 ### Code quality tools
 
 When you're making changes to this package please always run
@@ -59,7 +51,7 @@ The integration tests start a simple PHP web server for the
 testing purpose on port 8000. If you have anything else running
 on that port, the integration tests won't work.
 
-Also please don't forget to add new test cases if necessary.
+Also, please don't forget to add new test cases if necessary.
 
 ### Documentation
 

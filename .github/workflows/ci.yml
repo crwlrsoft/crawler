@@ -50,6 +50,31 @@ jobs:
       - name: Run tests
         run: vendor/bin/pest --coverage-clover clover.xml
 
+  integration-tests:
+    name: PestPHP Integration Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: [ '8.1' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+
+      - name: Check PHP Version
+        run: php -v
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run integration tests
+        run: composer test-integration
+
   stan:
     name: PHPStan
     runs-on: ubuntu-latest
