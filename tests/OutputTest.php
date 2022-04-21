@@ -3,21 +3,6 @@
 namespace tests;
 
 use Crwlr\Crawler\Output;
-use stdClass;
-
-/**
- * @param mixed[] $data
- */
-function helper_getStdClassWithData(array $data): stdClass
-{
-    $object = new stdClass();
-
-    foreach ($data as $key => $value) {
-        $object->{$key} = $value;
-    }
-
-    return $object;
-}
 
 it('sets a simple value key', function ($value, $key) {
     $output = new Output($value);

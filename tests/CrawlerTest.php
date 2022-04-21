@@ -52,7 +52,9 @@ test(
     function () {
         $crawler = new class () extends Crawler {
             public int $userAgentCalled = 0;
+
             public int $loggerCalled = 0;
+
             public int $loaderCalled = 0;
 
             protected function userAgent(): UserAgentInterface
@@ -82,23 +84,37 @@ test(
                 };
             }
         };
+
         expect($crawler->getUserAgent()->testProperty)->toBe('foo'); // @phpstan-ignore-line
+
         expect($crawler->getLogger()->testProperty)->toBe('foo');  // @phpstan-ignore-line
+
         expect($crawler->getLoader()->testProperty)->toBe('foo');  // @phpstan-ignore-line
+
         expect($crawler->userAgentCalled)->toBe(1);
+
         expect($crawler->loggerCalled)->toBe(1);
+
         expect($crawler->loaderCalled)->toBe(1);
 
         $crawler->getUserAgent()->testProperty = 'bar'; // @phpstan-ignore-line
+
         $crawler->getLogger()->testProperty = 'bar'; // @phpstan-ignore-line
+
         $crawler->getLoader()->testProperty = 'bar'; // @phpstan-ignore-line
+
         $crawler->addStep(Http::get()); // adding steps passes on logger and loader, should use the same instances
 
         expect($crawler->getUserAgent()->testProperty)->toBe('bar'); // @phpstan-ignore-line
+
         expect($crawler->getLogger()->testProperty)->toBe('bar');  // @phpstan-ignore-line
+
         expect($crawler->getLoader()->testProperty)->toBe('bar');  // @phpstan-ignore-line
+
         expect($crawler->userAgentCalled)->toBe(1);
+
         expect($crawler->loggerCalled)->toBe(1);
+
         expect($crawler->loaderCalled)->toBe(1);
     }
 );
@@ -179,52 +195,81 @@ test('Initial inputs are reset after the crawler was run', function () {
 
 test('The static loop method wraps a Step in a LoopStep object', function () {
     $step = Mockery::mock(StepInterface::class);
+
     $step->shouldReceive('invokeStep')->withArgs(function (Input $input) {
         return $input->get() === 'foo';
     });
+
     $loop = Crawler::loop($step);
+
     $loop->invokeStep(new Input('foo'));
 });
 
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
     $step = Mockery::mock(StepInterface::class);
+
     $step->shouldReceive('addLogger')->once();
+
     $crawler = helper_getDummyCrawler();
+
     $crawler->addStep($step);
 
     $step = Mockery::mock(LoadingStepInterface::class);
+
     $step->shouldReceive('addLogger')->once();
+
     $step->shouldReceive('addLoader')->once();
+
     $crawler->addStep($step);
 });
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
     $step = Mockery::mock(StepInterface::class);
+
     $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
-    $step->shouldReceive('addLogger')->once();
+
+    $step->shouldReceive('addLogger', 'outputsShallBeUnique')->once();
+
     $step->shouldReceive('addsToOrCreatesResult')->once()->andReturn(false);
+
     $crawler = helper_getDummyCrawler();
+
     $crawler->addStep($step);
+
     $crawler->input('randomInput');
 
     $results = $crawler->run();
+
     $results->current();
 });
 
 test('You can add a step group as a step and all it\'s steps are invoked when the Crawler is run', function () {
     $crawler = helper_getDummyCrawler();
+
     $step1 = Mockery::mock(StepInterface::class);
+
     $step1->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['foo']));
+
     $step1->shouldReceive('addLogger');
+
     $step1->shouldReceive('getResultKey');
+
     $step2 = Mockery::mock(StepInterface::class);
+
     $step2->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['bar']));
+
     $step2->shouldReceive('addLogger');
+
     $step2->shouldReceive('getResultKey');
+
     $step3 = Mockery::mock(StepInterface::class);
+
     $step3->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['baz']));
+
     $step3->shouldReceive('addLogger');
+
     $step3->shouldReceive('getResultKey');
+
     $crawler->addStep(
         Crawler::group()
             ->addStep($step1)
@@ -326,4 +371,16 @@ it('automatically sends all results to the Store when you add one', function () 
     $crawler->addStep('number', $step);
 
     helper_traverseIterable($crawler->run());
+});
+
+it('yields only unique outputs from a step when uniqueOutput was called', function () {
+    $crawler = helper_getDummyCrawler();
+
+    $crawler->addStep(helper_getInputReturningStep()->uniqueOutputs());
+
+    $crawler->inputs(['one', 'two', 'three', 'one', 'three', 'four', 'one', 'five', 'two']);
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(5);
 });

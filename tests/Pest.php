@@ -8,6 +8,7 @@ use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Generator;
 use GuzzleHttp\Psr7\Response;
+use stdClass;
 use Symfony\Component\Process\Process;
 
 class TestServerProcess
@@ -55,6 +56,84 @@ function helper_getInputReturningStep(): Step
         protected function invoke(mixed $input): Generator
         {
             yield $input;
+        }
+    };
+}
+
+function helper_getNumberIncrementingStep(): Step
+{
+    return new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield $input + 1;
+        }
+    };
+}
+
+function helper_getStepYieldingMultipleNumbers(): Step
+{
+    return new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $number) {
+                yield $number;
+            }
+        }
+    };
+}
+
+function helper_getStepYieldingArrayWithNumber(int $number): Step
+{
+    return new class ($number) extends Step {
+        public function __construct(private int $number)
+        {
+        }
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')];
+        }
+    };
+}
+
+function helper_getStepYieldingMultipleArraysWithNumber(): Step
+{
+    return new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
+                yield ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')];
+            }
+        }
+    };
+}
+
+function helper_getStepYieldingObjectWithNumber(int $number): Step
+{
+    return new class ($number) extends Step {
+        public function __construct(private int $number)
+        {
+        }
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield helper_getStdClassWithData(
+                ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')]
+            );
+        }
+    };
+}
+
+function helper_getStepYieldingMultipleObjectsWithNumber(): Step
+{
+    return new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
+                yield helper_getStdClassWithData(
+                    ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')]
+                );
+            }
         }
     };
 }
@@ -123,4 +202,18 @@ function helper_getStepFilesContent(string $filePathInFilesFolder): string
     }
 
     return $content;
+}
+
+/**
+ * @param mixed[] $data
+ */
+function helper_getStdClassWithData(array $data): stdClass
+{
+    $object = new stdClass();
+
+    foreach ($data as $key => $value) {
+        $object->{$key} = $value;
+    }
+
+    return $object;
 }

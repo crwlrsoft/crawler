@@ -24,6 +24,8 @@ abstract class Step implements StepInterface
 
     protected ?string $useInputKey = null;
 
+    protected bool|string $uniqueOutput = false;
+
     protected bool $cascades = true;
 
     protected ?Closure $updateInputUsingOutput = null;
@@ -47,28 +49,30 @@ abstract class Step implements StepInterface
 
         $inputValue = $this->useInputKey ? $input->get()[$this->useInputKey] : $input->get();
 
-        $validInput = $this->validateAndSanitizeInput($inputValue);
+        $validInputValue = $this->validateAndSanitizeInput($inputValue);
 
-        foreach ($this->invoke($validInput) as $output) {
-            yield $this->output($output, $input->result);
+        if ($this->uniqueOutput) {
+            yield from $this->invokeAndYieldUnique($validInputValue, $input->result);
+        } else {
+            yield from $this->invokeAndYield($validInputValue, $input->result);
         }
     }
 
-    public function useInputKey(string $key): static
+    final public function useInputKey(string $key): static
     {
         $this->useInputKey = $key;
 
         return $this;
     }
 
-    public function setResultKey(string $key): static
+    final public function setResultKey(string $key): static
     {
         $this->resultKey = $key;
 
         return $this;
     }
 
-    public function getResultKey(): ?string
+    final public function getResultKey(): ?string
     {
         return $this->resultKey;
     }
@@ -76,29 +80,41 @@ abstract class Step implements StepInterface
     /**
      * @param string[]|null $keys
      */
-    public function addKeysToResult(?array $keys = null): static
+    final public function addKeysToResult(?array $keys = null): static
     {
         $this->addToResult = $keys ?? true;
 
         return $this;
     }
 
+    final public function uniqueOutputs(?string $key = null): static
+    {
+        $this->uniqueOutput = $key ?? true;
+
+        return $this;
+    }
+
+    final public function outputsShallBeUnique(): bool
+    {
+        return $this->uniqueOutput !== false;
+    }
+
     /**
      * @return bool
      */
-    public function addsToOrCreatesResult(): bool
+    final public function addsToOrCreatesResult(): bool
     {
         return $this->resultKey !== null || $this->addToResult !== false;
     }
 
-    public function dontCascade(): static
+    final public function dontCascade(): static
     {
         $this->cascades = false;
 
         return $this;
     }
 
-    public function cascades(): bool
+    final public function cascades(): bool
     {
         return $this->cascades;
     }
@@ -109,7 +125,7 @@ abstract class Step implements StepInterface
      * In groups all the steps are called with the same Input, but with this callback it's possible to adjust the input
      * for the following steps.
      */
-    public function updateInputUsingOutput(Closure $closure): static
+    final public function updateInputUsingOutput(Closure $closure): static
     {
         $this->updateInputUsingOutput = $closure;
 
@@ -119,7 +135,7 @@ abstract class Step implements StepInterface
     /**
      * If the user set a callback to update the input (see above) => call it.
      */
-    public function callUpdateInputUsingOutput(Input $input, Output $output): Input
+    final public function callUpdateInputUsingOutput(Input $input, Output $output): Input
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
             return new Input($this->updateInputUsingOutput->call($this, $input->get(), $output->get()), $input->result);
@@ -150,12 +166,38 @@ abstract class Step implements StepInterface
         return $input;
     }
 
+    private function invokeAndYield(mixed $validInputValue, ?Result $result): Generator
+    {
+        foreach ($this->invoke($validInputValue) as $output) {
+            yield $this->output($output, $result);
+        }
+    }
+
+    private function invokeAndYieldUnique(mixed $validInputValue, ?Result $result): Generator
+    {
+        $uniqueKeys = [];
+
+        foreach ($this->invoke($validInputValue) as $output) {
+            $output = $this->output($output, $result);
+
+            $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
+
+            if (isset($uniqueKeys[$key])) {
+                continue;
+            }
+
+            $uniqueKeys[$key] = true; // Don't keep the output value, just the key, to keep memory usage low.
+
+            yield $output;
+        }
+    }
+
     /**
      * Wrap a single output yielded in the invoke method in an Output object and handle adding data to the final Result.
      *
      * @throws Exception
      */
-    protected function output(mixed $output, ?Result $result = null): Output
+    private function output(mixed $output, ?Result $result = null): Output
     {
         if ($this->resultKey !== null || $this->addToResult !== false) {
             if (!$result) {
