@@ -320,7 +320,7 @@ it('doesn\'t pass on outputs of one step to the next one when dontCascade was ca
 
     $step2->shouldNotReceive('invokeStep');
 
-    helper_traverseIterable($crawler->run());
+    $crawler->runAndTraverse();
 });
 
 test('When final steps return an array you get all values in the defined Result resource', function () {
@@ -348,7 +348,7 @@ test('When final steps return an array you get all values in the defined Result 
     expect($results->current())->toBeNull();
 });
 
-it('automatically sends all results to the Store when you add one', function () {
+it('sends all results to the Store when there is one and still yields the results', function () {
     $store = Mockery::mock(StoreInterface::class);
 
     $store->shouldReceive('store')->times(3);
@@ -370,8 +370,39 @@ it('automatically sends all results to the Store when you add one', function () 
 
     $crawler->addStep('number', $step);
 
-    helper_traverseIterable($crawler->run());
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(3);
 });
+
+it(
+    'actually runs the crawler without the need to traverse results manually, when runAndTraverse is called',
+    function () {
+        $step1 = Mockery::mock(StepInterface::class);
+
+        $step1->shouldNotReceive('invokeStep');
+
+        $step1->shouldReceive('addLogger');
+
+        $crawler = helper_getDummyCrawler()
+            ->addStep($step1)
+            ->input('test');
+
+        $crawler->run();
+
+        $step2 = Mockery::mock(StepInterface::class);
+
+        $step2->shouldReceive('invokeStep')->andYield(new Output('yo'));
+
+        $step2->shouldReceive('addLogger', 'outputsShallBeUnique', 'addsToOrCreatesResult');
+
+        $crawler = helper_getDummyCrawler()
+            ->addStep($step2)
+            ->input('test');
+
+        $crawler->runAndTraverse();
+    }
+);
 
 it('yields only unique outputs from a step when uniqueOutput was called', function () {
     $crawler = helper_getDummyCrawler();

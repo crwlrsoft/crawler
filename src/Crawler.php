@@ -130,6 +130,26 @@ abstract class Crawler
     }
 
     /**
+     * Run the crawler and traverse results
+     *
+     * When you've set a store, or you just don't need the results for any other reason (e.g. you use the crawler for
+     * cache warming) where you're calling the crawler, use this method.
+     *
+     * @throws Exception
+     */
+    public function runAndTraverse(): void
+    {
+        foreach ($this->run() as $result) {
+        }
+    }
+
+    /**
+     * Run the Crawler
+     *
+     * Handles calling all the steps and cascading the data from step to step.
+     * It's a generator, so when using this method directly, you need to traverse the generator, otherwise nothing
+     * happens. Alternatively you can use runAndTraverse().
+     *
      * @return Generator<Result>
      * @throws Exception
      */
@@ -160,7 +180,7 @@ abstract class Crawler
         }
 
         if (isset($outputs)) {
-            yield from $this->returnResults($outputs);
+            yield from $this->storeAndReturnResults($outputs);
         }
 
         $this->inputs = [];
@@ -175,34 +195,50 @@ abstract class Crawler
      * @param AppendIterator<Output>|Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function returnResults(AppendIterator|Generator $outputs): Generator
+    private function storeAndReturnResults(AppendIterator|Generator $outputs): Generator
     {
         if ($this->anyResultKeysDefinedInSteps()) {
-            $results = [];
-
-            foreach ($outputs as $output) {
-                if ($output->result !== null && !in_array($output->result, $results, true)) {
-                    $results[] = $output->result;
-                }
-            }
-
-            // yield results only when iterated over final outputs, because that could still add properties to result
-            // resources.
-            foreach ($results as $result) {
-                yield $result;
-
-                $this->store?->store($result);
-            }
+            yield from $this->storeAndReturnDefinedResults($outputs);
         } else {
-            foreach ($outputs as $output) {
-                $result = new Result();
+            yield from $this->storeAndReturnOutputsAsResults($outputs);
+        }
+    }
 
-                $result->set('unnamed', $output->get());
+    /**
+     * @param AppendIterator<Output>|Generator<Output> $outputs
+     * @return Generator<Result>
+     */
+    private function storeAndReturnDefinedResults(AppendIterator|Generator $outputs): Generator
+    {
+        $results = [];
 
-                yield $result;
-
-                $this->store?->store($result);
+        foreach ($outputs as $output) {
+            if ($output->result !== null && !in_array($output->result, $results, true)) {
+                $results[] = $output->result;
             }
+        }
+
+        // yield results only after iterating over final outputs, because that could still add properties to result
+        // resources.
+        foreach ($results as $result) {
+            $this->store?->store($result);
+
+            yield $result;
+        }
+    }
+
+    /**
+     * @param AppendIterator<Output>|Generator<Output> $outputs
+     * @return Generator<Result>
+     */
+    private function storeAndReturnOutputsAsResults(AppendIterator|Generator $outputs): Generator
+    {
+        foreach ($outputs as $output) {
+            $result = (new Result())->set('unnamed', $output->get());
+
+            $this->store?->store($result);
+
+            yield $result;
         }
     }
 

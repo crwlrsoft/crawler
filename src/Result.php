@@ -2,14 +2,14 @@
 
 namespace Crwlr\Crawler;
 
-class Result
+final class Result
 {
     /**
      * @var mixed[]
      */
     private array $data = [];
 
-    public function set(string $key, mixed $value): void
+    public function set(string $key, mixed $value): self
     {
         if ($key === '') {
             $key = $this->getUnnamedKey();
@@ -24,6 +24,8 @@ class Result
         } else {
             $this->data[$key] = $value;
         }
+
+        return $this;
     }
 
     public function get(string $key, mixed $default = null): mixed
