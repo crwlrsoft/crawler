@@ -148,6 +148,10 @@ abstract class Crawler
                 $nextIterationInputs->append(new NoRewindIterator($step->invokeStep($input)));
             }
 
+            if ($step->outputsShallBeUnique()) {
+                $nextIterationInputs = $this->filterDuplicateOutputs($nextIterationInputs);
+            }
+
             if ($step !== end($this->steps)) {
                 $inputs = $nextIterationInputs;
             } else {
@@ -155,7 +159,7 @@ abstract class Crawler
             }
         }
 
-        if (isset($outputs) && $outputs instanceof AppendIterator) {
+        if (isset($outputs)) {
             yield from $this->returnResults($outputs);
         }
 
@@ -168,10 +172,10 @@ abstract class Crawler
     }
 
     /**
-     * @param AppendIterator<Output> $outputs
+     * @param AppendIterator<Output>|Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function returnResults(AppendIterator $outputs): Generator
+    private function returnResults(AppendIterator|Generator $outputs): Generator
     {
         if ($this->anyResultKeysDefinedInSteps()) {
             $results = [];
@@ -222,5 +226,20 @@ abstract class Crawler
         }
 
         return false;
+    }
+
+    private function filterDuplicateOutputs(AppendIterator $outputs): Generator
+    {
+        $uniqueKeys = [];
+
+        foreach ($outputs as $output) {
+            if (isset($uniqueKeys[$output->getKey()])) {
+                continue;
+            }
+
+            $uniqueKeys[$output->getKey()] = true;
+
+            yield $output;
+        }
     }
 }

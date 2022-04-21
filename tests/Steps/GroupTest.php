@@ -2,6 +2,7 @@
 
 namespace tests\Steps;
 
+use Closure;
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
@@ -19,54 +20,103 @@ use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
 use function tests\helper_getInputReturningStep;
+use function tests\helper_getStepYieldingArrayWithNumber;
+use function tests\helper_getStepYieldingObjectWithNumber;
 use function tests\helper_getValueReturningStep;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
+function helper_addStepsToGroup(Group $group, Step ...$steps): Group
+{
+    foreach ($steps as $step) {
+        $group->addStep($step);
+    }
+
+    return $group;
+}
+
+function helper_addUpdateInputUsingOutputCallbackToSteps(Closure $callback, Step ...$steps): void
+{
+    foreach ($steps as $step) {
+        $step->updateInputUsingOutput($callback);
+    }
+}
+
 test('You can add a step and it passes on the logger', function () {
     $step = Mockery::mock(StepInterface::class);
+
     $step->shouldReceive('addLogger')->once();
+
     $step->shouldReceive('getResultKey');
+
     $step->shouldNotReceive('addLoader');
+
     $group = new Group();
+
     $group->addLogger(new CliLogger());
+
     $group->addStep($step);
 });
 
 test('It also passes on a new logger to all steps when the logger is added after the steps', function () {
     $step1 = Mockery::mock(StepInterface::class);
+
     $step1->shouldReceive('addLogger')->once();
+
     $step1->shouldReceive('getResultKey');
+
     $step2 = Mockery::mock(StepInterface::class);
+
     $step2->shouldReceive('addLogger')->once();
+
     $step2->shouldReceive('getResultKey');
+
     $group = new Group();
+
     $group->addStep($step1);
+
     $group->addStep($step2);
+
     $group->addLogger(new CliLogger());
 });
 
 test('It also passes on the loader to the step when addLoader method exists in step', function () {
     $step = Mockery::mock(LoadingStepInterface::class);
+
     $step->shouldReceive('addLogger')->once();
+
     $step->shouldReceive('addLoader')->once();
+
     $step->shouldReceive('getResultKey');
+
     $group = new Group();
+
     $group->addLogger(new CliLogger());
+
     $group->addLoader(new HttpLoader(new BotUserAgent('MyBot')));
+
     $group->addStep($step);
 });
 
 test('It also passes on a new loader to all steps when it is added after the steps', function () {
     $step1 = Mockery::mock(LoadingStepInterface::class);
+
     $step1->shouldReceive('addLoader')->once();
+
     $step1->shouldReceive('getResultKey');
+
     $step2 = Mockery::mock(LoadingStepInterface::class);
+
     $step2->shouldReceive('addLoader')->once();
+
     $step2->shouldReceive('getResultKey');
+
     $group = new Group();
+
     $group->addStep($step1);
+
     $group->addStep($step2);
+
     $group->addLoader(new HttpLoader(new BotUserAgent('MyBot')));
 });
 
@@ -76,14 +126,21 @@ test('The factory method returns a Group object instance', function () {
 
 test('You can add multiple steps and invokeStep calls all of them', function () {
     $step1 = Mockery::mock(StepInterface::class);
+
     $step1->shouldReceive('cascades', 'invokeStep')->once();
+
     $step2 = Mockery::mock(StepInterface::class);
+
     $step2->shouldReceive('cascades', 'invokeStep')->once();
+
     $step3 = Mockery::mock(StepInterface::class);
+
     $step3->shouldReceive('cascades', 'invokeStep')->once();
 
     $group = new Group();
+
     $group->addStep($step1)->addStep($step2)->addStep($step3);
+
     helper_traverseIterable($group->invokeStep(new Input('foo')));
 });
 
@@ -129,6 +186,176 @@ test('It returns the results of all steps when invoked', function () {
     expect($output[2])->toBeInstanceOf(Output::class);
 
     expect($output[2]->get())->toBe('3');
+});
+
+it('returns only unique outputs when uniqueOutput was called', function () {
+    $step1 = helper_getValueReturningStep('one');
+
+    $step2 = helper_getValueReturningStep('two');
+
+    $step3 = helper_getValueReturningStep('two');
+
+    $step4 = helper_getValueReturningStep('one');
+
+    $step5 = helper_getValueReturningStep('three');
+
+    $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3, $step4, $step5);
+
+    $outputs = helper_invokeStepWithInput($group);
+
+    expect($outputs)->toHaveCount(5);
+
+    $group->uniqueOutputs();
+
+    $outputs = helper_invokeStepWithInput($group);
+
+    expect($outputs)->toHaveCount(3);
+});
+
+it('returns only unique outputs when outputs are arrays and uniqueOutput was called', function () {
+    $step1 = helper_getStepYieldingArrayWithNumber(1);
+
+    $step2 = helper_getStepYieldingArrayWithNumber(2);
+
+    $step3 = helper_getStepYieldingArrayWithNumber(2);
+
+    $step4 = helper_getStepYieldingArrayWithNumber(1);
+
+    $step5 = helper_getStepYieldingArrayWithNumber(3);
+
+    $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3, $step4, $step5);
+
+    $outputs = helper_invokeStepWithInput($group);
+
+    expect($outputs)->toHaveCount(5);
+
+    $group->uniqueOutputs();
+
+    $outputs = helper_invokeStepWithInput($group);
+
+    expect($outputs)->toHaveCount(3);
+
+    $incrementNumberCallback = function (mixed $input) {
+        return $input+1;
+    };
+
+    helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2, $step3, $step4);
+
+    $outputs = helper_invokeStepWithInput($group, new Input(1));
+
+    expect($outputs)->toHaveCount(5);
+});
+
+it(
+    'returns only unique outputs when outputs are arrays and uniqueOutput was called with a key from the output arrays',
+    function () {
+        $step1 = helper_getStepYieldingArrayWithNumber(2);
+
+        $step2 = helper_getStepYieldingArrayWithNumber(3);
+
+        $step3 = helper_getStepYieldingArrayWithNumber(3);
+
+        $step4 = helper_getStepYieldingArrayWithNumber(2);
+
+        $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3, $step4);
+
+        $outputs = helper_invokeStepWithInput($group);
+
+        expect($outputs)->toHaveCount(4);
+
+        $group->uniqueOutputs('number');
+
+        $outputs = helper_invokeStepWithInput($group);
+
+        expect($outputs)->toHaveCount(2);
+
+        $incrementNumberCallback = function (mixed $input) {
+            return $input + 1;
+        };
+
+        helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2, $step3);
+
+        $outputs = helper_invokeStepWithInput($group, new Input(1));
+
+        expect($outputs)->toHaveCount(2);
+    }
+);
+
+it('returns only unique outputs when outputs are objects and uniqueOutput was called', function () {
+    $step1 = helper_getStepYieldingObjectWithNumber(10);
+
+    $step2 = helper_getStepYieldingObjectWithNumber(11);
+
+    $step3 = helper_getStepYieldingObjectWithNumber(12);
+
+    $step4 = helper_getStepYieldingObjectWithNumber(10);
+
+    $step5 = helper_getStepYieldingObjectWithNumber(12);
+
+    $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3, $step4, $step5);
+
+    expect(helper_invokeStepWithInput($group))->toHaveCount(5);
+
+    $group->uniqueOutputs();
+
+    expect(helper_invokeStepWithInput($group))->toHaveCount(3);
+
+    $incrementNumberCallback = function (mixed $input) {
+        return $input+1;
+    };
+
+    helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2, $step3, $step4);
+
+    $outputs = helper_invokeStepWithInput($group, new Input(1));
+
+    expect($outputs)->toHaveCount(5);
+});
+
+it(
+    'returns only unique outputs when outputs are objects and uniqueOutput was called with a property name from the ' .
+    'output objects',
+    function () {
+        $step1 = helper_getStepYieldingObjectWithNumber(21);
+
+        $step2 = helper_getStepYieldingObjectWithNumber(23);
+
+        $step3 = helper_getStepYieldingObjectWithNumber(27);
+
+        $step4 = helper_getStepYieldingObjectWithNumber(21);
+
+        $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3, $step4);
+
+        expect(helper_invokeStepWithInput($group))->toHaveCount(4);
+
+        $group->uniqueOutputs('number');
+
+        expect(helper_invokeStepWithInput($group))->toHaveCount(3);
+
+        $incrementNumberCallback = function (mixed $input) {
+            return $input+1;
+        };
+
+        helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2, $step3);
+
+        $outputs = helper_invokeStepWithInput($group, new Input(1));
+
+        expect($outputs)->toHaveCount(3);
+    }
+);
+
+it('knows if it will produce unique output or not', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'boo';
+        }
+    };
+
+    expect($step->outputsShallBeUnique())->toBeFalse();
+
+    $step->uniqueOutputs();
+
+    expect($step->outputsShallBeUnique())->toBeTrue();
 });
 
 test(

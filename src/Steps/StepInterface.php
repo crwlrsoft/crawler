@@ -26,6 +26,10 @@ interface StepInterface
      */
     public function addKeysToResult(?array $keys = null): static;
 
+    public function uniqueOutputs(?string $key = null): static;
+
+    public function outputsShallBeUnique(): bool;
+
     public function addsToOrCreatesResult(): bool;
 
     public function dontCascade(): static;

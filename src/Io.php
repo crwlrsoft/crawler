@@ -4,7 +4,7 @@ namespace Crwlr\Crawler;
 
 class Io
 {
-    private mixed $value;
+    protected mixed $value;
 
     public function __construct(mixed $value, public ?Result $result = null)
     {

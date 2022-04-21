@@ -12,11 +12,18 @@ use Psr\Log\LoggerInterface;
 final class Loop implements StepInterface
 {
     private int $maxIterations = 1000;
+
     private null|Closure|StepInterface $withInput = null;
+
     private bool $callWithInputOnlyOnce = false;
+
     private bool $callWithInputWithoutOutput = false;
+
     private null|Closure $stopIf = null;
+
     private bool $cascadeWhenFinished = false;
+
+    protected bool|string $uniqueOutput = false;
 
     /**
      * Use when cascadeWhenFinished() is used.
@@ -121,6 +128,22 @@ final class Loop implements StepInterface
         $this->step->addKeysToResult($keys);
 
         return $this;
+    }
+
+    public function uniqueOutputs(?string $key = null): static
+    {
+        $this->step->uniqueOutputs($key);
+
+        $this->uniqueOutput = $key ?? true;
+
+        $this->cascadeWhenFinished();
+
+        return $this;
+    }
+
+    public function outputsShallBeUnique(): bool
+    {
+        return $this->uniqueOutput !== false;
     }
 
     public function addsToOrCreatesResult(): bool
@@ -232,11 +255,32 @@ final class Loop implements StepInterface
     private function yieldDeferredOutputs(): Generator
     {
         if (!empty($this->deferredOutputs)) {
-            foreach ($this->deferredOutputs as $deferredOutput) {
-                yield $deferredOutput;
+            if ($this->uniqueOutput !== false) {
+                yield from $this->yieldDeferredOutputsUnique();
+            } else {
+                foreach ($this->deferredOutputs as $deferredOutput) {
+                    yield $deferredOutput;
+                }
             }
 
             $this->deferredOutputs = [];
+        }
+    }
+
+    private function yieldDeferredOutputsUnique(): Generator
+    {
+        $uniqueKeys = [];
+
+        foreach ($this->deferredOutputs as $output) {
+            $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
+
+            if (isset($uniqueKeys[$key])) {
+                continue;
+            }
+
+            $uniqueKeys[$key] = true; // Don't keep the output value, just the key, to keep memory usage low.
+
+            yield $output;
         }
     }
 }

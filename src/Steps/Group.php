@@ -19,9 +19,15 @@ final class Group implements StepInterface
     private array $steps = [];
 
     private ?LoggerInterface $logger = null;
+
     private ?LoaderInterface $loader = null;
+
     private bool $cascades = true;
+
     private bool $combine = false;
+
+    private bool|string $uniqueOutput = false;
+
     private ?string $useInputKey = null;
 
     /**
@@ -31,7 +37,7 @@ final class Group implements StepInterface
      */
     public function invokeStep(Input $input): Generator
     {
-        $combinedOutput = [];
+        $combinedOutput = $uniqueKeys = [];
 
         $input = $this->prepareInput($input);
 
@@ -46,15 +52,17 @@ final class Group implements StepInterface
 
                     $combinedOutput = $this->addOutputToCombinedOutputs($output, $combinedOutput, $stepKey);
                 } elseif ($this->cascades() && $step->cascades()) {
+                    if ($this->uniqueOutput !== false && $this->existsInUniqueKeys($output, $uniqueKeys)) {
+                        continue;
+                    }
+
                     yield $output;
                 }
             }
         }
 
         if ($this->combine && $this->cascades()) {
-            yield new Output(array_map(function ($output) {
-                return count($output) === 1 ? reset($output) : $output;
-            }, $combinedOutput), $input->result);
+            yield $this->combineOutputs($combinedOutput, $input->result);
         }
     }
 
@@ -99,6 +107,18 @@ final class Group implements StepInterface
     public function addKeysToResult(?array $keys = null): static
     {
         return $this; // TODO: same here...should it try to add every output of the group?
+    }
+
+    public function uniqueOutputs(?string $key = null): static
+    {
+        $this->uniqueOutput = $key ?? true;
+
+        return $this;
+    }
+
+    public function outputsShallBeUnique(): bool
+    {
+        return $this->uniqueOutput !== false;
     }
 
     public function addsToOrCreatesResult(): bool
@@ -218,5 +238,31 @@ final class Group implements StepInterface
         }
 
         return $combined;
+    }
+
+    /**
+     * @param mixed[] $combinedOutputs
+     */
+    private function combineOutputs(array $combinedOutputs, ?Result $result = null): Output
+    {
+        return new Output(array_map(function ($output) {
+            return count($output) === 1 ? reset($output) : $output;
+        }, $combinedOutputs), $result);
+    }
+
+    /**
+     * @param bool[] $uniqueKeys
+     */
+    private function existsInUniqueKeys(Output $output, array &$uniqueKeys): bool
+    {
+        $uniqueKey = $output->setKey(is_string($this->uniqueOutput) ? $this->uniqueOutput : null);
+
+        if (isset($uniqueKeys[$uniqueKey])) {
+            return true;
+        }
+
+        $uniqueKeys[$uniqueKey] = true;
+
+        return false;
     }
 }

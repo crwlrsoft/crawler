@@ -9,22 +9,12 @@ use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
 use Generator;
 use PHPUnit\Framework\TestCase;
+use function tests\helper_getStepYieldingMultipleArraysWithNumber;
+use function tests\helper_getStepYieldingMultipleNumbers;
+use function tests\helper_getStepYieldingMultipleObjectsWithNumber;
 use function tests\helper_getValueReturningStep;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
-
-function helper_getNumberIncrementingStep(): Step
-{
-    return new class () extends Step {
-        /**
-         * @return Generator<int>
-         */
-        protected function invoke(mixed $input): Generator
-        {
-            yield $input + 1;
-        }
-    };
-}
 
 /** @var TestCase $this */
 
@@ -181,6 +171,89 @@ it(
         expect($output[0]->result->toArray())->toBe(['prevProperty' => 'foobar']); // @phpstan-ignore-line
     }
 );
+
+it('makes outputs unique when uniqueOutput was called', function () {
+    $step = helper_getStepYieldingMultipleNumbers();
+
+    $step->uniqueOutputs();
+
+    $output = helper_invokeStepWithInput($step, new Input('anything'));
+
+    expect($output)->toHaveCount(5);
+
+    expect($output[0]->get())->toBe('one');
+
+    expect($output[1]->get())->toBe('two');
+
+    expect($output[2]->get())->toBe('three');
+
+    expect($output[3]->get())->toBe('four');
+
+    expect($output[4]->get())->toBe('five');
+});
+
+it('makes outputs unique when providing a key name to uniqueOutput to use from array output', function () {
+    $step = helper_getStepYieldingMultipleArraysWithNumber();
+
+    $step->uniqueOutputs('number');
+
+    $output = helper_invokeStepWithInput($step, new Input('anything'));
+
+    expect($output)->toHaveCount(5);
+});
+
+it('makes outputs unique when providing a key name to uniqueOutput to use from object output', function () {
+    $step = helper_getStepYieldingMultipleObjectsWithNumber();
+
+    $step->uniqueOutputs('number');
+
+    $output = helper_invokeStepWithInput($step, new Input('anything'));
+
+    expect($output)->toHaveCount(5);
+});
+
+it('makes array outputs unique when providing no key name to uniqueOutput', function () {
+    $step = helper_getStepYieldingMultipleArraysWithNumber();
+
+    $step->uniqueOutputs();
+
+    $output = helper_invokeStepWithInput($step, new Input(false));
+
+    expect($output)->toHaveCount(5);
+
+    $output = helper_invokeStepWithInput($step, new Input(true));
+
+    expect($output)->toHaveCount(8);
+});
+
+it('makes object outputs unique when providing no key name to uniqueOutput', function () {
+    $step = helper_getStepYieldingMultipleArraysWithNumber();
+
+    $step->uniqueOutputs();
+
+    $output = helper_invokeStepWithInput($step, new Input(false));
+
+    expect($output)->toHaveCount(5);
+
+    $output = helper_invokeStepWithInput($step, new Input(true));
+
+    expect($output)->toHaveCount(8);
+});
+
+it('knows if it will produce unique output or not', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'boo';
+        }
+    };
+
+    expect($step->outputsShallBeUnique())->toBeFalse();
+
+    $step->uniqueOutputs();
+
+    expect($step->outputsShallBeUnique())->toBeTrue();
+});
 
 it('calls the validateAndSanitizeInput method', function () {
     $step = new class () extends Step {

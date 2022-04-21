@@ -16,6 +16,8 @@ use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_getInputReturningStep;
+use function tests\helper_getNumberIncrementingStep;
+use function tests\helper_getStdClassWithData;
 use function tests\helper_getValueReturningStep;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
@@ -600,4 +602,154 @@ it('adds Results to the Outputs when you call addKeysToResult', function () {
     expect($outputs[0]->result->toArray())->toBe($expectedResultArray); // @phpstan-ignore-line
 
     expect($outputs[1]->result->toArray())->toBe($expectedResultArray); // @phpstan-ignore-line
+});
+
+it('only returns unique output when uniqueOutput was called', function () {
+    $loop = new Loop(helper_getNumberIncrementingStep());
+
+    $loop->withInput(function (mixed $input, mixed $output) {
+        if ($output > 5) {
+            return 1;
+        }
+
+        return $output;
+    });
+
+    $loop->maxIterations(10)
+        ->uniqueOutputs();
+
+    $outputs = helper_invokeStepWithInput($loop, new Input(1));
+
+    expect($outputs)->toHaveCount(5);
+});
+
+function helper_getStepYieldingArrayWithIncrementingNumber(): Step
+{
+    return new class () extends Step {
+        private int $_number = 1;
+
+        public function _resetNumber(): void
+        {
+            $this->_number = 1;
+        }
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield [
+                'number' => $this->_number,
+                'foo' => 'bar' . ($input['addSecondNumber'] === true ? ' ' . $input['secondNumber'] : ''),
+            ];
+
+            $this->_number++;
+        }
+    };
+}
+
+function helper_getStepYieldingObjectWithIncrementingNumber(): Step
+{
+    return new class () extends Step {
+        private int $_number = 1;
+
+        public function _resetNumber(): void
+        {
+            $this->_number = 1;
+        }
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield helper_getStdClassWithData([
+                'number' => $this->_number,
+                'foo' => 'bar' . ($input->addSecondNumber === true ? ' ' . $input->secondNumber : ''),
+            ]);
+
+            $this->_number++;
+        }
+    };
+}
+
+it(
+    'only returns unique output when outputs are arrays, when uniqueOutput was called with a key from those arrays',
+    function () {
+        $step = helper_getStepYieldingArrayWithIncrementingNumber();
+
+        $loop = new Loop($step);
+
+        $loop->withInput(function (mixed $input, mixed $output) {
+            if ($output['number'] >= 5) {
+                $this->_resetNumber(); // @phpstan-ignore-line
+            }
+
+            if (isset($input['secondNumber'])) {
+                $input['secondNumber'] += 1;
+            }
+
+            return $input;
+        });
+
+        $loop->maxIterations(10)
+            ->uniqueOutputs();
+
+        $outputs = helper_invokeStepWithInput($loop, new Input(['addSecondNumber' => true, 'secondNumber' => 1]));
+
+        expect($outputs)->toHaveCount(10);
+
+        $step->_resetNumber(); // @phpstan-ignore-line
+
+        $loop->uniqueOutputs('number');
+
+        $outputs = helper_invokeStepWithInput($loop, new Input(['addSecondNumber' => true, 'secondNumber' => 1]));
+
+        expect($outputs)->toHaveCount(5);
+    }
+);
+
+it(
+    'only returns unique output when outputs are objects, when uniqueOutput was called with a property from those ' .
+        'objects',
+    function () {
+        $step = helper_getStepYieldingObjectWithIncrementingNumber();
+
+        $loop = new Loop($step);
+
+        $loop->withInput(function (mixed $input, mixed $output) {
+            if ($output->number >= 5) {
+                $this->_resetNumber(); // @phpstan-ignore-line
+            }
+
+            if (isset($input->secondNumber)) {
+                $input->secondNumber += 1;
+            }
+
+            return $input;
+        });
+
+        $loop->maxIterations(10)
+            ->uniqueOutputs();
+
+        $inputObject = helper_getStdClassWithData(['addSecondNumber' => true, 'secondNumber' => 1]);
+
+        $outputs = helper_invokeStepWithInput($loop, new Input($inputObject));
+
+        expect($outputs)->toHaveCount(10);
+
+        $step->_resetNumber(); // @phpstan-ignore-line
+
+        $loop->uniqueOutputs('number');
+
+        $inputObject = helper_getStdClassWithData(['addSecondNumber' => true, 'secondNumber' => 1]);
+
+        $outputs = helper_invokeStepWithInput($loop, new Input($inputObject));
+
+        expect($outputs)->toHaveCount(5);
+    }
+);
+
+it('knows if it will produce only unique outputs', function () {
+    $loop = new Loop(helper_getStepYieldingObjectWithIncrementingNumber());
+
+    expect($loop->outputsShallBeUnique())->toBeFalse();
+
+    $loop->uniqueOutputs();
+
+    expect($loop->outputsShallBeUnique())->toBeTrue();
 });
