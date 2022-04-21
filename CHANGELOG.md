@@ -11,3 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   used as identifier to check for uniqueness. Otherwise the arrays or
   objects will be serialized for comparison which will probably be 
   slower.
+* `runAndTraverse()` method to Crawler, so you don't need to manually
+  traverse the Generator, if you don't need the results where you're
+  calling the crawler.
