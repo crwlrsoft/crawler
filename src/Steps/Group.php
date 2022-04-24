@@ -11,7 +11,7 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-final class Group implements StepInterface
+final class Group extends AddsDataToResult implements StepInterface
 {
     /**
      * @var StepInterface[]
@@ -62,7 +62,7 @@ final class Group implements StepInterface
         }
 
         if ($this->combine && $this->cascades()) {
-            yield $this->combineOutputs($combinedOutput, $input->result);
+            yield $this->prepareCombinedOutputs($combinedOutput, $input->result);
         }
     }
 
@@ -92,21 +92,28 @@ final class Group implements StepInterface
         return $this;
     }
 
-    // TODO: what to do here? When setting a result key for a group, should all steps add their outputs to that one
-    // property?
+    /**
+     * @throws Exception
+     */
     public function setResultKey(string $key): static
     {
-        return $this;
+        if (!$this->combine) {
+            throw new Exception('Groups can only add data to results when output is combined to a single output.');
+        }
+
+        return parent::setResultKey($key);
     }
 
-    public function getResultKey(): ?string
-    {
-        return null;
-    }
-
+    /**
+     * @throws Exception
+     */
     public function addKeysToResult(?array $keys = null): static
     {
-        return $this; // TODO: same here...should it try to add every output of the group?
+        if (!$this->combine) {
+            throw new Exception('Groups can only add data to results when output is combined to a single output.');
+        }
+
+        return parent::addKeysToResult($keys);
     }
 
     public function uniqueOutputs(?string $key = null): static
@@ -123,6 +130,10 @@ final class Group implements StepInterface
 
     public function addsToOrCreatesResult(): bool
     {
+        if (parent::addsToOrCreatesResult()) {
+            return true;
+        }
+
         foreach ($this->steps as $step) {
             if ($step->addsToOrCreatesResult()) {
                 return true;
@@ -136,9 +147,7 @@ final class Group implements StepInterface
     {
         if (is_string($stepOrResultKey) && $step === null) {
             throw new InvalidArgumentException('No StepInterface object provided');
-        } elseif (is_string($stepOrResultKey)) {
-            $step->setResultKey($stepOrResultKey);
-        } else {
+        } elseif ($stepOrResultKey instanceof StepInterface) {
             $step = $stepOrResultKey;
         }
 
@@ -150,7 +159,11 @@ final class Group implements StepInterface
             $step->addLoader($this->loader);
         }
 
-        $this->steps[] = $step;
+        if (is_string($stepOrResultKey) && !isset($this->steps[$stepOrResultKey])) {
+            $this->steps[$stepOrResultKey] = $step;
+        } else {
+            $this->steps[] = $step;
+        }
 
         return $this;
     }
@@ -177,6 +190,22 @@ final class Group implements StepInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @param mixed[] $output
+     */
+    protected function addDataFromOutputArrayToResult(array $output, Result $result): void
+    {
+        foreach ($output as $outputArray) {
+            foreach ($outputArray as $key => $value) {
+                if ($this->addToResult === true) {
+                    $result->set(is_string($key) ? $key : '', $value);
+                } elseif (is_array($this->addToResult) && in_array($key, $this->addToResult, true)) {
+                    $result->set($this->choseResultKey($key), $value);
+                }
+            }
+        }
     }
 
     /**
@@ -242,12 +271,40 @@ final class Group implements StepInterface
 
     /**
      * @param mixed[] $combinedOutputs
+     * @param Result|null $result
+     * @return Output
      */
-    private function combineOutputs(array $combinedOutputs, ?Result $result = null): Output
+    private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Output
     {
-        return new Output(array_map(function ($output) {
-            return count($output) === 1 ? reset($output) : $output;
-        }, $combinedOutputs), $result);
+        $outputData = $this->normalizeCombinedOutputs($combinedOutputs, $result);
+
+        $this->addOutputDataToResult($outputData, $result);
+
+        return new Output($outputData, $result);
+    }
+
+    /**
+     * Normalize combined outputs
+     *
+     * When adding outputs to combined output during step invocation, it always adds as arrays.
+     * Here it unwraps all array properties with just one element to have just that one element as value.
+     *
+     * @param mixed[] $combinedOutputs
+     * @return mixed[]
+     */
+    private function normalizeCombinedOutputs(array $combinedOutputs, ?Result $result = null): array
+    {
+        $normalized = [];
+
+        foreach ($combinedOutputs as $key => $combinedOutput) {
+            if (count($combinedOutput) === 1) {
+                $normalized[$key] = reset($combinedOutput);
+            } else {
+                $normalized[$key] = $combinedOutput;
+            }
+        }
+
+        return $normalized;
     }
 
     /**

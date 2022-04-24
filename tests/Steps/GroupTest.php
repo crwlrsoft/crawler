@@ -15,6 +15,7 @@ use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Exception;
 use Generator;
 use Mockery;
 use function tests\helper_arrayToGenerator;
@@ -388,8 +389,7 @@ test(
 );
 
 test(
-    'When mapping steps to the Result object and also combining to a single output, the resultKeys are also used in ' .
-    'the output array',
+    'When defining keys for the steps as first param in addStep call, the combined output array has those keys',
     function () {
         $step1 = helper_getValueReturningStep('ich');
 
@@ -418,10 +418,6 @@ test(
         $expectedOutputAndResultArray = ['foo' => 'ich', 'bar' => ['bin', 'ein'], 'baz' => 'berliner'];
 
         expect($output[0]->get())->toBe($expectedOutputAndResultArray);
-
-        expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-        expect($output[0]->result->toArray())->toBe($expectedOutputAndResultArray); // @phpstan-ignore-line
     }
 );
 
@@ -558,12 +554,12 @@ it('knows when at least one of the steps adds something to the final result', fu
 
     $step2 = helper_getValueReturningStep('Trick');
 
-    $step3 = helper_getValueReturningStep('Track');
+    $step3 = helper_getValueReturningStep('Track')->setResultKey('foo');
 
     $group = (new Group())
         ->addStep($step1)
         ->addStep($step2)
-        ->addStep('foo', $step3);
+        ->addStep($step3);
 
     expect($group->addsToOrCreatesResult())->toBe(true);
 
@@ -606,3 +602,86 @@ it('knows when at least one of the steps adds something to the final result when
 
     expect($outputs[2]->result->get('duck'))->toBe('Track'); // @phpstan-ignore-line
 });
+
+test('when calling setResultKey without calling combineToSingleOutput before, it throws an Exception', function () {
+    (new Group())->setResultKey('foo');
+})->throws(Exception::class);
+
+test('when calling addKeysToResult without calling combineToSingleOutput before, it throws an Exception', function () {
+    (new Group())->addKeysToResult();
+})->throws(Exception::class);
+
+it('adds the combined output to result with a certain key when setResultKey is used', function () {
+    $step1 = helper_getValueReturningStep('foo');
+
+    $step2 = helper_getValueReturningStep('bar');
+
+    $group = (new Group())
+        ->addStep('key1', $step1)
+        ->addStep('key2', $step2)
+        ->combineToSingleOutput()
+        ->setResultKey('test');
+
+    $output = helper_invokeStepWithInput($group);
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->result)->toBeInstanceOf(Result::class);
+
+    expect($output[0]->result?->toArray())->toBe(['test' => ['key1' => 'foo', 'key2' => 'bar']]);
+});
+
+it(
+    'adds all keys from a combined array output to the Result when addKeysToResult was called without argument',
+    function () {
+        $step1 = helper_getValueReturningStep(['foo' => 'fooValue', 'bar' => 'barValue']);
+
+        $step2 = helper_getValueReturningStep(['baz' => 'bazValue', 'yo' => 'lo']);
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->combineToSingleOutput()
+            ->addKeysToResult();
+
+        $output = helper_invokeStepWithInput($group);
+
+        expect($output)->toHaveCount(1);
+
+        expect($output[0]->result)->toBeInstanceOf(Result::class);
+
+        expect($output[0]->result?->toArray())->toBe([
+            'foo' => 'fooValue',
+            'bar' => 'barValue',
+            'baz' => 'bazValue',
+            'yo' => 'lo',
+        ]);
+    }
+);
+
+it(
+    'adds all defined keys from a combined array output to the Result when addKeysToResult was called with argument',
+    function () {
+        $step1 = helper_getValueReturningStep(['foo' => 'fooValue', 'bar' => 'barValue']);
+
+        $step2 = helper_getValueReturningStep(['baz' => 'bazValue', 'yo' => 'lo']);
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->combineToSingleOutput()
+            ->addKeysToResult(['foo', 'baz', 'yo']);
+
+        $output = helper_invokeStepWithInput($group);
+
+        expect($output)->toHaveCount(1);
+
+        expect($output[0]->result)->toBeInstanceOf(Result::class);
+
+        expect($output[0]->result?->toArray())->toBe([
+            'foo' => 'fooValue',
+            'baz' => 'bazValue',
+            'yo' => 'lo',
+        ]);
+    }
+);

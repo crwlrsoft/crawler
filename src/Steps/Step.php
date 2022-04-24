@@ -11,16 +11,9 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-abstract class Step implements StepInterface
+abstract class Step extends AddsDataToResult implements StepInterface
 {
     protected ?LoggerInterface $logger = null;
-
-    protected ?string $resultKey = null;
-
-    /**
-     * @var bool|string[]
-     */
-    protected bool|array $addToResult = false;
 
     protected ?string $useInputKey = null;
 
@@ -65,28 +58,6 @@ abstract class Step implements StepInterface
         return $this;
     }
 
-    final public function setResultKey(string $key): static
-    {
-        $this->resultKey = $key;
-
-        return $this;
-    }
-
-    final public function getResultKey(): ?string
-    {
-        return $this->resultKey;
-    }
-
-    /**
-     * @param string[]|null $keys
-     */
-    final public function addKeysToResult(?array $keys = null): static
-    {
-        $this->addToResult = $keys ?? true;
-
-        return $this;
-    }
-
     final public function uniqueOutputs(?string $key = null): static
     {
         $this->uniqueOutput = $key ?? true;
@@ -97,14 +68,6 @@ abstract class Step implements StepInterface
     final public function outputsShallBeUnique(): bool
     {
         return $this->uniqueOutput !== false;
-    }
-
-    /**
-     * @return bool
-     */
-    final public function addsToOrCreatesResult(): bool
-    {
-        return $this->resultKey !== null || $this->addToResult !== false;
     }
 
     final public function dontCascade(): static
@@ -199,48 +162,8 @@ abstract class Step implements StepInterface
      */
     private function output(mixed $output, ?Result $result = null): Output
     {
-        if ($this->resultKey !== null || $this->addToResult !== false) {
-            if (!$result) {
-                $result = new Result();
-            }
-
-            if ($this->resultKey !== null) {
-                $result->set($this->resultKey, $output);
-            }
-
-            if ($this->addToResult !== false) {
-                $result = $this->addOutputDataToResult($output, $result);
-            }
-        }
+        $result = $this->addOutputDataToResult($output, $result);
 
         return new Output($output, $result);
-    }
-
-    private function addOutputDataToResult(mixed $output, Result $result): Result
-    {
-        if (is_array($output)) {
-            foreach ($output as $key => $value) {
-                if ($this->addToResult === true) {
-                    $result->set(is_string($key) ? $key : '', $value);
-                } elseif (is_array($this->addToResult) && in_array($key, $this->addToResult, true)) {
-                    $result->set($this->choseResultKey($key), $value);
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    private function choseResultKey(int|string $keyInOutput): string
-    {
-        if (is_array($this->addToResult)) {
-            $mapToKey = array_search($keyInOutput, $this->addToResult, true);
-
-            if (is_string($mapToKey)) {
-                return $mapToKey;
-            }
-        }
-
-        return is_string($keyInOutput) ? $keyInOutput : '';
     }
 }
