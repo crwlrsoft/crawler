@@ -421,6 +421,31 @@ test(
     }
 );
 
+it(
+    'merges array outputs with string keys to one array when using combineToSingleOutput',
+    function () {
+        $step1 = helper_getValueReturningStep(['foo' => 'fooValue', 'bar' => 'barValue']);
+
+        $step2 = helper_getValueReturningStep(['baz' => 'bazValue', 'yo' => 'lo']);
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->combineToSingleOutput();
+
+        $output = helper_invokeStepWithInput($group);
+
+        expect($output)->toHaveCount(1);
+
+        expect($output[0]->get())->toBe([
+            'foo' => 'fooValue',
+            'bar' => 'barValue',
+            'baz' => 'bazValue',
+            'yo' => 'lo',
+        ]);
+    }
+);
+
 test('It doesn\'t output anything when the dontCascade method was called', function () {
     $step1 = helper_getValueReturningStep('something');
 

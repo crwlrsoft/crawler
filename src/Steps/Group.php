@@ -50,7 +50,7 @@ final class Group extends AddsDataToResult implements StepInterface
                 if ($this->combine && $step->cascades()) {
                     $stepKey = $step->getResultKey() ?? $key;
 
-                    $combinedOutput = $this->addOutputToCombinedOutputs($output, $combinedOutput, $stepKey);
+                    $combinedOutput = $this->addOutputToCombinedOutputs($output->get(), $combinedOutput, $stepKey);
                 } elseif ($this->cascades() && $step->cascades()) {
                     if ($this->uniqueOutput !== false && $this->existsInUniqueKeys($output, $uniqueKeys)) {
                         continue;
@@ -193,22 +193,6 @@ final class Group extends AddsDataToResult implements StepInterface
     }
 
     /**
-     * @param mixed[] $output
-     */
-    protected function addDataFromOutputArrayToResult(array $output, Result $result): void
-    {
-        foreach ($output as $outputArray) {
-            foreach ($outputArray as $key => $value) {
-                if ($this->addToResult === true) {
-                    $result->set(is_string($key) ? $key : '', $value);
-                } elseif (is_array($this->addToResult) && in_array($key, $this->addToResult, true)) {
-                    $result->set($this->choseResultKey($key), $value);
-                }
-            }
-        }
-    }
-
-    /**
      * @throws Exception
      */
     private function prepareInput(Input $input): Input
@@ -260,10 +244,14 @@ final class Group extends AddsDataToResult implements StepInterface
     {
         if (is_array($output)) {
             foreach ($output as $key => $value) {
-                $combined[$stepKey][$key][] = $value;
+                if (is_int($stepKey) && is_string($key)) {
+                    $combined[$key][] = $value;
+                } else {
+                    $combined[$stepKey][$key][] = $value;
+                }
             }
         } else {
-            $combined[$stepKey][] = $output->get();
+            $combined[$stepKey][] = $output;
         }
 
         return $combined;
