@@ -11,24 +11,16 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-final class Group extends AddsDataToResult implements StepInterface
+final class Group extends BaseStep implements StepInterface
 {
     /**
      * @var StepInterface[]
      */
     private array $steps = [];
 
-    private ?LoggerInterface $logger = null;
-
     private ?LoaderInterface $loader = null;
 
-    private bool $cascades = true;
-
     private bool $combine = false;
-
-    private bool|string $uniqueOutput = false;
-
-    private ?string $useInputKey = null;
 
     /**
      * @param Input $input
@@ -66,25 +58,6 @@ final class Group extends AddsDataToResult implements StepInterface
         }
     }
 
-    public function useInputKey(string $key): static
-    {
-        $this->useInputKey = $key;
-
-        return $this;
-    }
-
-    public function dontCascade(): static
-    {
-        $this->cascades = false;
-
-        return $this;
-    }
-
-    public function cascades(): bool
-    {
-        return $this->cascades;
-    }
-
     public function combineToSingleOutput(): self
     {
         $this->combine = true;
@@ -114,18 +87,6 @@ final class Group extends AddsDataToResult implements StepInterface
         }
 
         return parent::addKeysToResult($keys);
-    }
-
-    public function uniqueOutputs(?string $key = null): static
-    {
-        $this->uniqueOutput = $key ?? true;
-
-        return $this;
-    }
-
-    public function outputsShallBeUnique(): bool
-    {
-        return $this->uniqueOutput !== false;
     }
 
     public function addsToOrCreatesResult(): bool
@@ -170,7 +131,7 @@ final class Group extends AddsDataToResult implements StepInterface
 
     public function addLogger(LoggerInterface $logger): static
     {
-        $this->logger = $logger;
+        parent::addLogger($logger);
 
         foreach ($this->steps as $step) {
             $step->addLogger($logger);
@@ -205,24 +166,8 @@ final class Group extends AddsDataToResult implements StepInterface
     }
 
     /**
-     * @throws Exception
-     */
-    private function getInputKeyToUse(Input $input): Input
-    {
-        if ($this->useInputKey !== null) {
-            if (!array_key_exists($this->useInputKey, $input->get())) {
-                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
-            }
-
-            $input = new Input($input->get()[$this->useInputKey], $input->result);
-        }
-
-        return $input;
-    }
-
-    /**
-     * If in this group there are result keys and there is no Result object created before invoking the steps,
-     * add one, because otherwise multiple Result objects would be created.
+     * If this group combines the output, there are result keys and there is no Result object created before invoking
+     * the steps, add one. Because otherwise multiple Result objects will be created.
      *
      * @param Input $input
      * @return Input

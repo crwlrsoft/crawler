@@ -9,18 +9,9 @@ use Crwlr\Crawler\Result;
 use Exception;
 use Generator;
 use InvalidArgumentException;
-use Psr\Log\LoggerInterface;
 
-abstract class Step extends AddsDataToResult implements StepInterface
+abstract class Step extends BaseStep implements StepInterface
 {
-    protected ?LoggerInterface $logger = null;
-
-    protected ?string $useInputKey = null;
-
-    protected bool|string $uniqueOutput = false;
-
-    protected bool $cascades = true;
-
     protected ?Closure $updateInputUsingOutput = null;
 
     /**
@@ -36,50 +27,15 @@ abstract class Step extends AddsDataToResult implements StepInterface
      */
     final public function invokeStep(Input $input): Generator
     {
-        if ($this->useInputKey !== null && (is_array($input->get()) || !isset($input->get()[$this->useInputKey]))) {
-            throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
-        }
+        $input = $this->getInputKeyToUse($input);
 
-        $inputValue = $this->useInputKey ? $input->get()[$this->useInputKey] : $input->get();
-
-        $validInputValue = $this->validateAndSanitizeInput($inputValue);
+        $validInputValue = $this->validateAndSanitizeInput($input->get());
 
         if ($this->uniqueOutput) {
             yield from $this->invokeAndYieldUnique($validInputValue, $input->result);
         } else {
             yield from $this->invokeAndYield($validInputValue, $input->result);
         }
-    }
-
-    final public function useInputKey(string $key): static
-    {
-        $this->useInputKey = $key;
-
-        return $this;
-    }
-
-    final public function uniqueOutputs(?string $key = null): static
-    {
-        $this->uniqueOutput = $key ?? true;
-
-        return $this;
-    }
-
-    final public function outputsShallBeUnique(): bool
-    {
-        return $this->uniqueOutput !== false;
-    }
-
-    final public function dontCascade(): static
-    {
-        $this->cascades = false;
-
-        return $this;
-    }
-
-    final public function cascades(): bool
-    {
-        return $this->cascades;
     }
 
     /**
@@ -105,13 +61,6 @@ abstract class Step extends AddsDataToResult implements StepInterface
         }
 
         return $input;
-    }
-
-    final public function addLogger(LoggerInterface $logger): static
-    {
-        $this->logger = $logger;
-
-        return $this;
     }
 
     /**

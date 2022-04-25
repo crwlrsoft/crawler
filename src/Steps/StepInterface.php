@@ -9,6 +9,8 @@ use Psr\Log\LoggerInterface;
 
 interface StepInterface
 {
+    public function addLogger(LoggerInterface $logger): static;
+
     /**
      * @param Input $input
      * @return Generator<Output>
@@ -26,15 +28,13 @@ interface StepInterface
      */
     public function addKeysToResult(?array $keys = null): static;
 
+    public function addsToOrCreatesResult(): bool;
+
     public function uniqueOutputs(?string $key = null): static;
 
     public function outputsShallBeUnique(): bool;
 
-    public function addsToOrCreatesResult(): bool;
-
     public function dontCascade(): static;
 
     public function cascades(): bool;
-
-    public function addLogger(LoggerInterface $logger): static;
 }
