@@ -2,13 +2,18 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Exception;
+use Generator;
+use Psr\Log\LoggerInterface;
 
 /**
  * Base class for classes Step and Group which share some things in terms of adding output data to Result objects.
  */
 
-abstract class AddsDataToResult
+abstract class BaseStep
 {
     protected ?string $resultKey = null;
 
@@ -18,6 +23,27 @@ abstract class AddsDataToResult
      * @var bool|string[]
      */
     protected bool|array $addToResult = false;
+
+    protected ?LoggerInterface $logger = null;
+
+    protected ?string $useInputKey = null;
+
+    protected bool|string $uniqueOutput = false;
+
+    protected bool $cascades = true;
+
+    /**
+     * @param Input $input
+     * @return Generator<Output>
+     */
+    abstract public function invokeStep(Input $input): Generator;
+
+    public function addLogger(LoggerInterface $logger): static
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
 
     /**
      * When the output of a step is a simple value (not array), add it with this key to the Result.
@@ -32,7 +58,7 @@ abstract class AddsDataToResult
     /**
      * The key, the output value will be added to the result with (if set via setResultKey()).
      */
-    public function getResultKey(): ?string
+    final public function getResultKey(): ?string
     {
         return $this->resultKey;
     }
@@ -58,6 +84,53 @@ abstract class AddsDataToResult
         return $this->resultKey !== null || $this->addToResult !== false;
     }
 
+    final public function useInputKey(string $key): static
+    {
+        $this->useInputKey = $key;
+
+        return $this;
+    }
+
+    final public function dontCascade(): static
+    {
+        $this->cascades = false;
+
+        return $this;
+    }
+
+    final public function cascades(): bool
+    {
+        return $this->cascades;
+    }
+
+    final public function uniqueOutputs(?string $key = null): static
+    {
+        $this->uniqueOutput = $key ?? true;
+
+        return $this;
+    }
+
+    final public function outputsShallBeUnique(): bool
+    {
+        return $this->uniqueOutput !== false;
+    }
+
+    /**
+     * @throws Exception
+     */
+    final protected function getInputKeyToUse(Input $input): Input
+    {
+        if ($this->useInputKey !== null) {
+            if (!array_key_exists($this->useInputKey, $input->get())) {
+                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
+            }
+
+            $input = new Input($input->get()[$this->useInputKey], $input->result);
+        }
+
+        return $input;
+    }
+
     final protected function addOutputDataToResult(mixed $output, ?Result $result = null): ?Result
     {
         if ($this->addsToOrCreatesResult()) {
@@ -80,7 +153,7 @@ abstract class AddsDataToResult
     /**
      * @param mixed[] $output
      */
-    protected function addDataFromOutputArrayToResult(array $output, Result $result): void
+    private function addDataFromOutputArrayToResult(array $output, Result $result): void
     {
         foreach ($output as $key => $value) {
             if ($this->addToResult === true) {
@@ -91,7 +164,11 @@ abstract class AddsDataToResult
         }
     }
 
-    protected function choseResultKey(int|string $keyInOutput): string
+    /**
+     * When user defines an array of keys that shall be added to the result it can also contain a mapping.
+     * If it does, use the key that it should be mapped to, instead of the key it has in the output array.
+     */
+    private function choseResultKey(int|string $keyInOutput): string
     {
         if (is_array($this->addToResult)) {
             $mapToKey = array_search($keyInOutput, $this->addToResult, true);
