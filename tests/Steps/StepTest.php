@@ -9,6 +9,7 @@ use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
 use Generator;
 use PHPUnit\Framework\TestCase;
+use function tests\helper_getInputReturningStep;
 use function tests\helper_getStepYieldingMultipleArraysWithNumber;
 use function tests\helper_getStepYieldingMultipleNumbers;
 use function tests\helper_getStepYieldingMultipleObjectsWithNumber;
@@ -120,6 +121,18 @@ test('The addsToOrCreatesResult method returns false when no result key is set a
     $step = helper_getValueReturningStep('lol');
 
     expect($step->addsToOrCreatesResult())->toBeFalse();
+});
+
+it('uses a key from array input when defined', function () {
+    $step = helper_getInputReturningStep()->useInputKey('bar');
+
+    $output = helper_invokeStepWithInput($step, new Input(
+        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue']
+    ));
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe('barValue');
 });
 
 it('doesn\'t add the result object to the Input object only to the Output', function () {
@@ -308,6 +321,16 @@ it('still returns output from invokeStep when dontCascade was called', function 
     $output = helper_invokeStepWithInput($step);
 
     expect($output)->toHaveCount(1);
+});
+
+it('tells you if its output shall be cascaded to the next step', function () {
+    $step = helper_getInputReturningStep();
+
+    expect($step->cascades())->toBeTrue();
+
+    $step->dontCascade();
+
+    expect($step->cascades())->toBeFalse();
 });
 
 test('You can add and call an updateInputUsingOutput callback', function () {

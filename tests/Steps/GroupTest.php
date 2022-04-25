@@ -511,6 +511,16 @@ test(
     }
 );
 
+it('knows if it will cascade its output', function () {
+    $group = new Group();
+
+    expect($group->cascades())->toBeTrue();
+
+    $group->dontCascade();
+
+    expect($group->cascades())->toBeFalse();
+});
+
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
     $step1 = helper_getValueReturningStep(' rocks')
         ->updateInputUsingOutput(function (mixed $input, mixed $output) {
@@ -626,6 +636,22 @@ it('knows when at least one of the steps adds something to the final result when
     expect($outputs[2]->result)->toBeInstanceOf(Result::class);
 
     expect($outputs[2]->result->get('duck'))->toBe('Track'); // @phpstan-ignore-line
+});
+
+it('uses a key from array input when defined', function () {
+    $step = helper_getInputReturningStep();
+
+    $group = (new Group())
+        ->addStep($step)
+        ->useInputKey('bar');
+
+    $outputs = helper_invokeStepWithInput($group, new Input(
+        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue']
+    ));
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('barValue');
 });
 
 test('when calling setResultKey without calling combineToSingleOutput before, it throws an Exception', function () {
