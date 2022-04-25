@@ -209,7 +209,7 @@ final class Group extends BaseStep implements StepInterface
      */
     private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Output
     {
-        $outputData = $this->normalizeCombinedOutputs($combinedOutputs, $result);
+        $outputData = $this->normalizeCombinedOutputs($combinedOutputs);
 
         $this->addOutputDataToResult($outputData, $result);
 
@@ -225,19 +225,11 @@ final class Group extends BaseStep implements StepInterface
      * @param mixed[] $combinedOutputs
      * @return mixed[]
      */
-    private function normalizeCombinedOutputs(array $combinedOutputs, ?Result $result = null): array
+    private function normalizeCombinedOutputs(array $combinedOutputs): array
     {
-        $normalized = [];
-
-        foreach ($combinedOutputs as $key => $combinedOutput) {
-            if (count($combinedOutput) === 1) {
-                $normalized[$key] = reset($combinedOutput);
-            } else {
-                $normalized[$key] = $combinedOutput;
-            }
-        }
-
-        return $normalized;
+        return array_map(function ($output) {
+            return count($output) === 1 ? reset($output) : $output;
+        }, $combinedOutputs);
     }
 
     /**
