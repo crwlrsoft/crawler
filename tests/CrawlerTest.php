@@ -496,3 +496,21 @@ it(
         expect($outputLines[5])->toContain('step2 called');
     }
 );
+
+it('logs memory usage if you want it to', function () {
+    $step1 = helper_getValueReturningStep('foo');
+
+    $step2 = helper_getValueReturningStep('bar');
+
+    $crawler = helper_getDummyCrawler()
+        ->input('go')
+        ->addStep($step1)
+        ->addStep($step2)
+        ->monitorMemoryUsage();
+
+    $crawler->runAndTraverse();
+
+    $output = $this->getActualOutput();
+
+    expect($output)->toContain('memory usage: ');
+});
