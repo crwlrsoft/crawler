@@ -31,6 +31,8 @@ abstract class Crawler
 
     private ?StoreInterface $store = null;
 
+    private bool|int $monitorMemoryUsage = false;
+
     public function __construct()
     {
         $this->userAgent = $this->userAgent();
@@ -164,6 +166,20 @@ abstract class Crawler
         $this->reset();
     }
 
+    /**
+     * Use this method if you want the crawler to add log messages with the current memory usage after every step
+     * invocation.
+     *
+     * @param int|null $ifAboveXBytes  You can provide an int of bytes as a limit above which the crawler should log
+     *                                 the usage.
+     */
+    public function monitorMemoryUsage(?int $ifAboveXBytes = null): static
+    {
+        $this->monitorMemoryUsage = $ifAboveXBytes ?? true;
+
+        return $this;
+    }
+
     protected function logger(): LoggerInterface
     {
         return new CliLogger();
@@ -178,7 +194,17 @@ abstract class Crawler
 
         if ($step->cascades() && $this->nextStep($stepIndex)) {
             foreach ($outputs as $output) {
-                yield from $this->invokeStepsRecursive(new Input($output), $this->nextStep($stepIndex), $stepIndex + 1);
+                if ($this->monitorMemoryUsage !== false) {
+                    $this->logMemoryUsage();
+                }
+
+                if ($this->nextStep($stepIndex)) {
+                    yield from $this->invokeStepsRecursive(
+                        new Input($output),
+                        $this->nextStep($stepIndex),
+                        $stepIndex + 1
+                    );
+                }
             }
         } elseif ($step->cascades()) {
             yield from $outputs;
@@ -256,6 +282,15 @@ abstract class Crawler
         }
 
         return false;
+    }
+
+    private function logMemoryUsage(): void
+    {
+        $memoryUsage = memory_get_usage();
+
+        if (!is_int($this->monitorMemoryUsage) || $memoryUsage > $this->monitorMemoryUsage) {
+            $this->logger->info('memory usage: ' . $memoryUsage);
+        }
     }
 
     private function firstStep(): ?StepInterface
