@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.0] - 2022-04-27
+### Added
+* By calling monitorMemoryUsage() you can tell the Crawler to add
+  log messages with the current memory usage after every step
+  invocation.
+  You can also set a limit in bytes when to start monitoring and
+  below the limit it won't log memory usage.
+
 ### Fixed
 * Previously the __use of Generators__ actually didn't make a lot of
   sense, because the outputs of one step were only iterated and
