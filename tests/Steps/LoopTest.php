@@ -743,13 +743,3 @@ it(
         expect($outputs)->toHaveCount(5);
     }
 );
-
-it('knows if it will produce only unique outputs', function () {
-    $loop = new Loop(helper_getStepYieldingObjectWithIncrementingNumber());
-
-    expect($loop->outputsShallBeUnique())->toBeFalse();
-
-    $loop->uniqueOutputs();
-
-    expect($loop->outputsShallBeUnique())->toBeTrue();
-});

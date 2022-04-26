@@ -7,7 +7,6 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
-use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
@@ -18,6 +17,7 @@ use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 function helper_getDummyCrawler(): Crawler
@@ -45,6 +45,8 @@ function helper_getDummyCrawlerWithInputReturningStep(): Crawler
 
     return $crawler;
 }
+
+/** @var TestCase $this */
 
 test(
     'The methods to define UserAgent, Logger and Loader instances are called in construct and the getter methods ' .
@@ -224,23 +226,48 @@ test('You can add steps and the Crawler class passes on its Logger and also its 
 });
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
-    $step = Mockery::mock(StepInterface::class);
+    $step1 = helper_getValueReturningStep('step1 output')->setResultKey('step1');
 
-    $step->shouldReceive('invokeStep')->once()->andReturn(helper_arrayToGenerator([new Output('👍🏻')]));
+    $step2 = helper_getValueReturningStep('step2 output')->setResultKey('step2');
 
-    $step->shouldReceive('addLogger', 'outputsShallBeUnique')->once();
-
-    $step->shouldReceive('addsToOrCreatesResult')->once()->andReturn(false);
-
-    $crawler = helper_getDummyCrawler();
-
-    $crawler->addStep($step);
+    $crawler = helper_getDummyCrawler()
+        ->addStep($step1)
+        ->addStep($step2);
 
     $crawler->input('randomInput');
 
-    $results = $crawler->run();
+    $results = helper_generatorToArray($crawler->run());
 
-    $results->current();
+    expect($results)->toHaveCount(1);
+
+    expect($results[0]->toArray())->toBe(['step1' => 'step1 output', 'step2' => 'step2 output']);
+});
+
+it('resets the initial inputs and calls the resetAfterRun method of all its steps', function () {
+    $step = helper_getInputReturningStep()
+        ->uniqueOutputs();
+
+    $crawler = helper_getDummyCrawler()
+        ->addStep('foo', $step)
+        ->inputs(['input1', 'input1', 'input2']);
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0]->toArray())->toBe(['foo' => 'input1']);
+
+    expect($results[1]->toArray())->toBe(['foo' => 'input2']);
+
+    $crawler->inputs(['input1', 'input3']);
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0]->toArray())->toBe(['foo' => 'input1']);
+
+    expect($results[1]->toArray())->toBe(['foo' => 'input3']);
 });
 
 test('You can add a step group as a step and all it\'s steps are invoked when the Crawler is run', function () {
@@ -310,15 +337,21 @@ test('Result objects are created when defined and passed on through all the step
 });
 
 it('doesn\'t pass on outputs of one step to the next one when dontCascade was called', function () {
-    $crawler = helper_getDummyCrawler();
-
     $step1 = helper_getInputReturningStep();
 
     $step1->dontCascade();
 
     $step2 = Mockery::mock(StepInterface::class);
 
+    $step2->shouldReceive('addLogger', 'addsToOrCreatesResult', 'resetAfterRun');
+
     $step2->shouldNotReceive('invokeStep');
+
+    $crawler = helper_getDummyCrawler()
+        ->addStep($step1)
+        ->addStep($step2);
+
+    $crawler->input('anything');
 
     $crawler->runAndTraverse();
 });
@@ -378,26 +411,26 @@ it('sends all results to the Store when there is one and still yields the result
 it(
     'actually runs the crawler without the need to traverse results manually, when runAndTraverse is called',
     function () {
-        $step1 = Mockery::mock(StepInterface::class);
+        $step = helper_getInputReturningStep();
 
-        $step1->shouldNotReceive('invokeStep');
+        $store = Mockery::mock(StoreInterface::class);
 
-        $step1->shouldReceive('addLogger');
+        $store->shouldNotReceive('store');
 
         $crawler = helper_getDummyCrawler()
-            ->addStep($step1)
+            ->addStep($step)
+            ->setStore($store)
             ->input('test');
 
         $crawler->run();
 
-        $step2 = Mockery::mock(StepInterface::class);
+        $store = Mockery::mock(StoreInterface::class);
 
-        $step2->shouldReceive('invokeStep')->andYield(new Output('yo'));
-
-        $step2->shouldReceive('addLogger', 'outputsShallBeUnique', 'addsToOrCreatesResult');
+        $store->shouldReceive('store')->once();
 
         $crawler = helper_getDummyCrawler()
-            ->addStep($step2)
+            ->addStep($step)
+            ->setStore($store)
             ->input('test');
 
         $crawler->runAndTraverse();
@@ -415,3 +448,51 @@ it('yields only unique outputs from a step when uniqueOutput was called', functi
 
     expect($results)->toHaveCount(5);
 });
+
+it(
+    'cascades step outputs immediately and doesn\'t wait for the current step being called with all the inputs',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step1 called');
+
+                yield $input . ' step1-1';
+
+                yield $input . ' step1-2';
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step2 called');
+
+                yield $input . ' step2';
+            }
+        };
+
+        $crawler = helper_getDummyCrawler()
+            ->inputs(['input1', 'input2'])
+            ->addStep('foo', $step1)
+            ->addStep('bar', $step2);
+
+        $crawler->runAndTraverse();
+
+        $output = $this->getActualOutput();
+
+        $outputLines = explode("\n", $output);
+
+        expect($outputLines[0])->toContain('step1 called');
+
+        expect($outputLines[1])->toContain('step2 called');
+
+        expect($outputLines[2])->toContain('step2 called');
+
+        expect($outputLines[3])->toContain('step1 called');
+
+        expect($outputLines[4])->toContain('step2 called');
+
+        expect($outputLines[5])->toContain('step2 called');
+    }
+);

@@ -10,7 +10,7 @@ use Exception;
 use Generator;
 use InvalidArgumentException;
 
-abstract class Step extends BaseStep implements StepInterface
+abstract class Step extends BaseStep
 {
     protected ?Closure $updateInputUsingOutput = null;
 
@@ -87,18 +87,16 @@ abstract class Step extends BaseStep implements StepInterface
 
     private function invokeAndYieldUnique(mixed $validInputValue, ?Result $result): Generator
     {
-        $uniqueKeys = [];
-
         foreach ($this->invoke($validInputValue) as $output) {
             $output = $this->output($output, $result);
 
             $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
 
-            if (isset($uniqueKeys[$key])) {
+            if (isset($this->uniqueOutputKeys[$key])) {
                 continue;
             }
 
-            $uniqueKeys[$key] = true; // Don't keep the output value, just the key, to keep memory usage low.
+            $this->uniqueOutputKeys[$key] = true; // Don't keep output value, just the key, to keep memory usage low.
 
             yield $output;
         }

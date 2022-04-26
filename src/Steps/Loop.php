@@ -23,8 +23,6 @@ final class Loop implements StepInterface
 
     private bool $cascadeWhenFinished = false;
 
-    protected bool|string $uniqueOutput = false;
-
     /**
      * Use when cascadeWhenFinished() is used.
      *
@@ -134,16 +132,7 @@ final class Loop implements StepInterface
     {
         $this->step->uniqueOutputs($key);
 
-        $this->uniqueOutput = $key ?? true;
-
-        $this->cascadeWhenFinished();
-
         return $this;
-    }
-
-    public function outputsShallBeUnique(): bool
-    {
-        return $this->uniqueOutput !== false;
     }
 
     public function addsToOrCreatesResult(): bool
@@ -220,7 +209,12 @@ final class Loop implements StepInterface
         return $this;
     }
 
-    private function yieldOrDefer(mixed $output): Generator
+    public function resetAfterRun(): void
+    {
+        $this->step->resetAfterRun();
+    }
+
+    private function yieldOrDefer(Output $output): Generator
     {
         if (!$this->step->cascades()) {
             return;
@@ -255,32 +249,11 @@ final class Loop implements StepInterface
     private function yieldDeferredOutputs(): Generator
     {
         if (!empty($this->deferredOutputs)) {
-            if ($this->uniqueOutput !== false) {
-                yield from $this->yieldDeferredOutputsUnique();
-            } else {
-                foreach ($this->deferredOutputs as $deferredOutput) {
-                    yield $deferredOutput;
-                }
+            foreach ($this->deferredOutputs as $deferredOutput) {
+                yield $deferredOutput;
             }
 
             $this->deferredOutputs = [];
-        }
-    }
-
-    private function yieldDeferredOutputsUnique(): Generator
-    {
-        $uniqueKeys = [];
-
-        foreach ($this->deferredOutputs as $output) {
-            $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
-
-            if (isset($uniqueKeys[$key])) {
-                continue;
-            }
-
-            $uniqueKeys[$key] = true; // Don't keep the output value, just the key, to keep memory usage low.
-
-            yield $output;
         }
     }
 }
