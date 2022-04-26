@@ -2,7 +2,6 @@
 
 namespace Crwlr\Crawler;
 
-use AppendIterator;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
@@ -13,7 +12,6 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Exception;
 use Generator;
 use InvalidArgumentException;
-use NoRewindIterator;
 use Psr\Log\LoggerInterface;
 
 abstract class Crawler
@@ -147,7 +145,7 @@ abstract class Crawler
      * Run the Crawler
      *
      * Handles calling all the steps and cascading the data from step to step.
-     * It's a generator, so when using this method directly, you need to traverse the generator, otherwise nothing
+     * It returns a Generator, so when using this method directly, you need to traverse the Generator, otherwise nothing
      * happens. Alternatively you can use runAndTraverse().
      *
      * @return Generator<Result>
@@ -157,33 +155,13 @@ abstract class Crawler
     {
         $inputs = $this->prepareInput();
 
-        foreach ($this->steps as $step) {
-            $nextIterationInputs = new AppendIterator();
-
+        if ($this->firstStep()) {
             foreach ($inputs as $input) {
-                if ($input instanceof Output) {
-                    $input = new Input($input);
-                }
-
-                $nextIterationInputs->append(new NoRewindIterator($step->invokeStep($input)));
-            }
-
-            if ($step->outputsShallBeUnique()) {
-                $nextIterationInputs = $this->filterDuplicateOutputs($nextIterationInputs);
-            }
-
-            if ($step !== end($this->steps)) {
-                $inputs = $nextIterationInputs;
-            } else {
-                $outputs = $nextIterationInputs;
+                yield from $this->storeAndReturnResults($this->invokeStepsRecursive($input, $this->firstStep(), 0));
             }
         }
 
-        if (isset($outputs)) {
-            yield from $this->storeAndReturnResults($outputs);
-        }
-
-        $this->inputs = [];
+        $this->reset();
     }
 
     protected function logger(): LoggerInterface
@@ -192,10 +170,26 @@ abstract class Crawler
     }
 
     /**
-     * @param AppendIterator<Output>|Generator<Output> $outputs
+     * @return Generator<Output>
+     */
+    private function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
+    {
+        $outputs = $step->invokeStep($input);
+
+        if ($step->cascades() && $this->nextStep($stepIndex)) {
+            foreach ($outputs as $output) {
+                yield from $this->invokeStepsRecursive(new Input($output), $this->nextStep($stepIndex), $stepIndex + 1);
+            }
+        } elseif ($step->cascades()) {
+            yield from $outputs;
+        }
+    }
+
+    /**
+     * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnResults(AppendIterator|Generator $outputs): Generator
+    private function storeAndReturnResults(Generator $outputs): Generator
     {
         if ($this->anyResultKeysDefinedInSteps()) {
             yield from $this->storeAndReturnDefinedResults($outputs);
@@ -205,10 +199,10 @@ abstract class Crawler
     }
 
     /**
-     * @param AppendIterator<Output>|Generator<Output> $outputs
+     * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnDefinedResults(AppendIterator|Generator $outputs): Generator
+    private function storeAndReturnDefinedResults(Generator $outputs): Generator
     {
         $results = [];
 
@@ -228,10 +222,10 @@ abstract class Crawler
     }
 
     /**
-     * @param AppendIterator<Output>|Generator<Output> $outputs
+     * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnOutputsAsResults(AppendIterator|Generator $outputs): Generator
+    private function storeAndReturnOutputsAsResults(Generator $outputs): Generator
     {
         foreach ($outputs as $output) {
             $result = (new Result())->set('unnamed', $output->get());
@@ -264,18 +258,22 @@ abstract class Crawler
         return false;
     }
 
-    private function filterDuplicateOutputs(AppendIterator $outputs): Generator
+    private function firstStep(): ?StepInterface
     {
-        $uniqueKeys = [];
+        return $this->steps[0] ?? null;
+    }
 
-        foreach ($outputs as $output) {
-            if (isset($uniqueKeys[$output->getKey()])) {
-                continue;
-            }
+    private function nextStep(int $afterIndex): ?StepInterface
+    {
+        return $this->steps[$afterIndex + 1] ?? null;
+    }
 
-            $uniqueKeys[$output->getKey()] = true;
+    private function reset(): void
+    {
+        $this->inputs = [];
 
-            yield $output;
+        foreach ($this->steps as $step) {
+            $step->resetAfterRun();
         }
     }
 }

@@ -344,21 +344,6 @@ it(
     }
 );
 
-it('knows if it will produce unique output or not', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'boo';
-        }
-    };
-
-    expect($step->outputsShallBeUnique())->toBeFalse();
-
-    $step->uniqueOutputs();
-
-    expect($step->outputsShallBeUnique())->toBeTrue();
-});
-
 test(
     'It combines the outputs of all it\'s steps into one output containing an array when combineToSingleOutput is used',
     function () {

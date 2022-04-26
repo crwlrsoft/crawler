@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  * Base class for classes Step and Group which share some things in terms of adding output data to Result objects.
  */
 
-abstract class BaseStep
+abstract class BaseStep implements StepInterface
 {
     protected ?string $resultKey = null;
 
@@ -29,6 +29,11 @@ abstract class BaseStep
     protected ?string $useInputKey = null;
 
     protected bool|string $uniqueOutput = false;
+
+    /**
+     * @var bool[]
+     */
+    protected array $uniqueOutputKeys = [];
 
     protected bool $cascades = true;
 
@@ -110,9 +115,9 @@ abstract class BaseStep
         return $this;
     }
 
-    final public function outputsShallBeUnique(): bool
+    public function resetAfterRun(): void
     {
-        return $this->uniqueOutput !== false;
+        $this->uniqueOutputKeys = [];
     }
 
     /**

@@ -11,7 +11,7 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-final class Group extends BaseStep implements StepInterface
+final class Group extends BaseStep
 {
     /**
      * @var StepInterface[]

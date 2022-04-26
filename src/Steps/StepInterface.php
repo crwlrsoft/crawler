@@ -32,9 +32,9 @@ interface StepInterface
 
     public function uniqueOutputs(?string $key = null): static;
 
-    public function outputsShallBeUnique(): bool;
-
     public function dontCascade(): static;
 
     public function cascades(): bool;
+
+    public function resetAfterRun(): void;
 }

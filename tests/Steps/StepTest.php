@@ -253,21 +253,6 @@ it('makes object outputs unique when providing no key name to uniqueOutput', fun
     expect($output)->toHaveCount(8);
 });
 
-it('knows if it will produce unique output or not', function () {
-    $step = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'boo';
-        }
-    };
-
-    expect($step->outputsShallBeUnique())->toBeFalse();
-
-    $step->uniqueOutputs();
-
-    expect($step->outputsShallBeUnique())->toBeTrue();
-});
-
 it('calls the validateAndSanitizeInput method', function () {
     $step = new class () extends Step {
         protected function validateAndSanitizeInput(mixed $input): string
