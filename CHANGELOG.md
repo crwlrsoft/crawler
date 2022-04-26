@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+* Previously the __use of Generators__ actually didn't make a lot of
+  sense, because the outputs of one step were only iterated and
+  passed on to the next step, after the current step was invoked
+  with all its inputs. That makes steps with a lot of inputs
+  bottlenecks and causes bigger memory consumption. So, changed the
+  crawler to immediately pass on outputs of one step to the next
+  step if there is one.
 
 ## [0.2.0] - 2022-04-25
 ### Added
