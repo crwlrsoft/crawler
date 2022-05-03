@@ -5,10 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+* The `Csv` step now has a `filter()` method. You can set multiple
+  filters for all mapped column names by `Comparison` (equal, greater
+  than, less than,...) or `StringCheck` (contains, starts/ends with).
 
 ## [0.3.0] - 2022-04-27
 ### Added
-* By calling monitorMemoryUsage() you can tell the Crawler to add
+* By calling `monitorMemoryUsage()` you can tell the Crawler to add
   log messages with the current memory usage after every step
   invocation.
   You can also set a limit in bytes when to start monitoring and
@@ -34,6 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   traverse the Generator, if you don't need the results where you're
   calling the crawler.
 * Implement the behaviour for when a `Group` step should add
-  something to the Result using `setResultKey` or `addKeysToResult`,
-  which was still missing. For groups this will only work when using
-  `combineToSingleOutput`.
+  something to the Result using `setResultKey()` or
+  `addKeysToResult()`, which was still missing. For groups this will
+  only work when using `combineToSingleOutput`.
