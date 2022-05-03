@@ -5,6 +5,8 @@ namespace tests\Steps;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Csv;
+use Crwlr\Crawler\Steps\FilterRules\Comparison;
+use Crwlr\Crawler\Steps\FilterRules\StringCheck;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
@@ -338,4 +340,103 @@ it('uses a different escape character when you set one, when parsing a file', fu
     expect($outputs[0]->get())->toBe(['escaped' => 'test %"escape%" test']);
 
     expect($outputs[1]->get())->toBe(['escaped' => 'foo %"escape%" bar %"baz%" lorem']);
+});
+
+it('filters rows', function () {
+    $string = <<<CSV
+        ID,firstname,surname,isPremium
+        123,Freddy,Mercury,1
+        124,Christian,Olear,1
+        125,Jeff,Bezos,0
+        CSV;
+
+    $step = Csv::parseString(['id', 3 => 'isPremium'])
+        ->skipFirstLine()
+        ->filter('isPremium', Comparison::Equal, '1');
+
+    $outputs = helper_invokeStepWithInput($step, $string);
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0]->get())->toBe(['id' => '123', 'isPremium' => '1']);
+
+    expect($outputs[1]->get())->toBe(['id' => '124', 'isPremium' => '1']);
+});
+
+it('filters rows when parsing a file', function () {
+    $step = Csv::parseFile(['Stunde', 'Fach'])
+        ->skipFirstLine()
+        ->filter('Fach', Comparison::Equal, 'Sport');
+
+    $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0]->get())->toBe(['Stunde' => '2', 'Fach' => 'Sport']);
+
+    expect($outputs[1]->get())->toBe(['Stunde' => '3', 'Fach' => 'Sport']);
+});
+
+it('filters rows by multiple filters', function () {
+    $string = <<<CSV
+        ID,firstname,surname,isVip,queenBandMember
+        123,Freddy,Mercury,1,1
+        124,Ozzy,Osbourne,1,0
+        125,Barry,Mitchell,0,1
+        CSV;
+
+    $step = Csv::parseString(['id', 3 => 'isVip', 4 => 'isQueenBandMember'])
+        ->skipFirstLine()
+        ->filter('isVip', Comparison::Equal, '1')
+        ->filter('isQueenBandMember', Comparison::Equal, '1');
+
+    $outputs = helper_invokeStepWithInput($step, $string);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe(['id' => '123', 'isVip' => '1', 'isQueenBandMember' => '1']);
+});
+
+it('filters rows by multiple filters when parsing a file', function () {
+    $step = Csv::parseFile(['Stunde', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'])
+        ->skipFirstLine()
+        ->filter('Montag', Comparison::Equal, 'Sport')
+        ->filter('Donnerstag', Comparison::Equal, 'Sport');
+
+    $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe([
+        'Stunde' => '2',
+        'Montag' => 'Sport',
+        'Dienstag' => 'Deutsch',
+        'Mittwoch' => 'Englisch',
+        'Donnerstag' => 'Sport',
+        'Freitag' => 'Geschichte',
+    ]);
+});
+
+it('filters rows with a StringCheck filter', function () {
+    $string = <<<CSV
+        ID,firstname,surname
+        123,Christian,Bale
+        124,"Christian Anton",Smith
+        125,"Another Christian",Idontknow
+        126,Jennifer,Aniston
+        CSV;
+
+    $step = Csv::parseString(['id', 'firstname'])
+        ->skipFirstLine()
+        ->filter('firstname', StringCheck::Contains, 'Christian');
+
+    $outputs = helper_invokeStepWithInput($step, $string);
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->get())->toBe(['id' => '123', 'firstname' => 'Christian']);
+
+    expect($outputs[1]->get())->toBe(['id' => '124', 'firstname' => 'Christian Anton']);
+
+    expect($outputs[2]->get())->toBe(['id' => '125', 'firstname' => 'Another Christian']);
 });

@@ -3,6 +3,9 @@
 namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Csv\Filter;
+use Crwlr\Crawler\Steps\FilterRules\Comparison;
+use Crwlr\Crawler\Steps\FilterRules\StringCheck;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
@@ -13,8 +16,15 @@ class Csv extends Step
     protected string $method = 'string';
 
     protected string $separator = ',';
+
     protected string $enclosure = '"';
+
     protected string $escape = '\\';
+
+    /**
+     * @var Filter[]
+     */
+    protected array $filters = [];
 
     /**
      * @param array<string|null> $columnMapping
@@ -71,6 +81,13 @@ class Csv extends Step
     public function escape(string $escape): static
     {
         $this->escape = $escape;
+
+        return $this;
+    }
+
+    public function filter(string $columnName, Comparison|StringCheck $operator, mixed $filterValue): static
+    {
+        $this->filters[] = new Filter($columnName, $operator, $filterValue);
 
         return $this;
     }
@@ -140,7 +157,7 @@ class Csv extends Step
                 continue;
             }
 
-            yield $this->mapRow($row);
+            yield from $this->mapRow($row);
         }
 
         fclose($handle);
@@ -158,16 +175,16 @@ class Csv extends Step
             }
 
             if (!empty($line)) {
-                yield $this->mapRow(str_getcsv($line, $this->separator, $this->enclosure, $this->escape));
+                yield from $this->mapRow(str_getcsv($line, $this->separator, $this->enclosure, $this->escape));
             }
         }
     }
 
     /**
      * @param mixed[] $row
-     * @return mixed[]
+     * @return Generator<mixed>
      */
-    private function mapRow(array $row): array
+    private function mapRow(array $row): Generator
     {
         $count = 0;
         $mapped = [];
@@ -180,6 +197,23 @@ class Csv extends Step
             $count++;
         }
 
-        return $mapped;
+        if (empty($this->filters) || $this->rowMatchesAllFilters($mapped)) {
+            yield $mapped;
+        }
+    }
+
+    /**
+     * @param mixed[] $row
+     * @return bool
+     */
+    private function rowMatchesAllFilters(array $row): bool
+    {
+        foreach ($this->filters as $filter) {
+            if (!$filter->matches($row)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
