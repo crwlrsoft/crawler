@@ -26,7 +26,7 @@ class TestStep extends BaseStep
 test('You can set a filter and passesAllFilters() tells if an output value passes that filter', function () {
     $step = new TestStep();
 
-    $step->filter(Filter::equal('hello'));
+    $step->where(Filter::equal('hello'));
 
     helper_invokeStepWithInput($step, new Input('hello'));
 
@@ -40,9 +40,9 @@ test('You can set a filter and passesAllFilters() tells if an output value passe
 test('You can set multiple filters and passesAllFilters() tells if an output value passes that filters', function () {
     $step = new TestStep();
 
-    $step->filter(Filter::stringContains('foo'))
-        ->filter(Filter::equal('boo foo too'))
-        ->filter(Filter::notEqual('pew foo tew'));
+    $step->where(Filter::stringContains('foo'))
+        ->where(Filter::equal('boo foo too'))
+        ->where(Filter::notEqual('pew foo tew'));
 
     helper_invokeStepWithInput($step, new Input('boo foo too'));
 
@@ -57,10 +57,37 @@ test('You can set multiple filters and passesAllFilters() tells if an output val
     expect($step->passesAllFilters)->toBeFalse();
 });
 
+test(
+    'you can link filters using orWhere and passesAllFilters() is true when one of those filters evaluates to true',
+    function () {
+        $step = new TestStep();
+
+        $step->where(Filter::stringStartsWith('foo'))
+            ->orWhere(Filter::stringStartsWith('bar'))
+            ->orWhere(Filter::stringEndsWith('foo'));
+
+        helper_invokeStepWithInput($step, new Input('foo bar baz'));
+
+        expect($step->passesAllFilters)->toBeTrue();
+
+        helper_invokeStepWithInput($step, new Input('bar foo baz'));
+
+        expect($step->passesAllFilters)->toBeTrue();
+
+        helper_invokeStepWithInput($step, new Input('bar baz foo'));
+
+        expect($step->passesAllFilters)->toBeTrue();
+
+        helper_invokeStepWithInput($step, new Input('funky town'));
+
+        expect($step->passesAllFilters)->toBeFalse();
+    }
+);
+
 it('uses a key from an array when providing a key to the filter() method', function () {
     $step = new TestStep();
 
-    $step->filter('vendor', Filter::equal('crwlr'));
+    $step->where('vendor', Filter::equal('crwlr'));
 
     helper_invokeStepWithInput($step, new Input(['vendor' => 'crwlr', 'package' => 'url']));
 
@@ -74,7 +101,7 @@ it('uses a key from an array when providing a key to the filter() method', funct
 it('uses a key from an object when providing a key to the filter() method', function () {
     $step = new TestStep();
 
-    $step->filter('vendor', Filter::equal('crwlr'));
+    $step->where('vendor', Filter::equal('crwlr'));
 
     helper_invokeStepWithInput($step, new Input(
         helper_getStdClassWithData(['vendor' => 'crwlr', 'package' => 'url'])
@@ -92,5 +119,5 @@ it('uses a key from an object when providing a key to the filter() method', func
 it('throws an exception when you provide a string as first argument to filter but no second argument', function () {
     $step = new TestStep();
 
-    $step->filter('test');
+    $step->where('test');
 })->throws(InvalidArgumentException::class);

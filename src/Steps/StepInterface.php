@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,9 @@ interface StepInterface
 
     public function cascades(): bool;
 
-    public function filter(FilterInterface $filter): static;
+    public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;
+
+    public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;
 
     public function resetAfterRun(): void;
 }

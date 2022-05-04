@@ -353,7 +353,7 @@ it('filters rows', function () {
 
     $step = Csv::parseString(['id', 3 => 'isPremium'])
         ->skipFirstLine()
-        ->filter('isPremium', Filter::equal('1'));
+        ->where('isPremium', Filter::equal('1'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
@@ -367,7 +367,7 @@ it('filters rows', function () {
 it('filters rows when parsing a file', function () {
     $step = Csv::parseFile(['Stunde', 'Fach'])
         ->skipFirstLine()
-        ->filter('Fach', Filter::equal('Sport'));
+        ->where('Fach', Filter::equal('Sport'));
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
@@ -388,8 +388,8 @@ it('filters rows by multiple filters', function () {
 
     $step = Csv::parseString(['id', 3 => 'isVip', 4 => 'isQueenBandMember'])
         ->skipFirstLine()
-        ->filter('isVip', Filter::equal('1'))
-        ->filter('isQueenBandMember', Filter::equal('1'));
+        ->where('isVip', Filter::equal('1'))
+        ->where('isQueenBandMember', Filter::equal('1'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
@@ -401,8 +401,8 @@ it('filters rows by multiple filters', function () {
 it('filters rows by multiple filters when parsing a file', function () {
     $step = Csv::parseFile(['Stunde', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'])
         ->skipFirstLine()
-        ->filter('Montag', Filter::equal('Sport'))
-        ->filter('Donnerstag', Filter::equal('Sport'));
+        ->where('Montag', Filter::equal('Sport'))
+        ->where('Donnerstag', Filter::equal('Sport'));
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
@@ -429,7 +429,7 @@ it('filters rows with a StringCheck filter', function () {
 
     $step = Csv::parseString(['id', 'firstname'])
         ->skipFirstLine()
-        ->filter('firstname', Filter::stringContains('Christian'));
+        ->where('firstname', Filter::stringContains('Christian'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 

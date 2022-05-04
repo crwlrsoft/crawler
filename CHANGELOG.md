@@ -6,11 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* The `BaseStep` class now has a `filter()` method. You can set 
-  multiple filters that will be applied to all outputs. Outputs not
-  matching one of the filters, are not yielded. Currently available
-  filters are comparison filters (equal, greater/less than,...) and
-  a few string filters (contains, starts/ends with).
+* The `BaseStep` class now has `where()` and `orWhere()` methods to
+  filter step outputs. You can set multiple filters that will be
+  applied to all outputs. When setting a filter using `orWhere`
+  it's linked to the previously added Filter with "OR". Outputs not
+  matching one of the filters, are not yielded. The available
+  filters can be accessed through static methods on the new `Filter`
+  class. Currently available filters are comparison filters (equal,
+  greater/less than,...) and a few string filters (contains,
+  starts/ends with).
 
 ## [0.3.0] - 2022-04-27
 ### Added
