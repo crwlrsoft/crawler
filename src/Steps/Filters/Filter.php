@@ -11,6 +11,8 @@ abstract class Filter implements FilterInterface
 {
     protected ?string $useKey = null;
 
+    protected bool|FilterInterface $or = false;
+
     public static function equal(mixed $equalToValue): Comparison
     {
         return new Comparison(Comparisons::Equal, $equalToValue);
@@ -61,6 +63,33 @@ abstract class Filter implements FilterInterface
         $this->useKey = $key;
 
         return $this;
+    }
+
+    /**
+     * Step::orWhere() uses this method to link further Filters with OR to this filter.
+     * The Step then takes care of checking if one of the ORs evaluates to true.
+     */
+    public function addOr(FilterInterface $filter): void
+    {
+        if ($this->or instanceof FilterInterface) {
+            $or = $this->or;
+
+            while ($or->getOr()) {
+                $or = $or->getOr();
+            }
+
+            $or->addOr($filter);
+        } else {
+            $this->or = $filter;
+        }
+    }
+
+    /**
+     * Get the Filter linked to this Filter as OR.
+     */
+    public function getOr(): ?FilterInterface
+    {
+        return $this->or instanceof FilterInterface ? $this->or : null;
     }
 
     protected function getKey(mixed $value): mixed

@@ -122,7 +122,7 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
-    final public function filter(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    final public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
     {
         if (is_string($keyOrFilter) && $filter === null) {
             throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
@@ -133,6 +133,25 @@ abstract class BaseStep implements StepInterface
         } else {
             $this->filters[] = $keyOrFilter;
         }
+
+        return $this;
+    }
+
+    final public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    {
+        if (empty($this->filters)) {
+            throw new Exception('No where before orWhere');
+        } elseif (is_string($keyOrFilter) && $filter === null) {
+            throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
+        } elseif (is_string($keyOrFilter)) {
+            $filter->useKey($keyOrFilter);
+        } else {
+            $filter = $keyOrFilter;
+        }
+
+        $lastFilter = end($this->filters);
+
+        $lastFilter->addOr($filter);
 
         return $this;
     }
@@ -181,6 +200,18 @@ abstract class BaseStep implements StepInterface
     {
         foreach ($this->filters as $filter) {
             if (!$filter->evaluate($output)) {
+                if ($filter->getOr()) {
+                    $orFilter = $filter->getOr();
+
+                    while ($orFilter) {
+                        if ($orFilter->evaluate($output)) {
+                            continue 2;
+                        }
+
+                        $orFilter = $orFilter->getOr();
+                    }
+                }
+
                 return false;
             }
         }

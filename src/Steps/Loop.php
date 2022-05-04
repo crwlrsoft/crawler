@@ -167,9 +167,16 @@ final class Loop implements StepInterface
         return $this->step->cascades();
     }
 
-    public function filter(FilterInterface $filter): static
+    public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
     {
-        $this->step->filter($filter);
+        $this->step->where($keyOrFilter, $filter);
+
+        return $this;
+    }
+
+    public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    {
+        $this->step->orWhere($keyOrFilter, $filter);
 
         return $this;
     }
