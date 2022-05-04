@@ -6,6 +6,7 @@ use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
 
@@ -164,6 +165,13 @@ final class Loop implements StepInterface
     public function cascades(): bool
     {
         return $this->step->cascades();
+    }
+
+    public function filter(FilterInterface $filter): static
+    {
+        $this->step->filter($filter);
+
+        return $this;
     }
 
     /**

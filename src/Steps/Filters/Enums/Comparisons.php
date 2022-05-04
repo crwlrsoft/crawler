@@ -1,8 +1,8 @@
 <?php
 
-namespace Crwlr\Crawler\Steps\FilterRules;
+namespace Crwlr\Crawler\Steps\Filters\Enums;
 
-enum Comparison
+enum Comparisons
 {
     case Equal;
 

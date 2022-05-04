@@ -81,13 +81,19 @@ abstract class Step extends BaseStep
     private function invokeAndYield(mixed $validInputValue, ?Result $result): Generator
     {
         foreach ($this->invoke($validInputValue) as $output) {
-            yield $this->output($output, $result);
+            if ($this->passesAllFilters($output)) {
+                yield $this->output($output, $result);
+            }
         }
     }
 
     private function invokeAndYieldUnique(mixed $validInputValue, ?Result $result): Generator
     {
         foreach ($this->invoke($validInputValue) as $output) {
+            if (!$this->passesAllFilters($output)) {
+                continue;
+            }
+
             $output = $this->output($output, $result);
 
             $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();

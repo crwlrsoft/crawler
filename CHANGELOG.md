@@ -6,9 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* The `Csv` step now has a `filter()` method. You can set multiple
-  filters for all mapped column names by `Comparison` (equal, greater
-  than, less than,...) or `StringCheck` (contains, starts/ends with).
+* The `BaseStep` class now has a `filter()` method. You can set 
+  multiple filters that will be applied to all outputs. Outputs not
+  matching one of the filters, are not yielded. Currently available
+  filters are comparison filters (equal, greater/less than,...) and
+  a few string filters (contains, starts/ends with).
 
 ## [0.3.0] - 2022-04-27
 ### Added

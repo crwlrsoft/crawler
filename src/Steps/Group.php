@@ -48,13 +48,15 @@ final class Group extends BaseStep
                         continue;
                     }
 
-                    yield $output;
+                    if ($this->passesAllFilters($output)) {
+                        yield $output;
+                    }
                 }
             }
         }
 
         if ($this->combine && $this->cascades()) {
-            yield $this->prepareCombinedOutputs($combinedOutput, $input->result);
+            yield from $this->prepareCombinedOutputs($combinedOutput, $input->result);
         }
     }
 
@@ -205,15 +207,17 @@ final class Group extends BaseStep
     /**
      * @param mixed[] $combinedOutputs
      * @param Result|null $result
-     * @return Output
+     * @return Generator<Output>
      */
-    private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Output
+    private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Generator
     {
         $outputData = $this->normalizeCombinedOutputs($combinedOutputs);
 
-        $this->addOutputDataToResult($outputData, $result);
+        if ($this->passesAllFilters($outputData)) {
+            $this->addOutputDataToResult($outputData, $result);
 
-        return new Output($outputData, $result);
+            yield new Output($outputData, $result);
+        }
     }
 
     /**

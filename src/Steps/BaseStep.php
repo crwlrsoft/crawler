@@ -5,8 +5,10 @@ namespace Crwlr\Crawler\Steps;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Exception;
 use Generator;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -36,6 +38,11 @@ abstract class BaseStep implements StepInterface
     protected array $uniqueOutputKeys = [];
 
     protected bool $cascades = true;
+
+    /**
+     * @var FilterInterface[]
+     */
+    protected array $filters = [];
 
     /**
      * @param Input $input
@@ -115,6 +122,21 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    final public function filter(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    {
+        if (is_string($keyOrFilter) && $filter === null) {
+            throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
+        } elseif (is_string($keyOrFilter)) {
+            $filter->useKey($keyOrFilter);
+
+            $this->filters[] = $filter;
+        } else {
+            $this->filters[] = $keyOrFilter;
+        }
+
+        return $this;
+    }
+
     public function resetAfterRun(): void
     {
         $this->uniqueOutputKeys = [];
@@ -153,6 +175,17 @@ abstract class BaseStep implements StepInterface
         }
 
         return $result;
+    }
+
+    final protected function passesAllFilters(mixed $output): bool
+    {
+        foreach ($this->filters as $filter) {
+            if (!$filter->evaluate($output)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
