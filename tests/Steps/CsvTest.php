@@ -7,6 +7,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Csv;
 use Crwlr\Crawler\Steps\FilterRules\Comparison;
 use Crwlr\Crawler\Steps\FilterRules\StringCheck;
+use Crwlr\Crawler\Steps\Filters\Filter;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
@@ -352,7 +353,7 @@ it('filters rows', function () {
 
     $step = Csv::parseString(['id', 3 => 'isPremium'])
         ->skipFirstLine()
-        ->filter('isPremium', Comparison::Equal, '1');
+        ->filter('isPremium', Filter::equal('1'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
@@ -366,7 +367,7 @@ it('filters rows', function () {
 it('filters rows when parsing a file', function () {
     $step = Csv::parseFile(['Stunde', 'Fach'])
         ->skipFirstLine()
-        ->filter('Fach', Comparison::Equal, 'Sport');
+        ->filter('Fach', Filter::equal('Sport'));
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
@@ -387,8 +388,8 @@ it('filters rows by multiple filters', function () {
 
     $step = Csv::parseString(['id', 3 => 'isVip', 4 => 'isQueenBandMember'])
         ->skipFirstLine()
-        ->filter('isVip', Comparison::Equal, '1')
-        ->filter('isQueenBandMember', Comparison::Equal, '1');
+        ->filter('isVip', Filter::equal('1'))
+        ->filter('isQueenBandMember', Filter::equal('1'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
@@ -400,8 +401,8 @@ it('filters rows by multiple filters', function () {
 it('filters rows by multiple filters when parsing a file', function () {
     $step = Csv::parseFile(['Stunde', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'])
         ->skipFirstLine()
-        ->filter('Montag', Comparison::Equal, 'Sport')
-        ->filter('Donnerstag', Comparison::Equal, 'Sport');
+        ->filter('Montag', Filter::equal('Sport'))
+        ->filter('Donnerstag', Filter::equal('Sport'));
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
@@ -428,7 +429,7 @@ it('filters rows with a StringCheck filter', function () {
 
     $step = Csv::parseString(['id', 'firstname'])
         ->skipFirstLine()
-        ->filter('firstname', StringCheck::Contains, 'Christian');
+        ->filter('firstname', Filter::stringContains('Christian'));
 
     $outputs = helper_invokeStepWithInput($step, $string);
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace tests\Steps\FilterRules;
+namespace tests\Steps\Filters\Enums;
 
-use Crwlr\Crawler\Steps\FilterRules\Comparison;
+use Crwlr\Crawler\Steps\Filters\Enums\Comparisons;
 
 it('correctly applies equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::Equal;
+    $comparison = Comparisons::Equal;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
@@ -19,7 +19,7 @@ it('correctly applies equal operator', function (bool $expectedResult, mixed $va
 ]);
 
 it('correctly applies not equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::NotEqual;
+    $comparison = Comparisons::NotEqual;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
@@ -33,7 +33,7 @@ it('correctly applies not equal operator', function (bool $expectedResult, mixed
 ]);
 
 it('correctly applies greater than operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::GreaterThan;
+    $comparison = Comparisons::GreaterThan;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
@@ -46,7 +46,7 @@ it('correctly applies greater than operator', function (bool $expectedResult, mi
 ]);
 
 it('correctly applies greater than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::GreaterThanOrEqual;
+    $comparison = Comparisons::GreaterThanOrEqual;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
@@ -59,7 +59,7 @@ it('correctly applies greater than or equal operator', function (bool $expectedR
 ]);
 
 it('correctly applies less than operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::LessThan;
+    $comparison = Comparisons::LessThan;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
@@ -72,7 +72,7 @@ it('correctly applies less than operator', function (bool $expectedResult, mixed
 ]);
 
 it('correctly applies less than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparison::LessThanOrEqual;
+    $comparison = Comparisons::LessThanOrEqual;
 
     expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
