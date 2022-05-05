@@ -21,14 +21,14 @@ class Csv extends Step
     /**
      * @param array<string|null> $columnMapping
      */
-    final public function __construct(protected array $columnMapping, protected bool $skipFirstLine = false)
+    final public function __construct(protected array $columnMapping = [], protected bool $skipFirstLine = false)
     {
     }
 
     /**
      * @param array<string|null> $columnMapping
      */
-    public static function parseString(array $columnMapping, bool $skipFirstLine = false): static
+    public static function parseString(array $columnMapping = [], bool $skipFirstLine = false): static
     {
         return new static($columnMapping, $skipFirstLine);
     }
@@ -36,7 +36,7 @@ class Csv extends Step
     /**
      * @param array<string|null> $columnMapping
      */
-    public static function parseFile(array $columnMapping, bool $skipFirstLine = false): static
+    public static function parseFile(array $columnMapping = [], bool $skipFirstLine = false): static
     {
         $instance = new static($columnMapping, $skipFirstLine);
 
@@ -135,11 +135,19 @@ class Csv extends Step
             return;
         }
 
-        while (($row = fgetcsv($handle, 0, $this->separator, $this->enclosure, $this->escape)) !== false) {
-            if ($this->skipFirstLine && !isset($isNotFirstLine)) {
-                $isNotFirstLine = true;
+        $isFirstLine = true;
 
-                continue;
+        while (($row = fgetcsv($handle, 0, $this->separator, $this->enclosure, $this->escape)) !== false) {
+            if ($isFirstLine) {
+                if (empty($this->columnMapping)) {
+                    $this->columnMapping = $row;
+                }
+
+                $isFirstLine = false;
+
+                if ($this->skipFirstLine) {
+                    continue;
+                }
             }
 
             yield $this->mapRow($row);
@@ -156,6 +164,10 @@ class Csv extends Step
     {
         foreach ($lines as $key => $line) {
             if ($key === 0 && $this->skipFirstLine) {
+                if (empty($this->columnMapping)) {
+                    $this->columnMapping = str_getcsv($line, $this->separator, $this->enclosure, $this->escape);
+                }
+
                 continue;
             }
 

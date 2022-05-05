@@ -178,6 +178,39 @@ it('can map columns using null for columns to skip when parsing file', function 
     expect($outputs[2]->get())->toBe(['id' => '345', 'homepage' => 'https://www.jane.doe']);
 });
 
+it('uses the values from the first line as output keys when no column mapping defined', function () {
+    $string = <<<CSV
+        id,title,price
+        1,"Raspberry Pi Zero 2 W",16.99
+        2,"Raspberry Pi Pico",4.20
+        3,"Raspberry Pi 400 Personal Computer Kit & Unit",79.49
+        CSV;
+
+    $outputs = helper_invokeStepWithInput(Csv::parseString()->skipFirstLine(), $string);
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->get())->toBe(['id' => '1', 'title' => 'Raspberry Pi Zero 2 W', 'price' => '16.99']);
+});
+
+it('uses the values from the first line as output keys when no column mapping defined when parsing file', function () {
+    $outputs = helper_invokeStepWithInput(
+        Csv::parseFile()->skipFirstLine(),
+        helper_csvFilePath('with-column-headlines.csv')
+    );
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->get())->toBe([
+        'Stunde' => '1',
+        'Montag' => 'Mathematik',
+        'Dienstag' => 'Deutsch',
+        'Mittwoch' => 'Englisch',
+        'Donnerstag' => 'Erdkunde',
+        'Freitag' => 'Politik',
+    ]);
+});
+
 it('skips the first line when defined via method call to skipFirstLine method', function () {
     $string = <<<CSV
         Year,Make,Model,Description,Price

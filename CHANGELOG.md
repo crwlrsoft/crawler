@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   class. Currently available filters are comparison filters (equal,
   greater/less than,...) and a few string filters (contains,
   starts/ends with).
+* The `Csv` step can now also be used without defining a column
+  mapping. In that case it will use the values from the first line
+  (so this makes sense when there are column headlines) as output
+  array keys.
 
 ## [0.3.0] - 2022-04-27
 ### Added
