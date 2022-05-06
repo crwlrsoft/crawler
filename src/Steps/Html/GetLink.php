@@ -15,6 +15,20 @@ class GetLink extends Step
 {
     protected Url $baseUri;
 
+    protected ?bool $onSameDomain = null;
+
+    /**
+     * @var null|string[]
+     */
+    protected ?array $onDomain = null;
+
+    protected ?bool $onSameHost = null;
+
+    /**
+     * @var null|string[]
+     */
+    protected ?array $onHost = null;
+
     public function __construct(protected ?string $selector = null)
     {
     }
@@ -50,10 +64,135 @@ class GetLink extends Step
                 continue;
             }
 
-            $link = new Crawler($link);
+            $linkUrl = $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '');
 
-            yield $this->baseUri->resolve($link->attr('href') ?? '')->__toString();
-            break;
+            if ($this->matchesAdditionalCriteria($linkUrl)) {
+                yield $linkUrl->__toString();
+
+                break;
+            }
         }
+    }
+
+    public function onSameDomain(): static
+    {
+        $this->onSameDomain = true;
+
+        return $this;
+    }
+
+    public function notOnSameDomain(): static
+    {
+        $this->onSameDomain = false;
+
+        return $this;
+    }
+
+    /**
+     * @param string|string[] $domains
+     * @return $this
+     */
+    public function onDomain(string|array $domains): static
+    {
+        if (is_array($domains) && !$this->isArrayWithOnlyStrings($domains)) {
+            throw new InvalidArgumentException('You can only set domains from string values');
+        }
+
+        $domains = is_string($domains) ? [$domains] : $domains;
+
+        $this->onDomain = $this->onDomain ? array_merge($this->onDomain, $domains) : $domains;
+
+        return $this;
+    }
+
+    public function onSameHost(): static
+    {
+        $this->onSameHost = true;
+
+        return $this;
+    }
+
+    public function notOnSameHost(): static
+    {
+        $this->onSameHost = false;
+
+        return $this;
+    }
+
+    /**
+     * @param string|string[] $hosts
+     */
+    public function onHost(string|array $hosts): static
+    {
+        if (is_array($hosts) && !$this->isArrayWithOnlyStrings($hosts)) {
+            throw new InvalidArgumentException('You can only set hosts from string values');
+        }
+
+        $hosts = is_string($hosts) ? [$hosts] : $hosts;
+
+        $this->onHost = $this->onHost ? array_merge($this->onHost, $hosts) : $hosts;
+
+        return $this;
+    }
+
+    protected function matchesAdditionalCriteria(Url $link): bool
+    {
+        return ($this->onSameDomain === null || $this->isOnSameDomain($link)) &&
+            ($this->onSameHost === null || $this->isOnSameHost($link)) &&
+            ($this->onDomain === null || $this->isOnDomain($link)) &&
+            ($this->onHost === null || $this->isOnHost($link));
+    }
+
+    private function isOnSameDomain(Url $link): bool
+    {
+        return ($this->onSameDomain && $this->baseUri->isDomainEqualIn($link)) ||
+            ($this->onSameDomain === false && !$this->baseUri->isDomainEqualIn($link));
+    }
+
+    private function isOnSameHost(Url $link): bool
+    {
+        return ($this->onSameHost && $this->baseUri->isHostEqualIn($link)) ||
+            ($this->onSameHost === false && !$this->baseUri->isHostEqualIn($link));
+    }
+
+    private function isOnDomain(Url $link): bool
+    {
+        if (is_array($this->onDomain)) {
+            foreach ($this->onDomain as $domain) {
+                if ($link->domain() === $domain) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function isOnHost(Url $link): bool
+    {
+        if (is_array($this->onHost)) {
+            foreach ($this->onHost as $host) {
+                if ($link->host() === $host) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param mixed[] $array
+     * @return bool
+     */
+    private function isArrayWithOnlyStrings(array $array): bool
+    {
+        foreach ($array as $element) {
+            if (!is_string($element)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
