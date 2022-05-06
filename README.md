@@ -1,3 +1,5 @@
+<p style="text-align: center;"><a href="https://www.crwlr.software" target="_blank"><img src="https://github.com/crwlrsoft/graphics/blob/e0d46ba778597dbf51ab809cc8a48d88d985d736/crwlr-logo.png" alt="crwlr.software logo" width="250"></a></p>
+
 # Library for Rapid (Web) Crawler and Scraper Development
 
 This package provides kind of a framework and a lot of ready
