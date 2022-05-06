@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   class. Currently available filters are comparison filters (equal,
   greater/less than,...) and a few string filters (contains,
   starts/ends with).
+* The `GetLink` and `GetLinks` steps now have methods
+  `onSameDomain()`, `notOnSameDomain()`, `onDomain()`,
+  `onSameHost()`, `notOnSameHost()`, `onHost()` to restrict the
+  which links to find.
 
 ### Changed
 * The `Csv` step can now also be used without defining a column
