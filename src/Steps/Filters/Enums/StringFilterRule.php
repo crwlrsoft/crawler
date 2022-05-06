@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Filters\Enums;
 
-enum StringChecks
+enum StringFilterRule
 {
     case Contains;
 

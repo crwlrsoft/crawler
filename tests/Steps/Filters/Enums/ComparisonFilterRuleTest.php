@@ -2,12 +2,12 @@
 
 namespace tests\Steps\Filters\Enums;
 
-use Crwlr\Crawler\Steps\Filters\Enums\Comparisons;
+use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
 
 it('correctly applies equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::Equal;
+    $comparisonFilterRule = ComparisonFilterRule::Equal;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [true, 1, 1],
     [true, 'one', 'one'],
@@ -19,9 +19,9 @@ it('correctly applies equal operator', function (bool $expectedResult, mixed $va
 ]);
 
 it('correctly applies not equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::NotEqual;
+    $comparisonFilterRule = ComparisonFilterRule::NotEqual;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [false, 1, 1],
     [false, 'one', 'one'],
@@ -33,9 +33,9 @@ it('correctly applies not equal operator', function (bool $expectedResult, mixed
 ]);
 
 it('correctly applies greater than operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::GreaterThan;
+    $comparisonFilterRule = ComparisonFilterRule::GreaterThan;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [true, 1, 0],
     [true, 12, 3],
@@ -46,9 +46,9 @@ it('correctly applies greater than operator', function (bool $expectedResult, mi
 ]);
 
 it('correctly applies greater than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::GreaterThanOrEqual;
+    $comparisonFilterRule = ComparisonFilterRule::GreaterThanOrEqual;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [true, 1, 0],
     [true, 12, 3],
@@ -59,9 +59,9 @@ it('correctly applies greater than or equal operator', function (bool $expectedR
 ]);
 
 it('correctly applies less than operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::LessThan;
+    $comparisonFilterRule = ComparisonFilterRule::LessThan;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [true, 0, 1],
     [true, 4, 5],
@@ -72,9 +72,9 @@ it('correctly applies less than operator', function (bool $expectedResult, mixed
 ]);
 
 it('correctly applies less than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
-    $comparison = Comparisons::LessThanOrEqual;
+    $comparisonFilterRule = ComparisonFilterRule::LessThanOrEqual;
 
-    expect($comparison->evaluate($value1, $value2))->toBe($expectedResult);
+    expect($comparisonFilterRule->evaluate($value1, $value2))->toBe($expectedResult);
 })->with([
     [true, 0, 1],
     [true, 4, 5],

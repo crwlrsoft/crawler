@@ -2,12 +2,12 @@
 
 namespace tests\Steps\Filters;
 
-use Crwlr\Crawler\Steps\Filters\Comparison;
-use Crwlr\Crawler\Steps\Filters\Enums\Comparisons;
+use Crwlr\Crawler\Steps\Filters\ComparisonFilter;
+use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
 use function tests\helper_getStdClassWithData;
 
 it('compares a single value', function () {
-    $comparison = new Comparison(Comparisons::GreaterThan, 3);
+    $comparison = new ComparisonFilter(ComparisonFilterRule::GreaterThan, 3);
 
     expect($comparison->evaluate(4))->toBeTrue();
 
@@ -15,7 +15,7 @@ it('compares a single value', function () {
 });
 
 it('compares a value from an array by key', function () {
-    $comparison = new Comparison(Comparisons::NotEqual, 'barValue');
+    $comparison = new ComparisonFilter(ComparisonFilterRule::NotEqual, 'barValue');
 
     $comparison->useKey('bar');
 
@@ -25,7 +25,7 @@ it('compares a value from an array by key', function () {
 });
 
 it('compares a value from an object by key', function () {
-    $comparison = new Comparison(Comparisons::NotEqual, 'barValue');
+    $comparison = new ComparisonFilter(ComparisonFilterRule::NotEqual, 'barValue');
 
     $comparison->useKey('bar');
 

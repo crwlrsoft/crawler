@@ -2,12 +2,12 @@
 
 namespace Crwlr\Crawler\Steps\Filters;
 
-use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
+use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
 use Exception;
 
-class UrlFilter extends Filter
+class StringFilter extends Filter
 {
-    public function __construct(private readonly UrlFilterRule $filterRule, private readonly string $filterString)
+    public function __construct(private readonly StringFilterRule $filterRule, private readonly string $filterString)
     {
     }
 
