@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   matching one of the filters, are not yielded. The available
   filters can be accessed through static methods on the new `Filter`
   class. Currently available filters are comparison filters (equal,
-  greater/less than,...) and a few string filters (contains,
-  starts/ends with).
+  greater/less than,...), a few string filters (contains,
+  starts/ends with) and url filters (scheme, domain, host,...).
 * The `GetLink` and `GetLinks` steps now have methods
   `onSameDomain()`, `notOnSameDomain()`, `onDomain()`,
   `onSameHost()`, `notOnSameHost()`, `onHost()` to restrict the
