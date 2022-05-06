@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.0] - 2022-05-06
 ### Added
 * The `BaseStep` class now has `where()` and `orWhere()` methods to
   filter step outputs. You can set multiple filters that will be
@@ -19,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `onSameDomain()`, `notOnSameDomain()`, `onDomain()`,
   `onSameHost()`, `notOnSameHost()`, `onHost()` to restrict the
   which links to find.
+* Automatically add the crawler's logger to the `Store` so you can
+  also log messages from there. This can be breaking as the
+  `StoreInterface` now also requires the `addLogger` method. The
+  new abstract `Store` class already implements it, so you can just
+  extend it.
 
 ### Changed
 * The `Csv` step can now also be used without defining a column

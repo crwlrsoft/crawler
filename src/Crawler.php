@@ -80,6 +80,8 @@ abstract class Crawler
 
     public function setStore(StoreInterface $store): static
     {
+        $store->addLogger($this->logger);
+
         $this->store = $store;
 
         return $this;
