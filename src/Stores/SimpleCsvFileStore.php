@@ -5,13 +5,13 @@ namespace Crwlr\Crawler\Stores;
 use Crwlr\Crawler\Result;
 use Exception;
 
-class SimpleCsvFileStore implements StoreInterface
+class SimpleCsvFileStore extends Store
 {
     private int $createTimestamp;
 
     private bool $isFirstResult = true;
 
-    public function __construct(private string $storePath, private ?string $filePrefix = null)
+    public function __construct(private readonly string $storePath, private readonly ?string $filePrefix = null)
     {
         $this->createTimestamp = time();
 
@@ -35,6 +35,8 @@ class SimpleCsvFileStore implements StoreInterface
         fputcsv($fileHandle, array_values($result->toArray()));
 
         fclose($fileHandle);
+
+        $this->logger?->info('Stored a result');
     }
 
     public function filePath(): string

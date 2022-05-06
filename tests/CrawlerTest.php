@@ -12,6 +12,7 @@ use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\Stores\Store;
 use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -384,6 +385,8 @@ test('When final steps return an array you get all values in the defined Result 
 it('sends all results to the Store when there is one and still yields the results', function () {
     $store = Mockery::mock(StoreInterface::class);
 
+    $store->shouldReceive('addLogger');
+
     $store->shouldReceive('store')->times(3);
 
     $crawler = helper_getDummyCrawler();
@@ -415,6 +418,8 @@ it(
 
         $store = Mockery::mock(StoreInterface::class);
 
+        $store->shouldReceive('addLogger');
+
         $store->shouldNotReceive('store');
 
         $crawler = helper_getDummyCrawler()
@@ -426,7 +431,7 @@ it(
 
         $store = Mockery::mock(StoreInterface::class);
 
-        $store->shouldReceive('store')->once();
+        $store->shouldReceive('store', 'addLogger')->once();
 
         $crawler = helper_getDummyCrawler()
             ->addStep($step)
@@ -472,10 +477,18 @@ it(
             }
         };
 
+        $store = new class () extends Store {
+            public function store(Result $result): void
+            {
+                $this->logger?->info('Stored a result');
+            }
+        };
+
         $crawler = helper_getDummyCrawler()
             ->inputs(['input1', 'input2'])
             ->addStep('foo', $step1)
-            ->addStep('bar', $step2);
+            ->addStep('bar', $step2)
+            ->setStore($store);
 
         $crawler->runAndTraverse();
 
@@ -489,11 +502,19 @@ it(
 
         expect($outputLines[2])->toContain('step2 called');
 
-        expect($outputLines[3])->toContain('step1 called');
+        expect($outputLines[3])->toContain('Stored a result');
 
-        expect($outputLines[4])->toContain('step2 called');
+        expect($outputLines[4])->toContain('Stored a result');
 
-        expect($outputLines[5])->toContain('step2 called');
+        expect($outputLines[5])->toContain('step1 called');
+
+        expect($outputLines[6])->toContain('step2 called');
+
+        expect($outputLines[7])->toContain('step2 called');
+
+        expect($outputLines[8])->toContain('Stored a result');
+
+        expect($outputLines[9])->toContain('Stored a result');
     }
 );
 
