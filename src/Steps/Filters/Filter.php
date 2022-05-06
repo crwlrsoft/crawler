@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 
 use Crwlr\Crawler\Steps\Filters\Enums\Comparisons;
 use Crwlr\Crawler\Steps\Filters\Enums\StringChecks;
+use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
 use Exception;
 use InvalidArgumentException;
 
@@ -56,6 +57,31 @@ abstract class Filter implements FilterInterface
     public static function stringEndsWith(mixed $endsWithValue): StringCheck
     {
         return new StringCheck(StringChecks::EndsWith, $endsWithValue);
+    }
+
+    public static function urlScheme(mixed $urlSchemeValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::Scheme, $urlSchemeValue);
+    }
+
+    public static function urlHost(mixed $urlHostValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::Host, $urlHostValue);
+    }
+
+    public static function urlDomain(mixed $urlDomainValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::Domain, $urlDomainValue);
+    }
+
+    public static function urlPath(mixed $urlPathValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::Path, $urlPathValue);
+    }
+
+    public static function urlPathStartsWith(mixed $urlPathStartsWithValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::PathStartsWith, $urlPathStartsWithValue);
     }
 
     public function useKey(string $key): static
