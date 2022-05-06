@@ -2,16 +2,16 @@
 
 namespace tests\Steps\Filters\Enums;
 
-use Crwlr\Crawler\Steps\Filters\Enums\StringChecks;
+use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
 
 it('checks if a string contains another string', function (
     bool $expectedResult,
     mixed $haystack,
     mixed $needle,
 ) {
-    $comparison = StringChecks::Contains;
+    $stringFilterRule = StringFilterRule::Contains;
 
-    expect($comparison->evaluate($haystack, $needle))->toBe($expectedResult);
+    expect($stringFilterRule->evaluate($haystack, $needle))->toBe($expectedResult);
 })->with([
     [true, 'foobarbaz', 'foo'],
     [true, 'foo bar baz', 'foo'],
@@ -25,9 +25,9 @@ it('checks if a string starts with another string', function (
     mixed $haystack,
     mixed $needle,
 ) {
-    $comparison = StringChecks::StartsWith;
+    $stringFilterRule = StringFilterRule::StartsWith;
 
-    expect($comparison->evaluate($haystack, $needle))->toBe($expectedResult);
+    expect($stringFilterRule->evaluate($haystack, $needle))->toBe($expectedResult);
 })->with([
     [true, 'foobarbaz', 'foo'],
     [true, 'foo bar baz', 'foo'],
@@ -42,9 +42,9 @@ it('checks if a string ends with another string', function (
     mixed $haystack,
     mixed $needle,
 ) {
-    $comparison = StringChecks::EndsWith;
+    $stringFilterRule = StringFilterRule::EndsWith;
 
-    expect($comparison->evaluate($haystack, $needle))->toBe($expectedResult);
+    expect($stringFilterRule->evaluate($haystack, $needle))->toBe($expectedResult);
 })->with([
     [true, 'foobarbaz', 'baz'],
     [true, 'foo bar baz', 'baz'],

@@ -2,8 +2,8 @@
 
 namespace Crwlr\Crawler\Steps\Filters;
 
-use Crwlr\Crawler\Steps\Filters\Enums\Comparisons;
-use Crwlr\Crawler\Steps\Filters\Enums\StringChecks;
+use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
+use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
 use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
 use Exception;
 use InvalidArgumentException;
@@ -14,49 +14,49 @@ abstract class Filter implements FilterInterface
 
     protected bool|FilterInterface $or = false;
 
-    public static function equal(mixed $equalToValue): Comparison
+    public static function equal(mixed $equalToValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::Equal, $equalToValue);
+        return new ComparisonFilter(ComparisonFilterRule::Equal, $equalToValue);
     }
 
-    public static function notEqual(mixed $notEqualToValue): Comparison
+    public static function notEqual(mixed $notEqualToValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::NotEqual, $notEqualToValue);
+        return new ComparisonFilter(ComparisonFilterRule::NotEqual, $notEqualToValue);
     }
 
-    public static function greaterThan(mixed $greaterThanValue): Comparison
+    public static function greaterThan(mixed $greaterThanValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::GreaterThan, $greaterThanValue);
+        return new ComparisonFilter(ComparisonFilterRule::GreaterThan, $greaterThanValue);
     }
 
-    public static function greaterThanOrEqual(mixed $greaterThanOrEqualValue): Comparison
+    public static function greaterThanOrEqual(mixed $greaterThanOrEqualValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::GreaterThanOrEqual, $greaterThanOrEqualValue);
+        return new ComparisonFilter(ComparisonFilterRule::GreaterThanOrEqual, $greaterThanOrEqualValue);
     }
 
-    public static function lessThan(mixed $lessThanValue): Comparison
+    public static function lessThan(mixed $lessThanValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::LessThan, $lessThanValue);
+        return new ComparisonFilter(ComparisonFilterRule::LessThan, $lessThanValue);
     }
 
-    public static function lessThanOrEqual(mixed $lessThanOrEqualValue): Comparison
+    public static function lessThanOrEqual(mixed $lessThanOrEqualValue): ComparisonFilter
     {
-        return new Comparison(Comparisons::LessThanOrEqual, $lessThanOrEqualValue);
+        return new ComparisonFilter(ComparisonFilterRule::LessThanOrEqual, $lessThanOrEqualValue);
     }
 
-    public static function stringContains(mixed $containsValue): StringCheck
+    public static function stringContains(mixed $containsValue): StringFilter
     {
-        return new StringCheck(StringChecks::Contains, $containsValue);
+        return new StringFilter(StringFilterRule::Contains, $containsValue);
     }
 
-    public static function stringStartsWith(mixed $startsWithValue): StringCheck
+    public static function stringStartsWith(mixed $startsWithValue): StringFilter
     {
-        return new StringCheck(StringChecks::StartsWith, $startsWithValue);
+        return new StringFilter(StringFilterRule::StartsWith, $startsWithValue);
     }
 
-    public static function stringEndsWith(mixed $endsWithValue): StringCheck
+    public static function stringEndsWith(mixed $endsWithValue): StringFilter
     {
-        return new StringCheck(StringChecks::EndsWith, $endsWithValue);
+        return new StringFilter(StringFilterRule::EndsWith, $endsWithValue);
     }
 
     public static function urlScheme(mixed $urlSchemeValue): UrlFilter

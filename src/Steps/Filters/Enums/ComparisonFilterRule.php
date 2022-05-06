@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Filters\Enums;
 
-enum Comparisons
+enum ComparisonFilterRule
 {
     case Equal;
 

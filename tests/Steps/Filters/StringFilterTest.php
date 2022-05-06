@@ -2,12 +2,12 @@
 
 namespace tests\Steps\Filters;
 
-use Crwlr\Crawler\Steps\Filters\Enums\StringChecks;
-use Crwlr\Crawler\Steps\Filters\StringCheck;
+use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
+use Crwlr\Crawler\Steps\Filters\StringFilter;
 use function tests\helper_getStdClassWithData;
 
 it('checks a string', function () {
-    $stringCheck = new StringCheck(StringChecks::Contains, 'bar');
+    $stringCheck = new StringFilter(StringFilterRule::Contains, 'bar');
 
     expect($stringCheck->evaluate('foo bar baz'))->toBeTrue();
 
@@ -15,7 +15,7 @@ it('checks a string', function () {
 });
 
 it('checks a string from an array using a key', function () {
-    $stringCheck = new StringCheck(StringChecks::StartsWith, 'waldo');
+    $stringCheck = new StringFilter(StringFilterRule::StartsWith, 'waldo');
 
     $stringCheck->useKey('bar');
 
@@ -25,7 +25,7 @@ it('checks a string from an array using a key', function () {
 });
 
 it('checks a string from an object using a key', function () {
-    $stringCheck = new StringCheck(StringChecks::EndsWith, 'waldo');
+    $stringCheck = new StringFilter(StringFilterRule::EndsWith, 'waldo');
 
     $stringCheck->useKey('bar');
 
