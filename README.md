@@ -1,4 +1,4 @@
-<p align="center"><a href="https://www.crwlr.software" target="_blank"><img src="https://github.com/crwlrsoft/graphics/blob/e0d46ba778597dbf51ab809cc8a48d88d985d736/crwlr-logo.png" alt="crwlr.software logo" width="250"></a></p>
+<p align="center"><a href="https://www.crwlr.software" target="_blank"><img src="https://github.com/crwlrsoft/graphics/blob/eee6cf48ee491b538d11b9acd7ee71fbcdbe3a09/crwlr-logo.png" alt="crwlr.software logo" width="260"></a></p>
 
 # Library for Rapid (Web) Crawler and Scraper Development
 
