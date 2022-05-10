@@ -2,8 +2,6 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -80,14 +78,7 @@ class Csv extends Step
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         if ($this->method === 'string') {
-            if ($input instanceof RespondedRequest) {
-                return Http::getBodyString($input);
-            }
-
-            return $this->validateAndSanitizeStringOrStringable(
-                $input,
-                'Input has to be string, stringable or RespondedRequest'
-            );
+            return $this->validateAndSanitizeStringOrHttpResponse($input);
         } elseif ($this->method === 'file') {
             return $this->validateAndSanitizeStringOrStringable($input);
         } else {
@@ -110,21 +101,6 @@ class Csv extends Step
         } elseif ($this->method === 'string') {
             yield from $this->mapLines(explode(PHP_EOL, $input));
         }
-    }
-
-    private function validateAndSanitizeStringOrStringable(
-        mixed $value,
-        string $exceptionMessage = 'Input has to be string or stringable'
-    ): string {
-        if (is_object($value) && method_exists($value, '__toString')) {
-            return $value->__toString();
-        }
-
-        if (is_string($value)) {
-            return $value;
-        }
-
-        throw new InvalidArgumentException($exceptionMessage);
     }
 
     private function readFile(string $filePath): Generator

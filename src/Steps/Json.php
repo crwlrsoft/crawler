@@ -30,6 +30,11 @@ class Json extends Step
         return new static($propertyMapping, $each);
     }
 
+    protected function validateAndSanitizeInput(mixed $input): mixed
+    {
+        return $this->validateAndSanitizeStringOrHttpResponse($input);
+    }
+
     protected function invoke(mixed $input): Generator
     {
         $array = json_decode($input, true);
