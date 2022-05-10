@@ -4,11 +4,14 @@ namespace Crwlr\Crawler\Steps;
 
 use Closure;
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
 use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface;
 
 abstract class Step extends BaseStep
 {
@@ -76,6 +79,42 @@ abstract class Step extends BaseStep
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         return $input;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function validateAndSanitizeStringOrStringable(
+        mixed $inputValue,
+        string $exceptionMessage = 'Input has to be string or stringable'
+    ): string {
+        if (is_object($inputValue) && method_exists($inputValue, '__toString')) {
+            return $inputValue->__toString();
+        }
+
+        if (is_string($inputValue)) {
+            return $inputValue;
+        }
+
+        throw new InvalidArgumentException($exceptionMessage);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function validateAndSanitizeStringOrHttpResponse(
+        mixed $inputValue,
+        string $exceptionMessage = 'Input has to be string, stringable or Http response',
+        bool $allowOnlyRespondedRequest = false
+    ): string {
+        if (
+            $inputValue instanceof RespondedRequest ||
+            ($inputValue instanceof ResponseInterface && !$allowOnlyRespondedRequest)
+        ) {
+            return Http::getBodyString($inputValue);
+        }
+
+        return $this->validateAndSanitizeStringOrStringable($inputValue, $exceptionMessage);
     }
 
     private function invokeAndYield(mixed $validInputValue, ?Result $result): Generator

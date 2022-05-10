@@ -2,8 +2,36 @@
 
 namespace tests\Steps;
 
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Json;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use function tests\helper_invokeStepWithInput;
+
+it('accepts RespondedRequest as input', function () {
+    $json = '{ "data": { "foo": "bar" } }';
+
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response(body: Utils::streamFor($json)));
+
+    $output = helper_invokeStepWithInput(Json::get(['foo' => 'data.foo']), $respondedRequest);
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'bar']);
+});
+
+it('accepts PSR-7 Response as input', function () {
+    $json = '{ "data": { "foo": "bar" } }';
+
+    $response = new Response(body: Utils::streamFor($json));
+
+    $output = helper_invokeStepWithInput(Json::get(['foo' => 'data.foo']), $response);
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'bar']);
+});
 
 it('extracts data defined using dot notation', function () {
     $json = <<<JSON

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2022-05-10
+### Fixed
+* The `Json` step now also works with Http responses as input.
+
 ## [0.4.0] - 2022-05-06
 ### Added
 * The `BaseStep` class now has `where()` and `orWhere()` methods to

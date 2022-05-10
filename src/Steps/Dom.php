@@ -2,15 +2,12 @@
 
 namespace Crwlr\Crawler\Steps;
 
-use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
-use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
 use Generator;
 use InvalidArgumentException;
-use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
 abstract class Dom extends Step
@@ -85,17 +82,12 @@ abstract class Dom extends Step
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        if (is_string($input)) {
-            return new Crawler($input);
-        }
-
-        if ($input instanceof ResponseInterface || $input instanceof RespondedRequest) {
-            return new Crawler(Http::getBodyString($input));
-        }
-
-        throw new InvalidArgumentException('Input must be string, PSR-7 Response or RespondedRequest.');
+        return new Crawler($this->validateAndSanitizeStringOrHttpResponse($input));
     }
 
     /**
