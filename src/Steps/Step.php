@@ -17,6 +17,10 @@ abstract class Step extends BaseStep
 {
     protected ?Closure $updateInputUsingOutput = null;
 
+    protected ?int $maxOutputs = null;
+
+    protected int $currentOutputCount = 0;
+
     /**
      * @return Generator<mixed>
      */
@@ -30,15 +34,15 @@ abstract class Step extends BaseStep
      */
     final public function invokeStep(Input $input): Generator
     {
+        if ($this->maxOutputsExceeded()) {
+            return;
+        }
+
         $input = $this->getInputKeyToUse($input);
 
         $validInputValue = $this->validateAndSanitizeInput($input->get());
 
-        if ($this->uniqueOutput) {
-            yield from $this->invokeAndYieldUnique($validInputValue, $input->result);
-        } else {
-            yield from $this->invokeAndYield($validInputValue, $input->result);
-        }
+        yield from $this->invokeAndYield($validInputValue, $input->result);
     }
 
     /**
@@ -54,6 +58,13 @@ abstract class Step extends BaseStep
         return $this;
     }
 
+    final public function maxOutputs(int $maxOutputs): static
+    {
+        $this->maxOutputs = $maxOutputs;
+
+        return $this;
+    }
+
     /**
      * If the user set a callback to update the input (see above) => call it.
      */
@@ -64,6 +75,13 @@ abstract class Step extends BaseStep
         }
 
         return $input;
+    }
+
+    public function resetAfterRun(): void
+    {
+        parent::resetAfterRun();
+
+        $this->currentOutputCount = 0;
     }
 
     /**
@@ -117,33 +135,27 @@ abstract class Step extends BaseStep
         return $this->validateAndSanitizeStringOrStringable($inputValue, $exceptionMessage);
     }
 
+    /**
+     * @throws Exception
+     */
     private function invokeAndYield(mixed $validInputValue, ?Result $result): Generator
     {
         foreach ($this->invoke($validInputValue) as $output) {
-            if ($this->passesAllFilters($output)) {
-                yield $this->output($output, $result);
-            }
-        }
-    }
-
-    private function invokeAndYieldUnique(mixed $validInputValue, ?Result $result): Generator
-    {
-        foreach ($this->invoke($validInputValue) as $output) {
-            if (!$this->passesAllFilters($output)) {
+            if ($this->maxOutputsExceeded() || !$this->passesAllFilters($output)) {
                 continue;
             }
 
             $output = $this->output($output, $result);
 
-            $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
-
-            if (isset($this->uniqueOutputKeys[$key])) {
+            if ($this->uniqueOutput && !$this->outputIsUnique($output)) {
                 continue;
             }
 
-            $this->uniqueOutputKeys[$key] = true; // Don't keep output value, just the key, to keep memory usage low.
-
             yield $output;
+
+            if ($this->maxOutputs !== null) {
+                $this->currentOutputCount += 1;
+            }
         }
     }
 
@@ -157,5 +169,23 @@ abstract class Step extends BaseStep
         $result = $this->addOutputDataToResult($output, $result);
 
         return new Output($output, $result);
+    }
+
+    private function outputIsUnique(Output $output): bool
+    {
+        $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
+
+        if (isset($this->uniqueOutputKeys[$key])) {
+            return false;
+        }
+
+        $this->uniqueOutputKeys[$key] = true; // Don't keep value, just the key, to keep memory usage low.
+
+        return true;
+    }
+
+    private function maxOutputsExceeded(): bool
+    {
+        return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
     }
 }

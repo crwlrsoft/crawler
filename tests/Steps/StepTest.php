@@ -331,3 +331,85 @@ test('You can add and call an updateInputUsingOutput callback', function () {
 
     expect($updatedInput->get())->toBe('Boo Yah!');
 });
+
+it('does not yield more outputs than defined via maxOutputs() method', function () {
+    $step = helper_getValueReturningStep('yolo')->maxOutputs(3);
+
+    for ($i = 1; $i <= 5; $i++) {
+        $outputs = helper_invokeStepWithInput($step, new Input('asdf'));
+
+        if ($i <= 3) {
+            expect($outputs)->toHaveCount(1);
+        } else {
+            expect($outputs)->toHaveCount(0);
+        }
+    }
+});
+
+it(
+    'does not yield more outputs than defined via maxOutputs() when step yields multiple outputs per input and the ' .
+    'limit is reached in the middle of the outputs resulting from one input',
+    function () {
+        $step = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'one';
+
+                yield 'two';
+
+                yield 'three';
+            }
+        };
+
+        $step->maxOutputs(7);
+
+        $outputs = helper_invokeStepWithInput($step, new Input('a'));
+
+        expect($outputs)->toHaveCount(3);
+
+        $outputs = helper_invokeStepWithInput($step, new Input('b'));
+
+        expect($outputs)->toHaveCount(3);
+
+        $outputs = helper_invokeStepWithInput($step, new Input('c'));
+
+        expect($outputs)->toHaveCount(1);
+    }
+);
+
+test('When a step has max outputs defined, it won\'t call the invoke method after the limit was reached', function () {
+    $step = new class () extends Step {
+        public int $_invokeCallCount = 0;
+
+        protected function invoke(mixed $input): Generator
+        {
+            $this->_invokeCallCount += 1;
+
+            yield 'something';
+        }
+    };
+
+    $step->maxOutputs(2);
+
+    helper_invokeStepWithInput($step, new Input('one'));
+
+    helper_invokeStepWithInput($step, new Input('two'));
+
+    helper_invokeStepWithInput($step, new Input('three'));
+
+    helper_invokeStepWithInput($step, new Input('four'));
+
+    expect($step->_invokeCallCount)->toBe(2);
+});
+
+it('resets outputs count for maxOutputs rule when resetAfterRun() is called', function () {
+    $step = helper_getValueReturningStep('gogogo')->maxOutputs(2);
+
+    helper_invokeStepWithInput($step, new Input('one'));
+
+    helper_invokeStepWithInput($step, new Input('two'));
+
+    $step->resetAfterRun();
+
+    expect(helper_invokeStepWithInput($step, new Input('three')))->toHaveCount(1);
+});

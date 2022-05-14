@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+* With the `maxOutputs()` method of the abstract `Step` class you
+  can now limit how many outputs a certain step should yield at max.
+  That's for example helpful during development, when you want to
+  run the crawler only with a small subset of the data/requests it
+  will actually have to process when you eventually remove the
+  limits. When a step has reached its limit, it won't even call the
+  `invoke()` method any longer until the step is reset after a run.
 
 ## [0.4.1] - 2022-05-10
 ### Fixed
