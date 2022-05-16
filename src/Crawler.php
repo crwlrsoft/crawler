@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler;
 
+use Closure;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
@@ -29,9 +30,11 @@ abstract class Crawler
      */
     protected array $steps = [];
 
-    protected ?StoreInterface $store = null;
+    private ?StoreInterface $store = null;
 
-    protected bool|int $monitorMemoryUsage = false;
+    private bool|int $monitorMemoryUsage = false;
+
+    private ?Closure $outputHook = null;
 
     public function __construct()
     {
@@ -183,6 +186,13 @@ abstract class Crawler
         return $this;
     }
 
+    public function outputHook(Closure $callback): static
+    {
+        $this->outputHook = $callback;
+
+        return $this;
+    }
+
     protected function logger(): LoggerInterface
     {
         return new CliLogger();
@@ -191,7 +201,7 @@ abstract class Crawler
     /**
      * @return Generator<Output>
      */
-    protected function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
+    private function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
     {
         $outputs = $step->invokeStep($input);
 
@@ -200,6 +210,8 @@ abstract class Crawler
                 if ($this->monitorMemoryUsage !== false) {
                     $this->logMemoryUsage();
                 }
+
+                $this->outputHook?->call($this, $output, $stepIndex, $step);
 
                 if ($this->nextStep($stepIndex)) {
                     yield from $this->invokeStepsRecursive(
@@ -210,7 +222,15 @@ abstract class Crawler
                 }
             }
         } elseif ($step->cascades()) {
-            yield from $outputs;
+            if ($this->outputHook) {
+                foreach ($outputs as $output) {
+                    $this->outputHook->call($this, $output, $stepIndex, $step);
+
+                    yield $output;
+                }
+            } else {
+                yield from $outputs;
+            }
         }
     }
 
@@ -218,7 +238,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnResults(Generator $outputs): Generator
+    private function storeAndReturnResults(Generator $outputs): Generator
     {
         if ($this->anyResultKeysDefinedInSteps()) {
             yield from $this->storeAndReturnDefinedResults($outputs);
@@ -231,7 +251,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnDefinedResults(Generator $outputs): Generator
+    private function storeAndReturnDefinedResults(Generator $outputs): Generator
     {
         $results = [];
 
@@ -254,7 +274,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnOutputsAsResults(Generator $outputs): Generator
+    private function storeAndReturnOutputsAsResults(Generator $outputs): Generator
     {
         foreach ($outputs as $output) {
             $result = (new Result())->set('unnamed', $output->get());
@@ -269,14 +289,14 @@ abstract class Crawler
      * @return Input[]
      * @throws Exception
      */
-    protected function prepareInput(): array
+    private function prepareInput(): array
     {
         return array_map(function ($input) {
             return new Input($input);
         }, $this->inputs);
     }
 
-    protected function anyResultKeysDefinedInSteps(): bool
+    private function anyResultKeysDefinedInSteps(): bool
     {
         foreach ($this->steps as $step) {
             if ($step->addsToOrCreatesResult()) {
@@ -287,7 +307,7 @@ abstract class Crawler
         return false;
     }
 
-    protected function logMemoryUsage(): void
+    private function logMemoryUsage(): void
     {
         $memoryUsage = memory_get_usage();
 
@@ -296,17 +316,17 @@ abstract class Crawler
         }
     }
 
-    protected function firstStep(): ?StepInterface
+    private function firstStep(): ?StepInterface
     {
         return $this->steps[0] ?? null;
     }
 
-    protected function nextStep(int $afterIndex): ?StepInterface
+    private function nextStep(int $afterIndex): ?StepInterface
     {
         return $this->steps[$afterIndex + 1] ?? null;
     }
 
-    protected function reset(): void
+    private function reset(): void
     {
         $this->inputs = [];
 
