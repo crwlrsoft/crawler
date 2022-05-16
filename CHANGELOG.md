@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   will actually have to process when you eventually remove the
   limits. When a step has reached its limit, it won't even call the
   `invoke()` method any longer until the step is reset after a run.
+* With the new `outputHook()` method of the abstract `Crawler` class
+  you can set a closure that'll receive all the outputs from all the
+  steps. Should be only for debugging reasons.
 
 ## [0.4.1] - 2022-05-10
 ### Fixed
