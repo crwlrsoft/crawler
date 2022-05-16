@@ -7,6 +7,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
@@ -534,4 +535,33 @@ it('logs memory usage if you want it to', function () {
     $output = $this->getActualOutput();
 
     expect($output)->toContain('memory usage: ');
+});
+
+it('sends all outputs to the outputHook when defined', function () {
+    $outputs = [];
+
+    $crawler = helper_getDummyCrawler()
+        ->input(1)
+        ->addStep(helper_getNumberIncrementingStep())
+        ->addStep(
+            Crawler::loop(helper_getNumberIncrementingStep())
+                ->maxIterations(5)
+        )
+        ->outputHook(function (Output $output, int $stepIndex, StepInterface $step) use (& $outputs) {
+            $outputs[$stepIndex][] = $output->get();
+        });
+
+    $crawler->runAndTraverse();
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0])->toHaveCount(1);
+
+    expect($outputs[0][0])->toBe(2);
+
+    expect($outputs[1])->toHaveCount(5);
+
+    expect($outputs[1][0])->toBe(3);
+
+    expect($outputs[1][4])->toBe(7);
 });
