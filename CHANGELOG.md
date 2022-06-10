@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   you can set a closure that'll receive all the outputs from all the
   steps. Should be only for debugging reasons.
 
+### Fixed
+* The static methods `Html::getLink()` and `Html::getLinks()` now
+  also work without argument, like the `GetLink` and `GetLinks`
+  classes.
+
 ## [0.4.1] - 2022-05-10
 ### Fixed
 * The `Json` step now also works with Http responses as input.

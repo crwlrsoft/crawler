@@ -4,6 +4,8 @@ namespace tests\Steps;
 
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Html;
+use Crwlr\Crawler\Steps\Html\GetLink;
+use Crwlr\Crawler\Steps\Html\GetLinks;
 use function tests\helper_invokeStepWithInput;
 
 function helper_getHtmlContent(string $fileName): string
@@ -96,4 +98,12 @@ it('extracts the data of the last matching element when the last method is used'
     expect($output)->toHaveCount(1);
 
     expect($output[0]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
+});
+
+test('the static getLink method works without argument', function () {
+    expect(Html::getLink())->toBeInstanceOf(GetLink::class);
+});
+
+test('the static getLinks method works without argument', function () {
+    expect(Html::getLinks())->toBeInstanceOf(GetLinks::class);
 });
