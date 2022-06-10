@@ -9,12 +9,12 @@ use Crwlr\Crawler\Steps\Html\GetLinks;
 
 class Html extends Dom
 {
-    public static function getLink(string $selector): GetLink
+    public static function getLink(?string $selector = null): GetLink
     {
         return new GetLink($selector);
     }
 
-    public static function getLinks(string $selector): GetLinks
+    public static function getLinks(?string $selector = null): GetLinks
     {
         return new GetLinks($selector);
     }

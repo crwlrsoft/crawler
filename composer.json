@@ -63,5 +63,11 @@
         "cs": "@php vendor/bin/php-cs-fixer fix -v --dry-run",
         "cs-fix": "@php vendor/bin/php-cs-fixer fix -v",
         "add-git-hooks": "@php bin/add-git-hooks"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
     }
 }

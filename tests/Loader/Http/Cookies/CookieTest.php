@@ -260,6 +260,7 @@ test('It should be sent when date of expires attribute is not reached', function
 test('It should not be sent when maxAge attribute is already reached', function () {
     $cookie = new Cookie('https://www.crwlr.software', 'cookie=value; Max-Age=1');
     expect($cookie->shouldBeSentTo('https://www.crwlr.software'))->toBeTrue();
+    // @phpstan-ignore-next-line
     invade($cookie)->receivedAtTimestamp -= 2; // instead of sleep, manipulate the timestamp when it was received.
     expect($cookie->shouldBeSentTo('https://www.crwlr.software'))->toBeFalse();
 });
