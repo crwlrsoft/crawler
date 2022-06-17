@@ -13,7 +13,7 @@ class GetLinks extends GetLink
      * @return Generator<string>
      * @throws Exception
      */
-    protected function invoke(mixed $input): Generator
+    protected function invoke(Crawler $input): Generator
     {
         $selector = $this->selector ?? 'a';
 
