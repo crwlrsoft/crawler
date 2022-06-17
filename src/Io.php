@@ -8,11 +8,13 @@ class Io
 
     public function __construct(mixed $value, public ?Result $result = null)
     {
-        $this->value = $value instanceof Io ? $value->get() : $value;
-
-        if (!$this->result && $value instanceof Io) {
-            $this->result = $value->result;
+        if ($value instanceof self) {
+            $this->value = $value->value;
+            $this->result ??= $value->result;
+            return;
         }
+
+        $this->value = $value;
     }
 
     public function get(): mixed
