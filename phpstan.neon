@@ -6,7 +6,5 @@ parameters:
     excludePaths:
         analyse:
             - tests/_Integration/_Server
-    treatPhpDocTypesAsCertain: false
-
     ignoreErrors:
-        - "/Call to an undefined method Pest\\\\Expectation\\\\|Pest\\\\Support\\\\Extendable.*/"
+         - "#^Call to an undefined method Pest\\\\Expectation\\|Pest\\\\Support\\\\Extendable\\:\\:\\S+\\(\\)\\.$#"
