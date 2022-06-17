@@ -157,28 +157,24 @@ class GetLink extends Step
 
     private function isOnDomain(Url $link): bool
     {
-        if (is_array($this->onDomain)) {
-            foreach ($this->onDomain as $domain) {
-                if ($link->domain() === $domain) {
-                    return true;
-                }
-            }
+        if (!is_array($this->onDomain)) {
+            return false;
         }
 
-        return false;
+        return array_filter($this->onDomain, static function (string $domain) use ($link) {
+            return $link->domain() === $domain;
+        }) !== [];
     }
 
     private function isOnHost(Url $link): bool
     {
-        if (is_array($this->onHost)) {
-            foreach ($this->onHost as $host) {
-                if ($link->host() === $host) {
-                    return true;
-                }
-            }
+        if (!is_array($this->onHost)) {
+            return false;
         }
 
-        return false;
+        return array_filter($this->onHost, static function (string $host) use ($link) {
+            return $link->host() === $host;
+        }) !== [];
     }
 
     /**
@@ -187,12 +183,6 @@ class GetLink extends Step
      */
     private function isArrayWithOnlyStrings(array $array): bool
     {
-        foreach ($array as $element) {
-            if (!is_string($element)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_filter($array, 'is_string') === $array;
     }
 }
