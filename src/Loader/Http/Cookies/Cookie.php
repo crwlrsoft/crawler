@@ -49,17 +49,12 @@ class Cookie
         $url = $url instanceof Url ? $url : Url::parse($url);
         $urlHost = $url->host() ?? '';
 
-        if (
-            !str_contains($urlHost, $this->domain()) ||
-            ($this->hasHostPrefix() && $urlHost !== $this->receivedFromHost) ||
-            ($this->secure() && $url->scheme() !== 'https' && !in_array($urlHost, ['localhost', '127.0.0.1'], true)) ||
-            ($this->path() && !$this->pathMatches($url)) ||
-            $this->isExpired()
-        ) {
-            return false;
-        }
-
-        return true;
+        return
+            str_contains($urlHost, $this->domain()) &&
+            (!$this->hasHostPrefix() || $urlHost === $this->receivedFromHost) &&
+            (!$this->secure() || $url->scheme() === 'https' || in_array($urlHost, ['localhost', '127.0.0.1'], true)) &&
+            (!$this->path() || $this->pathMatches($url)) &&
+            !$this->isExpired();
     }
 
     public function __toString(): string
@@ -104,14 +99,8 @@ class Cookie
             return true;
         }
 
-        if (
-            $this->maxAge() !== null &&
-            ($this->maxAge() <= 0 || $nowTimestamp > ($this->receivedAtTimestamp + $this->maxAge()))
-        ) {
-            return true;
-        }
-
-        return false;
+        return $this->maxAge() !== null &&
+            ($this->maxAge() <= 0 || $nowTimestamp > ($this->receivedAtTimestamp + $this->maxAge()));
     }
 
     public function domain(): string
