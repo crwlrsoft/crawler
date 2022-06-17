@@ -35,13 +35,13 @@ class GetLink extends Step
 
     protected function validateAndSanitizeInput(mixed $input): Crawler
     {
-        if ($input instanceof RespondedRequest) {
-            $this->baseUri = Url::parse($input->effectiveUri());
-
-            return new Crawler(Http::getBodyString($input));
+        if (!$input instanceof RespondedRequest) {
+            throw new InvalidArgumentException('Input must be an instance of RespondedRequest.');
         }
 
-        throw new InvalidArgumentException('Input must be an instance of RespondedRequest.');
+        $this->baseUri = Url::parse($input->effectiveUri());
+
+        return new Crawler(Http::getBodyString($input));
     }
 
     /**
