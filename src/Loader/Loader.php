@@ -14,13 +14,13 @@ abstract class Loader implements LoaderInterface
     protected ?CacheInterface $cache = null;
 
     /**
-     * @var array|(null|callable[])[]
+     * @var array<string, callable[]>
      */
     protected array $hooks = [
-        'beforeLoad' => null,
-        'onSuccess' => null,
-        'onError' => null,
-        'afterLoad' => null,
+        'beforeLoad' => [],
+        'onSuccess' => [],
+        'onError' => [],
+        'afterLoad' => [],
     ];
 
     public function __construct(
@@ -80,12 +80,14 @@ abstract class Loader implements LoaderInterface
 
     protected function callHook(string $hook, mixed ...$arguments): void
     {
+        if (!array_key_exists($hook, $this->hooks)) {
+            return;
+        }
+
         $arguments[] = $this->logger;
 
-        if (array_key_exists($hook, $this->hooks) && is_array($this->hooks[$hook])) {
-            foreach ($this->hooks[$hook] as $callback) {
-                call_user_func($callback, ...$arguments);
-            }
+        foreach ($this->hooks[$hook] as $callback) {
+            call_user_func($callback, ...$arguments);
         }
     }
 
@@ -101,10 +103,6 @@ abstract class Loader implements LoaderInterface
 
     private function addHookCallback(string $hook, callable $callback): void
     {
-        if ($this->hooks[$hook] === null) {
-            $this->hooks[$hook] = [$callback];
-        } else {
-            $this->hooks[$hook][] = $callback;
-        }
+        $this->hooks[$hook][] = $callback;
     }
 }
