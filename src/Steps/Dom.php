@@ -13,15 +13,27 @@ use Symfony\Component\DomCrawler\Crawler;
 abstract class Dom extends Step
 {
     protected bool $root = false;
+
     protected ?DomQueryInterface $each = null;
+
     protected ?DomQueryInterface $first = null;
+
     protected ?DomQueryInterface $last = null;
 
     /**
-     * @param array<string|CssSelector> $mapping
+     * @var array<int|string, string|DomQueryInterface>
      */
-    final public function __construct(protected array $mapping = [])
-    {
+    protected array $mapping = [];
+
+    protected null|string|DomQueryInterface $singleSelector = null;
+
+    /**
+     * @param string|DomQueryInterface|array<int|string, string|DomQueryInterface> $selectorOrMapping
+     */
+    final public function __construct(
+        string|DomQueryInterface|array $selectorOrMapping = []
+    ) {
+        $this->extract($selectorOrMapping);
     }
 
     public static function root(): static
@@ -73,11 +85,15 @@ abstract class Dom extends Step
     abstract protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface;
 
     /**
-     * @param mixed[] $mapping
+     * @param string|DomQueryInterface|array<string|DomQueryInterface> $selectorOrMapping
      */
-    public function extract(array $mapping): static
+    public function extract(string|DomQueryInterface|array $selectorOrMapping): static
     {
-        $this->mapping = $mapping;
+        if (is_array($selectorOrMapping)) {
+            $this->mapping = $selectorOrMapping;
+        } else {
+            $this->singleSelector = $selectorOrMapping;
+        }
 
         return $this;
     }
@@ -85,7 +101,7 @@ abstract class Dom extends Step
     /**
      * @throws InvalidArgumentException
      */
-    protected function validateAndSanitizeInput(mixed $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): Crawler
     {
         return new Crawler($this->validateAndSanitizeStringOrHttpResponse($input));
     }
@@ -98,12 +114,37 @@ abstract class Dom extends Step
     {
         $base = $this->getBase($input);
 
-        if ($this->each) {
-            foreach ($base as $element) {
-                yield $this->mapProperties(new Crawler($element));
+        if (empty($this->mapping) && $this->singleSelector) {
+            yield from $this->singleSelector($base);
+        } else {
+            if ($this->each) {
+                foreach ($base as $element) {
+                    yield $this->mapProperties(new Crawler($element));
+                }
+            } else {
+                yield $this->mapProperties($base);
+            }
+        }
+    }
+
+    protected function singleSelector(Crawler $domCrawler): Generator
+    {
+        if ($this->singleSelector === null) {
+            return;
+        }
+
+        $domQuery = is_string($this->singleSelector) ?
+            $this->makeDefaultDomQueryInstance($this->singleSelector) :
+            $this->singleSelector;
+
+        $outputs = $domQuery->apply($domCrawler);
+
+        if (is_array($outputs)) {
+            foreach ($outputs as $output) {
+                yield $output;
             }
         } else {
-            yield $this->mapProperties($base);
+            yield $outputs;
         }
     }
 
