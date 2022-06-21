@@ -21,12 +21,12 @@ test('The apply method returns an array of strings for multiple matches', functi
     expect((new XPathQuery('//item'))->apply($domCrawler))->toBe(['test', 'test 2 sub', 'test 3']);
 });
 
-test('The apply method returns an empty string if nothing matches', function () {
+test('The apply method returns null if nothing matches', function () {
     $xml = '<item>test</item>';
 
     $domCrawler = new Crawler($xml);
 
-    expect((new XPathQuery('//aitem'))->apply($domCrawler))->toBe('');
+    expect((new XPathQuery('//aitem'))->apply($domCrawler))->toBeNull();
 });
 
 it('trims whitespace', function () {

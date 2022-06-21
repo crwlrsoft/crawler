@@ -15,21 +15,21 @@ abstract class DomQuery implements DomQueryInterface
     }
 
     /**
-     * @return string|string[]
+     * @return string[]|string|null
      */
-    public function apply(Crawler $domCrawler): array|string
+    public function apply(Crawler $domCrawler): array|string|null
     {
         $filtered = $this->filter($domCrawler);
 
-        if ($filtered->count() === 0) {
-            return '';
+        if ($filtered->count() > 1) {
+            return $filtered->each(function ($element) {
+                return $this->getTarget($element);
+            });
         } elseif ($filtered->count() === 1) {
             return $this->getTarget($filtered);
         }
 
-        return $filtered->each(function ($element) {
-            return $this->getTarget($element);
-        });
+        return null;
     }
 
     public function text(): self

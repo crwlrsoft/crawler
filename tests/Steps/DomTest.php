@@ -41,7 +41,7 @@ test('string is valid input', function () {
 test('ResponseInterface is a valid input', function () {
     $output = helper_invokeStepWithInput(helper_getDomStepInstance()::root(), new Response());
 
-    expect($output[0]->get())->toBe([]);
+    expect($output)->toHaveCount(0);
 });
 
 test('RequestResponseAggregate is a valid input', function () {
@@ -50,7 +50,7 @@ test('RequestResponseAggregate is a valid input', function () {
         new RespondedRequest(new Request('GET', '/'), new Response())
     );
 
-    expect($output[0]->get())->toBe([]);
+    expect($output)->toHaveCount(0);
 });
 
 test('For other inputs an InvalidArgumentException is thrown', function (mixed $input) {
@@ -127,6 +127,15 @@ test('Extracting with single selector also works with last', function () {
     expect($outputs[0]->get())->toBe('match 3');
 });
 
+test('Extracting with single selector that doesn\'t match anything doesn\'t yield any output', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::last('.list .item')->extract('.mätch'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(0);
+});
+
 it('extracts one result from the root node when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(['matches' => '.match']),
@@ -171,6 +180,44 @@ it('extracts the last matching result when the last method is used', function ()
     expect($output)->toHaveCount(1);
 
     expect($output[0]->get())->toBe(['match' => 'match 3']);
+});
+
+it('doesn\'t yield any output when the each selector doesn\'t match anything', function () {
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::each('.list .ytem')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($output)->toHaveCount(0);
+});
+
+it('doesn\'t yield any output when the first selector doesn\'t match anything', function () {
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::first('.list .ytem')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($output)->toHaveCount(0);
+});
+
+it('doesn\'t yield any output when the last selector doesn\'t match anything', function () {
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::last('.list .otem')->extract(['match' => '.match']),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($output)->toHaveCount(0);
+});
+
+it('returns an array with null values when selectors in an extract array mapping don\'t match anything', function () {
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::last('.list .item')->extract(['match' => '.match', 'noMatch' => '.doesntMatch']),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['match' => 'match 3', 'noMatch' => null]);
 });
 
 test('The static cssSelector method returns an instance of CssSelector using the provided selector', function () {
