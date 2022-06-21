@@ -114,6 +114,10 @@ abstract class Dom extends Step
     {
         $base = $this->getBase($input);
 
+        if ($base->count() === 0) {
+            return;
+        }
+
         if (empty($this->mapping) && $this->singleSelector) {
             yield from $this->singleSelector($base);
         } else {
@@ -143,7 +147,7 @@ abstract class Dom extends Step
             foreach ($outputs as $output) {
                 yield $output;
             }
-        } else {
+        } elseif ($outputs !== null) {
             yield $outputs;
         }
     }
