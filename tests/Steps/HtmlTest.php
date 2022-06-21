@@ -19,6 +19,19 @@ function helper_getHtmlContent(string $fileName): string
     return $content;
 }
 
+it('returns single strings when extract is called with a selector only', function () {
+    $output = helper_invokeStepWithInput(
+        Html::each('#bookstore .book')->extract('.title'),
+        helper_getHtmlContent('bookstore.html')
+    );
+
+    expect($output)->toHaveCount(4);
+
+    expect($output[0]->get())->toBe('Everyday Italian');
+
+    expect($output[3]->get())->toBe('Learning XML');
+});
+
 it('extracts data from an HTML document with CSS selectors by default', function () {
     $output = helper_invokeStepWithInput(
         Html::each('#bookstore .book')->extract(['title' => '.title', 'author' => '.author', 'year' => '.year']),

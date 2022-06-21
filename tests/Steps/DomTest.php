@@ -57,6 +57,76 @@ test('For other inputs an InvalidArgumentException is thrown', function (mixed $
     helper_traverseIterable(helper_getDomStepInstance()::root()->invokeStep(new Input($input)));
 })->throws(InvalidArgumentException::class)->with([123, 123.456, new stdClass()]);
 
+it('outputs a single string when argument for extract is a selector string matching only one element', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract('.list .item:first-child .match'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('match 2');
+});
+
+it('outputs multiple strings when argument for extract is a selector string matching multiple elements', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract('.match'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(3);
+
+    expect($outputs[0]->get())->toBe('match 1');
+
+    expect($outputs[2]->get())->toBe('match 3');
+});
+
+it('also takes a DomQuery instance as argument for extract', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract(Dom::cssSelector('.list .item:first-child .match')),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('match 2');
+});
+
+test('Extracting with single selector also works with each', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::each('.list .item')->extract('.match'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(2);
+
+    expect($outputs[0]->get())->toBe('match 2');
+
+    expect($outputs[1]->get())->toBe('match 3');
+});
+
+test('Extracting with single selector also works with first', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::first('.list .item')->extract('.match'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('match 2');
+});
+
+test('Extracting with single selector also works with last', function () {
+    $outputs = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::last('.list .item')->extract('.match'),
+        helper_getStepFilesContent('Html/basic.html')
+    );
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe('match 3');
+});
+
 it('extracts one result from the root node when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(['matches' => '.match']),

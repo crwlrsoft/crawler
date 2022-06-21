@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * With the new `outputHook()` method of the abstract `Crawler` class
   you can set a closure that'll receive all the outputs from all the
   steps. Should be only for debugging reasons.
+* The `extract()` method of the `Html` and `Xml` (children of `Dom`)
+  steps now also works with a single selector instead of an array
+  with a mapping. Sometimes you'll want to just get a simple string
+  output e.g. for a next step, instead of an array with mapped
+  extracted data.
 
 ### Fixed
 * The static methods `Html::getLink()` and `Html::getLinks()` now

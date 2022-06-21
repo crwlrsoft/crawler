@@ -17,6 +17,19 @@ function helper_getXmlContent(string $fileName): string
     return $content;
 }
 
+it('returns single strings when extract is called with a selector only', function () {
+    $output = helper_invokeStepWithInput(
+        Xml::each('bookstore/book')->extract('//title'),
+        helper_getXmlContent('bookstore.xml')
+    );
+
+    expect($output)->toHaveCount(4);
+
+    expect($output[0]->get())->toBe('Everyday Italian');
+
+    expect($output[3]->get())->toBe('Learning XML');
+});
+
 it('extracts data from an XML document with XPath queries per default', function () {
     $output = helper_invokeStepWithInput(
         Xml::each('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
