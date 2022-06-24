@@ -431,45 +431,7 @@ test('It stops looping when the withInput callback returns null', function () {
     expect($outputs[4]->get())->toBe(5);
 });
 
-test(
-    'It calls the withInput method when there is no output but the callWithoutOutput param is set to true',
-    function () {
-        $step = new class () extends Step {
-            public int $_callcount = 0;
-
-            protected function invoke(mixed $input): Generator
-            {
-                $this->_callcount++;
-
-                if ($input === true) {
-                    yield 'it';
-                }
-            }
-        };
-
-        $firstCall = true;
-
-        $loopStep = (new Loop($step))
-            ->maxIterations(5)
-            ->withInput(function (mixed $input, mixed $output) use (& $firstCall) {
-                expect($output)->toBeNull();
-
-                if ($firstCall === true) {
-                    $firstCall = false;
-
-                    return $input;
-                }
-
-                return null;
-            }, true);
-
-        helper_traverseIterable($loopStep->invokeStep(new Input('yo')));
-
-        expect($step->_callcount)->toBe(2);
-    }
-);
-
-test('It also calls the withInput method without output when keepLoopingWithoutOutput is called', function () {
+it('calls the withInput method when there is no output but keepLoopingWithoutOutput was called', function () {
     $step = new class () extends Step {
         public int $_callcount = 0;
 
@@ -487,6 +449,7 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
 
     $loopStep = (new Loop($step))
         ->maxIterations(10)
+        ->keepLoopingWithoutOutput()
         ->withInput(function (mixed $input, mixed $output) use (& $firstCall) {
             expect($output)->toBeNull();
 
@@ -497,8 +460,7 @@ test('It also calls the withInput method without output when keepLoopingWithoutO
             }
 
             return null;
-        })
-        ->keepLoopingWithoutOutput();
+        });
 
     helper_traverseIterable($loopStep->invokeStep(new Input('don\'t yield output')));
 

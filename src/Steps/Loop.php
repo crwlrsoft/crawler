@@ -80,11 +80,9 @@ final class Loop implements StepInterface
         return $this;
     }
 
-    public function withInput(Closure|StepInterface $closure, bool $callWithoutOutput = false): self
+    public function withInput(Closure|StepInterface $closure): self
     {
         $this->withInput = $closure;
-
-        $this->callWithInputWithoutOutput = $callWithoutOutput;
 
         return $this;
     }
