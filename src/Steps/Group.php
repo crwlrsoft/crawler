@@ -29,9 +29,13 @@ final class Group extends BaseStep
      */
     public function invokeStep(Input $input): Generator
     {
-        $combinedOutput = $uniqueKeys = [];
+        $combinedOutput = [];
 
         $input = $this->prepareInput($input);
+
+        if (!$input) {
+            return;
+        }
 
         foreach ($this->steps as $key => $step) {
             foreach ($step->invokeStep($input) as $output) {
@@ -44,7 +48,7 @@ final class Group extends BaseStep
 
                     $combinedOutput = $this->addOutputToCombinedOutputs($output->get(), $combinedOutput, $stepKey);
                 } elseif ($this->cascades() && $step->cascades()) {
-                    if ($this->uniqueOutput !== false && $this->existsInUniqueKeys($output, $uniqueKeys)) {
+                    if ($this->uniqueOutput !== false && !$this->inputOrOutputIsUnique($output)) {
                         continue;
                     }
 
@@ -158,13 +162,15 @@ final class Group extends BaseStep
     /**
      * @throws Exception
      */
-    private function prepareInput(Input $input): Input
+    private function prepareInput(Input $input): ?Input
     {
         $input = $this->getInputKeyToUse($input);
 
-        $input = $this->addResultToInputIfAnyResultKeysDefined($input);
+        if (!$this->uniqueInput || $this->inputOrOutputIsUnique($input)) {
+            return $this->addResultToInputIfAnyResultKeysDefined($input);
+        }
 
-        return $input;
+        return null;
     }
 
     /**
@@ -234,21 +240,5 @@ final class Group extends BaseStep
         return array_map(function ($output) {
             return count($output) === 1 ? reset($output) : $output;
         }, $combinedOutputs);
-    }
-
-    /**
-     * @param bool[] $uniqueKeys
-     */
-    private function existsInUniqueKeys(Output $output, array &$uniqueKeys): bool
-    {
-        $uniqueKey = $output->setKey(is_string($this->uniqueOutput) ? $this->uniqueOutput : null);
-
-        if (isset($uniqueKeys[$uniqueKey])) {
-            return true;
-        }
-
-        $uniqueKeys[$uniqueKey] = true;
-
-        return false;
     }
 }

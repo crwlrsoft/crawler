@@ -566,6 +566,28 @@ it('adds Results to the Outputs when you call addKeysToResult', function () {
     expect($outputs[1]->result->toArray())->toBe($expectedResultArray); // @phpstan-ignore-line
 });
 
+it('filters duplicate inputs when uniqueInput was called', function () {
+    $loop = new Loop(helper_getInputReturningStep());
+
+    $loop->maxIterations(3);
+
+    $outputs = helper_invokeStepWithInput($loop, 1);
+
+    expect($outputs)->toHaveCount(3);
+
+    $loop->resetAfterRun();
+
+    $loop->uniqueInputs();
+
+    $outputs = helper_invokeStepWithInput($loop, 1);
+
+    expect($outputs)->toHaveCount(1);
+
+    $outputs = helper_invokeStepWithInput($loop, 1);
+
+    expect($outputs)->toHaveCount(0);
+});
+
 it('only returns unique output when uniqueOutput was called', function () {
     $loop = new Loop(helper_getNumberIncrementingStep());
 

@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
@@ -30,10 +31,17 @@ abstract class BaseStep implements StepInterface
 
     protected ?string $useInputKey = null;
 
+    protected bool|string $uniqueInput = false;
+
+    /**
+     * @var array<int|string, true>
+     */
+    protected array $uniqueInputKeys = [];
+
     protected bool|string $uniqueOutput = false;
 
     /**
-     * @var bool[]
+     * @var array<int|string, true>
      */
     protected array $uniqueOutputKeys = [];
 
@@ -115,6 +123,13 @@ abstract class BaseStep implements StepInterface
         return $this->cascades;
     }
 
+    final public function uniqueInputs(?string $key = null): static
+    {
+        $this->uniqueInput = $key ?? true;
+
+        return $this;
+    }
+
     final public function uniqueOutputs(?string $key = null): static
     {
         $this->uniqueOutput = $key ?? true;
@@ -137,6 +152,9 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     final public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
     {
         if (empty($this->filters)) {
@@ -158,7 +176,7 @@ abstract class BaseStep implements StepInterface
 
     public function resetAfterRun(): void
     {
-        $this->uniqueOutputKeys = [];
+        $this->uniqueOutputKeys = $this->uniqueInputKeys = [];
     }
 
     /**
@@ -175,6 +193,27 @@ abstract class BaseStep implements StepInterface
         }
 
         return $input;
+    }
+
+    final protected function inputOrOutputIsUnique(Io $io): bool
+    {
+        $uniquenessSetting = $io instanceof Input ? $this->uniqueInput : $this->uniqueOutput;
+
+        $uniqueKeys = $io instanceof Input ? $this->uniqueInputKeys : $this->uniqueOutputKeys;
+
+        $key = is_string($uniquenessSetting) ? $io->setKey($uniquenessSetting) : $io->setKey();
+
+        if (isset($uniqueKeys[$key])) {
+            return false;
+        }
+
+        if ($io instanceof Input) {
+            $this->uniqueInputKeys[$key] = true; // Don't keep value, just the key, to keep memory usage low.
+        } else {
+            $this->uniqueOutputKeys[$key] = true;
+        }
+
+        return true;
     }
 
     final protected function addOutputDataToResult(mixed $output, ?Result $result = null): ?Result

@@ -42,7 +42,9 @@ abstract class Step extends BaseStep
 
         $validInputValue = $this->validateAndSanitizeInput($input->get());
 
-        yield from $this->invokeAndYield($validInputValue, $input->result);
+        if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
+            yield from $this->invokeAndYield($validInputValue, $input->result);
+        }
     }
 
     /**
@@ -147,7 +149,7 @@ abstract class Step extends BaseStep
 
             $output = $this->output($output, $result);
 
-            if ($this->uniqueOutput && !$this->outputIsUnique($output)) {
+            if ($this->uniqueOutput && !$this->inputOrOutputIsUnique($output)) {
                 continue;
             }
 
@@ -169,19 +171,6 @@ abstract class Step extends BaseStep
         $result = $this->addOutputDataToResult($output, $result);
 
         return new Output($output, $result);
-    }
-
-    private function outputIsUnique(Output $output): bool
-    {
-        $key = is_string($this->uniqueOutput) ? $output->setKey($this->uniqueOutput) : $output->setKey();
-
-        if (isset($this->uniqueOutputKeys[$key])) {
-            return false;
-        }
-
-        $this->uniqueOutputKeys[$key] = true; // Don't keep value, just the key, to keep memory usage low.
-
-        return true;
     }
 
     private function maxOutputsExceeded(): bool
