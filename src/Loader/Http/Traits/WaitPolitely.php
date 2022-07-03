@@ -91,7 +91,7 @@ trait WaitPolitely
         }
 
         $wait = $waitUntil - $now;
-        $this->logger->info('Wait ' . round($wait, 4) . 's for politeness.');
+
         usleep((int) ($wait * 1000000));
     }
 

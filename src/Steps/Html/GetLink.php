@@ -53,10 +53,6 @@ class GetLink extends Step
     {
         $selector = $this->selector ?? 'a';
 
-        $this->logger?->info(
-            $this->selector === null ? 'Select first link in document.' : 'Select link with CSS selector: ' . $selector
-        );
-
         foreach ($input->filter($selector) as $link) {
             if ($link->nodeName !== 'a') {
                 $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');

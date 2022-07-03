@@ -35,8 +35,6 @@ class SimpleCsvFileStore extends Store
         fputcsv($fileHandle, array_values($result->toArray()));
 
         fclose($fileHandle);
-
-        $this->logger?->info('Stored a result');
     }
 
     public function filePath(): string
