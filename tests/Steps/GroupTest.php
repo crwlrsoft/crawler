@@ -21,6 +21,7 @@ use Mockery;
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
 use function tests\helper_getInputReturningStep;
+use function tests\helper_getStdClassWithData;
 use function tests\helper_getStepYieldingArrayWithNumber;
 use function tests\helper_getStepYieldingObjectWithNumber;
 use function tests\helper_getValueReturningStep;
@@ -189,6 +190,100 @@ test('It returns the results of all steps when invoked', function () {
     expect($output[2]->get())->toBe('3');
 });
 
+it('doesn\'t invoke twice with duplicate inputs when uniqueInput was called', function () {
+    $step1 = helper_getValueReturningStep('one');
+
+    $step2 = helper_getValueReturningStep('two');
+
+    $group = helper_addStepsToGroup(new Group(), $step1, $step2);
+
+    $outputs = helper_invokeStepWithInput($group, 'foo');
+
+    expect($outputs)->toHaveCount(2);
+
+    $outputs = helper_invokeStepWithInput($group, 'foo');
+
+    expect($outputs)->toHaveCount(2);
+
+    $group->resetAfterRun();
+
+    $group->uniqueInputs();
+
+    $outputs = helper_invokeStepWithInput($group, 'foo');
+
+    expect($outputs)->toHaveCount(2);
+
+    $outputs = helper_invokeStepWithInput($group, 'foo');
+
+    expect($outputs)->toHaveCount(0);
+});
+
+it(
+    'doesn\'t invoke twice with array inputs with duplicate keys when uniqueInput was called with that key',
+    function () {
+        $step1 = helper_getValueReturningStep('one');
+
+        $step2 = helper_getValueReturningStep('two');
+
+        $group = helper_addStepsToGroup(new Group(), $step1, $step2);
+
+        $group->uniqueInputs();
+
+        $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'bttfc' => 'marty']);
+
+        expect($outputs)->toHaveCount(2);
+
+        $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'bttfc' => 'doc']);
+
+        expect($outputs)->toHaveCount(2);
+
+        $group->resetAfterRun();
+
+        $group->uniqueInputs('foo');
+
+        $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'bttfc' => 'marty']);
+
+        expect($outputs)->toHaveCount(2);
+
+        $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'bttfc' => 'doc']);
+
+        expect($outputs)->toHaveCount(0);
+    }
+);
+
+it(
+    'doesn\'t invoke twice with object inputs with duplicate keys when uniqueInput was called with that key',
+    function () {
+        $step1 = helper_getValueReturningStep('one');
+
+        $step2 = helper_getValueReturningStep('two');
+
+        $group = helper_addStepsToGroup(new Group(), $step1, $step2);
+
+        $group->uniqueInputs();
+
+        $outputs = helper_invokeStepWithInput($group, helper_getStdClassWithData(['foo' => 'bar', 'bttfc' => 'marty']));
+
+        expect($outputs)->toHaveCount(2);
+
+        $outputs = helper_invokeStepWithInput($group, helper_getStdClassWithData(['foo' => 'bar', 'bttfc' => 'doc']));
+
+        expect($outputs)->toHaveCount(2);
+
+        $group->resetAfterRun();
+
+        $group->uniqueInputs('foo');
+
+        $outputs = helper_invokeStepWithInput($group, helper_getStdClassWithData(['foo' => 'bar', 'bttfc' => 'marty']));
+
+        expect($outputs)->toHaveCount(2);
+
+        $outputs = helper_invokeStepWithInput($group, helper_getStdClassWithData(['foo' => 'bar', 'bttfc' => 'doc']));
+
+        expect($outputs)->toHaveCount(0);
+    }
+);
+
 it('returns only unique outputs when uniqueOutput was called', function () {
     $step1 = helper_getValueReturningStep('one');
 
@@ -264,11 +359,15 @@ it(
 
         expect($outputs)->toHaveCount(4);
 
+        $group->resetAfterRun();
+
         $group->uniqueOutputs('number');
 
         $outputs = helper_invokeStepWithInput($group);
 
         expect($outputs)->toHaveCount(2);
+
+        $group->resetAfterRun();
 
         $incrementNumberCallback = function (mixed $input) {
             return $input + 1;
@@ -328,9 +427,13 @@ it(
 
         expect(helper_invokeStepWithInput($group))->toHaveCount(4);
 
+        $group->resetAfterRun();
+
         $group->uniqueOutputs('number');
 
         expect(helper_invokeStepWithInput($group))->toHaveCount(3);
+
+        $group->resetAfterRun();
 
         $incrementNumberCallback = function (mixed $input) {
             return $input+1;

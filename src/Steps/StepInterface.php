@@ -32,6 +32,8 @@ interface StepInterface
 
     public function addsToOrCreatesResult(): bool;
 
+    public function uniqueInputs(?string $key = null): static;
+
     public function uniqueOutputs(?string $key = null): static;
 
     public function dontCascade(): static;

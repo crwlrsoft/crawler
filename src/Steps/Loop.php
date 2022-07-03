@@ -127,6 +127,13 @@ final class Loop implements StepInterface
         return $this;
     }
 
+    public function uniqueInputs(?string $key = null): static
+    {
+        $this->step->uniqueInputs($key);
+
+        return $this;
+    }
+
     public function uniqueOutputs(?string $key = null): static
     {
         $this->step->uniqueOutputs($key);

@@ -10,6 +10,8 @@ use Crwlr\Crawler\Steps\Step;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use function tests\helper_getInputReturningStep;
+use function tests\helper_getStdClassWithData;
+use function tests\helper_getStepYieldingArrayWithNumber;
 use function tests\helper_getStepYieldingMultipleArraysWithNumber;
 use function tests\helper_getStepYieldingMultipleNumbers;
 use function tests\helper_getStepYieldingMultipleObjectsWithNumber;
@@ -182,6 +184,86 @@ it(
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
         expect($output[0]->result->toArray())->toBe(['prevProperty' => 'foobar']); // @phpstan-ignore-line
+    }
+);
+
+it('doesn\'t invoke twice with duplicate inputs when uniqueInput was called', function () {
+    $step = helper_getInputReturningStep();
+
+    $outputs = helper_invokeStepWithInput($step, 'foo');
+
+    expect($outputs)->toHaveCount(1);
+
+    $outputs = helper_invokeStepWithInput($step, 'foo');
+
+    expect($outputs)->toHaveCount(1);
+
+    $step->uniqueInputs();
+
+    $outputs = helper_invokeStepWithInput($step, 'foo');
+
+    expect($outputs)->toHaveCount(1);
+
+    $outputs = helper_invokeStepWithInput($step, 'foo');
+
+    expect($outputs)->toHaveCount(0);
+});
+
+it(
+    'doesn\'t invoke twice with inputs with the same value in an array key when uniqueInput was called with that key',
+    function () {
+        $step = helper_getInputReturningStep();
+
+        $step->uniqueInputs();
+
+        $outputs = helper_invokeStepWithInput($step, ['foo' => 'bar', 'number' => 1]);
+
+        expect($outputs)->toHaveCount(1);
+
+        $outputs = helper_invokeStepWithInput($step, ['foo' => 'bar', 'number' => 2]);
+
+        expect($outputs)->toHaveCount(1);
+
+        $step->resetAfterRun();
+
+        $step->uniqueInputs('foo');
+
+        $outputs = helper_invokeStepWithInput($step, ['foo' => 'bar', 'number' => 1]);
+
+        expect($outputs)->toHaveCount(1);
+
+        $outputs = helper_invokeStepWithInput($step, ['foo' => 'bar', 'number' => 2]);
+
+        expect($outputs)->toHaveCount(0);
+    }
+);
+
+it(
+    'doesn\'t invoke twice with inputs with the same value in an object key when uniqueInput was called with that key',
+    function () {
+        $step = helper_getInputReturningStep();
+
+        $step->uniqueInputs();
+
+        $outputs = helper_invokeStepWithInput($step, helper_getStdClassWithData(['foo' => 'bar', 'number' => 1]));
+
+        expect($outputs)->toHaveCount(1);
+
+        $outputs = helper_invokeStepWithInput($step, helper_getStdClassWithData(['foo' => 'bar', 'number' => 2]));
+
+        expect($outputs)->toHaveCount(1);
+
+        $step->resetAfterRun();
+
+        $step->uniqueInputs('foo');
+
+        $outputs = helper_invokeStepWithInput($step, helper_getStdClassWithData(['foo' => 'bar', 'number' => 1]));
+
+        expect($outputs)->toHaveCount(1);
+
+        $outputs = helper_invokeStepWithInput($step, helper_getStdClassWithData(['foo' => 'bar', 'number' => 2]));
+
+        expect($outputs)->toHaveCount(0);
     }
 );
 
