@@ -23,7 +23,11 @@ class Date
             $dateTime = DateTime::createFromFormat(DateTimeInterface::COOKIE, $this->httpDateString);
 
             if (!$dateTime instanceof DateTime) {
-                throw new InvalidArgumentException('Can\'t parse date string ' . $this->httpDateString);
+                $dateTime = DateTime::createFromFormat('l, d M Y H:i:s T', $this->httpDateString);
+
+                if (!$dateTime instanceof DateTime) {
+                    throw new InvalidArgumentException('Can\'t parse date string ' . $this->httpDateString);
+                }
             }
 
             $this->dateTime = $dateTime;
