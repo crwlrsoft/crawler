@@ -9,6 +9,7 @@ use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
 use Generator;
 use PHPUnit\Framework\TestCase;
+
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
 use function tests\helper_getStepYieldingArrayWithNumber;

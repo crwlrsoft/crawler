@@ -10,6 +10,7 @@ use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
+
 use function tests\helper_generatorToArray;
 
 class StructuredDataBlogPost extends Step

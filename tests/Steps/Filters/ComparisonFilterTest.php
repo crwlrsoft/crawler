@@ -4,6 +4,7 @@ namespace tests\Steps\Filters;
 
 use Crwlr\Crawler\Steps\Filters\ComparisonFilter;
 use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
+
 use function tests\helper_getStdClassWithData;
 
 it('compares a single value', function () {
