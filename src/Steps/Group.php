@@ -38,7 +38,7 @@ final class Group extends BaseStep
         }
 
         foreach ($this->steps as $key => $step) {
-            foreach ($step->invokeStep($input) as $output) {
+            foreach ($step->invokeStep($input) as $nthOutput => $output) {
                 if (method_exists($step, 'callUpdateInputUsingOutput')) {
                     $input = $step->callUpdateInputUsingOutput($input, $output);
                 }
@@ -46,7 +46,12 @@ final class Group extends BaseStep
                 if ($this->combine && $step->cascades()) {
                     $stepKey = $step->getResultKey() ?? $key;
 
-                    $combinedOutput = $this->addOutputToCombinedOutputs($output->get(), $combinedOutput, $stepKey);
+                    $combinedOutput = $this->addOutputToCombinedOutputs(
+                        $output->get(),
+                        $combinedOutput,
+                        $stepKey,
+                        $nthOutput,
+                    );
                 } elseif ($this->cascades() && $step->cascades()) {
                     if ($this->uniqueOutput !== false && !$this->inputOrOutputIsUnique($output)) {
                         continue;
@@ -193,18 +198,22 @@ final class Group extends BaseStep
      * @param mixed[] $combined
      * @return mixed[]
      */
-    private function addOutputToCombinedOutputs(mixed $output, array $combined, int|string $stepKey): array
-    {
+    private function addOutputToCombinedOutputs(
+        mixed $output,
+        array $combined,
+        int|string $stepKey,
+        int $nthOutput,
+    ): array {
         if (is_array($output)) {
             foreach ($output as $key => $value) {
                 if (is_int($stepKey) && is_string($key)) {
-                    $combined[$key][] = $value;
+                    $combined[$nthOutput][$key][] = $value;
                 } else {
-                    $combined[$stepKey][$key][] = $value;
+                    $combined[$nthOutput][$stepKey][$key][] = $value;
                 }
             }
         } else {
-            $combined[$stepKey][] = $output;
+            $combined[$nthOutput][$stepKey][] = $output;
         }
 
         return $combined;
@@ -217,12 +226,14 @@ final class Group extends BaseStep
      */
     private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Generator
     {
-        $outputData = $this->normalizeCombinedOutputs($combinedOutputs);
+        foreach ($combinedOutputs as $combinedOutput) {
+            $outputData = $this->normalizeCombinedOutputs($combinedOutput);
 
-        if ($this->passesAllFilters($outputData)) {
-            $this->addOutputDataToResult($outputData, $result);
+            if ($this->passesAllFilters($outputData)) {
+                $this->addOutputDataToResult($outputData, $result);
 
-            yield new Output($outputData, $result);
+                yield new Output($outputData, $result);
+            }
         }
     }
 

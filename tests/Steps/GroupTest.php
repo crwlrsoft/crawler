@@ -456,11 +456,10 @@ test(
             protected function invoke(mixed $input): Generator
             {
                 yield 'ipsum';
-                yield 'dolor';
             }
         };
 
-        $step3 = helper_getValueReturningStep('sit');
+        $step3 = helper_getValueReturningStep('dolor');
 
         $group = new Group();
 
@@ -472,7 +471,7 @@ test(
 
         expect($output[0])->toBeInstanceOf(Output::class);
 
-        expect($output[0]->get())->toBe(['lorem', ['ipsum', 'dolor'], 'sit']);
+        expect($output[0]->get())->toBe(['lorem', 'ipsum', 'dolor']);
     }
 );
 
@@ -485,11 +484,10 @@ test(
             protected function invoke(mixed $input): Generator
             {
                 yield 'bin';
-                yield 'ein';
             }
         };
 
-        $step3 = helper_getValueReturningStep('berliner');
+        $step3 = helper_getValueReturningStep('ein berliner');
 
         $group = (new Group())
             ->addStep('foo', $step1)
@@ -503,7 +501,7 @@ test(
 
         expect($output[0])->toBeInstanceOf(Output::class);
 
-        $expectedOutputAndResultArray = ['foo' => 'ich', 'bar' => ['bin', 'ein'], 'baz' => 'berliner'];
+        $expectedOutputAndResultArray = ['foo' => 'ich', 'bar' => 'bin', 'baz' => 'ein berliner'];
 
         expect($output[0]->get())->toBe($expectedOutputAndResultArray);
     }
@@ -822,5 +820,42 @@ it(
             'baz' => 'bazValue',
             'yo' => 'lo',
         ]);
+    }
+);
+
+test(
+    'When steps yield multiple outputs it combines the first output from first step with first output from second ' .
+        'step and so on.',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['one' => 'foo'];
+
+                yield ['two' => 'bar'];
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['three' => 'baz'];
+
+                yield ['four' => 'quz'];
+            }
+        };
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->combineToSingleOutput();
+
+        $output = helper_invokeStepWithInput($group);
+
+        expect($output)->toHaveCount(2);
+
+        expect($output[0]->get())->toBe(['one' => 'foo', 'three' => 'baz']);
+
+        expect($output[1]->get())->toBe(['two' => 'bar', 'four' => 'quz']);
     }
 );
