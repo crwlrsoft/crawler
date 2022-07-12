@@ -18,6 +18,7 @@ use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Exception;
 use Generator;
 use Mockery;
+
 use function tests\helper_arrayToGenerator;
 use function tests\helper_generatorToArray;
 use function tests\helper_getInputReturningStep;

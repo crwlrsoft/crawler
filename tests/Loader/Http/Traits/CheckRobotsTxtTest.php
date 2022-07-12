@@ -10,6 +10,7 @@ use GuzzleHttp\Psr7\Response;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
+
 use function tests\helper_getDummyRobotsTxtResponse;
 
 /** @var TestCase $this */

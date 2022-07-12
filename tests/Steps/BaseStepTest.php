@@ -8,6 +8,7 @@ use Crwlr\Crawler\Steps\BaseStep;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use Generator;
 use InvalidArgumentException;
+
 use function tests\helper_getStdClassWithData;
 use function tests\helper_invokeStepWithInput;
 

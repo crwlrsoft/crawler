@@ -7,6 +7,7 @@ use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+
 use function tests\helper_generatorToArray;
 
 it('gets all the links from a listing and gets data from the detail pages', function () {

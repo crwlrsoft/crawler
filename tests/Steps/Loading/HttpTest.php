@@ -10,6 +10,7 @@ use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
+
 use function tests\helper_traverseIterable;
 
 test('It can be invoked with a string as input', function () {

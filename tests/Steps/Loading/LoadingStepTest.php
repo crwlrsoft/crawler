@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Steps\Loading\LoadingStep;
 use Generator;
 use Mockery;
+
 use function tests\helper_traverseIterable;
 
 test('You can add a loader', function () {

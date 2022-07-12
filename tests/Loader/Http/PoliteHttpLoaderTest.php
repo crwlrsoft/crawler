@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+
 use function tests\helper_getDummyRobotsTxtResponse;
 
 function helper_wait100ms(): void

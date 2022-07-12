@@ -4,6 +4,7 @@ namespace tests\Steps\Filters;
 
 use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
 use Crwlr\Crawler\Steps\Filters\UrlFilter;
+
 use function tests\helper_getStdClassWithData;
 
 it('evaluates an url', function () {

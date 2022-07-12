@@ -4,6 +4,7 @@ namespace tests\Steps\Filters;
 
 use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
 use Crwlr\Crawler\Steps\Filters\StringFilter;
+
 use function tests\helper_getStdClassWithData;
 
 it('checks a string', function () {
