@@ -565,3 +565,17 @@ it('sends all outputs to the outputHook when defined', function () {
 
     expect($outputs[1][4])->toBe(7);
 });
+
+test(
+    'When result is not explicitly composed and last step produces array output with string keys, it uses those keys ' .
+    'for the result.',
+    function () {
+        $crawler = helper_getDummyCrawler()
+            ->input('hello')
+            ->addStep(helper_getValueReturningStep(['foo' => 'bar', 'baz' => 'quz']));
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results[0]->toArray())->toBe(['foo' => 'bar', 'baz' => 'quz']);
+    }
+);

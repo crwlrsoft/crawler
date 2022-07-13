@@ -277,7 +277,15 @@ abstract class Crawler
     private function storeAndReturnOutputsAsResults(Generator $outputs): Generator
     {
         foreach ($outputs as $output) {
-            $result = (new Result())->set('unnamed', $output->get());
+            $result = new Result();
+
+            if ($output->isArrayWithStringKeys()) {
+                foreach ($output->get() as $key => $value) {
+                    $result->set($key, $value);
+                }
+            } else {
+                $result->set('unnamed', $output->get());
+            }
 
             $this->store?->store($result);
 
