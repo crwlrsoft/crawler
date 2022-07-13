@@ -4,6 +4,7 @@ namespace tests;
 
 use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Result;
+use stdClass;
 
 function helper_getIoInstance(mixed $value, ?Result $result = null): Io
 {
@@ -117,3 +118,20 @@ test('getKey returns a key when setKey was not called yet', function () {
 
     expect($io->getKey())->toBe('test');
 });
+
+test('isArrayWithStringKeys returns true when the value is an array with string keys', function () {
+    $io = helper_getIoInstance(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+
+    expect($io->isArrayWithStringKeys())->toBeTrue();
+});
+
+test('isArrayWithStringKeys returns false when the value is not an array with string keys', function ($value) {
+    $io = helper_getIoInstance($value);
+
+    expect($io->isArrayWithStringKeys())->toBeFalse();
+})->with([
+    123,
+    true,
+    ['foo', 'bar'],
+    helper_getStdClassWithData(['foo' => 'bar']),
+]);

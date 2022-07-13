@@ -49,6 +49,21 @@ class Io
         return $this->key;
     }
 
+    public function isArrayWithStringKeys(): bool
+    {
+        if (!is_array($this->value)) {
+            return false;
+        }
+
+        foreach ($this->value as $key => $value) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function valueToString(mixed $value): string
     {
         if (is_array($value) || is_object($value)) {
