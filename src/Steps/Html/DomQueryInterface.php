@@ -13,4 +13,8 @@ interface DomQueryInterface
     public function apply(Crawler $domCrawler): array|string|null;
 
     public function filter(Crawler $domCrawler): Crawler;
+
+    public function setBaseUrl(string $baseUrl): static;
+
+    public function toAbsoluteUrl(): self;
 }

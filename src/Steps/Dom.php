@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
@@ -26,6 +27,8 @@ abstract class Dom extends Step
     protected array $mapping = [];
 
     protected null|string|DomQueryInterface $singleSelector = null;
+
+    protected ?string $baseUrl = null;
 
     /**
      * @param string|DomQueryInterface|array<int|string, string|DomQueryInterface> $selectorOrMapping
@@ -103,6 +106,10 @@ abstract class Dom extends Step
      */
     protected function validateAndSanitizeInput(mixed $input): Crawler
     {
+        if ($input instanceof RespondedRequest) {
+            $this->baseUrl = $input->effectiveUri();
+        }
+
         return new Crawler($this->validateAndSanitizeStringOrHttpResponse($input));
     }
 
@@ -141,6 +148,10 @@ abstract class Dom extends Step
             $this->makeDefaultDomQueryInstance($this->singleSelector) :
             $this->singleSelector;
 
+        if ($this->baseUrl !== null) {
+            $domQuery->setBaseUrl($this->baseUrl);
+        }
+
         $outputs = $domQuery->apply($domCrawler);
 
         if (is_array($outputs)) {
@@ -162,6 +173,10 @@ abstract class Dom extends Step
         foreach ($this->mapping as $key => $domQuery) {
             if (is_string($domQuery)) {
                 $domQuery = $this->makeDefaultDomQueryInstance($domQuery);
+            }
+
+            if ($this->baseUrl !== null) {
+                $domQuery->setBaseUrl($this->baseUrl);
             }
 
             $mappedProperties[$key] = $domQuery->apply($domCrawler);

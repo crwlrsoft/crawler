@@ -2,12 +2,18 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Url\Url;
 use Symfony\Component\DomCrawler\Crawler;
 
 abstract class DomQuery implements DomQueryInterface
 {
     public ?string $attributeName = null;
+
     private SelectorTarget $target = SelectorTarget::Text;
+
+    private bool $toAbsoluteUrl = false;
+
+    private ?string $baseUrl = null;
 
     public function __construct(
         public readonly string $query
@@ -69,12 +75,40 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
+    /**
+     * Call this method and the selected value will be converted to an absolute url when apply() is called.
+     *
+     * @return $this
+     */
+    public function toAbsoluteUrl(): self
+    {
+        $this->toAbsoluteUrl = true;
+
+        return $this;
+    }
+
+    /**
+     * Automatically called when used in a Dom step.
+     */
+    public function setBaseUrl(string $baseUrl): static
+    {
+        $this->baseUrl = $baseUrl;
+
+        return $this;
+    }
+
     private function getTarget(Crawler $filtered): string
     {
-        return trim(
+        $target = trim(
             $this->attributeName ?
                 $filtered->attr($this->attributeName) :
                 $filtered->{strtolower($this->target->name)}()
         );
+
+        if ($this->toAbsoluteUrl && $this->baseUrl !== null) {
+            $target = Url::parse($this->baseUrl)->resolve($target);
+        }
+
+        return $target;
     }
 }

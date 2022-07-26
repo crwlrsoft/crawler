@@ -2,6 +2,7 @@
 
 namespace tests\Steps\Html;
 
+use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -87,4 +88,19 @@ it('gets the contents of an attribute using the attribute method', function () {
     $domCrawler = new Crawler($xml);
 
     expect((new XPathQuery('//item'))->attribute('attr')->apply($domCrawler))->toBe('content');
+});
+
+it('turns the value into an absolute url when toAbsoluteUrl() is called', function () {
+    $html = '<item>/foo/bar</item>';
+
+    $domCrawler = new Crawler($html);
+
+    $query = (new XPathQuery('//item'))
+        ->setBaseUrl('https://www.example.com');
+
+    expect($query->apply($domCrawler))->toBe('/foo/bar');
+
+    $query->toAbsoluteUrl();
+
+    expect($query->apply($domCrawler))->toBe('https://www.example.com/foo/bar');
 });
