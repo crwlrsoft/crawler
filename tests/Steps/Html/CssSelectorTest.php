@@ -95,3 +95,20 @@ it('gets the contents of an attribute using the attribute method', function () {
 
     expect((new CssSelector('.item'))->attribute('data-attr')->apply($domCrawler))->toBe('content');
 });
+
+it('turns the value into an absolute url when toAbsoluteUrl() is called', function () {
+    $html = '<a href="/packages/crawler/v0.4/getting-started">getting started</a>';
+
+    $domCrawler = new Crawler($html);
+
+    $selector = new CssSelector('a');
+
+    $selector->setBaseUrl('https://www.crwlr.software/')
+        ->attribute('href');
+
+    expect($selector->apply($domCrawler))->toBe('/packages/crawler/v0.4/getting-started');
+
+    $selector->toAbsoluteUrl();
+
+    expect($selector->apply($domCrawler))->toBe('https://www.crwlr.software/packages/crawler/v0.4/getting-started');
+});

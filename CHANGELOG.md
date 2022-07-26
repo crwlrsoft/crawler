@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * With the new `outputHook()` method of the abstract `Crawler` class you can set a closure that'll receive all the outputs from all the steps. Should be only for debugging reasons.
 * The `extract()` method of the `Html` and `Xml` (children of `Dom`) steps now also works with a single selector instead of an array with a mapping. Sometimes you'll want to just get a simple string output e.g. for a next step, instead of an array with mapped extracted data.
 * In addition to `uniqueOutputs()` there is now also `uniqueInputs()`. It works exactly the same as `uniqueOutputs()`, filtering duplicate input values instead. Optionally also by a key when expected input is an array or an object.
+* In order to be able to also get absolute links when using the `extract()` method of Dom steps, the abstract `DomQuery` class now has a method `toAbsoluteUrl()`. The Dom step will automatically provide the `DomQuery` instance with the base url, presumed that the input was an instance of the `RespondedRequest` class and resolve the selected value against that base url.
 
 ### Changed
 * Remove some not so important log messages.

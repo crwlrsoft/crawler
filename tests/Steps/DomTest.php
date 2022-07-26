@@ -262,3 +262,23 @@ it('trims the extracted data', function () {
 
     expect($output[0]->get())->toBe(['foo' => 'foo content']);
 });
+
+it('automatically passes on the base url to dom query instances when the input is a RespondedRequest', function () {
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract([
+            'one' => Dom::cssSelector('#one')->attribute('href')->toAbsoluteUrl(),
+            'two' => Dom::cssSelector('#two')->attribute('href')->toAbsoluteUrl(),
+        ]),
+        new RespondedRequest(
+            new Request('GET', 'https://www.example.com/home'),
+            new Response(body: '<p><a id="one" href="/foo/bar">foo bar</a> <a id="two" href="yo/lo">yolo</a></p>')
+        ),
+    );
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe([
+        'one' => 'https://www.example.com/foo/bar',
+        'two' => 'https://www.example.com/yo/lo',
+    ]);
+});
