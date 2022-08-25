@@ -78,13 +78,8 @@ jobs:
           ${GITHUB_WORKSPACE}/.github/workflows/install-chrome.sh
         shell: bash
 
-      - name: Add chrome alias for chromedriver
-        run: |
-          shopt -s expand_aliases
-          alias chrome='chromium-browser'
-
       - name: Run integration tests
-        run: composer test-integration
+        run: alias chrome='chromium-browser' && composer test-integration
 
   stan:
     name: PHPStan
