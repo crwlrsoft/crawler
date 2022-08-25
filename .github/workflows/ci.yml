@@ -73,15 +73,10 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Install chrome
-        run: |
-          chmod +x ${GITHUB_WORKSPACE}/.github/workflows/install-chrome.sh
-          ${GITHUB_WORKSPACE}/.github/workflows/install-chrome.sh
-        shell: bash
+        uses: browser-actions/setup-chrome@latest
 
       - name: Run integration tests
-        run: |
-          alias chrome='chromium-browser'
-          composer test-integration
+        run: composer test-integration
 
   stan:
     name: PHPStan
