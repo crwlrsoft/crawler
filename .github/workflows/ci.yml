@@ -79,7 +79,9 @@ jobs:
         shell: bash
 
       - name: Run integration tests
-        run: alias chrome='chromium-browser' && composer test-integration
+        run: |
+          alias chrome='chromium-browser'
+          composer test-integration
 
   stan:
     name: PHPStan
