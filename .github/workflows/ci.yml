@@ -74,8 +74,8 @@ jobs:
 
       - name: Install chrome
         run: |
-          chmod +x ./install-chrome.sh
-          ./install-chrome.sh
+          chmod +x ${GITHUB_WORKSPACE}/.github/workflows/install-chrome.sh
+          ${GITHUB_WORKSPACE}/.github/workflows/install-chrome.sh
         shell: bash
 
       - name: Add chrome alias for chromedriver
