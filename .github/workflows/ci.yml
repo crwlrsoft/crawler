@@ -48,7 +48,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Run tests
-        run: vendor/bin/pest --coverage-clover clover.xml
+        run: composer test
 
   integration-tests:
     name: PestPHP Integration Tests
@@ -71,6 +71,14 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Install chrome
+        uses: nanasess/setup-chromedriver@v1
+
+      - run: |
+          export DISPLAY=:99
+          chromedriver --url-base=/wd/hub &
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
 
       - name: Run integration tests
         run: composer test-integration
