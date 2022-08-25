@@ -79,7 +79,9 @@ jobs:
         shell: bash
 
       - name: Add chrome alias for chromedriver
-        run: alias chrome='chromium-browser'
+        run: |
+          shopt -s expand_aliases
+          alias chrome='chromium-browser'
 
       - name: Run integration tests
         run: composer test-integration
