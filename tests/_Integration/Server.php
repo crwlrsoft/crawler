@@ -36,3 +36,19 @@ if (str_starts_with($route, '/paginated-listing')) {
 if ($route === '/blog-post-with-json-ld') {
     return include(__DIR__ . '/_Server/BlogPostWithJsonLd.php');
 }
+
+if ($route === '/js-rendering') {
+    return include(__DIR__ . '/_Server/JsGeneratedContent.php');
+}
+
+if ($route === '/print-headers') {
+    return include(__DIR__ . '/_Server/PrintHeaders.php');
+}
+
+if ($route === '/set-cookie') {
+    return include(__DIR__ . '/_Server/SetCookie.php');
+}
+
+if ($route === '/print-cookie') {
+    return include(__DIR__ . '/_Server/PrintCookie.php');
+}

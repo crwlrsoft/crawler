@@ -48,7 +48,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Run tests
-        run: vendor/bin/pest --coverage-clover clover.xml
+        run: composer test
 
   integration-tests:
     name: PestPHP Integration Tests
@@ -71,6 +71,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Install chrome
+        uses: browser-actions/setup-chrome@latest
 
       - name: Run integration tests
         run: composer test-integration

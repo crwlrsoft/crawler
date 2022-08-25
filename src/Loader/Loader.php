@@ -11,6 +11,7 @@ use Psr\SimpleCache\CacheInterface;
 abstract class Loader implements LoaderInterface
 {
     protected LoggerInterface $logger;
+
     protected ?CacheInterface $cache = null;
 
     /**
