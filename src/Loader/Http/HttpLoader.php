@@ -363,6 +363,9 @@ class HttpLoader extends Loader
         );
     }
 
+    /**
+     * @throws Exception
+     */
     private function getBrowser(RequestInterface $request): Browser
     {
         if (!$this->headlessBrowser || $this->headlessBrowserOptionsDirty) {
@@ -372,7 +375,10 @@ class HttpLoader extends Loader
 
             $options['userAgent'] = $this->userAgent->__toString();
 
-            $options['headers'] = array_merge($options['headers'] ?? [], $request->getHeaders());
+            $options['headers'] = array_merge(
+                $options['headers'] ?? [],
+                $this->prepareRequestHeadersForHeadlessBrowser($request->getHeaders()),
+            );
 
             $this->headlessBrowser = (new BrowserFactory())->createBrowser($options);
 
@@ -414,6 +420,36 @@ class HttpLoader extends Loader
     {
         foreach ($headers as $key => $value) {
             $headers[$key] = explode(PHP_EOL, $value)[0];
+        }
+
+        return $headers;
+    }
+
+    /**
+     * @param mixed[] $headers
+     * @return array<string, string>
+     */
+    private function prepareRequestHeadersForHeadlessBrowser(array $headers = []): array
+    {
+        $headers = $this->removeHeadersCausingErrorWithHeadlessBrowser($headers);
+
+        return array_map(function ($headerValue) {
+            return is_array($headerValue) ? reset($headerValue) : $headerValue;
+        }, $headers);
+    }
+
+    /**
+     * @param mixed[] $headers
+     * @return mixed[]
+     */
+    private function removeHeadersCausingErrorWithHeadlessBrowser(array $headers = []): array
+    {
+        $removeHeaders = ['host'];
+
+        foreach ($headers as $headerName => $headerValue) {
+            if (in_array(strtolower($headerName), $removeHeaders, true)) {
+                unset($headers[$headerName]);
+            }
         }
 
         return $headers;
