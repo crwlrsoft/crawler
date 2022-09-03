@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.5.0] - 2022-09-03
 ### Added
 * You can now call the new `useHeadlessBrowser` method on the `HttpLoader` class to use a headless Chrome browser to load pages. This is enough to get HTML after executing javascript in the browser. For more sophisticated tasks a separate Loader and/or Steps should better be created.
 * With the `maxOutputs()` method of the abstract `Step` class you can now limit how many outputs a certain step should yield at max. That's for example helpful during development, when you want to run the crawler only with a small subset of the data/requests it will actually have to process when you eventually remove the limits. When a step has reached its limit, it won't even call the `invoke()` method any longer until the step is reset after a run.
@@ -16,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Remove some not so important log messages.
 * Improve behavior of group step's `combineToSingleOutput()`. When steps yield multiple outputs, don't combine all yielded outputs to one. Instead, combine the first output from the first step with the first output from the second step, and so on.
-* When result is not explicitly composed, but the outputs of the last step are arrays with string keys, it sets those keys on the Result object instead of setting a key `unnamed` with the whole array as value.
+* When results are not explicitly composed, but the outputs of the last step are arrays with string keys, it sets those keys on the Result object instead of setting a key `unnamed` with the whole array as value.
 
 ### Fixed
 * The static methods `Html::getLink()` and `Html::getLinks()` now also work without argument, like the `GetLink` and `GetLinks` classes.
