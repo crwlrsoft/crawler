@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Loader\Http\Cookies;
 
 use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Url;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -34,6 +35,7 @@ class CookieJar
 
     /**
      * @throws InvalidCookieException
+     * @throws Exception
      */
     public function addFrom(string|UriInterface|Url $url, ResponseInterface $response): void
     {
@@ -51,6 +53,7 @@ class CookieJar
 
     /**
      * @return Cookie[]
+     * @throws Exception
      */
     public function getFor(string|UriInterface $url): array
     {

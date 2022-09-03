@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Filters\Enums;
 
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
+use Exception;
 
 enum UrlFilterRule
 {
@@ -27,7 +28,7 @@ enum UrlFilterRule
                 self::Path => Url::parse($url)->path() === $needle,
                 self::PathStartsWith => str_starts_with(Url::parse($url)->path() ?? '', $needle),
             };
-        } catch (InvalidUrlException $exception) {
+        } catch (InvalidUrlException|Exception $exception) {
             return false;
         }
     }

@@ -75,7 +75,7 @@ class Csv extends Step
         return $this;
     }
 
-    protected function validateAndSanitizeInput(mixed $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): string
     {
         if ($this->method === 'string') {
             return $this->validateAndSanitizeStringOrHttpResponse($input);

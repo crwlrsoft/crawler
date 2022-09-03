@@ -5,11 +5,12 @@ namespace Crwlr\Crawler\Loader\Http\Cache;
 use Crwlr\Crawler\Loader\Http\Cache\Exceptions\InvalidArgumentException;
 use Crwlr\Crawler\Loader\Http\Cache\Exceptions\ReadingCacheFailedException;
 use DateInterval;
+use Exception;
 use Psr\SimpleCache\CacheInterface;
 
 class FileCache implements CacheInterface
 {
-    public function __construct(private string $basePath)
+    public function __construct(private readonly string $basePath)
     {
     }
 
@@ -20,7 +21,7 @@ class FileCache implements CacheInterface
 
     /**
      * @throws ReadingCacheFailedException
-     * @throws InvalidArgumentException
+     * @throws Exception
      */
     public function get(string $key, mixed $default = null): mixed
     {
@@ -51,6 +52,9 @@ class FileCache implements CacheInterface
         return unlink($this->basePath . '/' . $key);
     }
 
+    /**
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     public function clear(): bool
     {
         $allFiles = scandir($this->basePath);
@@ -68,7 +72,6 @@ class FileCache implements CacheInterface
 
     /**
      * @return iterable<mixed>
-     * @throws InvalidArgumentException
      * @throws ReadingCacheFailedException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable

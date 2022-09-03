@@ -31,7 +31,7 @@ final class Loop implements StepInterface
      */
     private array $deferredOutputs = [];
 
-    public function __construct(private StepInterface $step)
+    public function __construct(private readonly StepInterface $step)
     {
     }
 

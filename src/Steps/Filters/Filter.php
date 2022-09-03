@@ -118,6 +118,9 @@ abstract class Filter implements FilterInterface
         return $this->or instanceof FilterInterface ? $this->or : null;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getKey(mixed $value): mixed
     {
         if ($this->useKey === null) {

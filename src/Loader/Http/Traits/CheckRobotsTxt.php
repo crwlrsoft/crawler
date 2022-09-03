@@ -29,6 +29,7 @@ trait CheckRobotsTxt
 
     /**
      * @throws LoadingException
+     * @throws Exception
      */
     public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
     {
@@ -62,6 +63,7 @@ trait CheckRobotsTxt
      *
      * @param string $uri
      * @return string|null
+     * @throws Exception
      */
     protected function loadRobotsTxtContent(string $uri): ?string
     {
@@ -78,6 +80,9 @@ trait CheckRobotsTxt
         return null;
     }
 
+    /**
+     * @throws Exception
+     */
     private function getParsedRobotsTxtFor(UriInterface $uri): ?RobotsTxt
     {
         $robotsTxtLocation = $this->getRobotsTxtLocationFor($uri);
@@ -100,6 +105,9 @@ trait CheckRobotsTxt
         return $this->robotsTxts[$robotsTxtLocation];
     }
 
+    /**
+     * @throws Exception
+     */
     private function getRobotsTxtLocationFor(UriInterface $uri): string
     {
         return Url::parse($uri->__toString())->root() . '/robots.txt';

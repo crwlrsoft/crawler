@@ -131,6 +131,9 @@ class GetLink extends Step
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function matchesAdditionalCriteria(Url $link): bool
     {
         return ($this->onSameDomain === null || $this->isOnSameDomain($link)) &&
@@ -151,6 +154,9 @@ class GetLink extends Step
             ($this->onSameHost === false && !$this->baseUri->isHostEqualIn($link));
     }
 
+    /**
+     * @throws Exception
+     */
     private function isOnDomain(Url $link): bool
     {
         if (is_array($this->onDomain)) {
@@ -164,6 +170,9 @@ class GetLink extends Step
         return false;
     }
 
+    /**
+     * @throws Exception
+     */
     private function isOnHost(Url $link): bool
     {
         if (is_array($this->onHost)) {

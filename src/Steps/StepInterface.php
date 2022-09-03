@@ -4,7 +4,6 @@ namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Output;
-use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Generator;
 use Psr\Log\LoggerInterface;

@@ -10,7 +10,7 @@ class Date
 {
     private ?DateTime $dateTime = null;
 
-    public function __construct(private string $httpDateString)
+    public function __construct(private readonly string $httpDateString)
     {
     }
 

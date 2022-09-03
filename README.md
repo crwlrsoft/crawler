@@ -9,7 +9,7 @@ own crawlers and scrapers with.
 ## Documentation
 
 You can find the documentation at 
-[crwlr.software](https://www.crwlr.software/packages/crawler/v0.4/getting-started).
+[crwlr.software](https://www.crwlr.software/packages/crawler/getting-started).
 
 ## Contributing
 
