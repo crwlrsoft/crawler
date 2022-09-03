@@ -5,30 +5,44 @@ namespace Crwlr\Crawler\Loader\Http\Cookies;
 use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Psr\Uri;
 use Crwlr\Url\Url;
+use Exception;
 use Psr\Http\Message\UriInterface;
 
 class Cookie
 {
     private Url $receivedFromUrl;
+
     private string $receivedFromHost;
+
     private string $cookieName;
+
     private string $cookieValue;
+
     private ?Date $expires = null;
+
     private ?int $maxAge = null;
+
     private int $receivedAtTimestamp = 0;
+
     private string $domain;
+
     private bool $domainSetViaAttribute = false;
+
     private ?string $path = null;
+
     private bool $secure = false;
+
     private bool $httpOnly = false;
+
     private string $sameSite = 'Lax';
 
     /**
      * @throws InvalidCookieException
+     * @throws Exception
      */
     public function __construct(
-        string|Url $receivedFromUrl,
-        private string $setCookieHeader,
+        string|Url              $receivedFromUrl,
+        private readonly string $setCookieHeader,
     ) {
         $this->receivedFromUrl = $receivedFromUrl instanceof Url ? $receivedFromUrl : Url::parse($receivedFromUrl);
 
@@ -40,13 +54,19 @@ class Cookie
         }
 
         $this->receivedFromHost = $this->receivedFromUrl->host();
+
         $this->setDomain($this->receivedFromUrl->domain() ?? $this->receivedFromUrl->host());
+
         $this->parseSetCookieHeader($this->setCookieHeader);
     }
 
+    /**
+     * @throws Exception
+     */
     public function shouldBeSentTo(string|UriInterface|Url $url): bool
     {
         $url = $url instanceof Url ? $url : Url::parse($url);
+
         $urlHost = $url->host() ?? '';
 
         return
@@ -128,6 +148,9 @@ class Cookie
         return $this->sameSite;
     }
 
+    /**
+     * @throws Exception
+     */
     public function isReceivedSecure(): bool
     {
         return $this->receivedFromUrl->scheme() === 'https';
@@ -143,9 +166,13 @@ class Cookie
         return str_starts_with($this->cookieName, '__Host-');
     }
 
+    /**
+     * @throws InvalidCookieException
+     */
     private function parseSetCookieHeader(string $setCookieHeader): void
     {
         $splitAtSemicolon = explode(';', $setCookieHeader);
+
         $splitFirstPart = explode('=', trim(array_shift($splitAtSemicolon)), 2);
 
         if (count($splitFirstPart) !== 2) {
@@ -161,10 +188,15 @@ class Cookie
         $this->checkPrefixes();
     }
 
+    /**
+     * @throws InvalidCookieException
+     */
     private function parseAttribute(string $attribute): void
     {
         $splitAtEquals = explode('=', trim($attribute), 2);
+
         $attributeName = strtolower($splitAtEquals[0]);
+
         $attributeValue = $splitAtEquals[1] ?? '';
 
         if ($attributeName === 'expires') {
@@ -187,6 +219,7 @@ class Cookie
     /**
      * @see https://datatracker.ietf.org/doc/html/draft-west-cookie-prefixes#section-3
      * @throws InvalidCookieException
+     * @throws Exception
      */
     private function checkPrefixes(): void
     {
@@ -223,11 +256,13 @@ class Cookie
     private function setMaxAge(string $value): void
     {
         $this->maxAge = (int) $value;
+
         $this->receivedAtTimestamp = time();
     }
 
     /**
      * @throws InvalidCookieException
+     * @throws Exception
      */
     private function setDomain(string $value, bool $viaAttribute = false): void
     {
@@ -253,6 +288,10 @@ class Cookie
         $this->path = $path;
     }
 
+    /**
+     * @throws InvalidCookieException
+     * @throws Exception
+     */
     private function setSecure(): void
     {
         if (!$this->isReceivedSecure()) {
@@ -278,9 +317,13 @@ class Cookie
         $this->sameSite = ucfirst($value);
     }
 
+    /**
+     * @throws Exception
+     */
     private function pathMatches(Url $url): bool
     {
         $path = $this->path() ?? '';
+
         $urlPath = $url->path() ?? '';
 
         return str_starts_with($urlPath, $path) &&

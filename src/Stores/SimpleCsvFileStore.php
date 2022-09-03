@@ -18,6 +18,9 @@ class SimpleCsvFileStore extends Store
         touch($this->filePath());
     }
 
+    /**
+     * @throws Exception
+     */
     public function store(Result $result): void
     {
         $fileHandle = fopen($this->filePath(), 'a');

@@ -27,14 +27,14 @@ final class HttpResponseCacheItem
      * @param string $responseBody
      */
     public function __construct(
-        private string $requestMethod,
-        private string $requestUri,
-        private array $requestHeaders,
-        private string $requestBody,
-        private string $effectiveUri,
-        private int $responseStatusCode,
-        private array $responseHeaders,
-        private string $responseBody,
+        private readonly string $requestMethod,
+        private readonly string $requestUri,
+        private readonly array  $requestHeaders,
+        private readonly string $requestBody,
+        private readonly string $effectiveUri,
+        private readonly int    $responseStatusCode,
+        private readonly array  $responseHeaders,
+        private readonly string $responseBody,
     ) {
         $this->key = self::keyFromRequestData($this->requestProperties());
     }

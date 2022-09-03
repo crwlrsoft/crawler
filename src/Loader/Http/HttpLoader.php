@@ -78,6 +78,9 @@ class HttpLoader extends Loader
         $this->cookieJar = new CookieJar();
     }
 
+    /**
+     * @throws Exception
+     */
     public function load(mixed $subject): ?RespondedRequest
     {
         $request = $this->validateSubjectType($subject);
@@ -260,6 +263,9 @@ class HttpLoader extends Loader
         return $requestOrUri;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function prepareRequest(RequestInterface $request): RequestInterface
     {
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
@@ -399,6 +405,9 @@ class HttpLoader extends Loader
         }
     }
 
+    /**
+     * @throws Exception
+     */
     private function addCookiesToRequest(RequestInterface $request): RequestInterface
     {
         if (!$this->useCookies) {
