@@ -35,7 +35,13 @@ class SimpleCsvFileStore extends Store
             $this->isFirstResult = false;
         }
 
-        fputcsv($fileHandle, array_values($result->toArray()));
+        $resultArray = $result->toArray();
+
+        if ($this->anyPropertyIsArray($result)) {
+            $resultArray = $this->flattenResultArray($resultArray);
+        }
+
+        fputcsv($fileHandle, array_values($resultArray));
 
         fclose($fileHandle);
     }
@@ -44,5 +50,31 @@ class SimpleCsvFileStore extends Store
     {
         return $this->storePath . '/' .
             ($this->filePrefix ? $this->filePrefix . '-' : '') . $this->createTimestamp . '.csv';
+    }
+
+    public function anyPropertyIsArray(Result $result): bool
+    {
+        foreach ($result->toArray() as $value) {
+            if (is_array($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param mixed[] $result
+     * @return array<string|int>
+     */
+    public function flattenResultArray(array $result): array
+    {
+        foreach ($result as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = implode(' | ', $value);
+            }
+        }
+
+        return $result;
     }
 }

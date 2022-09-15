@@ -51,6 +51,24 @@ it('saves Results to a csv file', function () {
     );
 });
 
+test('if the value of a result property is an array, it concatenates the values separated with a pipe', function () {
+    $result1 = helper_getResultWithData(['col1' => 'foo', 'col2' => ['bar', 'baz', 'quz']]);
+
+    $store = new SimpleCsvFileStore(__DIR__ . '/_files', 'test2');
+
+    $store->store($result1);
+
+    expect(file_get_contents($store->filePath()))->toBe("col1,col2\nfoo,\"bar | baz | quz\"\n");
+
+    $result2 = helper_getResultWithData(['col1' => 'Donald', 'col2' => ['Tick', 'Trick', 'Track']]);
+
+    $store->store($result2);
+
+    expect(file_get_contents($store->filePath()))->toBe(
+        "col1,col2\nfoo,\"bar | baz | quz\"\nDonald,\"Tick | Trick | Track\"\n"
+    );
+});
+
 afterAll(function () {
     $dir = __DIR__ . '/_files';
 
