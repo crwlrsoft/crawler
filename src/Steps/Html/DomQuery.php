@@ -3,17 +3,28 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Url\Url;
+use InvalidArgumentException;
 use Symfony\Component\DomCrawler\Crawler;
 
 abstract class DomQuery implements DomQueryInterface
 {
     public ?string $attributeName = null;
 
-    private SelectorTarget $target = SelectorTarget::Text;
+    protected SelectorTarget $target = SelectorTarget::Text;
 
-    private bool $toAbsoluteUrl = false;
+    protected bool $onlyFirstMatch = false;
 
-    private ?string $baseUrl = null;
+    protected bool $onlyLastMatch = false;
+
+    protected false|int $onlyNthMatch = false;
+
+    protected bool $onlyEvenMatches = false;
+
+    protected bool $onlyOddMatches = false;
+
+    protected bool $toAbsoluteUrl = false;
+
+    protected ?string $baseUrl = null;
 
     public function __construct(
         public readonly string $query
@@ -27,6 +38,14 @@ abstract class DomQuery implements DomQueryInterface
     {
         $filtered = $this->filter($domCrawler);
 
+        if ($this->filtersMatches()) {
+            $filtered = $this->filterMatches($filtered);
+
+            if ($filtered === null) {
+                return null;
+            }
+        }
+
         if ($filtered->count() > 1) {
             return $filtered->each(function ($element) {
                 return $this->getTarget($element);
@@ -36,6 +55,45 @@ abstract class DomQuery implements DomQueryInterface
         }
 
         return null;
+    }
+
+    public function first(): self
+    {
+        $this->onlyFirstMatch = true;
+
+        return $this;
+    }
+
+    public function last(): self
+    {
+        $this->onlyLastMatch = true;
+
+        return $this;
+    }
+
+    public function nth(int $n): self
+    {
+        if ($n < 1) {
+            throw new InvalidArgumentException('Argument $n must be greater than 0');
+        }
+
+        $this->onlyNthMatch = $n;
+
+        return $this;
+    }
+
+    public function even(): self
+    {
+        $this->onlyEvenMatches = true;
+
+        return $this;
+    }
+
+    public function odd(): self
+    {
+        $this->onlyOddMatches = true;
+
+        return $this;
     }
 
     public function text(): self
@@ -97,7 +155,58 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
-    private function getTarget(Crawler $filtered): string
+    protected function filtersMatches(): bool
+    {
+        return $this->onlyFirstMatch ||
+            $this->onlyLastMatch ||
+            $this->onlyNthMatch !== false ||
+            $this->onlyEvenMatches ||
+            $this->onlyOddMatches;
+    }
+
+    protected function filterMatches(Crawler $domCrawler): ?Crawler
+    {
+        if (
+            $domCrawler->count() === 0 ||
+            ($this->onlyNthMatch !== false && $domCrawler->count() < $this->onlyNthMatch)
+        ) {
+            return null;
+        }
+
+        if ($this->onlyFirstMatch) {
+            return $domCrawler->first();
+        } elseif ($this->onlyLastMatch) {
+            return $domCrawler->last();
+        } elseif ($this->onlyNthMatch !== false) {
+            return new Crawler($domCrawler->getNode($this->onlyNthMatch - 1));
+        } elseif ($this->onlyEvenMatches || $this->onlyOddMatches) {
+            return $this->filterEvenOrOdd($domCrawler);
+        }
+
+        return null;
+    }
+
+    protected function filterEvenOrOdd(Crawler $domCrawler): Crawler
+    {
+        $newDomCrawler = new Crawler();
+
+        $i = 1;
+
+        foreach ($domCrawler as $node) {
+            if (
+                ($this->onlyEvenMatches && $i % 2 === 0) ||
+                ($this->onlyOddMatches && $i % 2 !== 0)
+            ) {
+                $newDomCrawler->addNode($node);
+            }
+
+            $i++;
+        }
+
+        return $newDomCrawler;
+    }
+
+    protected function getTarget(Crawler $filtered): string
     {
         $target = trim(
             $this->attributeName ?

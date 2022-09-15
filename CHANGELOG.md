@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* The abstract `DomQuery` class (parent of the `CssSelector` and `XPathQuery` classes) now has some methods to narrow the selected matches further: `first()`, `last()`, `nth(n)`, `even()`, `odd()`.
+
 ## [0.5.0] - 2022-09-03
 ### Added
 * You can now call the new `useHeadlessBrowser` method on the `HttpLoader` class to use a headless Chrome browser to load pages. This is enough to get HTML after executing javascript in the browser. For more sophisticated tasks a separate Loader and/or Steps should better be created.

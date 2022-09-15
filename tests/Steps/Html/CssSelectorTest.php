@@ -5,6 +5,8 @@ namespace tests\Steps\Html;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Symfony\Component\DomCrawler\Crawler;
 
+use function tests\helper_getSimpleListHtml;
+
 test('The apply method returns a string for a single match', function () {
     $html = '<div class="item">test</div>';
 
@@ -111,4 +113,52 @@ it('turns the value into an absolute url when toAbsoluteUrl() is called', functi
     $selector->toAbsoluteUrl();
 
     expect($selector->apply($domCrawler))->toBe('https://www.crwlr.software/packages/crawler/v0.4/getting-started');
+});
+
+it('gets only the first matching element when the first() method is called', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->first();
+
+    expect($selector->apply($domCrawler))->toBe('one');
+});
+
+it('gets only the last matching element when the last() method is called', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->last();
+
+    expect($selector->apply($domCrawler))->toBe('four');
+});
+
+it('gets only the nth matching element when the nth() method is called', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->nth(3);
+
+    expect($selector->apply($domCrawler))->toBe('three');
+});
+
+it('returns null when no nth matching element exists', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->nth(5);
+
+    expect($selector->apply($domCrawler))->toBeNull();
+});
+
+it('gets only even matching elements when the even() method is called', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->even();
+
+    expect($selector->apply($domCrawler))->toBe(['two', 'four']);
+});
+
+it('gets only odd matching elements when the odd() method is called', function () {
+    $domCrawler = new Crawler(helper_getSimpleListHtml());
+
+    $selector = (new CssSelector('#list .item'))->odd();
+
+    expect($selector->apply($domCrawler))->toBe(['one', 'three']);
 });

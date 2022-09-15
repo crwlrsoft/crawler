@@ -217,3 +217,15 @@ function helper_getStdClassWithData(array $data): stdClass
 
     return $object;
 }
+
+function helper_getSimpleListHtml(): string
+{
+    return <<<HTML
+        <ul id="list">
+            <li class="item">one</li>
+            <li class="item">two</li>
+            <li class="item">three</li>
+            <li class="item">four</li>
+        </ul>
+        HTML;
+}
