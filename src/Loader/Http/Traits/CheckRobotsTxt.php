@@ -69,7 +69,7 @@ trait CheckRobotsTxt
     {
         $respondedRequest = $this->load($uri);
 
-        if (method_exists($this, 'waitUntilNextRequestCanBeSent')) {
+        if (method_exists($this, 'waitUntilNextRequestCanBeSent')) { // @phpstan-ignore-line
             $this->waitUntilNextRequestCanBeSent();
         }
 
