@@ -30,8 +30,8 @@
     "require": {
         "ext-dom": "*",
         "php": "^8.1",
-        "crwlr/robots-txt": "^0.1.0",
-        "crwlr/url": "^1.1",
+        "crwlr/robots-txt": "^0.1.2",
+        "crwlr/url": "^2.0",
         "psr/log": "^2.0|^3.0",
         "symfony/dom-crawler": "^6.0",
         "symfony/css-selector": "^6.0",
