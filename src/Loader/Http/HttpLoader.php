@@ -10,6 +10,7 @@ use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
+use Error;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -62,7 +63,7 @@ class HttpLoader extends Loader
             $logger->info('Loaded ' . $request->getUri()->__toString());
         });
 
-        $this->onError(function (RequestInterface $request, Exception|ResponseInterface $exceptionOrResponse, $logger) {
+        $this->onError(function (RequestInterface $request, Exception|Error|ResponseInterface $exceptionOrResponse, $logger) {
             $logMessage = 'Failed to load ' . $request->getUri()->__toString() . ': ';
 
             if ($exceptionOrResponse instanceof ResponseInterface) {

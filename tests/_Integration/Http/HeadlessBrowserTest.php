@@ -1,5 +1,7 @@
 <?php
 
+namespace tests\_Integration\Http;
+
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
@@ -8,6 +10,7 @@ use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Generator;
 use Psr\Log\LoggerInterface;
 
 use Symfony\Component\DomCrawler\Crawler;

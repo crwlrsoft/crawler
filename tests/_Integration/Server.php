@@ -52,3 +52,7 @@ if ($route === '/set-cookie') {
 if ($route === '/print-cookie') {
     return include(__DIR__ . '/_Server/PrintCookie.php');
 }
+
+if (str_starts_with($route, '/crawling/')) {
+    return include(__DIR__ . '/_Server/Crawling.php');
+}

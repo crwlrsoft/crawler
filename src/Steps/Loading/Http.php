@@ -9,6 +9,7 @@ use Generator;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -26,6 +27,14 @@ class Http extends LoadingStep
         protected readonly string|StreamInterface|null $body = null,
         protected readonly string $httpVersion = '1.1',
     ) {
+    }
+
+    /**
+     * @param array|(string|string[])[] $headers
+     */
+    public static function crawl(array $headers = [], string $httpVersion = '1.1'): HttpCrawl
+    {
+        return new HttpCrawl($headers, $httpVersion);
     }
 
     /**
@@ -81,7 +90,7 @@ class Http extends LoadingStep
     }
 
     /**
-     * When using the contents of an Http Message Stream multiple times, it's important to not forget to rewind() it,
+     * When using the contents of an HTTP Message Stream multiple times, it's important to not forget to rewind() it,
      * otherwise you'll just get an empty string. So better just always use this helper.
      */
     public static function getBodyString(MessageInterface|RespondedRequest $message): string
@@ -119,12 +128,15 @@ class Http extends LoadingStep
      */
     protected function invoke(mixed $input): Generator
     {
-        $request = new Request($this->method, $input, $this->headers, $this->body, $this->httpVersion);
-
-        $response = $this->loader->load($request);
+        $response = $this->loader->load($this->getRequestFromInputUri($input));
 
         if ($response !== null) {
             yield $response;
         }
+    }
+
+    protected function getRequestFromInputUri(UriInterface $uri): RequestInterface
+    {
+        return new Request($this->method, $uri, $this->headers, $this->body, $this->httpVersion);
     }
 }
