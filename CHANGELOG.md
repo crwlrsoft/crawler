@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * New step `Http::crawl()` (class `HttpCrawl` extending the normal `Http` step class) for conventional crawling. It loads all pages of a website (same host or domain) by following links. There's also a lot of options like depth, filtering by paths, and so on.
+* New steps `Sitemap::getSitemapsFromRobotsTxt()` (`GetSitemapsFromRobotsTxt`) and `Sitemap::getUrlsFromSitemap()` (`GetUrlsFromSitemap`) to get sitemap (URLs) from a robots.txt file and to get all the URLs from those sitemaps.
 * The abstract `DomQuery` class (parent of the `CssSelector` and `XPathQuery` classes) now has some methods to narrow the selected matches further: `first()`, `last()`, `nth(n)`, `even()`, `odd()`.
 
 ### Changed

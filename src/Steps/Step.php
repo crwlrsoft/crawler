@@ -8,10 +8,13 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
+use Crwlr\Url\Url;
 use Exception;
 use Generator;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
+use Symfony\Component\DomCrawler\Crawler;
 
 abstract class Step extends BaseStep
 {
@@ -106,7 +109,7 @@ abstract class Step extends BaseStep
      */
     protected function validateAndSanitizeStringOrStringable(
         mixed $inputValue,
-        string $exceptionMessage = 'Input has to be string or stringable'
+        string $exceptionMessage = 'Input must be string or stringable'
     ): string {
         if (is_object($inputValue) && method_exists($inputValue, '__toString')) {
             return $inputValue->__toString();
@@ -124,7 +127,7 @@ abstract class Step extends BaseStep
      */
     protected function validateAndSanitizeStringOrHttpResponse(
         mixed $inputValue,
-        string $exceptionMessage = 'Input has to be string, stringable or Http response',
+        string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
         bool $allowOnlyRespondedRequest = false
     ): string {
         if (
@@ -135,6 +138,35 @@ abstract class Step extends BaseStep
         }
 
         return $this->validateAndSanitizeStringOrStringable($inputValue, $exceptionMessage);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function validateAndSanitizeToUriInterface(
+        mixed $inputValue,
+        string $exceptionMessage = 'Input must be string, stringable or an instance of UriInterface or Crwlr\\Url',
+    ): UriInterface {
+        if ($inputValue instanceof UriInterface) {
+            return $inputValue;
+        }
+
+        if (
+            is_string($inputValue) ||
+            $inputValue instanceof Url ||
+            (is_object($inputValue) && method_exists($inputValue, '__toString'))
+        ) {
+            return Url::parsePsr7((string) $inputValue);
+        }
+
+        throw new InvalidArgumentException($exceptionMessage);
+    }
+
+    protected function validateAndSanitizeToDomCrawlerInstance(
+        mixed $inputValue,
+        string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
+    ): Crawler {
+        return new Crawler($this->validateAndSanitizeStringOrHttpResponse($inputValue, $exceptionMessage));
     }
 
     /**

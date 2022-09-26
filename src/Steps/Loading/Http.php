@@ -3,7 +3,6 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Url\Url;
 use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
@@ -109,17 +108,9 @@ class Http extends LoadingStep
     /**
      * @throws InvalidArgumentException
      */
-    protected function validateAndSanitizeInput(mixed $input): mixed
+    protected function validateAndSanitizeInput(mixed $input): UriInterface
     {
-        if ($input instanceof UriInterface) {
-            return $input;
-        }
-
-        if (is_string($input)) {
-            return Url::parsePsr7($input);
-        }
-
-        throw new InvalidArgumentException('Input must be string or an instance of the PSR-7 UriInterface');
+        return $this->validateAndSanitizeToUriInterface($input);
     }
 
     /**
