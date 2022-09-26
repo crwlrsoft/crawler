@@ -6,7 +6,9 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -17,12 +19,17 @@ use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
 
+function helper_nonBotUserAgent(): UserAgent
+{
+    return new UserAgent('Mozilla/5.0 (compatible; FooBot)');
+}
+
 /** @var TestCase $this */
 
 test('It accepts url string as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->load('https://www.crwlr.software');
     $httpLoader->loadOrFail('https://www.crwlr.software');
 });
@@ -30,7 +37,7 @@ test('It accepts url string as argument to load', function () {
 test('It accepts RequestInterface as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->load(new Request('GET', 'https://www.crwlr.software'));
     $httpLoader->loadOrFail(new Request('GET', 'https://www.crwlr.software'));
 });
@@ -54,7 +61,7 @@ test(
             $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response($responseStatusCode));
         }
 
-        $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
         $beforeLoadWasCalled = false;
         $httpLoader->beforeLoad(function () use (& $beforeLoadWasCalled) {
             $beforeLoadWasCalled = true;
@@ -73,7 +80,7 @@ test(
 test('It calls the onSuccess hook on a successful response', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response($responseStatusCode));
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $onSuccessWasCalled = false;
     $httpLoader->onSuccess(function () use (& $onSuccessWasCalled) {
         $onSuccessWasCalled = true;
@@ -90,7 +97,7 @@ test('It calls the onSuccess hook on a successful response', function ($response
 test('It calls the onError hook on a failed request', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response($responseStatusCode));
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $onErrorWasCalled = false;
     $httpLoader->onError(function () use (& $onErrorWasCalled) {
         $onErrorWasCalled = true;
@@ -103,7 +110,7 @@ test('It calls the onError hook on a failed request', function ($responseStatusC
 test('It throws an Exception when request fails in loadOrFail method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(400));
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $onErrorWasCalled = false;
     $httpLoader->onError(function () use (& $onErrorWasCalled) {
         $onErrorWasCalled = true;
@@ -169,7 +176,7 @@ test('It automatically handles redirects', function (string $loadingMethod) {
             new Response(301, ['Location' => 'https://www.redirect.com']),
             new Response(200, [], 'YES')
         );
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $requestResponseAggregate = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
 
     /** @var RespondedRequest $requestResponseAggregate */
@@ -180,29 +187,40 @@ test('It automatically handles redirects', function (string $loadingMethod) {
 
 test('It calls request start and end tracking methods', function (string $loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
+
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
-    $httpLoader = new class (new BotUserAgent('Foo'), $httpClient) extends HttpLoader {
-        public function trackRequestStart(?float $microtime = null): void
+
+    $throttler = new class () extends Throttler {
+        public function trackRequestStartFor(UriInterface $url): void
         {
-            $this->logger()->info('track request start');
+            $this->logger?->info('Track request start ' . $url);
+
+            parent::trackRequestStartFor($url);
         }
 
-        public function trackRequestEnd(?float $microtime = null): void
+        public function trackRequestEndFor(UriInterface $url): void
         {
-            $this->logger()->info('track request end');
+            $this->logger?->info('Track request end ' . $url);
+
+            parent::trackRequestEndFor($url);
         }
     };
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient, throttler: $throttler);
+
     $httpLoader->load('https://www.twitter.com');
 
     $output = $this->getActualOutput();
-    expect($output)->toContain('track request start');
-    expect($output)->toContain('track request end');
+
+    expect($output)->toContain('Track request start https://www.twitter.com');
+
+    expect($output)->toContain('Track request end https://www.twitter.com');
 })->with(['load', 'loadOrFail']);
 
 test('It automatically logs loading success message', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response());
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->{$loadingMethod}(new Request('GET', 'https://phpstan.org/'));
 
     $output = $this->getActualOutput();
@@ -212,7 +230,7 @@ test('It automatically logs loading success message', function ($loadingMethod) 
 test('It automatically logs loading error message in normal load method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(500));
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->load(new Request('GET', 'https://phpstan.org/'));
 
     $output = $this->getActualOutput();
@@ -227,7 +245,7 @@ test('It automatically adds the User-Agent header before sending', function () {
             return str_contains($request->getHeaderLine('User-Agent'), 'FooBot');
         })
         ->andReturn(new Response());
-    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->load('https://www.facebook.com');
 });
 
@@ -241,7 +259,7 @@ test('It tries to get responses from cache', function () {
         ->andReturn(HttpResponseCacheItem::fromAggregate(
             new RespondedRequest(new Request('GET', '/'), new Response())
         ));
-    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->load('https://www.facebook.com');
 });
@@ -255,7 +273,7 @@ test('It fails when it gets a failed response from cache', function () {
         ->andReturn(HttpResponseCacheItem::fromAggregate(
             new RespondedRequest(new Request('GET', '/'), new Response(404))
         ));
-    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->setCache($cache);
 
     $onErrorWasCalled = false;
@@ -276,7 +294,7 @@ test('It fails when it gets a failed response from cache in loadOrFail', functio
         ->andReturn(HttpResponseCacheItem::fromAggregate(
             new RespondedRequest(new Request('GET', 'facebook'), new Response(404))
         ));
-    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->loadOrFail('https://www.facebook.com');
 })->throws(LoadingException::class);
@@ -287,7 +305,7 @@ test('It adds loaded responses to the cache when it has a cache', function ($loa
     $cache = Mockery::mock(CacheInterface::class);
     $cache->shouldReceive('has')->once()->andReturn(false);
     $cache->shouldReceive('set')->once();
-    $httpLoader = new HttpLoader(new BotUserAgent('FooBot'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->setCache($cache);
     $httpLoader->{$loadingMethod}('https://laravel.com/');
 })->with(['load', 'loadOrFail']);
@@ -325,6 +343,8 @@ test('By default it uses the cookie jar and passes on cookies', function () {
     $httpLoader->load('https://www.crwlr.software/blog');
     $httpLoader->loadOrFail('https://www.crwlr.software/contact');
     $httpLoader->loadOrFail('https://www.crwlr.software/packages');
+
+    expect(true)->toBeTrue(); // Just here so pest doesn't complain that there is no assertion.
 });
 
 test('You can turn off using the cookie jar', function () {
@@ -358,4 +378,6 @@ test('You can turn off using the cookie jar', function () {
     $httpLoader->load('https://www.crwlr.software/blog');
     $httpLoader->loadOrFail('https://www.crwlr.software/contact');
     $httpLoader->loadOrFail('https://www.crwlr.software/packages');
+
+    expect(true)->toBeTrue(); // Just here so pest doesn't complain that there is no assertion.
 });

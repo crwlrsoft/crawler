@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New step `Http::crawl()` (class `HttpCrawl` extending the normal `Http` step class) for conventional crawling. It loads all pages of a website (same host or domain) by following links. There's also a lot of options like depth, filtering by paths, and so on.
 * The abstract `DomQuery` class (parent of the `CssSelector` and `XPathQuery` classes) now has some methods to narrow the selected matches further: `first()`, `last()`, `nth(n)`, `even()`, `odd()`.
 
+### Changed
+* __BREAKING__: Removed `PoliteHttpLoader` and traits `WaitPolitely` and `CheckRobotsTxt`. Converted the traits to classes `Throttler` and `RobotsTxtHandler` which are dependencies of the `HttpLoader`. The `HttpLoader` internally gets default instances of those classes. The `RobotsTxtHandler` will respect robots.txt rules by default if you use a `BotUserAgent` and it won't if you use a normal `UserAgent`. You can access the loader's `RobotsTxtHandler` via `HttpLoader::robotsTxt()`. You can pass your own instance of the `Throttler` to the loader and also access it via `HttpLoader::throttle()` to change settings.
+
 ### Fixed
 * The `SimpleCsvFileStore` can now also save results with nested data (but only second level). It just concatenates the values separated with a ` | `.
 

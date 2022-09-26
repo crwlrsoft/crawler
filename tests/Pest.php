@@ -3,11 +3,16 @@
 namespace tests;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
+use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use GuzzleHttp\Psr7\Response;
+use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\Process\Process;
 
@@ -228,4 +233,15 @@ function helper_getSimpleListHtml(): string
             <li class="item">four</li>
         </ul>
         HTML;
+}
+
+function helper_getFastLoader(UserAgentInterface $userAgent, ?LoggerInterface $logger = null): HttpLoader
+{
+    $loader = new HttpLoader($userAgent, logger: $logger);
+
+    $loader->throttle()
+        ->waitBetween(new MultipleOf(0.0001), new MultipleOf(0.0002))
+        ->waitAtLeast(Microseconds::fromSeconds(0.0001));
+
+    return $loader;
 }

@@ -4,6 +4,7 @@ namespace tests\_Integration;
 
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\HttpCrawler;
+use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
@@ -11,7 +12,10 @@ use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 
+use Psr\Log\LoggerInterface;
+
 use function tests\helper_generatorToArray;
+use function tests\helper_getFastLoader;
 
 class StructuredDataBlogPost extends Step
 {
@@ -53,6 +57,11 @@ it('gets both, data from html and the enclosed json-ld using two steps in a grou
         {
             return new BotUserAgent('MyBot');
         }
+
+        public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+        {
+            return helper_getFastLoader($userAgent, $logger);
+        }
     };
 
     $crawler->input('http://localhost:8000/blog-post-with-json-ld');
@@ -88,6 +97,11 @@ it(
             protected function userAgent(): UserAgentInterface
             {
                 return new BotUserAgent('MyBot');
+            }
+
+            public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+            {
+                return helper_getFastLoader($userAgent, $logger);
             }
         };
 

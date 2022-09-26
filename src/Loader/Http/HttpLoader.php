@@ -2,10 +2,12 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
-use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
-use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
+use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
@@ -26,6 +28,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -50,10 +53,15 @@ class HttpLoader extends Loader
 
     protected ?Browser $headlessBrowser = null;
 
+    protected RobotsTxtHandler $robotsTxtHandler;
+
+    protected Throttler $throttler;
+
     public function __construct(
         UserAgentInterface $userAgent,
         ?ClientInterface $httpClient = null,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?Throttler $throttler = null,
     ) {
         parent::__construct($userAgent, $logger);
 
@@ -77,6 +85,12 @@ class HttpLoader extends Loader
         });
 
         $this->cookieJar = new CookieJar();
+
+        $this->robotsTxtHandler = new RobotsTxtHandler($this);
+
+        $this->throttler = $throttler ?? new Throttler();
+
+        $this->throttler->addLogger($this->logger);
     }
 
     /**
@@ -117,7 +131,8 @@ class HttpLoader extends Loader
 
             return $respondedRequest;
         } catch (Throwable $exception) {
-            $this->trackRequestEnd(); // Don't move to finally so hooks don't run before it.
+            // Don't move to finally so hooks don't run before it.
+            $this->throttler->trackRequestEndFor($request->getUri());
 
             $this->callHook('onError', $request, $exception);
 
@@ -194,6 +209,11 @@ class HttpLoader extends Loader
         return $this;
     }
 
+    public function usesHeadlessBrowser(): bool
+    {
+        return $this->useHeadlessBrowser;
+    }
+
     public function useHttpClient(): static
     {
         $this->useHeadlessBrowser = false;
@@ -227,6 +247,33 @@ class HttpLoader extends Loader
         $this->headlessBrowserOptionsDirty = true;
 
         return $this;
+    }
+
+    public function robotsTxt(): RobotsTxtHandler
+    {
+        return $this->robotsTxtHandler;
+    }
+
+    public function throttle(): Throttler
+    {
+        return $this->throttler;
+    }
+
+    protected function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
+    {
+        if (!$this->robotsTxtHandler->isAllowed($uri)) {
+            $message = 'Crawler is not allowed to load ' . $uri . ' according to robots.txt file.';
+
+            $this->logger->warning($message);
+
+            if ($throwsException) {
+                throw new LoadingException($message);
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -289,6 +336,8 @@ class HttpLoader extends Loader
      */
     private function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
+        $this->throttler->waitForGo($request->getUri());
+
         if ($this->useHeadlessBrowser) {
             return $this->loadViaHeadlessBrowser($request);
         }
@@ -301,31 +350,33 @@ class HttpLoader extends Loader
      */
     private function handleRedirects(
         RequestInterface  $request,
-        ?RespondedRequest $aggregate = null
+        ?RespondedRequest $respondedRequest = null
     ): RespondedRequest {
-        $this->trackRequestStart();
+        if (!$respondedRequest) {
+            $this->throttler->trackRequestStartFor($request->getUri());
+        }
 
         $response = $this->httpClient->sendRequest($request);
 
-        $this->trackRequestEnd();
+        $this->throttler->trackRequestEndFor($request->getUri());
 
-        if (!$aggregate) {
-            $aggregate = new RespondedRequest($request, $response);
+        if (!$respondedRequest) {
+            $respondedRequest = new RespondedRequest($request, $response);
         } else {
-            $aggregate->setResponse($response);
+            $respondedRequest->setResponse($response);
         }
 
-        $this->addCookiesToJar($aggregate);
+        $this->addCookiesToJar($respondedRequest);
 
-        if ($aggregate->isRedirect()) {
-            $this->logger()->info('Load redirect to: ' . $aggregate->effectiveUri());
+        if ($respondedRequest->isRedirect()) {
+            $this->logger()->info('Load redirect to: ' . $respondedRequest->effectiveUri());
 
-            $newRequest = $request->withUri(Url::parsePsr7($aggregate->effectiveUri()));
+            $newRequest = $request->withUri(Url::parsePsr7($respondedRequest->effectiveUri()));
 
-            return $this->handleRedirects($newRequest, $aggregate);
+            return $this->handleRedirects($newRequest, $respondedRequest);
         }
 
-        return $aggregate;
+        return $respondedRequest;
     }
 
     /**

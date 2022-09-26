@@ -92,7 +92,7 @@ abstract class Loader implements LoaderInterface
         }
     }
 
-    protected function userAgent(): UserAgentInterface
+    public function userAgent(): UserAgentInterface
     {
         return $this->userAgent;
     }

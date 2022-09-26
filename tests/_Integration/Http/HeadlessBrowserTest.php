@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_generatorToArray;
+use function tests\helper_getFastLoader;
 
 class HeadlessBrowserCrawler extends HttpCrawler
 {
@@ -26,7 +27,7 @@ class HeadlessBrowserCrawler extends HttpCrawler
 
     public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
-        $loader = new HttpLoader($userAgent, logger: $logger);
+        $loader = helper_getFastLoader($userAgent, $logger);
 
         $loader->useHeadlessBrowser();
 

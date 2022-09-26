@@ -5,8 +5,10 @@ namespace tests\_Integration\Http;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
+use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Steps\Loading\Http;
-use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Url;
 use GuzzleHttp\Client;
@@ -65,12 +67,19 @@ class Crawler extends HttpCrawler
             }
         };
 
-        return new TestLoader($userAgent, $client, $logger);
+        $loader = new TestLoader($userAgent, $client, $logger);
+
+        // To not slow down tests unnecessarily
+        $loader->throttle()
+            ->waitBetween(new MultipleOf(0.0001), new MultipleOf(0.0002))
+            ->waitAtLeast(Microseconds::fromSeconds(0.0001));
+
+        return $loader;
     }
 
     protected function userAgent(): UserAgentInterface
     {
-        return new BotUserAgent('TestBot');
+        return new UserAgent('SomeUserAgent');
     }
 
     public function getLoader(): TestLoader
