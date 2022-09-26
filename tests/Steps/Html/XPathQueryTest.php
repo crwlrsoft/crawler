@@ -2,7 +2,6 @@
 
 namespace tests\Steps\Html;
 
-use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
 use Symfony\Component\DomCrawler\Crawler;
 
