@@ -4,8 +4,8 @@ namespace tests;
 
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
-use Crwlr\Crawler\Loader\Http\PoliteHttpLoader;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
@@ -83,7 +83,7 @@ test(
             {
                 $this->loaderCalled += 1;
 
-                return new class ($userAgent, null, $logger) extends PoliteHttpLoader {
+                return new class ($userAgent, null, $logger) extends HttpLoader {
                     public string $testProperty = 'foo';
                 };
             }
