@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * __BREAKING__: Removed `PoliteHttpLoader` and traits `WaitPolitely` and `CheckRobotsTxt`. Converted the traits to classes `Throttler` and `RobotsTxtHandler` which are dependencies of the `HttpLoader`. The `HttpLoader` internally gets default instances of those classes. The `RobotsTxtHandler` will respect robots.txt rules by default if you use a `BotUserAgent` and it won't if you use a normal `UserAgent`. You can access the loader's `RobotsTxtHandler` via `HttpLoader::robotsTxt()`. You can pass your own instance of the `Throttler` to the loader and also access it via `HttpLoader::throttle()` to change settings.
 
 ### Fixed
+* Getting absolute links via the `GetLink` and `GetLinks` steps and the `toAbsoluteUrl()` method of the `CssSelector` and `XPathQuery` classes, now also look for `<base>` tags in HTML when resolving the URLs.
 * The `SimpleCsvFileStore` can now also save results with nested data (but only second level). It just concatenates the values separated with a ` | `.
 
 ## [0.5.0] - 2022-09-03

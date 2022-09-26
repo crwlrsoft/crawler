@@ -115,6 +115,34 @@ it('turns the value into an absolute url when toAbsoluteUrl() is called', functi
     expect($selector->apply($domCrawler))->toBe('https://www.crwlr.software/packages/crawler/v0.4/getting-started');
 });
 
+it(
+    'turns the value into the correct absolute url when toAbsoluteUrl() is called and the HTML contains a base tag',
+    function () {
+        $html = <<<HTML
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <base href="/c/d" />
+            </head>
+            <body><a href="e">link</a></body>
+            </html>
+            HTML;
+
+        $domCrawler = new Crawler($html);
+
+        $selector = new CssSelector('a');
+
+        $selector->setBaseUrl('https://www.example.com/a/b')
+            ->attribute('href');
+
+        expect($selector->apply($domCrawler))->toBe('e');
+
+        $selector->toAbsoluteUrl();
+
+        expect($selector->apply($domCrawler))->toBe('https://www.example.com/c/e');
+    }
+);
+
 it('gets only the first matching element when the first() method is called', function () {
     $domCrawler = new Crawler(helper_getSimpleListHtml());
 
