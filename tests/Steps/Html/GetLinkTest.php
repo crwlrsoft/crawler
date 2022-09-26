@@ -344,3 +344,24 @@ test('onHost() can be called multiple times and merges all hosts it was called w
 
     expect($links[0]->get())->toBe('https://www.otsch.codes/blog');
 });
+
+it('works correctly when HTML contains a base tag', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <base href="/c/d" />
+        </head>
+        <body><a href="e">link</a></body>
+        </html>
+        HTML;
+
+    $step = (new GetLink());
+
+    $links = helper_invokeStepWithInput($step, new RespondedRequest(
+        new Request('GET', 'https://www.example.com/a/b'),
+        new Response(200, [], $html)
+    ));
+
+    expect($links[0]->get())->toBe('https://www.example.com/c/e');
+});

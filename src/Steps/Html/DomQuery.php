@@ -32,10 +32,39 @@ abstract class DomQuery implements DomQueryInterface
     }
 
     /**
+     * When there is a <base> tag with a href attribute in an HTML document all links in the document must be resolved
+     * against that base url. This method finds the base href in a document if there is one.
+     */
+    public static function getBaseHrefFromDocument(Crawler $document): ?string
+    {
+        $baseTag = $document->filter('base');
+
+        if ($baseTag->count() > 0) {
+            // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+            // "If multiple <base> elements are used, only the first href and first target are obeyed..."
+            $href = $baseTag->first()->attr('href');
+
+            if (!empty($href)) {
+                return $href;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return string[]|string|null
      */
     public function apply(Crawler $domCrawler): array|string|null
     {
+        if ($this->toAbsoluteUrl) {
+            $baseHref = self::getBaseHrefFromDocument($domCrawler);
+
+            if ($baseHref) {
+                $this->setBaseUrl($baseHref);
+            }
+        }
+
         $filtered = $this->filter($domCrawler);
 
         if ($this->filtersMatches()) {
@@ -150,7 +179,11 @@ abstract class DomQuery implements DomQueryInterface
      */
     public function setBaseUrl(string $baseUrl): static
     {
-        $this->baseUrl = $baseUrl;
+        if (!empty($this->baseUrl)) {
+            $this->baseUrl = Url::parse($this->baseUrl)->resolve($baseUrl)->__toString();
+        } else {
+            $this->baseUrl = $baseUrl;
+        }
 
         return $this;
     }

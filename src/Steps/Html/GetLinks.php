@@ -15,6 +15,8 @@ class GetLinks extends GetLink
      */
     protected function invoke(mixed $input): Generator
     {
+        $this->getBaseFromDocument($input);
+
         $selector = $this->selector ?? 'a';
 
         foreach ($input->filter($selector) as $link) {

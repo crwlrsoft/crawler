@@ -51,6 +51,8 @@ class GetLink extends Step
      */
     protected function invoke(mixed $input): Generator
     {
+        $this->getBaseFromDocument($input);
+
         $selector = $this->selector ?? 'a';
 
         foreach ($input->filter($selector) as $link) {
@@ -129,6 +131,15 @@ class GetLink extends Step
         $this->onHost = $this->onHost ? array_merge($this->onHost, $hosts) : $hosts;
 
         return $this;
+    }
+
+    protected function getBaseFromDocument(Crawler $document): void
+    {
+        $baseHref = DomQuery::getBaseHrefFromDocument($document);
+
+        if (!empty($baseHref)) {
+            $this->baseUri = $this->baseUri->resolve($baseHref);
+        }
     }
 
     /**
