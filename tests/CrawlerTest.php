@@ -207,6 +207,8 @@ test('The static loop method wraps a Step in a LoopStep object', function () {
     $loop = Crawler::loop($step);
 
     $loop->invokeStep(new Input('foo'));
+
+    expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
 });
 
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
@@ -305,6 +307,8 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
             ->addStep($step2)
             ->addStep($step3)
     );
+
+    expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
 });
 
 test('Result objects are created when defined and passed on through all the steps', function () {

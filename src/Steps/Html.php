@@ -7,6 +7,7 @@ use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Html\GetLinks;
 use Crwlr\Crawler\Steps\Html\MetaData;
+use Crwlr\Crawler\Steps\Html\SchemaOrg;
 
 class Html extends Dom
 {
@@ -23,6 +24,11 @@ class Html extends Dom
     public static function metaData(): MetaData
     {
         return new MetaData();
+    }
+
+    public static function schemaOrg(): SchemaOrg
+    {
+        return new SchemaOrg();
     }
 
     protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface

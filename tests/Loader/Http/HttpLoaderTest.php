@@ -208,7 +208,7 @@ test('It calls request start and end tracking methods', function (string $loadin
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient, throttler: $throttler);
 
-    $httpLoader->load('https://www.twitter.com');
+    $httpLoader->{$loadingMethod}('https://www.twitter.com');
 
     $output = $this->getActualOutput();
 
@@ -338,7 +338,7 @@ test('By default it uses the cookie jar and passes on cookies', function () {
             $cookiesHeader === ['cookie1=foo2', 'cookie2=bar2', 'cookie3=baz'];
     })->andReturn(new Response());
 
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->load('https://www.crwlr.software/');
     $httpLoader->load('https://www.crwlr.software/blog');
     $httpLoader->loadOrFail('https://www.crwlr.software/contact');
@@ -372,7 +372,7 @@ test('You can turn off using the cookie jar', function () {
         return $request->getUri()->__toString() === 'https://www.crwlr.software/packages' && $cookiesHeader === [];
     })->andReturn(new Response());
 
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
     $httpLoader->dontUseCookies();
     $httpLoader->load('https://www.crwlr.software/');
     $httpLoader->load('https://www.crwlr.software/blog');
