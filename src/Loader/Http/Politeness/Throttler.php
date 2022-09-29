@@ -40,13 +40,13 @@ class Throttler
         Microseconds|null $min = null,
         protected Microseconds|null $max = null,
     ) {
-        $this->from = $from ?? new MultipleOf(0.5);
+        $this->from = $from ?? new MultipleOf(1.0);
 
-        $this->to = $to ?? new MultipleOf(1.0);
+        $this->to = $to ?? new MultipleOf(2.0);
 
         $this->validateFromAndTo();
 
-        $this->min = $min ?? Microseconds::fromSeconds(0.1);
+        $this->min = $min ?? Microseconds::fromSeconds(0.25);
     }
 
     /**
