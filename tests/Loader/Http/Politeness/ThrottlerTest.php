@@ -8,7 +8,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Url\Url;
 use InvalidArgumentException;
 
-it('waits between 0.5 and 1.0 times of the time span that the last request took by default', function () {
+it('waits between 1.0 and 2.0 times of the time span that the last request took by default', function () {
     $url = Url::parsePsr7('https://www.example.com');
 
     $throttler = new Throttler();
@@ -29,12 +29,12 @@ it('waits between 0.5 and 1.0 times of the time span that the last request took 
 
     $diff = $readyForNextRequest->subtract($requestEndTime);
 
-    expect($diff->value)->toBeGreaterThan(50000);
+    expect($diff->value)->toBeGreaterThan(100000);
 
-    expect($diff->value)->toBeLessThan(110000); // Bit more than * 1.0 because other things happening also take time.
+    expect($diff->value)->toBeLessThan(220000); // A bit more than * 2.0 because other things happening also take time.
 });
 
-it('waits min 0.1s by default', function () {
+it('waits min 0.25s by default', function () {
     $url = Url::parsePsr7('https://www.example.com');
 
     $throttler = new Throttler();
@@ -51,7 +51,7 @@ it('waits min 0.1s by default', function () {
 
     $diff = $readyForNextRequest->subtract($requestEndTime);
 
-    expect($diff->value)->toBeGreaterThan(100000);
+    expect($diff->value)->toBeGreaterThan(250000);
 });
 
 it('respects the max wait time you set', function () {
@@ -77,7 +77,7 @@ it('respects the max wait time you set', function () {
 
     $diff = $readyForNextRequest->subtract($requestEndTime);
 
-    expect($diff->value)->toBeLessThan(110000); // Bit more than * 1.0 because other things happening also take time.
+    expect($diff->value)->toBeLessThan(110000); // A bit more than * 1.0 because other things happening also take time.
 });
 
 it('waits only if there was already a request to the same domain', function () {

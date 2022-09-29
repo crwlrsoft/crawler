@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 
 abstract class HttpCrawler extends Crawler
 {
-    public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+    protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
         return new HttpLoader($userAgent, $this->httpClient(), $logger);
     }

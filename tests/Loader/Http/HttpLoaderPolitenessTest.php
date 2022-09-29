@@ -14,10 +14,10 @@ use Psr\Http\Message\RequestInterface;
 
 use function tests\helper_getDummyRobotsTxtResponse;
 
-function helper_wait100ms(): void
+function helper_wait300ms(): void
 {
     $start = microtime(true);
-    while ((microtime(true) - $start) < 0.1) {
+    while ((microtime(true) - $start) < 0.3) {
     }
 }
 
@@ -27,7 +27,7 @@ it('throttles requests to the same domain', function ($loadingMethod) {
     $httpClient->shouldReceive('sendRequest')->once()->andReturnUsing(function (RequestInterface $request) {
         $response = new Response(200, [], $request->getUri()->__toString() . ' response');
 
-        helper_wait100ms();
+        helper_wait300ms();
 
         return $response;
     });
@@ -46,9 +46,9 @@ it('throttles requests to the same domain', function ($loadingMethod) {
 
     $diff = $secondResponse - $firstResponse;
 
-    expect($diff)->toBeGreaterThan(0.05);
+    expect($diff)->toBeGreaterThan(0.3);
 
-    expect($diff)->toBeLessThan(0.12);
+    expect($diff)->toBeLessThan(0.62);
 })->with(['load', 'loadOrFail']);
 
 it('does not throttle requests to different domains', function ($loadingMethod) {
@@ -57,7 +57,7 @@ it('does not throttle requests to different domains', function ($loadingMethod) 
     $httpClient->shouldReceive('sendRequest')->once()->andReturnUsing(function (RequestInterface $request) {
         $response = new Response(200, [], $request->getUri()->__toString() . ' response');
 
-        helper_wait100ms();
+        helper_wait300ms();
 
         return $response;
     });
