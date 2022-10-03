@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2022-10-03
 
 ### Added
 * New step `Http::crawl()` (class `HttpCrawl` extending the normal `Http` step class) for conventional crawling. It loads all pages of a website (same host or domain) by following links. There's also a lot of options like depth, filtering by paths, and so on.
