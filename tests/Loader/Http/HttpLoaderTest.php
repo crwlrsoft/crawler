@@ -193,14 +193,14 @@ test('It calls request start and end tracking methods', function (string $loadin
     $throttler = new class () extends Throttler {
         public function trackRequestStartFor(UriInterface $url): void
         {
-            $this->logger?->info('Track request start ' . $url);
+            echo 'Track request start ' . $url . PHP_EOL;
 
             parent::trackRequestStartFor($url);
         }
 
         public function trackRequestEndFor(UriInterface $url): void
         {
-            $this->logger?->info('Track request end ' . $url);
+            echo 'Track request end ' . $url . PHP_EOL;
 
             parent::trackRequestEndFor($url);
         }
