@@ -7,7 +7,6 @@ use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Url\Url;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
-use Psr\Log\LoggerInterface;
 
 class Throttler
 {
@@ -29,7 +28,6 @@ class Throttler
     protected Microseconds|MultipleOf $from;
     protected Microseconds|MultipleOf $to;
     protected Microseconds $min;
-    protected ?LoggerInterface $logger = null;
 
     /**
      * @throws InvalidArgumentException
@@ -118,11 +116,6 @@ class Throttler
         $wait = $waitUntil->subtract($now);
 
         usleep($wait->value);
-    }
-
-    public function addLogger(LoggerInterface $logger): void
-    {
-        $this->logger = $logger;
     }
 
     protected function time(): Microseconds

@@ -46,7 +46,8 @@ class CookieJar
 
             foreach ($cookieHeaders as $cookieHeader) {
                 $cookie = new Cookie($url, $cookieHeader);
-                $this->jar[$url->domain()][$cookie->name()] = $cookie;
+
+                $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
             }
         }
     }
@@ -57,20 +58,35 @@ class CookieJar
      */
     public function getFor(string|UriInterface $url): array
     {
-        $url = Url::parse($url);
+        $forDomain = $this->getForDomainFromUrl($url);
 
-        if (!is_string($url->domain()) || !array_key_exists($url->domain(), $this->jar)) {
+        if (!$forDomain || !array_key_exists($forDomain, $this->jar)) {
             return [];
         }
 
         $cookiesToSend = [];
 
-        foreach ($this->jar[$url->domain()] as $cookie) {
+        foreach ($this->jar[$forDomain] as $cookie) {
             if ($cookie->shouldBeSentTo($url)) {
                 $cookiesToSend[] = $cookie;
             }
         }
 
         return $cookiesToSend;
+    }
+
+    protected function getForDomainFromUrl(string|UriInterface|Url $url): ?string
+    {
+        if (!$url instanceof Url) {
+            $url = Url::parse($url);
+        }
+
+        $forDomain = empty($url->domain()) ? $url->host() : $url->domain();
+
+        if (!is_string($forDomain)) {
+            return null;
+        }
+
+        return $forDomain;
     }
 }

@@ -3,7 +3,6 @@
 namespace tests\_Integration\Http;
 
 use Crwlr\Crawler\HttpCrawler;
-use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;

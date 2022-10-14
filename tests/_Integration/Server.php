@@ -56,3 +56,19 @@ if ($route === '/print-cookie') {
 if (str_starts_with($route, '/crawling/')) {
     return include(__DIR__ . '/_Server/Crawling.php');
 }
+
+if (str_starts_with($route, '/too-many-requests')) {
+    if (str_ends_with($route, '/succeed-on-second-attempt')) {
+        session_start();
+
+        $isSecondRequest = isset($_SESSION["isSecondRequest"]) && $_SESSION["isSecondRequest"] === true;
+
+        if (!$isSecondRequest) {
+            $_SESSION["isSecondRequest"] = true;
+        }
+    }
+
+    $retryAfter = str_ends_with($route, '/retry-after') ? 2 : null;
+
+    return include(__DIR__ . '/_Server/TooManyRequests.php');
+}

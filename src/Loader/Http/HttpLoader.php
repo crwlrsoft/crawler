@@ -8,6 +8,7 @@ use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
+use Crwlr\Crawler\Loader\Http\Politeness\TooManyRequestsHandler;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
@@ -62,6 +63,7 @@ class HttpLoader extends Loader
         ?ClientInterface $httpClient = null,
         ?LoggerInterface $logger = null,
         ?Throttler $throttler = null,
+        protected TooManyRequestsHandler $tooManyRequestsHandler = new TooManyRequestsHandler(),
     ) {
         parent::__construct($userAgent, $logger);
 
@@ -89,12 +91,12 @@ class HttpLoader extends Loader
         $this->robotsTxtHandler = new RobotsTxtHandler($this);
 
         $this->throttler = $throttler ?? new Throttler();
-
-        $this->throttler->addLogger($this->logger);
     }
 
     /**
-     * @throws Exception
+     * @param mixed $subject
+     * @return RespondedRequest|null
+     * @throws LoadingException
      */
     public function load(mixed $subject): ?RespondedRequest
     {
@@ -114,7 +116,7 @@ class HttpLoader extends Loader
             $isFromCache = $respondedRequest !== null;
 
             if (!$respondedRequest) {
-                $respondedRequest = $this->loadViaClientOrHeadlessBrowser($request);
+                $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
             }
 
             if ($respondedRequest->response->getStatusCode() < 400) {
@@ -170,7 +172,7 @@ class HttpLoader extends Loader
         $isFromCache = $respondedRequest !== null;
 
         if (!$respondedRequest) {
-            $respondedRequest = $this->loadViaClientOrHeadlessBrowser($request);
+            $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
         }
 
         if ($respondedRequest->response->getStatusCode() >= 400) {
@@ -322,6 +324,40 @@ class HttpLoader extends Loader
     }
 
     /**
+     * @return RespondedRequest
+     * @throws ClientExceptionInterface
+     * @throws CommunicationException
+     * @throws CommunicationException\CannotReadResponse
+     * @throws CommunicationException\InvalidResponse
+     * @throws CommunicationException\ResponseHasError
+     * @throws LoadingException
+     * @throws NavigationExpired
+     * @throws NoResponseAvailable
+     * @throws OperationTimedOut
+     * @throws Throwable
+     */
+    private function waitForGoAndLoadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
+    {
+        $this->throttler->waitForGo($request->getUri());
+
+        $respondedRequest = $this->loadViaClientOrHeadlessBrowser($request);
+
+        if ($respondedRequest->response->getStatusCode() === 429) {
+            $respondedRequest = $this->tooManyRequestsHandler->handleRetries(
+                $respondedRequest,
+                (function () use ($request) {
+                    $request = $this->prepareRequest($request);
+
+                    return $this->loadViaClientOrHeadlessBrowser($request);
+                })->bindTo($this),
+                $this->logger,
+            );
+        }
+
+        return $respondedRequest;
+    }
+
+    /**
      * @param RequestInterface $request
      * @return RespondedRequest
      * @throws ClientExceptionInterface
@@ -336,8 +372,6 @@ class HttpLoader extends Loader
      */
     private function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
-        $this->throttler->waitForGo($request->getUri());
-
         if ($this->useHeadlessBrowser) {
             return $this->loadViaHeadlessBrowser($request);
         }
@@ -446,11 +480,11 @@ class HttpLoader extends Loader
         return $this->headlessBrowser;
     }
 
-    private function addCookiesToJar(RespondedRequest $aggregate): void
+    private function addCookiesToJar(RespondedRequest $respondedRequest): void
     {
         if ($this->useCookies) {
             try {
-                $this->cookieJar->addFrom($aggregate->effectiveUri(), $aggregate->response);
+                $this->cookieJar->addFrom($respondedRequest->effectiveUri(), $respondedRequest->response);
             } catch (Exception $exception) {
                 $this->logger->warning('Problem when adding cookies to the Jar: ' . $exception->getMessage());
             }
