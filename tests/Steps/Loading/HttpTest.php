@@ -4,8 +4,11 @@ namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
@@ -123,3 +126,20 @@ test('It has static methods to create instances with all the different http meth
 
     helper_traverseIterable($step->invokeStep(new Input('https://dev.to/otsch')));
 })->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+it(
+    'calls the loadOrFail() loader method when the stopOnErrorResponse() method was called',
+    function (string $httpMethod) {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('loadOrFail')->withArgs(function (RequestInterface $request) use ($httpMethod) {
+            return $request->getMethod() === $httpMethod;
+        })->once()->andReturn(new RespondedRequest(new Request('GET', '/foo'), new Response(200)));
+
+        $step = (Http::{strtolower($httpMethod)}())
+            ->addLoader($loader)
+            ->stopOnErrorResponse();
+
+        helper_traverseIterable($step->invokeStep(new Input('https://example.com/otsch')));
+    }
+)->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);

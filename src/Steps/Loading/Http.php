@@ -14,6 +14,10 @@ use Psr\Http\Message\UriInterface;
 
 class Http extends LoadingStep
 {
+    protected bool $stopOnErrorResponse = false;
+
+    protected bool $yieldErrorResponses = false;
+
     /**
      * @param string $method
      * @param array|(string|string[])[] $headers
@@ -105,6 +109,20 @@ class Http extends LoadingStep
         return $contents;
     }
 
+    public function stopOnErrorResponse(): static
+    {
+        $this->stopOnErrorResponse = true;
+
+        return $this;
+    }
+
+    public function yieldErrorResponses(): static
+    {
+        $this->yieldErrorResponses = true;
+
+        return $this;
+    }
+
     /**
      * @throws InvalidArgumentException
      */
@@ -119,9 +137,15 @@ class Http extends LoadingStep
      */
     protected function invoke(mixed $input): Generator
     {
-        $response = $this->loader->load($this->getRequestFromInputUri($input));
+        $request = $this->getRequestFromInputUri($input);
 
-        if ($response !== null) {
+        if ($this->stopOnErrorResponse) {
+            $response = $this->loader->loadOrFail($request);
+        } else {
+            $response = $this->loader->load($request);
+        }
+
+        if ($response !== null && ($response->response->getStatusCode() < 400 || $this->yieldErrorResponses)) {
             yield $response;
         }
     }
