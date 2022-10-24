@@ -9,11 +9,13 @@ class JsonFileStore extends Store
 {
     private int $createTimestamp;
 
-    private bool $isFirstResult = true;
-
     public function __construct(private readonly string $storePath, private readonly ?string $filePrefix = null)
     {
         $this->createTimestamp = time();
+
+        touch($this->filePath());
+
+        file_put_contents($this->filePath(), '[]');
     }
 
     /**
@@ -21,16 +23,17 @@ class JsonFileStore extends Store
      */
     public function store(Result $result): void
     {
-        $resultArray = $result->toArray();
-        if (!$this->isFirstResult) {
-            $currentFile = file_get_contents($this->filePath());
-            $tempArray = json_decode($currentFile, true);
-            array_push($tempArray, $resultArray);
-            $resultArray = $tempArray;
-        } else {
-            $this->isFirstResult = false;
+        $currentResultsFileContent = file_get_contents($this->filePath());
+
+        if (!$currentResultsFileContent) {
+            $currentResultsFileContent = '[]';
         }
-        file_put_contents($this->filePath(), json_encode([$resultArray]));
+
+        $results = json_decode($currentResultsFileContent, true);
+
+        $results[] = $result->toArray();
+
+        file_put_contents($this->filePath(), json_encode($results));
     }
 
     public function filePath(): string
