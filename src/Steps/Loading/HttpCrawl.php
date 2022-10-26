@@ -160,11 +160,11 @@ class HttpCrawl extends Http
         foreach ($this->urls as $url => $yieldResponse) {
             $uri = Url::parsePsr7($url);
 
-            $response = $this->loader->load($this->getRequestFromInputUri($uri));
-
-            $this->addLoadedUrlsFromResponse($response);
+            $response = $this->getResponseFromInputUri($uri);
 
             if ($response !== null) {
+                $this->addLoadedUrlsFromResponse($response);
+
                 if ($yieldResponse['yield'] === true) {
                     yield $response;
                 }

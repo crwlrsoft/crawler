@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Steps\Loading;
+namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
@@ -20,10 +20,10 @@ it('gets all the sitemaps listed in the robots.txt file on a host, based on some
     $robotsTxt = <<<ROBOTSTXT
         User-agent: *
         Disallow:
-        
+
         Sitemap: https://www.crwlr.software/sitemap.xml
         Sitemap: https://www.crwlr.software/sitemap2.xml
-        
+
         Sitemap: https://www.crwlr.software/sitemap3.xml
         ROBOTSTXT;
 

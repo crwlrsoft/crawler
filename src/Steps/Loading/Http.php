@@ -3,6 +3,9 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Loading\Http\Paginate;
+use Crwlr\Crawler\Steps\Loading\Http\Paginator;
+use Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface;
 use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
@@ -109,6 +112,17 @@ class Http extends LoadingStep
         return $contents;
     }
 
+    public function paginate(
+        PaginatorInterface|string $paginator,
+        int $defaultPaginatorMaxPages = Paginator::MAX_PAGES_DEFAULT
+    ): Paginate {
+        if (is_string($paginator)) {
+            $paginator = Paginator::simpleWebsite($paginator, $defaultPaginatorMaxPages);
+        }
+
+        return new Paginate($paginator, $this->method, $this->headers, $this->body, $this->httpVersion);
+    }
+
     public function stopOnErrorResponse(): static
     {
         $this->stopOnErrorResponse = true;
@@ -137,8 +151,27 @@ class Http extends LoadingStep
      */
     protected function invoke(mixed $input): Generator
     {
+        $response = $this->getResponseFromInputUri($input);
+
+        if ($response) {
+            yield $response;
+        }
+    }
+
+    protected function getResponseFromInputUri(UriInterface $input): ?RespondedRequest
+    {
         $request = $this->getRequestFromInputUri($input);
 
+        return $this->getResponseFromRequest($request);
+    }
+
+    protected function getRequestFromInputUri(UriInterface $uri): RequestInterface
+    {
+        return new Request($this->method, $uri, $this->headers, $this->body, $this->httpVersion);
+    }
+
+    protected function getResponseFromRequest(RequestInterface $request): ?RespondedRequest
+    {
         if ($this->stopOnErrorResponse) {
             $response = $this->loader->loadOrFail($request);
         } else {
@@ -146,12 +179,9 @@ class Http extends LoadingStep
         }
 
         if ($response !== null && ($response->response->getStatusCode() < 400 || $this->yieldErrorResponses)) {
-            yield $response;
+            return $response;
         }
-    }
 
-    protected function getRequestFromInputUri(UriInterface $uri): RequestInterface
-    {
-        return new Request($this->method, $uri, $this->headers, $this->body, $this->httpVersion);
+        return null;
     }
 }
