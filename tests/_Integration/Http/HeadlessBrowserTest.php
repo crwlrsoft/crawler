@@ -7,7 +7,7 @@ use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
-use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
@@ -21,7 +21,7 @@ class HeadlessBrowserCrawler extends HttpCrawler
 {
     protected function userAgent(): UserAgentInterface
     {
-        return new BotUserAgent('HeadlessBrowserBot');
+        return new UserAgent('HeadlessBrowserBot');
     }
 
     public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
@@ -71,7 +71,7 @@ it('automatically uses the Loader\'s user agent', function () {
 
     expect($results[0]->get('responseBody'))->toHaveKey('User-Agent');
 
-    expect($results[0]->get('responseBody')['User-Agent'])->toBe('Mozilla/5.0 (compatible; HeadlessBrowserBot)');
+    expect($results[0]->get('responseBody')['User-Agent'])->toBe('HeadlessBrowserBot');
 });
 
 it('uses cookies', function () {
@@ -114,4 +114,27 @@ it('renders javascript', function () {
     expect($results[0]->toArray())->toBe([
         'content' => 'This was added through javascript',
     ]);
+});
+
+it('also gets cookies that are set via javascript', function () {
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler->input('http://localhost:8000/set-js-cookie')
+        ->addStep(Http::get())
+        ->addStep(new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'http://localhost:8000/print-cookie';
+            }
+        })
+        ->addStep(Http::get())
+        ->addStep('printed-cookie', new GetStringFromResponseHtmlBody());
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(1);
+
+    expect($results[0]->get('printed-cookie'))->toBeString();
+
+    expect($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
 });

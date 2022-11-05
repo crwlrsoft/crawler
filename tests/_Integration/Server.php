@@ -49,6 +49,10 @@ if ($route === '/set-cookie') {
     return include(__DIR__ . '/_Server/SetCookie.php');
 }
 
+if ($route === '/set-js-cookie') {
+    return include(__DIR__ . '/_Server/SetCookieJs.php');
+}
+
 if ($route === '/print-cookie') {
     return include(__DIR__ . '/_Server/PrintCookie.php');
 }
