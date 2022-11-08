@@ -92,3 +92,9 @@ if (str_starts_with($route, '/server-error-response')) {
 
     return;
 }
+
+if (str_starts_with($route, '/gzip')) {
+    header('Content-Type: application/x-gzip');
+
+    echo gzencode('This is a gzip compressed string');
+}

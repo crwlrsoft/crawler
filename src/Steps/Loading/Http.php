@@ -107,6 +107,12 @@ class Http extends LoadingStep
 
         $contents = $message->getBody()->getContents();
 
+        if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true)) {
+            $decoded = gzdecode($contents);
+
+            $contents = $decoded === false ? $contents : $decoded;
+        }
+
         $message->getBody()->rewind();
 
         return $contents;

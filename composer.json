@@ -53,6 +53,9 @@
         "spatie/invade": "^1.0",
         "symfony/process": "^6.0"
     },
+    "suggest": {
+        "ext-zlib": "Needed to uncompress compressed responses"
+    },
     "autoload": {
         "psr-4": {
             "Crwlr\\Crawler\\": "src/"
