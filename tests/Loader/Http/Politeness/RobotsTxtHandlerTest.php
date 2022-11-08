@@ -4,6 +4,7 @@ namespace tests\Loader\Http\Politeness;
 
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
+use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -11,6 +12,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
 function helper_getLoaderWithRobotsTxt(string $robotsTxtContent = '', ?UserAgentInterface $userAgent = null): HttpLoader
@@ -29,6 +31,8 @@ function helper_getLoaderWithRobotsTxt(string $robotsTxtContent = '', ?UserAgent
 
     return new HttpLoader($userAgent, $httpClient);
 }
+
+/** @var TestCase $this */
 
 test('route is disallowed when it\'s disallowed for my user agent', function () {
     $robotsTxt = <<<ROBOTSTXT
@@ -94,7 +98,7 @@ it('gets all the sitemap URLs from robots.txt', function () {
     $robotsTxt = <<<ROBOTSTXT
         User-agent: *
         Disallow:
-        
+
         Sitemap: https://www.example.com/sitemap.xml
         Sitemap: https://www.example.com/sitemap2.xml
         sitemap: https://www.example.com/sitemap3.xml
@@ -109,4 +113,20 @@ it('gets all the sitemap URLs from robots.txt', function () {
         'https://www.example.com/sitemap2.xml',
         'https://www.example.com/sitemap3.xml',
     ]);
+});
+
+it('fails silently when parsing fails', function () {
+    $robotsTxt = <<<ROBOTSTXT
+        Disallow: /
+        ROBOTSTXT;
+
+    $loader = helper_getLoaderWithRobotsTxt($robotsTxt);
+
+    $robotsTxt = new RobotsTxtHandler($loader, new CliLogger());
+
+    expect($robotsTxt->isAllowed('/anything'))->toBeTrue();
+
+    $logOutput = $this->getActualOutput();
+
+    expect($logOutput)->toContain('Failed to parse robots.txt');
 });

@@ -11,6 +11,7 @@ use Crwlr\RobotsTxt\RobotsTxt;
 use Crwlr\Url\Url;
 use Exception;
 use Psr\Http\Message\UriInterface;
+use Psr\Log\LoggerInterface;
 
 class RobotsTxtHandler
 {
@@ -23,8 +24,10 @@ class RobotsTxtHandler
 
     protected bool $ignoreWildcardRules = false;
 
-    public function __construct(protected Loader $loader)
-    {
+    public function __construct(
+        protected Loader $loader,
+        protected ?LoggerInterface $logger = null,
+    ) {
         $this->userAgent = $this->loader->userAgent();
     }
 
@@ -77,7 +80,13 @@ class RobotsTxtHandler
 
         $robotsTxtContent = $this->loadRobotsTxtContent($root . '/robots.txt');
 
-        $this->robotsTxts[$root] = RobotsTxt::parse($robotsTxtContent);
+        try {
+            $this->robotsTxts[$root] = RobotsTxt::parse($robotsTxtContent);
+        } catch (Exception $exception) {
+            $this->logger?->warning('Failed to parse robots.txt: ' . $exception->getMessage());
+
+            $this->robotsTxts[$root] = RobotsTxt::parse('');
+        }
 
         return $this->robotsTxts[$root];
     }
