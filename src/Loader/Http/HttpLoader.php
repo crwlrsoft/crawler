@@ -88,7 +88,7 @@ class HttpLoader extends Loader
 
         $this->cookieJar = new CookieJar();
 
-        $this->robotsTxtHandler = new RobotsTxtHandler($this);
+        $this->robotsTxtHandler = new RobotsTxtHandler($this, $this->logger);
 
         $this->throttler = $throttler ?? new Throttler();
     }
