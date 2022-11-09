@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Cache\FileCache;
 use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
+use Crwlr\Crawler\Steps\Loading\Http;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
@@ -188,4 +189,23 @@ it('compresses cache data when useCompression() is used', function () {
     // Didn't want to check for exact numbers, because I guess they could be a bit different on different systems.
     // But thought the diff should at least be more than 30% for the test to succeed.
     expect($uncompressedFileSize - $compressedFileSize)->toBeGreaterThan($uncompressedFileSize * 0.3);
+});
+
+it('gets compressed cache items', function () {
+    $cache = new FileCache(helper_cachedir());
+
+    $cache->useCompression();
+
+    $cacheItem = HttpResponseCacheItem::fromAggregate(new RespondedRequest(
+        new Request('GET', '/compression'),
+        new Response(body: Utils::streamFor('Hello World'))
+    ));
+
+    $cache->set($cacheItem->key(), $cacheItem);
+
+    $retrievedCacheItem = $cache->get($cacheItem->key());
+
+    expect($retrievedCacheItem->aggregate())->toBeInstanceOf(RespondedRequest::class);
+
+    expect(Http::getBodyString($retrievedCacheItem->aggregate()))->toBe('Hello World');
 });
