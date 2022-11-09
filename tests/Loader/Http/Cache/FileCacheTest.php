@@ -2,12 +2,14 @@
 
 namespace tests\Loader\Http\Cache;
 
+use Crwlr\Crawler\Loader\Http\Cache\Exceptions\InvalidArgumentException;
+use Crwlr\Crawler\Loader\Http\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Cache\FileCache;
 use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Psr\SimpleCache\InvalidArgumentException;
+use GuzzleHttp\Psr7\Utils;
 
 function helper_cachedir(): string
 {
@@ -17,6 +19,7 @@ function helper_cachedir(): string
 /**
  * @param mixed[] $items
  * @throws InvalidArgumentException
+ * @throws MissingZlibExtensionException
  */
 function helper_addMultipleItemsToCache(array $items, FileCache $cache): void
 {
@@ -150,4 +153,39 @@ test('It deletes multiple items', function () {
     expect($cache->has($cacheItem1->key()))->toBeFalse();
     expect($cache->has($cacheItem2->key()))->toBeFalse();
     expect($cache->has($cacheItem3->key()))->toBeFalse();
+});
+
+it('compresses cache data when useCompression() is used', function () {
+    $data = <<<DATA
+        Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et
+        dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet
+        clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet,
+        consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat,
+        sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea
+        takimata sanctus est Lorem ipsum dolor sit amet.
+        DATA;
+
+    $aggregate = new RespondedRequest(new Request('GET', '/compression'), new Response(body: Utils::streamFor($data)));
+
+    $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
+
+    $cache = new FileCache(helper_cachedir());
+
+    $cache->set($cacheItem->key(), $cacheItem);
+
+    $uncompressedFileSize = filesize(helper_cachedir() . '/' . $cacheItem->key());
+
+    clearstatcache(); // Results of filesize() are cached. Clear that to get correct result for compressed file size.
+
+    $cache->useCompression();
+
+    $cache->set($cacheItem->key(), $cacheItem);
+
+    $compressedFileSize = filesize(helper_cachedir() . '/' . $cacheItem->key());
+
+    expect($compressedFileSize)->toBeLessThan($uncompressedFileSize);
+
+    // Didn't want to check for exact numbers, because I guess they could be a bit different on different systems.
+    // But thought the diff should at least be more than 30% for the test to succeed.
+    expect($uncompressedFileSize - $compressedFileSize)->toBeGreaterThan($uncompressedFileSize * 0.3);
 });
