@@ -41,7 +41,7 @@ class FileCache implements CacheInterface
             $fileContent = $this->getFileContents($key);
 
             if ($this->useCompression) {
-                $this->decode($fileContent);
+                $fileContent = $this->decode($fileContent);
             }
 
             return HttpResponseCacheItem::fromSerialized($fileContent);
