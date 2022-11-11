@@ -58,16 +58,28 @@ class HttpLoader extends Loader
 
     protected Throttler $throttler;
 
+    /**
+     * @var mixed[]
+     */
+    protected array $defaultGuzzleClientConfig = [
+        'connect_timeout' => 10,
+        'timeout' => 60,
+    ];
+
+    /**
+     * @param mixed[] $defaultGuzzleClientConfig
+     */
     public function __construct(
         UserAgentInterface $userAgent,
         ?ClientInterface $httpClient = null,
         ?LoggerInterface $logger = null,
         ?Throttler $throttler = null,
         protected TooManyRequestsHandler $tooManyRequestsHandler = new TooManyRequestsHandler(),
+        array $defaultGuzzleClientConfig = [],
     ) {
         parent::__construct($userAgent, $logger);
 
-        $this->httpClient = $httpClient ?? new Client();
+        $this->httpClient = $httpClient ?? new Client($this->mergeClientConfigWithDefaults($defaultGuzzleClientConfig));
 
         $this->onSuccess(function (RequestInterface $request, ResponseInterface $response, LoggerInterface $logger) {
             $logger->info('Loaded ' . $request->getUri()->__toString());
@@ -91,6 +103,21 @@ class HttpLoader extends Loader
         $this->robotsTxtHandler = new RobotsTxtHandler($this, $this->logger);
 
         $this->throttler = $throttler ?? new Throttler();
+    }
+
+    /**
+     * @param mixed[] $config
+     * @return mixed[]
+     */
+    protected function mergeClientConfigWithDefaults(array $config): array
+    {
+        $merged = $this->defaultGuzzleClientConfig;
+
+        foreach ($config as $key => $value) {
+            $merged[$key] = $value;
+        }
+
+        return $merged;
     }
 
     /**
