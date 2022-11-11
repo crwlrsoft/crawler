@@ -100,7 +100,7 @@ if (str_starts_with($route, '/gzip')) {
 }
 
 if (str_starts_with($route, '/sleep')) {
-    sleep(10);
+    usleep(1050000);
 
     return;
 }
