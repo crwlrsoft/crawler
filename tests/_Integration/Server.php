@@ -98,3 +98,9 @@ if (str_starts_with($route, '/gzip')) {
 
     echo gzencode('This is a gzip compressed string');
 }
+
+if (str_starts_with($route, '/sleep')) {
+    sleep(10);
+
+    return;
+}

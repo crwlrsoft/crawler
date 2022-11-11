@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * __BREAKING__: Error responses (4xx as well as 5xx), by default, won't produce any step outputs any longer. If you want to receive error responses, use the new `yieldErrorResponses()` method.
+* __BREAKING__: Removed the `httpClient()` method in the `HttpCrawler` class. If you want to provide your own HTTP client, implement a custom `loader` method passing your client to the `HttpLoader` instead.
 * In case of a 429 (Too Many Requests) response, the `HttpLoader` now automatically waits and retries. By default, it retries twice and waits 10 seconds for the first retry and a minute for the second one. In case the response also contains a `Retry-After` header with a value in seconds, it complies to that. Exception: by default it waits at max `60` seconds (you can set your own limit if you want), if the `Retry-After` value is higher, it will stop crawling. If all the retries also receive a `429` it also throws an Exception.
 * Removed logger from `Throttler` as it doesn't log anything.
 * Fail silently when `robots.txt` can't be parsed.
+* Default timeout configuration for the default guzzle HTTP client: `connect_timeout` is `10` seconds and `timeout` is `60` seconds.
 
 ### Fixed
 * The `CookieJar` now also works with `localhost` or other hosts without a registered domain name.
