@@ -53,7 +53,7 @@ it('retries after defined number of seconds', function () {
     expect($diff)->toBeGreaterThan(3.0);
 
     expect($diff)->toBeLessThan(3.5);
-})->only();
+});
 
 it('starts the first retry after the number of seconds returned in the Retry-After HTTP header', function () {
     $crawler = new TooManyRequestsCrawler();
@@ -72,7 +72,7 @@ it('starts the first retry after the number of seconds returned in the Retry-Aft
     expect($diff)->toBeGreaterThan(4.0);
 
     expect($diff)->toBeLessThan(4.5);
-})->only();
+});
 
 it('goes on crawling when a retry receives a successful response', function () {
     $crawler = new TooManyRequestsCrawler();
@@ -93,4 +93,4 @@ it('goes on crawling when a retry receives a successful response', function () {
     expect($diff)->toBeGreaterThan(1.0);
 
     expect($diff)->toBeLessThan(1.5);
-})->only();
+});
