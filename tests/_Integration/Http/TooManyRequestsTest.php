@@ -38,17 +38,11 @@ it('retries after defined number of seconds', function () {
 
     $start = microtime(true);
 
-    var_dump($start);
-
     helper_generatorToArray($crawler->run());
 
     $end = microtime(true);
 
-    var_dump($end);
-
     $diff = $end - $start;
-
-    var_dump($diff);
 
     expect($diff)->toBeGreaterThan(3.0);
 
