@@ -66,6 +66,10 @@ class HttpLoader extends Loader
         'timeout' => 60,
     ];
 
+    protected bool $retryCachedErrorResponses = false;
+
+    protected bool $writeOnlyCache = false;
+
     /**
      * @param mixed[] $defaultGuzzleClientConfig
      */
@@ -106,24 +110,10 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @param mixed[] $config
-     * @return mixed[]
-     */
-    protected function mergeClientConfigWithDefaults(array $config): array
-    {
-        $merged = $this->defaultGuzzleClientConfig;
-
-        foreach ($config as $key => $value) {
-            $merged[$key] = $value;
-        }
-
-        return $merged;
-    }
-
-    /**
      * @param mixed $subject
      * @return RespondedRequest|null
      * @throws LoadingException
+     * @throws Exception
      */
     public function load(mixed $subject): ?RespondedRequest
     {
@@ -288,6 +278,35 @@ class HttpLoader extends Loader
         return $this->throttler;
     }
 
+    public function retryCachedErrorResponses(): static
+    {
+        $this->retryCachedErrorResponses = true;
+
+        return $this;
+    }
+
+    public function writeOnlyCache(): static
+    {
+        $this->writeOnlyCache = true;
+
+        return $this;
+    }
+
+    /**
+     * @param mixed[] $config
+     * @return mixed[]
+     */
+    protected function mergeClientConfigWithDefaults(array $config): array
+    {
+        $merged = $this->defaultGuzzleClientConfig;
+
+        foreach ($config as $key => $value) {
+            $merged[$key] = $value;
+        }
+
+        return $merged;
+    }
+
     protected function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
     {
         if (!$this->robotsTxtHandler->isAllowed($uri)) {
@@ -310,7 +329,7 @@ class HttpLoader extends Loader
      */
     protected function getFromCache(RequestInterface $request): ?RespondedRequest
     {
-        if (!$this->cache) {
+        if (!$this->cache || $this->writeOnlyCache) {
             return null;
         }
 
@@ -321,7 +340,15 @@ class HttpLoader extends Loader
 
             $responseCacheItem = $this->cache->get($key);
 
-            return $responseCacheItem->aggregate();
+            $respondedRequest = $responseCacheItem->aggregate();
+
+            if ($this->retryCachedErrorResponses && $respondedRequest->response->getStatusCode() >= 400) {
+                $this->logger->info('Cached response was an error response, retry.');
+
+                return null;
+            }
+
+            return $respondedRequest;
         }
 
         return null;
