@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New methods `stopOnErrorResponse()` and `yieldErrorResponses()` that can be used with `Http` steps. By calling `stopOnErrorResponse()` the step will throw a `LoadingException` when a response has a 4xx or 5xx status code. By calling the `yieldErrorResponse()` even error responses will be yielded and passed on to the next steps (this was default behaviour until this version. See the breaking change below).
 * The body of HTTP responses with a `Content-Type` header containing `application/x-gzip` are automatically decoded when `Http::getBodyString()` is used. Therefor added `ext-zlib` to suggested in `composer.json`.
 * The `FileCache` class can compress the cache data now to save disk space. Use the `useCompression()` method to do so.
+* New method `retryCachedErrorResponses()` in `HttpLoader`. When called, the loader will only use successful responses (status code < 400) from the cache and therefore retry already cached error responses.
+* New method `writeOnlyCache()` in `HttpLoader` to only write to, but don't read from the response cache. Can be used to renew cached responses.
 
 ### Changed
 * __BREAKING__: Error responses (4xx as well as 5xx), by default, won't produce any step outputs any longer. If you want to receive error responses, use the new `yieldErrorResponses()` method.
