@@ -62,7 +62,7 @@ it('checks if a URL path matches a regex pattern', function (bool $expectedResul
 
     expect($urlFilterRule->evaluate($haystack, $needle))->toBe($expectedResult);
 })->with([
-    [true, 'https://www.example.com/foo/bar', '/^\/foo/'],
-    [true, 'https://www.example.com/56/something/foo', '/^\/\d{1,5}\/[a-z]{1,20}/'],
-    [false, 'https://www.example.com/56/some-thing/foo', '/^\/\d{1,5}\/[a-z]{1,20}\//'],
+    [true, 'https://www.example.com/foo/bar', '^/foo/'],
+    [true, 'https://www.example.com/56/something/foo', '^/\d{1,5}/[a-z]{1,20}'],
+    [false, 'https://www.example.com/56/some-thing/foo', '^/\d{1,5}/[a-z]{1,20}/'],
 ]);

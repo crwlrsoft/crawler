@@ -29,10 +29,15 @@ enum UrlFilterRule
                 self::Domain => Url::parse($url)->domain() === $needle,
                 self::Path => Url::parse($url)->path() === $needle,
                 self::PathStartsWith => str_starts_with(Url::parse($url)->path() ?? '', $needle),
-                self::PathMatches => preg_match($needle, Url::parse($url)->path() ?? '') === 1,
+                self::PathMatches => preg_match($this->prepareRegex($needle), Url::parse($url)->path() ?? '') === 1,
             };
         } catch (InvalidUrlException|Exception $exception) {
             return false;
         }
+    }
+
+    protected function prepareRegex(string $regex): string
+    {
+        return '~' . $regex . '~';
     }
 }
