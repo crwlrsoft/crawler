@@ -22,6 +22,12 @@ class GetUrlsFromSitemap extends Step
      */
     protected function invoke(mixed $input): Generator
     {
+        if ($input->filter('urlset url')->count() === 0) {
+            $xml = preg_replace('/<urlset.+>/', '<urlset>', $input->outerHtml());
+
+            $input = new Crawler($xml);
+        }
+
         foreach ($input->filter('urlset url') as $urlNode) {
             $urlNode = new Crawler($urlNode);
 

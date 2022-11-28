@@ -75,3 +75,24 @@ it('doesn\'t fail when sitemap is empty', function () {
 
     expect($outputs)->toHaveCount(0);
 });
+
+it(
+    'doesn\'t fail when the urlset tag contains attributes, that would cause the symfony DomCrawler to not find the ' .
+    'elements',
+    function () {
+        $xml = <<<XML
+            <?xml version="1.0" encoding="UTF-8"?>
+            <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+                    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                <url><loc>https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-5</loc></url>
+                <url><loc>https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php</loc></url>
+                <url><loc>https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-4</loc></url>
+            </urlset>
+            XML;
+
+        $outputs = helper_invokeStepWithInput(Sitemap::getUrlsFromSitemap(), $xml);
+
+        expect($outputs)->toHaveCount(3);
+    }
+);
