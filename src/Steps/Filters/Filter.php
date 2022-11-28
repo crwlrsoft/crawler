@@ -84,6 +84,11 @@ abstract class Filter implements FilterInterface
         return new UrlFilter(UrlFilterRule::PathStartsWith, $urlPathStartsWithValue);
     }
 
+    public static function urlPathMatches(mixed $urlPathMatchesValue): UrlFilter
+    {
+        return new UrlFilter(UrlFilterRule::PathMatches, $urlPathMatchesValue);
+    }
+
     public function useKey(string $key): static
     {
         $this->useKey = $key;

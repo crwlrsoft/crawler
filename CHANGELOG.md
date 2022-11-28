@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The `FileCache` class can compress the cache data now to save disk space. Use the `useCompression()` method to do so.
 * New method `retryCachedErrorResponses()` in `HttpLoader`. When called, the loader will only use successful responses (status code < 400) from the cache and therefore retry already cached error responses.
 * New method `writeOnlyCache()` in `HttpLoader` to only write to, but don't read from the response cache. Can be used to renew cached responses.
+* `Filter::urlPathMatches()` to filter URL paths using a regex.
 
 ### Changed
 * __BREAKING__: Error responses (4xx as well as 5xx), by default, won't produce any step outputs any longer. If you want to receive error responses, use the new `yieldErrorResponses()` method.
