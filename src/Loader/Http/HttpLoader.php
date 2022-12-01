@@ -435,11 +435,17 @@ class HttpLoader extends Loader
 
     /**
      * @throws ClientExceptionInterface
+     * @throws LoadingException
      */
     private function handleRedirects(
         RequestInterface  $request,
-        ?RespondedRequest $respondedRequest = null
+        ?RespondedRequest $respondedRequest = null,
+        int $redirectNumber = 0,
     ): RespondedRequest {
+        if ($redirectNumber >= 10) {
+            throw new LoadingException('Too many redirects.');
+        }
+
         if (!$respondedRequest) {
             $this->throttler->trackRequestStartFor($request->getUri());
         }
@@ -461,7 +467,9 @@ class HttpLoader extends Loader
 
             $newRequest = $request->withUri(Url::parsePsr7($respondedRequest->effectiveUri()));
 
-            return $this->handleRedirects($newRequest, $respondedRequest);
+            $redirectNumber++;
+
+            return $this->handleRedirects($newRequest, $respondedRequest, $redirectNumber);
         }
 
         return $respondedRequest;
