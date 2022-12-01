@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * The `CookieJar` now also works with `localhost` or other hosts without a registered domain name.
 * Improve the `Sitemap::getUrlsFromSitemap()` step to also work when the `<urlset>` tag contains attributes that would cause the symfony DomCrawler to not find any elements.
+* Fixed possibility of infinite redirects in `HttpLoader` by adding a redirects limit of 10.
 
 ## [0.6.0] - 2022-10-03
 
