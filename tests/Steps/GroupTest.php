@@ -860,3 +860,194 @@ test(
         expect($output[1]->get())->toBe(['two' => 'bar', 'four' => 'quz']);
     }
 );
+
+it(
+    'throws an exception when keepInputData() is called on a group but combineToSingleOutput() was not called',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['foo' => 'one'];
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['bar' => 'two'];
+            }
+        };
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->keepInputData();
+
+        helper_invokeStepWithInput($group, new Input(['baz' => 'three']));
+    }
+)->throws(Exception::class);
+
+it(
+    'keeps input data in output when keepInputData() was called when outputs are combined',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['foo' => 'one'];
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['bar' => 'two'];
+            }
+        };
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->combineToSingleOutput()
+            ->keepInputData();
+
+        $output = helper_invokeStepWithInput($group, new Input(['baz' => 'three']));
+
+        expect($output)->toHaveCount(1);
+
+        expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+    }
+);
+
+it('keeps non array input data in array output with key', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['foo' => 'one'];
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['bar' => 'two'];
+        }
+    };
+
+    $group = (new Group())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->combineToSingleOutput()
+        ->keepInputData('baz');
+
+    $output = helper_invokeStepWithInput($group, new Input('three'));
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+});
+
+it('throws an error when non array input should be kept but no key is defined', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['foo' => 'one'];
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['bar' => 'two'];
+        }
+    };
+
+    $group = (new Group())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->combineToSingleOutput()
+        ->keepInputData();
+
+    helper_invokeStepWithInput($group, new Input('three'));
+})->throws(Exception::class);
+
+it('does not replace output data when a key from input to keep is also defined in output', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['foo' => 'one'];
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['bar' => 'two'];
+        }
+    };
+
+    $group = (new Group())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->combineToSingleOutput()
+        ->keepInputData();
+
+    $output = helper_invokeStepWithInput($group, new Input(['foo' => 'four', 'baz' => 'three']));
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+});
+
+//it('keeps array input data when output is non array and output key is defined', function () {
+//    $step1 = new class () extends Step {
+//        protected function invoke(mixed $input): Generator
+//        {
+//            yield 'one';
+//        }
+//    };
+//
+//    $step2 = new class () extends Step {
+//        protected function invoke(mixed $input): Generator
+//        {
+//            yield ['bar' => 'two'];
+//        }
+//    };
+//
+//    $group = (new Group())
+//        ->addStep($step1)
+//        ->addStep($step2)
+//        ->combineToSingleOutput()
+//        ->keepInputData(outputKey: 'foo');
+//
+//    $output = helper_invokeStepWithInput($group, new Input(['baz' => 'three']));
+//
+//    expect($output)->toHaveCount(1);
+//
+//    expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+//})->only();
+
+it(
+    'throws an exception when input should be kept, output is non array value and no output key is defined',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'one';
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['bar' => 'two'];
+            }
+        };
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2)
+            ->keepInputData();
+
+        helper_invokeStepWithInput($group, new Input(['baz' => 'three']));
+    }
+)->throws(Exception::class);

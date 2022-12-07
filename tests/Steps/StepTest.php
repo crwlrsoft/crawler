@@ -7,6 +7,7 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
+use Exception;
 use Generator;
 use PHPUnit\Framework\TestCase;
 
@@ -496,3 +497,56 @@ it('resets outputs count for maxOutputs rule when resetAfterRun() is called', fu
 
     expect(helper_invokeStepWithInput($step, new Input('three')))->toHaveCount(1);
 });
+
+it('keeps input data in output when keepInputData() was called', function () {
+    $step = helper_getValueReturningStep(['bar' => 'baz'])
+        ->keepInputData();
+
+    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'quz']));
+
+    expect($output[0]->get())->toBe(['bar' => 'baz', 'foo' => 'quz']);
+});
+
+it('keeps non array input data in array output with key', function () {
+    $step = helper_getValueReturningStep(['bar' => 'baz'])
+        ->keepInputData('foo');
+
+    $output = helper_invokeStepWithInput($step, new Input('quz'));
+
+    expect($output[0]->get())->toBe(['bar' => 'baz', 'foo' => 'quz']);
+});
+
+it('throws an error when non array input should be kept but no key is defined', function () {
+    $step = helper_getValueReturningStep(['bar' => 'baz'])
+        ->keepInputData();
+
+    helper_invokeStepWithInput($step, new Input('quz'));
+})->throws(Exception::class);
+
+it('does not replace output data when a key from input to keep is also defined in output', function () {
+    $step = helper_getValueReturningStep(['foo' => 'four', 'bar' => 'five'])
+        ->keepInputData('foo');
+
+    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']));
+
+    expect($output[0]->get())->toBe(['foo' => 'four', 'bar' => 'five', 'baz' => 'three']);
+});
+
+it('keeps array input data when output is non array and output key is defined', function () {
+    $step = helper_getValueReturningStep('three')
+        ->keepInputData(outputKey: 'baz');
+
+    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
+
+    expect($output[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
+});
+
+it(
+    'throws an exception when input should be kept, output is non array value and no output key is defined',
+    function () {
+        $step = helper_getValueReturningStep('three')
+            ->keepInputData();
+
+        helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
+    }
+)->throws(Exception::class);
