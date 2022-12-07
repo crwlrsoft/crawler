@@ -146,7 +146,7 @@ class Http extends LoadingStep
     /**
      * @throws InvalidArgumentException
      */
-    protected function validateAndSanitizeInput(mixed $input): UriInterface
+    protected function validateAndSanitizeInput(mixed $input): mixed
     {
         return $this->validateAndSanitizeToUriInterface($input);
     }

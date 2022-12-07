@@ -58,6 +58,12 @@ final class Group extends BaseStep
                     }
 
                     if ($this->passesAllFilters($output)) {
+                        if ($this->keepInputData['value'] === true) {
+                            $outputData = $this->addInputDataToOutputData($input->get(), $output->get());
+
+                            $output = new Output($outputData, $output->result);
+                        }
+
                         yield $output;
                     }
                 }
@@ -65,7 +71,7 @@ final class Group extends BaseStep
         }
 
         if ($this->combine && $this->cascades()) {
-            yield from $this->prepareCombinedOutputs($combinedOutput, $input->result);
+            yield from $this->prepareCombinedOutputs($combinedOutput, $input);
         }
     }
 
@@ -167,6 +173,18 @@ final class Group extends BaseStep
     /**
      * @throws Exception
      */
+    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static
+    {
+        if (!$this->combine) {
+            throw new Exception('Groups can only keep input data when outputs are combined to a single output.');
+        }
+
+        return parent::keepInputData($inputKey, $outputKey);
+    }
+
+    /**
+     * @throws Exception
+     */
     private function prepareInput(Input $input): ?Input
     {
         $input = $this->getInputKeyToUse($input);
@@ -221,16 +239,23 @@ final class Group extends BaseStep
 
     /**
      * @param mixed[] $combinedOutputs
-     * @param Result|null $result
+     * @param Input $input
      * @return Generator<Output>
+     * @throws Exception
      */
-    private function prepareCombinedOutputs(array $combinedOutputs, ?Result $result = null): Generator
+    private function prepareCombinedOutputs(array $combinedOutputs, Input $input): Generator
     {
+        $result = $input->result;
+
         foreach ($combinedOutputs as $combinedOutput) {
             $outputData = $this->normalizeCombinedOutputs($combinedOutput);
 
             if ($this->passesAllFilters($outputData)) {
                 $this->addOutputDataToResult($outputData, $result);
+
+                if ($this->keepInputData['value'] === true) {
+                    $outputData = $this->addInputDataToOutputData($input->get(), $outputData);
+                }
 
                 yield new Output($outputData, $result);
             }

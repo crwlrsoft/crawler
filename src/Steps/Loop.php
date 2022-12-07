@@ -186,6 +186,13 @@ final class Loop implements StepInterface
         return $this;
     }
 
+    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static
+    {
+        $this->step->keepInputData($inputKey, $outputKey);
+
+        return $this;
+    }
+
     /**
      * Callback that is called in a step group to adapt the input for further steps
      *

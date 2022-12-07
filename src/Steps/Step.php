@@ -179,6 +179,10 @@ abstract class Step extends BaseStep
                 continue;
             }
 
+            if ($this->keepInputData['value'] === true) {
+                $output = $this->addInputDataToOutputData($validInputValue, $output);
+            }
+
             $output = $this->output($output, $result);
 
             if ($this->uniqueOutput && !$this->inputOrOutputIsUnique($output)) {

@@ -53,6 +53,11 @@ abstract class BaseStep implements StepInterface
     protected array $filters = [];
 
     /**
+     * @var array<string, bool|null|string>
+     */
+    protected array $keepInputData = ['value' => false, 'inputKey' => null, 'outputKey' => null];
+
+    /**
      * @param Input $input
      * @return Generator<Output>
      */
@@ -174,6 +179,22 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    /**
+     * @param string|null $inputKey
+     * @param string|null $outputKey
+     * @return $this
+     */
+    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static
+    {
+        $this->keepInputData['value'] = true;
+
+        $this->keepInputData['inputKey'] = $inputKey;
+
+        $this->keepInputData['outputKey'] = $outputKey;
+
+        return $this;
+    }
+
     public function resetAfterRun(): void
     {
         $this->uniqueOutputKeys = $this->uniqueInputKeys = [];
@@ -256,6 +277,37 @@ abstract class BaseStep implements StepInterface
         }
 
         return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     * @throws Exception
+     */
+    protected function addInputDataToOutputData(mixed $inputValue, mixed $outputValue): array
+    {
+        if (!is_array($outputValue)) {
+            if (!is_string($this->keepInputData['outputKey'])) {
+                throw new Exception('No key defined for scalar output value.');
+            }
+
+            $outputValue = [$this->keepInputData['outputKey'] => $outputValue];
+        }
+
+        if (!is_array($inputValue)) {
+            if (!is_string($this->keepInputData['inputKey'])) {
+                throw new Exception('No key defined for scalar input value.');
+            }
+
+            $inputValue = [$this->keepInputData['inputKey'] => $inputValue];
+        }
+
+        foreach ($inputValue as $key => $value) {
+            if (!isset($outputValue[$key])) {
+                $outputValue[$key] = $value;
+            }
+        }
+
+        return $outputValue;
     }
 
     /**
