@@ -43,7 +43,9 @@ interface StepInterface
 
     public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;
 
-    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static;
+    public function outputKey(string $key): static;
+
+    public function keepInputData(?string $inputKey = null): static;
 
     public function resetAfterRun(): void;
 }
