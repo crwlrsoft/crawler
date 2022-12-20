@@ -179,7 +179,11 @@ abstract class Step extends BaseStep
                 continue;
             }
 
-            if ($this->keepInputData['value'] === true) {
+            if (!is_array($output) && $this->outputKey) {
+                $output = [$this->outputKey => $output];
+            }
+
+            if ($this->keepInputData === true) {
                 $output = $this->addInputDataToOutputData($validInputValue, $output);
             }
 

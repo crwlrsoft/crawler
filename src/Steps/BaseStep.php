@@ -52,10 +52,11 @@ abstract class BaseStep implements StepInterface
      */
     protected array $filters = [];
 
-    /**
-     * @var array<string, bool|null|string>
-     */
-    protected array $keepInputData = ['value' => false, 'inputKey' => null, 'outputKey' => null];
+    protected bool $keepInputData = false;
+
+    protected ?string $keepInputDataKey = null;
+
+    protected ?string $outputKey = null;
 
     /**
      * @param Input $input
@@ -179,18 +180,22 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    public function outputKey(string $key): static
+    {
+        $this->outputKey = $key;
+
+        return $this;
+    }
+
     /**
      * @param string|null $inputKey
-     * @param string|null $outputKey
      * @return $this
      */
-    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static
+    public function keepInputData(?string $inputKey = null): static
     {
-        $this->keepInputData['value'] = true;
+        $this->keepInputData = true;
 
-        $this->keepInputData['inputKey'] = $inputKey;
-
-        $this->keepInputData['outputKey'] = $outputKey;
+        $this->keepInputDataKey = $inputKey;
 
         return $this;
     }
@@ -286,19 +291,18 @@ abstract class BaseStep implements StepInterface
     protected function addInputDataToOutputData(mixed $inputValue, mixed $outputValue): array
     {
         if (!is_array($outputValue)) {
-            if (!is_string($this->keepInputData['outputKey'])) {
-                throw new Exception('No key defined for scalar output value.');
-            }
-
-            $outputValue = [$this->keepInputData['outputKey'] => $outputValue];
+            throw new Exception(
+                'Can\'t add input data to non array output data! You can use the outputKey() method ' .
+                'to make the step\'s output an array.'
+            );
         }
 
         if (!is_array($inputValue)) {
-            if (!is_string($this->keepInputData['inputKey'])) {
+            if (!is_string($this->keepInputDataKey)) {
                 throw new Exception('No key defined for scalar input value.');
             }
 
-            $inputValue = [$this->keepInputData['inputKey'] => $inputValue];
+            $inputValue = [$this->keepInputDataKey => $inputValue];
         }
 
         foreach ($inputValue as $key => $value) {

@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
-use function tests\helper_getStepYieldingArrayWithNumber;
 use function tests\helper_getStepYieldingMultipleArraysWithNumber;
 use function tests\helper_getStepYieldingMultipleNumbers;
 use function tests\helper_getStepYieldingMultipleObjectsWithNumber;
@@ -498,6 +497,14 @@ it('resets outputs count for maxOutputs rule when resetAfterRun() is called', fu
     expect(helper_invokeStepWithInput($step, new Input('three')))->toHaveCount(1);
 });
 
+it('converts non array output to array with a certain key using the outputKey() method', function () {
+    $step = helper_getValueReturningStep('bar')->outputKey('foo');
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0]->get())->toBe(['foo' => 'bar']);
+});
+
 it('keeps input data in output when keepInputData() was called', function () {
     $step = helper_getValueReturningStep(['bar' => 'baz'])
         ->keepInputData();
@@ -532,15 +539,6 @@ it('does not replace output data when a key from input to keep is also defined i
     expect($output[0]->get())->toBe(['foo' => 'four', 'bar' => 'five', 'baz' => 'three']);
 });
 
-it('keeps array input data when output is non array and output key is defined', function () {
-    $step = helper_getValueReturningStep('three')
-        ->keepInputData(outputKey: 'baz');
-
-    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
-
-    expect($output[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
-});
-
 it(
     'throws an exception when input should be kept, output is non array value and no output key is defined',
     function () {
@@ -550,3 +548,16 @@ it(
         helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
     }
 )->throws(Exception::class);
+
+it(
+    'works when output is non array value but it\'s converted to an array using the outputKey() method',
+    function () {
+        $step = helper_getValueReturningStep('three')
+            ->keepInputData()
+            ->outputKey('baz');
+
+        $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
+
+        expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
+    }
+);

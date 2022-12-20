@@ -20,8 +20,6 @@ final class Group extends BaseStep
 
     private ?LoaderInterface $loader = null;
 
-    private bool $combine = false;
-
     /**
      * @param Input $input
      * @return Generator<Output>
@@ -43,7 +41,7 @@ final class Group extends BaseStep
                     $input = $step->callUpdateInputUsingOutput($input, $output);
                 }
 
-                if ($this->combine && $step->cascades()) {
+                if ($this->cascades() && $step->cascades()) {
                     $stepKey = $step->getResultKey() ?? $key;
 
                     $combinedOutput = $this->addOutputToCombinedOutputs(
@@ -52,58 +50,13 @@ final class Group extends BaseStep
                         $stepKey,
                         $nthOutput,
                     );
-                } elseif ($this->cascades() && $step->cascades()) {
-                    if ($this->uniqueOutput !== false && !$this->inputOrOutputIsUnique($output)) {
-                        continue;
-                    }
-
-                    if ($this->passesAllFilters($output)) {
-                        if ($this->keepInputData['value'] === true) {
-                            $outputData = $this->addInputDataToOutputData($input->get(), $output->get());
-
-                            $output = new Output($outputData, $output->result);
-                        }
-
-                        yield $output;
-                    }
                 }
             }
         }
 
-        if ($this->combine && $this->cascades()) {
+        if ($this->cascades()) {
             yield from $this->prepareCombinedOutputs($combinedOutput, $input);
         }
-    }
-
-    public function combineToSingleOutput(): self
-    {
-        $this->combine = true;
-
-        return $this;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function setResultKey(string $key): static
-    {
-        if (!$this->combine) {
-            throw new Exception('Groups can only add data to results when output is combined to a single output.');
-        }
-
-        return parent::setResultKey($key);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function addKeysToResult(?array $keys = null): static
-    {
-        if (!$this->combine) {
-            throw new Exception('Groups can only add data to results when output is combined to a single output.');
-        }
-
-        return parent::addKeysToResult($keys);
     }
 
     public function addsToOrCreatesResult(): bool
@@ -173,18 +126,6 @@ final class Group extends BaseStep
     /**
      * @throws Exception
      */
-    public function keepInputData(?string $inputKey = null, ?string $outputKey = null): static
-    {
-        if (!$this->combine) {
-            throw new Exception('Groups can only keep input data when outputs are combined to a single output.');
-        }
-
-        return parent::keepInputData($inputKey, $outputKey);
-    }
-
-    /**
-     * @throws Exception
-     */
     private function prepareInput(Input $input): ?Input
     {
         $input = $this->getInputKeyToUse($input);
@@ -205,7 +146,7 @@ final class Group extends BaseStep
      */
     private function addResultToInputIfAnyResultKeysDefined(Input $input): Input
     {
-        if ($this->combine && $this->addsToOrCreatesResult() && !$input->result) {
+        if ($this->addsToOrCreatesResult() && !$input->result) {
             $input = new Input($input->get(), new Result());
         }
 
@@ -251,13 +192,19 @@ final class Group extends BaseStep
             $outputData = $this->normalizeCombinedOutputs($combinedOutput);
 
             if ($this->passesAllFilters($outputData)) {
-                $this->addOutputDataToResult($outputData, $result);
-
-                if ($this->keepInputData['value'] === true) {
+                if ($this->keepInputData === true) {
                     $outputData = $this->addInputDataToOutputData($input->get(), $outputData);
                 }
 
-                yield new Output($outputData, $result);
+                $output = new Output($outputData, $result);
+
+                if ($this->uniqueOutput !== false && !$this->inputOrOutputIsUnique($output)) {
+                    continue;
+                }
+
+                $this->addOutputDataToResult($outputData, $result);
+
+                yield $output;
             }
         }
     }
