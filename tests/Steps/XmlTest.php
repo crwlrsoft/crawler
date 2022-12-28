@@ -2,8 +2,13 @@
 
 namespace tests\Steps;
 
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
+use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Xml;
+
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 
 use function tests\helper_invokeStepWithInput;
 
@@ -111,3 +116,61 @@ it('extracts the data of the last matching element when the last method is used'
 
     expect($output[0]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
 });
+
+test(
+    'you can extract data in a second level to the output array using another Xml step as an element in the mapping ' .
+    'array',
+    function () {
+        $response = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/events.xml'),
+            new Response(body: helper_getXmlContent('events.xml'))
+        );
+
+        $outputs = helper_invokeStepWithInput(
+            Xml::each(Dom::cssSelector('events event'))->extract([
+                'title' => Dom::cssSelector('name'),
+                'location' => Dom::cssSelector('location'),
+                'date' => Dom::cssSelector('date'),
+                'talks' => Xml::each(Dom::cssSelector('talks talk'))->extract([
+                    'title' => Dom::cssSelector('title'),
+                    'speaker' => Dom::cssSelector('speaker'),
+                ])
+            ]),
+            $response,
+        );
+
+        expect($outputs)->toHaveCount(2);
+
+        expect($outputs[0]->get())->toBe([
+            'title' => 'Some Meetup',
+            'location' => 'Somewhere',
+            'date' => '2023-01-14 20:00',
+            'talks' => [
+                [
+                    'title' => 'Sophisticated talk title',
+                    'speaker' => 'Super Mario',
+                ],
+                [
+                    'title' => 'Fun talk',
+                    'speaker' => 'Princess Peach',
+                ],
+            ]
+        ]);
+
+        expect($outputs[1]->get())->toBe([
+            'title' => 'Another Meetup',
+            'location' => 'Somewhere else',
+            'date' => '2023-01-21 19:00',
+            'talks' => [
+                [
+                    'title' => 'Join the dark side',
+                    'speaker' => 'Wario',
+                ],
+                [
+                    'title' => 'Let\'s go',
+                    'speaker' => 'Yoshi',
+                ],
+            ]
+        ]);
+    }
+);
