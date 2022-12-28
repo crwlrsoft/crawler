@@ -538,7 +538,7 @@ test(
 it('adds Results to the Outputs when you set a result key', function () {
     $step = (new Loop(helper_getValueReturningStep('test')))
         ->maxIterations(2)
-        ->setResultKey('resultKey');
+        ->addToResult('resultKey');
 
     $outputs = helper_invokeStepWithInput($step, 'test');
 
@@ -551,10 +551,10 @@ it('adds Results to the Outputs when you set a result key', function () {
     expect($outputs[1]->result->get('resultKey'))->toBe(['test', 'test']); // @phpstan-ignore-line
 });
 
-it('adds Results to the Outputs when you call addKeysToResult', function () {
+it('adds Results to the Outputs when you call addToResult()', function () {
     $step = (new Loop(helper_getValueReturningStep(['foo' => 'bar', 'yo' => 'lo'])))
         ->maxIterations(2)
-        ->addKeysToResult();
+        ->addToResult();
 
     $outputs = helper_invokeStepWithInput($step, 'test');
 

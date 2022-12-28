@@ -6,12 +6,17 @@ class Io
 {
     private string|int|float|bool|null $key = null;
 
-    public function __construct(protected mixed $value, public ?Result $result = null)
-    {
+    public function __construct(
+        protected mixed $value,
+        public ?Result $result = null,
+        public ?Result $addLaterToResult = null,
+    ) {
         if ($value instanceof self) {
             $this->value = $value->value;
 
             $this->result ??= $value->result;
+
+            $this->addLaterToResult ??= $value->addLaterToResult;
         }
     }
 

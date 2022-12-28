@@ -4,21 +4,20 @@ namespace tests;
 
 use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Result;
-use stdClass;
 
-function helper_getIoInstance(mixed $value, ?Result $result = null): Io
+function helper_getIoInstance(mixed $value, ?Result $result = null, ?Result $addLaterToResult = null): Io
 {
-    return new class ($value, $result) extends Io {
+    return new class ($value, $result, $addLaterToResult) extends Io {
     };
 }
 
-test('It can be created with only a value.', function () {
+it('can be created with only a value.', function () {
     $io = helper_getIoInstance('test');
 
     expect($io)->toBeInstanceOf(Io::class);
 });
 
-test('You can add a Result object.', function () {
+test('you can add a Result object.', function () {
     $result = new Result();
 
     $io = helper_getIoInstance('test', $result);
@@ -26,7 +25,15 @@ test('You can add a Result object.', function () {
     expect($io->result)->toBe($result);
 });
 
-test('You can create it from another Io instance and it keeps the value of the original instance.', function () {
+test('you can add a secondary Result object that should be added to the main Result object later.', function () {
+    $addLaterToResult = new Result();
+
+    $io = helper_getIoInstance('test', addLaterToResult: $addLaterToResult);
+
+    expect($io->addLaterToResult)->toBe($addLaterToResult);
+});
+
+test('you can create it from another Io instance and it keeps the value of the original instance.', function () {
     $io1 = helper_getIoInstance('test');
 
     $io2 = helper_getIoInstance($io1);
@@ -34,7 +41,7 @@ test('You can create it from another Io instance and it keeps the value of the o
     expect($io2->get())->toBe('test');
 });
 
-test('When created from another Io instance it passes on the Result object.', function () {
+test('when created from another Io instance it passes on the Result object.', function () {
     $result = new Result();
 
     $io1 = helper_getIoInstance('test', $result);
@@ -42,6 +49,16 @@ test('When created from another Io instance it passes on the Result object.', fu
     $io2 = helper_getIoInstance($io1);
 
     expect($io2->result)->toBe($result);
+});
+
+test('when created from another Io instance it passes on the secondary Result object.', function () {
+    $addLaterToResult = new Result();
+
+    $io1 = helper_getIoInstance('test', addLaterToResult: $addLaterToResult);
+
+    $io2 = helper_getIoInstance($io1);
+
+    expect($io2->addLaterToResult)->toBe($addLaterToResult);
 });
 
 it('sets a simple value key', function ($value, $key) {

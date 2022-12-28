@@ -9,6 +9,13 @@ final class Result
      */
     private array $data = [];
 
+    public function __construct(protected ?Result $result = null)
+    {
+        if ($result) {
+            $this->data = $result->data;
+        }
+    }
+
     public function set(string $key, mixed $value): self
     {
         if ($key === '') {

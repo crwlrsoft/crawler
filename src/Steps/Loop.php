@@ -108,21 +108,16 @@ final class Loop implements StepInterface
         return $this;
     }
 
-    public function setResultKey(string $key): static
+    public function addToResult(array|string|null $keys = null): static
     {
-        $this->step->setResultKey($key);
+        $this->step->addToResult($keys);
 
         return $this;
     }
 
-    public function getResultKey(): ?string
+    public function addLaterToResult(array|string|null $keys = null): static
     {
-        return $this->step->getResultKey();
-    }
-
-    public function addKeysToResult(?array $keys = null): static
-    {
-        $this->step->addKeysToResult($keys);
+        $this->step->addLaterToResult($keys);
 
         return $this;
     }
@@ -144,6 +139,11 @@ final class Loop implements StepInterface
     public function addsToOrCreatesResult(): bool
     {
         return $this->step->addsToOrCreatesResult();
+    }
+
+    public function createsResult(): bool
+    {
+        return $this->step->createsResult();
     }
 
     public function useInputKey(string $key): static

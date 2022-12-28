@@ -6,7 +6,6 @@ use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
-use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use Exception;
@@ -46,7 +45,7 @@ abstract class Step extends BaseStep
         $validInputValue = $this->validateAndSanitizeInput($input->get());
 
         if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
-            yield from $this->invokeAndYield($validInputValue, $input->result);
+            yield from $this->invokeAndYield($validInputValue, $input);
         }
     }
 
@@ -172,22 +171,22 @@ abstract class Step extends BaseStep
     /**
      * @throws Exception
      */
-    private function invokeAndYield(mixed $validInputValue, ?Result $result): Generator
+    private function invokeAndYield(mixed $validInputValue, Input $input): Generator
     {
-        foreach ($this->invoke($validInputValue) as $output) {
-            if ($this->maxOutputsExceeded() || !$this->passesAllFilters($output)) {
+        foreach ($this->invoke($validInputValue) as $outputData) {
+            if ($this->maxOutputsExceeded() || !$this->passesAllFilters($outputData)) {
                 continue;
             }
 
-            if (!is_array($output) && $this->outputKey) {
-                $output = [$this->outputKey => $output];
+            if (!is_array($outputData) && $this->outputKey) {
+                $outputData = [$this->outputKey => $outputData];
             }
 
             if ($this->keepInputData === true) {
-                $output = $this->addInputDataToOutputData($validInputValue, $output);
+                $outputData = $this->addInputDataToOutputData($validInputValue, $outputData);
             }
 
-            $output = $this->output($output, $result);
+            $output = $this->makeOutput($outputData, $input);
 
             if ($this->uniqueOutput && !$this->inputOrOutputIsUnique($output)) {
                 continue;
@@ -199,18 +198,6 @@ abstract class Step extends BaseStep
                 $this->currentOutputCount += 1;
             }
         }
-    }
-
-    /**
-     * Wrap a single output yielded in the invoke method in an Output object and handle adding data to the final Result.
-     *
-     * @throws Exception
-     */
-    private function output(mixed $output, ?Result $result = null): Output
-    {
-        $result = $this->addOutputDataToResult($output, $result);
-
-        return new Output($output, $result);
     }
 
     private function maxOutputsExceeded(): bool

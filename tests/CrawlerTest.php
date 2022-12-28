@@ -230,9 +230,9 @@ test('You can add steps and the Crawler class passes on its Logger and also its 
 });
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
-    $step1 = helper_getValueReturningStep('step1 output')->setResultKey('step1');
+    $step1 = helper_getValueReturningStep('step1 output')->addToResult('step1');
 
-    $step2 = helper_getValueReturningStep('step2 output')->setResultKey('step2');
+    $step2 = helper_getValueReturningStep('step2 output')->addToResult('step2');
 
     $crawler = helper_getDummyCrawler()
         ->addStep($step1)
@@ -283,23 +283,17 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
 
     $step1->shouldReceive('addLogger');
 
-    $step1->shouldReceive('getResultKey');
-
     $step2 = Mockery::mock(StepInterface::class);
 
     $step2->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['bar']));
 
     $step2->shouldReceive('addLogger');
 
-    $step2->shouldReceive('getResultKey');
-
     $step3 = Mockery::mock(StepInterface::class);
 
     $step3->shouldReceive('invokeStep')->andReturn(helper_arrayToGenerator(['baz']));
 
     $step3->shouldReceive('addLogger');
-
-    $step3->shouldReceive('getResultKey');
 
     $crawler->addStep(
         Crawler::group()
@@ -311,16 +305,16 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
     expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
 });
 
-test('Result objects are created when defined and passed on through all the steps', function () {
+test('Result objects are created when addToResult() is called and passed on through all the steps', function () {
     $crawler = helper_getDummyCrawler();
 
     $step = helper_getValueReturningStep('yo');
 
-    $crawler->addStep($step->setResultKey('prop1'));
+    $crawler->addStep($step->addToResult('prop1'));
 
     $step2 = helper_getValueReturningStep('lo');
 
-    $crawler->addStep($step2->setResultKey('prop2'));
+    $crawler->addStep($step2->addToResult('prop2'));
 
     $step3 = helper_getValueReturningStep('foo');
 
@@ -341,6 +335,127 @@ test('Result objects are created when defined and passed on through all the step
         'prop2' => 'lo',
     ]);
 });
+
+test(
+    'when calling addToResult() it creates a Result object. When the next step also adds to the result and it yields ' .
+    'multiple outputs for one input, the data is added as array to the previously created Result object.',
+    function () {
+        $crawler = helper_getDummyCrawler();
+
+        $step = helper_getValueReturningStep(['some' => 'thing'])->addToResult();
+
+        $crawler->addStep($step);
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                foreach (['one', 'two', 'three'] as $number) {
+                    yield $number;
+                }
+            }
+        };
+
+        $step2->addToResult('number');
+
+        $crawler->addStep($step2);
+
+        $crawler->input('some input');
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(1);
+
+        expect($results[0])->toBeInstanceOf(Result::class);
+
+        expect($results[0]->toArray())->toBe([
+            'some' => 'thing',
+            'number' => ['one', 'two', 'three'],
+        ]);
+    }
+);
+
+test(
+    'calling addLaterToResult() doesn\'t immediately create a Result object, but adds the data to the output and ' .
+    'later adds it to each Result object that is created from that output object.',
+    function () {
+        $crawler = helper_getDummyCrawler();
+
+        $step = helper_getValueReturningStep(['some' => 'thing'])->addLaterToResult();
+
+        $crawler->addStep($step);
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                foreach (['one', 'two', 'three'] as $number) {
+                    yield $number;
+                }
+            }
+        };
+
+        $step2->addToResult('number');
+
+        $crawler->addStep($step2);
+
+        $crawler->input('test input');
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(3);
+
+        expect($results[0])->toBeInstanceOf(Result::class);
+
+        expect($results[0]->toArray())->toBe([
+            'some' => 'thing',
+            'number' => 'one',
+        ]);
+
+        expect($results[1]->toArray())->toBe([
+            'some' => 'thing',
+            'number' => 'two',
+        ]);
+
+        expect($results[2]->toArray())->toBe([
+            'some' => 'thing',
+            'number' => 'three',
+        ]);
+    }
+);
+
+test(
+    'when addLaterToResult() is called, but addToResult() is not, you get the results from the step that ' .
+    'addLaterToResult() was called on in the quantity of the last steps outputs.',
+    function () {
+        $crawler = helper_getDummyCrawler();
+
+        $step = helper_getValueReturningStep(['some' => 'thing'])->addLaterToResult();
+
+        $crawler->addStep($step);
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                foreach (['one', 'two', 'three'] as $number) {
+                    yield $number;
+                }
+            }
+        };
+
+        $crawler->addStep($step2);
+
+        $crawler->input('test input');
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(3);
+
+        expect($results[0]->toArray())->toBe(['some' => 'thing']);
+
+        expect($results[1]->toArray())->toBe(['some' => 'thing']);
+
+        expect($results[2]->toArray())->toBe(['some' => 'thing']);
+    }
+);
 
 it('doesn\'t pass on outputs of one step to the next one when dontCascade was called', function () {
     $step1 = helper_getInputReturningStep();
@@ -367,11 +482,11 @@ test('When final steps return an array you get all values in the defined Result 
 
     $step1 = helper_getValueReturningStep('Donald');
 
-    $crawler->addStep($step1->setResultKey('parent'));
+    $crawler->addStep($step1->addToResult('parent'));
 
     $step2 = helper_getValueReturningStep(['Tick', 'Trick', 'Track']);
 
-    $crawler->addStep($step2->setResultKey('children'));
+    $crawler->addStep($step2->addToResult('children'));
 
     $crawler->input('randomInput');
 

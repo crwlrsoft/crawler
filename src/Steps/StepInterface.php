@@ -20,16 +20,19 @@ interface StepInterface
 
     public function useInputKey(string $key): static;
 
-    public function setResultKey(string $key): static;
-
-    public function getResultKey(): ?string;
+    /**
+     * @param string|string[]|null $keys
+     */
+    public function addToResult(null|string|array $keys = null): static;
 
     /**
-     * @param string[]|null $keys
+     * @param string|string[]|null $keys
      */
-    public function addKeysToResult(?array $keys = null): static;
+    public function addLaterToResult(null|string|array $keys = null): static;
 
     public function addsToOrCreatesResult(): bool;
+
+    public function createsResult(): bool;
 
     public function uniqueInputs(?string $key = null): static;
 

@@ -18,14 +18,22 @@ use Psr\Log\LoggerInterface;
 
 abstract class BaseStep implements StepInterface
 {
-    protected ?string $resultKey = null;
+    /**
+     * True means add all elements of the output array.
+     * String means use that key for a non array output value.
+     * Array of strings means, add just those keys.
+     *
+     * @var bool|string|string[]
+     */
+    protected bool|string|array $addToResult = false;
 
     /**
-     * True means add all elements of the output array. Array of strings means, add just those keys.
+     * Same as $addToResult, but doesn't create a Result object now. Instead, it appends the data to the Output object,
+     * so it'll add the data to all the Result objects that are later created from the output.
      *
-     * @var bool|string[]
+     * @var bool|string|string[]
      */
-    protected bool|array $addToResult = false;
+    protected bool|string|array $addLaterToResult = false;
 
     protected ?LoggerInterface $logger = null;
 
@@ -71,43 +79,36 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
-    /**
-     * When the output of a step is a simple value (not array), add it with this key to the Result.
-     */
-    public function setResultKey(string $key): static
+    public function addToResult(array|string|null $keys = null): static
     {
-        $this->resultKey = $key;
+        if (is_string($keys) || is_array($keys)) {
+            $this->addToResult = $keys;
+        } else {
+            $this->addToResult = true;
+        }
 
         return $this;
     }
 
-    /**
-     * The key, the output value will be added to the result with (if set via setResultKey()).
-     */
-    final public function getResultKey(): ?string
+    public function addLaterToResult(array|string|null $keys = null): static
     {
-        return $this->resultKey;
-    }
-
-    /**
-     * When the output of a step is an array, call this method with null to add all it's elements/properties
-     * to the Result, or provide an array with the keys that should be added.
-     *
-     * @param string[]|null $keys
-     */
-    public function addKeysToResult(?array $keys = null): static
-    {
-        $this->addToResult = $keys ?? true;
+        if (is_string($keys) || is_array($keys)) {
+            $this->addLaterToResult = $keys;
+        } else {
+            $this->addLaterToResult = true;
+        }
 
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function addsToOrCreatesResult(): bool
     {
-        return $this->resultKey !== null || $this->addToResult !== false;
+        return $this->createsResult() || $this->addLaterToResult !== false;
+    }
+
+    public function createsResult(): bool
+    {
+        return $this->addToResult !== false;
     }
 
     final public function useInputKey(string $key): static
@@ -208,7 +209,7 @@ abstract class BaseStep implements StepInterface
     /**
      * @throws Exception
      */
-    final protected function getInputKeyToUse(Input $input): Input
+    protected function getInputKeyToUse(Input $input): Input
     {
         if ($this->useInputKey !== null) {
             if (!array_key_exists($this->useInputKey, $input->get())) {
@@ -221,7 +222,7 @@ abstract class BaseStep implements StepInterface
         return $input;
     }
 
-    final protected function inputOrOutputIsUnique(Io $io): bool
+    protected function inputOrOutputIsUnique(Io $io): bool
     {
         $uniquenessSetting = $io instanceof Input ? $this->uniqueInput : $this->uniqueOutput;
 
@@ -242,26 +243,7 @@ abstract class BaseStep implements StepInterface
         return true;
     }
 
-    final protected function addOutputDataToResult(mixed $output, ?Result $result = null): ?Result
-    {
-        if ($this->addsToOrCreatesResult()) {
-            if (!$result) {
-                $result = new Result();
-            }
-
-            if ($this->resultKey !== null) {
-                $result->set($this->resultKey, $output);
-            }
-
-            if ($this->addToResult !== false && is_array($output)) {
-                $this->addDataFromOutputArrayToResult($output, $result);
-            }
-        }
-
-        return $result;
-    }
-
-    final protected function passesAllFilters(mixed $output): bool
+    protected function passesAllFilters(mixed $output): bool
     {
         foreach ($this->filters as $filter) {
             if (!$filter->evaluate($output)) {
@@ -314,25 +296,69 @@ abstract class BaseStep implements StepInterface
         return $outputValue;
     }
 
-    /**
-     * @param mixed[] $output
-     */
-    private function addDataFromOutputArrayToResult(array $output, Result $result): void
+    protected function makeOutput(mixed $outputData, Input $input): Output
     {
-        foreach ($output as $key => $value) {
-            if ($this->addToResult === true) {
-                $result->set(is_string($key) ? $key : '', $value);
-            } elseif (is_array($this->addToResult) && in_array($key, $this->addToResult, true)) {
-                $result->set($this->choseResultKey($key), $value);
+        return new Output(
+            $outputData,
+            $this->addOutputDataToResult($outputData, $input),
+            $this->addOutputDataToAddLaterResult($outputData, $input),
+        );
+    }
+
+    protected function addOutputDataToResult(
+        mixed $output,
+        Input $input,
+    ): ?Result {
+        if ($this->addToResult !== false) {
+            $result = $input->result ?? new Result($input->addLaterToResult);
+
+            return $this->addOutputDataToResultObject($output, $result);
+        }
+
+        return $input->result;
+    }
+
+    protected function addOutputDataToAddLaterResult(mixed $output, Input $input): ?Result
+    {
+        if ($this->addToResult !== false) {
+            return null;
+        }
+
+        if ($this->addLaterToResult !== false) {
+            $addLaterResult = $input->addLaterToResult ?? new Result();
+
+            return $this->addOutputDataToResultObject($output, $addLaterResult);
+        }
+
+        return $input->addLaterToResult;
+    }
+
+    protected function addOutputDataToResultObject(mixed $output, Result $result): Result
+    {
+        $addToResultObject = $this->addToResult !== false ? $this->addToResult : $this->addLaterToResult;
+
+        if (is_string($addToResultObject)) {
+            $result->set($addToResultObject, $output);
+        }
+
+        if (($addToResultObject === true || is_array($addToResultObject)) && is_array($output)) {
+            foreach ($output as $key => $value) {
+                if ($addToResultObject === true) {
+                    $result->set(is_string($key) ? $key : '', $value);
+                } elseif (is_array($addToResultObject) && in_array($key, $addToResultObject, true)) {
+                    $result->set($this->choseResultKey($key), $value);
+                }
             }
         }
+
+        return $result;
     }
 
     /**
      * When user defines an array of keys that shall be added to the result it can also contain a mapping.
      * If it does, use the key that it should be mapped to, instead of the key it has in the output array.
      */
-    private function choseResultKey(int|string $keyInOutput): string
+    protected function choseResultKey(int|string $keyInOutput): string
     {
         if (is_array($this->addToResult)) {
             $mapToKey = array_search($keyInOutput, $this->addToResult, true);

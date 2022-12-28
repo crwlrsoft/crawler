@@ -74,9 +74,9 @@ it(
                     ->addStep(
                         Html::first('#content article.blog-post')
                             ->extract(['title' => 'h1', 'date' => '.date'])
-                            ->addKeysToResult()
+                            ->addToResult()
                     )
-                    ->addStep((new StructuredDataBlogPost())->addKeysToResult())
+                    ->addStep((new StructuredDataBlogPost())->addToResult())
             );
 
         $result = helper_generatorToArray($crawler->run());
