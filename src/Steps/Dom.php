@@ -22,7 +22,7 @@ abstract class Dom extends Step
     protected ?DomQueryInterface $last = null;
 
     /**
-     * @var array<int|string, string|DomQueryInterface>
+     * @var array<int|string, string|DomQueryInterface|Dom>
      */
     protected array $mapping = [];
 
@@ -88,7 +88,7 @@ abstract class Dom extends Step
     abstract protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface;
 
     /**
-     * @param string|DomQueryInterface|array<string|DomQueryInterface> $selectorOrMapping
+     * @param string|DomQueryInterface|array<string|DomQueryInterface|Dom> $selectorOrMapping
      */
     public function extract(string|DomQueryInterface|array $selectorOrMapping): static
     {
@@ -165,21 +165,28 @@ abstract class Dom extends Step
 
     /**
      * @return mixed[]
+     * @throws Exception
      */
     protected function mapProperties(Crawler $domCrawler): array
     {
         $mappedProperties = [];
 
         foreach ($this->mapping as $key => $domQuery) {
-            if (is_string($domQuery)) {
-                $domQuery = $this->makeDefaultDomQueryInstance($domQuery);
-            }
+            if ($domQuery instanceof Dom) {
+                $domQuery->baseUrl = $this->baseUrl;
 
-            if ($this->baseUrl !== null) {
-                $domQuery->setBaseUrl($this->baseUrl);
-            }
+                $mappedProperties[$key] = iterator_to_array($domQuery->invoke($domCrawler));
+            } else {
+                if (is_string($domQuery)) {
+                    $domQuery = $this->makeDefaultDomQueryInstance($domQuery);
+                }
 
-            $mappedProperties[$key] = $domQuery->apply($domCrawler);
+                if ($this->baseUrl !== null) {
+                    $domQuery->setBaseUrl($this->baseUrl);
+                }
+
+                $mappedProperties[$key] = $domQuery->apply($domCrawler);
+            }
         }
 
         return $mappedProperties;

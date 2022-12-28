@@ -2,10 +2,14 @@
 
 namespace tests\Steps;
 
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Html\GetLinks;
+
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 
 use function tests\helper_invokeStepWithInput;
 
@@ -113,6 +117,56 @@ it('extracts the data of the last matching element when the last method is used'
 
     expect($output[0]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
 });
+
+test(
+    'you can extract data in a second level to the output array using another Html step as an element in the mapping ' .
+    'array',
+    function () {
+        $response = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/meetups/some-meetup/'),
+            new Response(body: helper_getHtmlContent('event.html'))
+        );
+
+        $output = helper_invokeStepWithInput(
+            Html::root()->extract([
+                'title' => '#event h1',
+                'location' => '#event .location',
+                'date' => '#event .date',
+                'talks' => Html::each('#event .talks .talk')->extract([
+                    'title' => '.title',
+                    'speaker' => '.speaker',
+                    'slides' => Dom::cssSelector('.slidesLink')->attribute('href')->toAbsoluteUrl(),
+                ])
+            ]),
+            $response,
+        );
+
+        expect($output)->toHaveCount(1);
+
+        expect($output[0]->get())->toBe([
+            'title' => 'Some Meetup',
+            'location' => 'Somewhere',
+            'date' => '2023-01-14 21:00',
+            'talks' => [
+                [
+                    'title' => 'Sophisticated talk title',
+                    'speaker' => 'Super Mario',
+                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk1.pdf',
+                ],
+                [
+                    'title' => 'Simple beginner talk',
+                    'speaker' => 'Luigi',
+                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk2.pdf',
+                ],
+                [
+                    'title' => 'Fun talk',
+                    'speaker' => 'Princess Peach',
+                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk3.pdf',
+                ],
+            ]
+        ]);
+    }
+);
 
 test('the static getLink method works without argument', function () {
     expect(Html::getLink())->toBeInstanceOf(GetLink::class);

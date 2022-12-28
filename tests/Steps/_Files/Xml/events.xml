@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<events>
+
+    <event>
+        <name>Some Meetup</name>
+        <location>Somewhere</location>
+        <date>2023-01-14 20:00</date>
+        <talks>
+            <talk>
+                <title>Sophisticated talk title</title>
+                <speaker>Super Mario</speaker>
+            </talk>
+            <talk>
+                <title>Fun talk</title>
+                <speaker>Princess Peach</speaker>
+            </talk>
+        </talks>
+    </event>
+
+    <event>
+        <name>Another Meetup</name>
+        <location>Somewhere else</location>
+        <date>2023-01-21 19:00</date>
+        <talks>
+            <talk>
+                <title>Join the dark side</title>
+                <speaker>Wario</speaker>
+            </talk>
+            <talk>
+                <title>Let's go</title>
+                <speaker>Yoshi</speaker>
+            </talk>
+        </talks>
+    </event>
+
+</events>
