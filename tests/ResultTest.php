@@ -62,3 +62,21 @@ test('when you add something with empty string as key it creates a name with inc
 
     expect($result->get('unnamed3'))->toBe('baz');
 });
+
+test('you can create a new instance from another instance', function () {
+    $instance1 = new Result();
+
+    $instance1->set('foo', 'bar');
+
+    $instance2 = new Result($instance1);
+
+    expect($instance1->get('foo'))->toBe('bar');
+
+    expect($instance2->get('foo'))->toBe('bar');
+
+    $instance2->set('baz', 'quz');
+
+    expect($instance1->get('baz'))->toBeNull();
+
+    expect($instance2->get('baz'))->toBe('quz');
+});

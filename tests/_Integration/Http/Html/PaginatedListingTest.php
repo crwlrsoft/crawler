@@ -40,7 +40,7 @@ it('paginates through pagination', function () {
         ->addStep(
             Html::first('article')
                 ->extract(['title' => 'h1', 'number' => '.someNumber'])
-                ->addKeysToResult()
+                ->addToResult()
         );
 
     $results = helper_generatorToArray($crawler->run());

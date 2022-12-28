@@ -119,7 +119,7 @@ abstract class Crawler
         if (is_string($stepOrResultKey) && $step === null) {
             throw new InvalidArgumentException('No StepInterface object provided');
         } elseif (is_string($stepOrResultKey)) {
-            $step->setResultKey($stepOrResultKey);
+            $step->addToResult($stepOrResultKey);
         } else {
             $step = $stepOrResultKey;
         }
@@ -258,6 +258,8 @@ abstract class Crawler
         foreach ($outputs as $output) {
             if ($output->result !== null && !in_array($output->result, $results, true)) {
                 $results[] = $output->result;
+            } elseif ($output->addLaterToResult !== null && !in_array($output->addLaterToResult, $results, true)) {
+                $results[] = new Result($output->addLaterToResult);
             }
         }
 

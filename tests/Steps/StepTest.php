@@ -65,65 +65,113 @@ test(
     'The invokeStep method creates a Result object that is added to the Output when you set a property name',
     function () {
         $step = helper_getValueReturningStep('returnValue')
-            ->setResultKey('property');
+            ->addToResult('property');
 
         $output = helper_invokeStepWithInput($step);
 
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-        expect($output[0]->result->toArray())->toBe(['property' => 'returnValue']); // @phpstan-ignore-line
+        expect($output[0]->result?->toArray())->toBe(['property' => 'returnValue']);
     }
 );
 
-it('creates a Result object with the data from yielded array when addKeysToResult is used', function () {
+it('creates a Result object with the data from yielded array when addToResult() is used', function () {
     $step = helper_getValueReturningStep(['foo' => 'bar', 'baz' => 'yo'])
-        ->addKeysToResult();
+        ->addToResult();
 
     $output = helper_invokeStepWithInput($step);
 
     expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-    expect($output[0]->result->toArray())->toBe(['foo' => 'bar', 'baz' => 'yo']); // @phpstan-ignore-line
+    expect($output[0]->result?->toArray())->toBe(['foo' => 'bar', 'baz' => 'yo']);
 });
 
-it('picks keys from the output array when you pass an array of keys to addKeysToResult', function () {
+it('picks keys from the output array when you pass an array of keys to addToResult()', function () {
     $step = helper_getValueReturningStep(['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'])
-        ->addKeysToResult(['firstname', 'surname']);
+        ->addToResult(['firstname', 'surname']);
 
     $output = helper_invokeStepWithInput($step);
 
     expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-    expect($output[0]->result->toArray())->toBe(['firstname' => 'Christian', 'surname' => 'Olear']); // @phpstan-ignore-line
+    expect($output[0]->result?->toArray())->toBe(['firstname' => 'Christian', 'surname' => 'Olear']);
 });
 
-it('maps output keys to different result keys when defined in the array passed to addKeysToResult', function () {
+it('maps output keys to different result keys when defined in the array passed to addToResult()', function () {
     $step = helper_getValueReturningStep(['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'])
-        ->addKeysToResult(['foo' => 'firstname', 'bar' => 'surname']);
+        ->addToResult(['foo' => 'firstname', 'bar' => 'surname']);
 
     $output = helper_invokeStepWithInput($step);
 
     expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-    expect($output[0]->result->toArray())->toBe(['foo' => 'Christian', 'bar' => 'Olear']); // @phpstan-ignore-line
+    expect($output[0]->result?->toArray())->toBe(['foo' => 'Christian', 'bar' => 'Olear']);
 });
 
-test('The addsToOrCreatesResult method returns true when a result key is set', function () {
-    $step = helper_getValueReturningStep('test')->setResultKey('test');
+test(
+    'The addsToOrCreatesResult() method returns false when addToResult() and addLaterToResult() have not been called',
+    function () {
+        $step = helper_getValueReturningStep('lol');
+
+        expect($step->addsToOrCreatesResult())->toBeFalse();
+    }
+);
+
+test('The addsToOrCreatesResult() method returns true when addToResult() was called with a string key', function () {
+    $step = helper_getValueReturningStep('test')->addToResult('test');
 
     expect($step->addsToOrCreatesResult())->toBeTrue();
 });
 
-test('The addsToOrCreatesResult method returns true when it adds keys to result', function () {
-    $step = helper_getValueReturningStep(['test' => 'yo'])->addKeysToResult();
+test('The addsToOrCreatesResult() method returns true when addLaterToResult() was called with a string key', function () {
+    $step = helper_getValueReturningStep('test')->addLaterToResult('test');
 
     expect($step->addsToOrCreatesResult())->toBeTrue();
 });
 
-test('The addsToOrCreatesResult method returns false when no result key is set and it doesn\'t add keys', function () {
+test('The addsToOrCreatesResult() method returns true when addToResult() was called without an argument', function () {
+    $step = helper_getValueReturningStep(['test' => 'yo'])->addToResult();
+
+    expect($step->addsToOrCreatesResult())->toBeTrue();
+});
+
+test(
+    'The addsToOrCreatesResult() method returns true when addLaterToResult() was called without an argument',
+    function () {
+        $step = helper_getValueReturningStep(['test' => 'yo'])->addLaterToResult();
+
+        expect($step->addsToOrCreatesResult())->toBeTrue();
+    }
+);
+
+test('The createsResult() method returns false when addToResult() has not been called', function () {
     $step = helper_getValueReturningStep('lol');
 
-    expect($step->addsToOrCreatesResult())->toBeFalse();
+    expect($step->createsResult())->toBeFalse();
+});
+
+test('The createsResult() method returns true when addToResult() was called with a string key', function () {
+    $step = helper_getValueReturningStep('test')->addToResult('test');
+
+    expect($step->createsResult())->toBeTrue();
+});
+
+test('The createsResult() method returns false when addLaterToResult() was called with a string key', function () {
+    $step = helper_getValueReturningStep('test')->addLaterToResult('test');
+
+    expect($step->createsResult())->toBeFalse();
+});
+
+test('The createsResult() method returns true when addToResult() was called without an argument', function () {
+    $step = helper_getValueReturningStep(['test' => 'yo'])->addToResult();
+
+    expect($step->createsResult())->toBeTrue();
+});
+
+test('The createsResult() method returns false when addLaterToResult() was called without an argument', function () {
+    $step = helper_getValueReturningStep(['test' => 'yo'])->addLaterToResult();
+
+    expect($step->createsResult())->toBeFalse();
 });
 
 it('uses a key from array input when defined', function () {
@@ -140,7 +188,7 @@ it('uses a key from array input when defined', function () {
 
 it('doesn\'t add the result object to the Input object only to the Output', function () {
     $step = helper_getValueReturningStep('Stand with Ukraine!')
-        ->setResultKey('property');
+        ->addToResult('property');
 
     $input = new Input('inputValue');
 
@@ -153,7 +201,7 @@ it('doesn\'t add the result object to the Input object only to the Output', func
 
 it('appends properties to a result object that was already included with the Input object', function () {
     $step = helper_getValueReturningStep('returnValue')
-        ->setResultKey('property');
+        ->addToResult('property');
 
     $prevResult = new Result();
 
@@ -165,9 +213,58 @@ it('appends properties to a result object that was already included with the Inp
 
     expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-    expect($output[0]->result->toArray())->toBe([ // @phpstan-ignore-line
+    expect($output[0]->result?->toArray())->toBe([
         'prevProperty' => 'foobar',
         'property' => 'returnValue',
+    ]);
+});
+
+it(
+    'adds a secondary Result object with data to add later to main Result objects when addLaterToResult() is called',
+    function () {
+        $step = helper_getValueReturningStep('returnValue')
+            ->addLaterToResult('property');
+
+        $outputs = helper_invokeStepWithInput($step);
+
+        expect($outputs[0]->result)->toBeNull();
+
+        expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
+
+        expect($outputs[0]->addLaterToResult?->toArray())->toBe([
+            'property' => 'returnValue',
+        ]);
+    }
+);
+
+test('addLaterToResult() works with array output and no argument', function () {
+    $step = helper_getValueReturningStep(['foo' => 'bar'])
+        ->addLaterToResult();
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0]->result)->toBeNull();
+
+    expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
+
+    expect($outputs[0]->addLaterToResult?->toArray())->toBe([
+        'foo' => 'bar',
+    ]);
+});
+
+test('with addLaterToResult() you can also pick some keys from array output', function () {
+    $step = helper_getValueReturningStep(['foo' => 'one', 'bar' => 'two', 'baz' => 'three', 'quz' => 'four'])
+        ->addLaterToResult(['foo', 'baz', 'yolo']);
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0]->result)->toBeNull();
+
+    expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
+
+    expect($outputs[0]->addLaterToResult?->toArray())->toBe([
+        'foo' => 'one',
+        'baz' => 'three',
     ]);
 });
 
@@ -184,7 +281,7 @@ it(
 
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
-        expect($output[0]->result->toArray())->toBe(['prevProperty' => 'foobar']); // @phpstan-ignore-line
+        expect($output[0]->result?->toArray())->toBe(['prevProperty' => 'foobar']);
     }
 );
 
