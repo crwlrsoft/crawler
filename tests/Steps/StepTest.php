@@ -9,6 +9,7 @@ use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Step;
 use Exception;
 use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function tests\helper_getInputReturningStep;
@@ -450,6 +451,48 @@ it('calls the validateAndSanitizeInput method', function () {
 
     expect($output[0]->get())->toBe('inputValue validated and sanitized');
 });
+
+test(
+    'when calling validateAndSanitizeStringOrStringable() and the input is array with a single element it tries to ' .
+    'use that element as input value',
+    function () {
+        $step = new class () extends Step {
+            protected function validateAndSanitizeInput(mixed $input): string
+            {
+                return $this->validateAndSanitizeStringOrStringable($input);
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        $output = helper_invokeStepWithInput($step, ['inputValue']);
+
+        expect($output[0]->get())->toBe('inputValue');
+    }
+);
+
+test(
+    'when calling validateAndSanitizeStringOrStringable() and the input is array with multiple elements it throws ' .
+    'an InvalidArgumentException',
+    function () {
+        $step = new class () extends Step {
+            protected function validateAndSanitizeInput(mixed $input): string
+            {
+                return $this->validateAndSanitizeStringOrStringable($input);
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        helper_invokeStepWithInput($step, ['inputValue', 'foo' => 'bar']);
+    }
+)->throws(InvalidArgumentException::class);
 
 it('is possible that a step does not produce any output at all', function () {
     $step = new class () extends Step {

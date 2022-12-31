@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed logger from `Throttler` as it doesn't log anything.
 * Fail silently when `robots.txt` can't be parsed.
 * Default timeout configuration for the default guzzle HTTP client: `connect_timeout` is `10` seconds and `timeout` is `60` seconds.
+* The `validateAndSanitize...()` methods in the abstract `Step` class, when called with an array with one single element, automatically try to use that array element as input value.
 
 ### Fixed
 * The `CookieJar` now also works with `localhost` or other hosts without a registered domain name.

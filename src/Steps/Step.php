@@ -110,6 +110,8 @@ abstract class Step extends BaseStep
         mixed $inputValue,
         string $exceptionMessage = 'Input must be string or stringable'
     ): string {
+        $inputValue = $this->getSingleElementFromArray($inputValue);
+
         if (is_object($inputValue) && method_exists($inputValue, '__toString')) {
             return $inputValue->__toString();
         }
@@ -129,6 +131,8 @@ abstract class Step extends BaseStep
         string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
         bool $allowOnlyRespondedRequest = false
     ): string {
+        $inputValue = $this->getSingleElementFromArray($inputValue);
+
         if (
             $inputValue instanceof RespondedRequest ||
             ($inputValue instanceof ResponseInterface && !$allowOnlyRespondedRequest)
@@ -146,6 +150,8 @@ abstract class Step extends BaseStep
         mixed $inputValue,
         string $exceptionMessage = 'Input must be string, stringable or an instance of UriInterface or Crwlr\\Url',
     ): UriInterface {
+        $inputValue = $this->getSingleElementFromArray($inputValue);
+
         if ($inputValue instanceof UriInterface) {
             return $inputValue;
         }
@@ -203,5 +209,14 @@ abstract class Step extends BaseStep
     private function maxOutputsExceeded(): bool
     {
         return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
+    }
+
+    private function getSingleElementFromArray(mixed $inputValue): mixed
+    {
+        if (is_array($inputValue) && count($inputValue) === 1) {
+            return reset($inputValue);
+        }
+
+        return $inputValue;
     }
 }
