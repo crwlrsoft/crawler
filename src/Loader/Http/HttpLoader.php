@@ -43,6 +43,8 @@ class HttpLoader extends Loader
 
     protected bool $useHeadlessBrowser = false;
 
+    protected ?string $chromeExecutable = null;
+
     /**
      * @var mixed[]
      */
@@ -264,6 +266,13 @@ class HttpLoader extends Loader
         }
 
         $this->headlessBrowserOptionsDirty = true;
+
+        return $this;
+    }
+
+    public function setChromeExecutable(string $executable): static
+    {
+        $this->chromeExecutable = $executable;
 
         return $this;
     }
@@ -534,7 +543,7 @@ class HttpLoader extends Loader
                 $this->prepareRequestHeadersForHeadlessBrowser($request->getHeaders()),
             );
 
-            $this->headlessBrowser = (new BrowserFactory())->createBrowser($options);
+            $this->headlessBrowser = (new BrowserFactory($this->chromeExecutable))->createBrowser($options);
 
             $this->headlessBrowserOptionsDirty = false;
         }
