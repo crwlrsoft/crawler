@@ -274,7 +274,7 @@ final class Loop implements StepInterface
                 }
             }
 
-            return $newInputValue !== null ? new Input($newInputValue, $input->result) : null;
+            return $newInputValue !== null ? new Input($newInputValue, $input->result, $input->addLaterToResult) : null;
         }
 
         return new Input($output);

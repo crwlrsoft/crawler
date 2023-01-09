@@ -75,7 +75,11 @@ abstract class Step extends BaseStep
     final public function callUpdateInputUsingOutput(Input $input, Output $output): Input
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
-            return new Input($this->updateInputUsingOutput->call($this, $input->get(), $output->get()), $input->result);
+            return new Input(
+                $this->updateInputUsingOutput->call($this, $input->get(), $output->get()),
+                $input->result,
+                $input->addLaterToResult,
+            );
         }
 
         return $input;

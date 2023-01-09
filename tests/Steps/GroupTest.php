@@ -791,6 +791,28 @@ it(
     }
 );
 
+it(
+    'adds a secondary Result object with data to add later to main Result objects when addLaterToResult() is called ' .
+    'on one of the steps in the group',
+    function () {
+        $step1 = helper_getValueReturningStep(['foo' => 'one', 'bar' => 'two'])->addLaterToResult();
+
+        $step2 = helper_getValueReturningStep(['baz' => 'three', 'four' => 'quz']);
+
+        $group = (new Group())
+            ->addStep($step1)
+            ->addStep($step2);
+
+        $outputs = helper_invokeStepWithInput($group);
+
+        expect($outputs[0]->result)->toBeNull();
+
+        expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
+
+        expect($outputs[0]->addLaterToResult?->toArray())->toBe(['foo' => 'one', 'bar' => 'two']);
+    }
+);
+
 test(
     'When steps yield multiple outputs it combines the first output from first step with first output from second ' .
         'step and so on.',
