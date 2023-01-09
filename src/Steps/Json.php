@@ -39,6 +39,16 @@ class Json extends Step
     {
         $array = json_decode($input, true);
 
+        if ($array === null) {
+            $array = json_decode($this->fixJsonString($input), true);
+
+            if ($array === null) {
+                $this->logger?->warning('Failed to decode JSON string.');
+
+                return;
+            }
+        }
+
         $dot = new Dot($array);
 
         if ($this->each === null) {
@@ -56,7 +66,7 @@ class Json extends Step
      * @param Dot<int|string, mixed> $dot
      * @return mixed[]
      */
-    private function mapProperties(Dot $dot): array
+    protected function mapProperties(Dot $dot): array
     {
         $mapped = [];
 
@@ -69,5 +79,28 @@ class Json extends Step
         }
 
         return $mapped;
+    }
+
+    /**
+     * Try to fix JSON keys without quotes
+     *
+     * PHPs json_decode() doesn't work with JSON objects where the keys are not wrapped in quotes.
+     * This method tries to fix this, when json_decode() fails to parse a JSON string.
+     */
+    protected function fixJsonString(string $jsonString): string
+    {
+        return preg_replace_callback('/(\w+):/i', function ($match) {
+            $key = $match[1];
+
+            if (!str_starts_with($key, '"')) {
+                $key = '"' . $key;
+            }
+
+            if (!str_ends_with($key, '"')) {
+                $key = $key . '"';
+            }
+
+            return $key . ':';
+        }, $jsonString) ?? $jsonString;
     }
 }

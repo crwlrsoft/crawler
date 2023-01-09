@@ -137,3 +137,19 @@ test('When the root element is an array you can use each with empty string as pa
 
     expect($output[3]->get())->toBe(['nickname' => 'Dominik']);
 });
+
+it('also works with JS style JSON objects without quotes around keys', function () {
+    $jsonString = <<<JSON
+        {
+            foo: "one",
+            bar: "two",
+            "baz": "three"
+        }
+        JSON;
+
+    $outputs = helper_invokeStepWithInput(Json::get(['foo', 'bar', 'baz']), $jsonString);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
+});
