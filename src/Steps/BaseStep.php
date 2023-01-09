@@ -216,7 +216,7 @@ abstract class BaseStep implements StepInterface
                 throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
             }
 
-            $input = new Input($input->get()[$this->useInputKey], $input->result);
+            $input = new Input($input->get()[$this->useInputKey], $input->result, $input->addLaterToResult);
         }
 
         return $input;

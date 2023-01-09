@@ -160,7 +160,9 @@ final class Group extends BaseStep
     private function addResultToInputIfAnyResultKeysDefined(Input $input): Input
     {
         if ($this->createsResult() && !$input->result) {
-            $input = new Input($input->get(), new Result());
+            $input = new Input($input->get(), new Result(), $input->addLaterToResult);
+        } elseif ($this->addsToOrCreatesResult() && !$input->addLaterToResult) {
+            $input = new Input($input->get(), $input->result, new Result());
         }
 
         return $input;

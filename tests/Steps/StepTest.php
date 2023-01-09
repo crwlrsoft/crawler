@@ -269,6 +269,17 @@ test('with addLaterToResult() you can also pick some keys from array output', fu
     ]);
 });
 
+it('does not lose previously added result to add later, when it uses the useInputKey() method', function () {
+    $step = helper_getValueReturningStep(['test' => 'test'])
+        ->useInputKey('foo');
+
+    $addLaterToResult = new Result();
+
+    $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'test'], addLaterToResult: $addLaterToResult));
+
+    expect($outputs[0]->addLaterToResult)->toBe($addLaterToResult);
+});
+
 it(
     'also passes on Result objects through further steps when they don\'t define further result resource properties',
     function () {
@@ -553,6 +564,23 @@ test('You can add and call an updateInputUsingOutput callback', function () {
     expect($updatedInput)->toBeInstanceOf(Input::class);
 
     expect($updatedInput->get())->toBe('Boo Yah!');
+});
+
+it('does not lose previously added result to add later, when updateInputUsingOutput() is called', function () {
+    $step = helper_getValueReturningStep('something');
+
+    $step->updateInputUsingOutput(function (mixed $input, mixed $output) {
+        return $input . ' ' . $output;
+    });
+
+    $addLaterToResult = new Result();
+
+    $updatedInput = $step->callUpdateInputUsingOutput(
+        new Input('Some', addLaterToResult: $addLaterToResult),
+        new Output('thing')
+    );
+
+    expect($updatedInput->addLaterToResult)->toBe($addLaterToResult);
 });
 
 it('does not yield more outputs than defined via maxOutputs() method', function () {
