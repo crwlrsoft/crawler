@@ -10,6 +10,15 @@ use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
 
+/**
+ * The loop feature is deprecated
+ *
+ * The Loop class will be removed in v1.0. Probably the only use case is iterating over paginated list pages,
+ * which can be done using the new Paginator functionality.
+ *
+ * @deprecated since v0.7.0
+ */
+
 final class Loop implements StepInterface
 {
     private int $maxIterations = 1000;
