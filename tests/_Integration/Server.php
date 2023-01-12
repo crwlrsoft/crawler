@@ -104,3 +104,17 @@ if (str_starts_with($route, '/sleep')) {
 
     return;
 }
+
+if (str_starts_with($route, '/publisher')) {
+    if ($route === '/publisher/authors') {
+        return include(__DIR__ . '/_Server/Publisher/AuthorsListPage.php');
+    } elseif (str_starts_with($route, '/publisher/authors/')) {
+        $author = getParamAfter($route, '/publisher/authors/');
+
+        return include(__DIR__ . '/_Server/Publisher/AuthorDetailPage.php');
+    } elseif (str_starts_with($route, '/publisher/books/')) {
+        $bookNo = (int) getParamAfter($route, '/publisher/books/');
+
+        return include(__DIR__ . '/_Server/Publisher/BookDetailPage.php');
+    }
+}

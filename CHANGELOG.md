@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New method `retryCachedErrorResponses()` in `HttpLoader`. When called, the loader will only use successful responses (status code < 400) from the cache and therefore retry already cached error responses.
 * New method `writeOnlyCache()` in `HttpLoader` to only write to, but don't read from the response cache. Can be used to renew cached responses.
 * `Filter::urlPathMatches()` to filter URL paths using a regex.
-* With the `Html` and `Xml` data extraction steps you can now add layers to the data that is being extracted, by just adding further `Html`/`Xml` data extraction steps as values in the mapping array that you pass as argument to the `extract()` method.
 * Option to provide a chrome executable name to the `chrome-php/chrome` library via `HttpLoader::setChromeExecutable()`.
 
 ### Changed
@@ -32,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fail silently when `robots.txt` can't be parsed.
 * Default timeout configuration for the default guzzle HTTP client: `connect_timeout` is `10` seconds and `timeout` is `60` seconds.
 * The `validateAndSanitize...()` methods in the abstract `Step` class, when called with an array with one single element, automatically try to use that array element as input value.
+* With the `Html` and `Xml` data extraction steps you can now add layers to the data that is being extracted, by just adding further `Html`/`Xml` data extraction steps as values in the mapping array that you pass as argument to the `extract()` method.
+* The base `Http` step can now also be called with an array of URLs as a single input. Crawl and Paginate steps still require a single URL input.
 
 ### Fixed
 * The `CookieJar` now also works with `localhost` or other hosts without a registered domain name.

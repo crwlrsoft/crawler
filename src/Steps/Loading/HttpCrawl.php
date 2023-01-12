@@ -107,6 +107,15 @@ class HttpCrawl extends Http
         return $this;
     }
 
+    protected function validateAndSanitizeInput(mixed $input): mixed
+    {
+        return $this->validateAndSanitizeToUriInterface($input);
+    }
+
+    /**
+     * @param UriInterface $input
+     * @throws Exception
+     */
     protected function invoke(mixed $input): Generator
     {
         $this->setHostOrDomain($input);

@@ -144,23 +144,37 @@ class Http extends LoadingStep
     }
 
     /**
+     * @return UriInterface|UriInterface[]
      * @throws InvalidArgumentException
      */
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
+        if (is_array($input)) {
+            foreach ($input as $key => $url) {
+                $input[$key] = $this->validateAndSanitizeToUriInterface($url);
+            }
+
+            return $input;
+        }
+
         return $this->validateAndSanitizeToUriInterface($input);
     }
 
     /**
+     * @param UriInterface|UriInterface[] $input
      * @return Generator<RespondedRequest>
      * @throws Exception
      */
     protected function invoke(mixed $input): Generator
     {
-        $response = $this->getResponseFromInputUri($input);
+        $input = !is_array($input) ? [$input] : $input;
 
-        if ($response) {
-            yield $response;
+        foreach ($input as $uri) {
+            $response = $this->getResponseFromInputUri($uri);
+
+            if ($response) {
+                yield $response;
+            }
         }
     }
 

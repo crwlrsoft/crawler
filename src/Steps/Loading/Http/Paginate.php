@@ -59,4 +59,13 @@ class Paginate extends Http
             $this->paginator->logWhenFinished($this->logger);
         }
     }
+
+    /**
+     * @param mixed $input
+     * @return mixed
+     */
+    protected function validateAndSanitizeInput(mixed $input): mixed
+    {
+        return $this->validateAndSanitizeToUriInterface($input);
+    }
 }
