@@ -29,16 +29,20 @@ final class Group extends BaseStep
     {
         $combinedOutput = [];
 
-        $input = $this->prepareInput($input);
-
-        if (!$input) {
-            return;
+        if (!$this->uniqueInput || $this->inputOrOutputIsUnique($input)) {
+            $input = $this->addResultToInputIfAnyResultKeysDefined($input);
+        } else {
+            return; // Input is not unique.
         }
 
+        // When input is array and useInputKey() was used, invoke the steps only with that input array element,
+        // but keep the original input, because we want to use it e.g. for the keepInputData() functionality.
+        $inputForStepInvocation = $this->getInputKeyToUse($input);
+
         foreach ($this->steps as $key => $step) {
-            foreach ($step->invokeStep($input) as $nthOutput => $output) {
+            foreach ($step->invokeStep($inputForStepInvocation) as $nthOutput => $output) {
                 if (method_exists($step, 'callUpdateInputUsingOutput')) {
-                    $input = $step->callUpdateInputUsingOutput($input, $output);
+                    $inputForStepInvocation = $step->callUpdateInputUsingOutput($inputForStepInvocation, $output);
                 }
 
                 if ($this->cascades() && $step->cascades()) {
@@ -134,20 +138,6 @@ final class Group extends BaseStep
         }
 
         return $this;
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function prepareInput(Input $input): ?Input
-    {
-        $input = $this->getInputKeyToUse($input);
-
-        if (!$this->uniqueInput || $this->inputOrOutputIsUnique($input)) {
-            return $this->addResultToInputIfAnyResultKeysDefined($input);
-        }
-
-        return null;
     }
 
     /**

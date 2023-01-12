@@ -40,9 +40,7 @@ abstract class Step extends BaseStep
             return;
         }
 
-        $input = $this->getInputKeyToUse($input);
-
-        $validInputValue = $this->validateAndSanitizeInput($input->get());
+        $validInputValue = $this->validateAndSanitizeInput($this->getInputKeyToUse($input)->get());
 
         if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
             yield from $this->invokeAndYield($validInputValue, $input);
@@ -97,7 +95,7 @@ abstract class Step extends BaseStep
      *
      * In child classes you can add this method to validate and sanitize the incoming input. The method is called
      * automatically when the step is invoked within the Crawler and the invoke method receives the validated and
-     * sanitized input. Also you can just return any value from this method and in the invoke method it's again
+     * sanitized input. Also, you can just return any value from this method and in the invoke method it's again
      * incoming as an Input object.
      *
      * @throws InvalidArgumentException  Throw this if the input value is invalid for this step.
@@ -193,7 +191,7 @@ abstract class Step extends BaseStep
             }
 
             if ($this->keepInputData === true) {
-                $outputData = $this->addInputDataToOutputData($validInputValue, $outputData);
+                $outputData = $this->addInputDataToOutputData($input->get(), $outputData);
             }
 
             $output = $this->makeOutput($outputData, $input);

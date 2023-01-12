@@ -729,3 +729,13 @@ it(
         expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
     }
 );
+
+it('keeps the original input data when useInputKey() is used', function () {
+    $step = helper_getValueReturningStep(['baz' => 'three'])
+        ->keepInputData()
+        ->useInputKey('bar');
+
+    $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
+
+    expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
+});
