@@ -1059,3 +1059,31 @@ it('throws an exception when input should be kept, is non array and no key is de
 
     helper_invokeStepWithInput($group, new Input('three'));
 })->throws(Exception::class);
+
+it('keeps the original input data when useInputKey() is used', function () {
+    $step1 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['foo' => 'one'];
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['bar' => 'two'];
+        }
+    };
+
+    $group = (new Group())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->useInputKey('baz')
+        ->keepInputData();
+
+    $output = helper_invokeStepWithInput($group, new Input(['baz' => 'three', 'quz' => 'four']));
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three', 'quz' => 'four']);
+});
