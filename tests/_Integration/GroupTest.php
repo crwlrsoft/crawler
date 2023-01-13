@@ -7,49 +7,13 @@ use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
-use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
-use Generator;
 
 use Psr\Log\LoggerInterface;
 
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
-
-class StructuredDataBlogPost extends Step
-{
-    protected function validateAndSanitizeInput(mixed $input): mixed
-    {
-        $pageContent = $input->response->getBody()->getContents();
-
-        $input->response->getBody()->rewind();
-
-        return $pageContent;
-    }
-
-    protected function invoke(mixed $input): Generator
-    {
-        $splitAtBeginning = explode('<script type="application/ld+json">', $input);
-
-        foreach ($splitAtBeginning as $key => $snippet) {
-            if ($key === 0) {
-                continue;
-            }
-
-            $jsonBlock = trim(explode('</script>', $snippet)[0]);
-
-            $decoded = json_decode($jsonBlock, true);
-
-            if (!empty($decoded)) {
-                yield [
-                    'author' => $decoded['author']['name'],
-                    'keywords' => $decoded['keywords'],
-                ];
-            }
-        }
-    }
-}
 
 it(
     'gets both, data from html and the enclosed json-ld using two steps in a group and combines the results',
@@ -74,9 +38,16 @@ it(
                     ->addStep(
                         Html::first('#content article.blog-post')
                             ->extract(['title' => 'h1', 'date' => '.date'])
-                            ->addToResult()
                     )
-                    ->addStep((new StructuredDataBlogPost())->addToResult())
+                    ->addStep(
+                        Html::schemaOrg()
+                            ->onlyType('BlogPosting')
+                            ->extract([
+                                'author' => 'author.name',
+                                'keywords',
+                            ])
+                    )
+                    ->addToResult()
             );
 
         $result = helper_generatorToArray($crawler->run());
