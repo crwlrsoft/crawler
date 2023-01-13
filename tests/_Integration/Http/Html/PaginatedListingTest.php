@@ -2,7 +2,6 @@
 
 namespace tests\_Integration\Http\Html;
 
-use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
@@ -30,12 +29,9 @@ it('paginates through pagination', function () {
 
     $crawler->input('http://localhost:8000/paginated-listing');
 
-    $crawler->addStep(
-        Crawler::loop(Http::get())
-            ->withInput(Html::getLink('#nextPage'))
-    );
-
-    $crawler->addStep('url', Html::getLinks('#listing .item a'))
+    $crawler
+        ->addStep(Http::get()->paginate('#nextPage'))
+        ->addStep('url', Html::getLinks('#listing .item a'))
         ->addStep(Http::get())
         ->addStep(
             Html::first('article')

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2023-x-x
+
+### Removed
+* The loop feature. The only real world use case should be paginating listings and this should be solved with the Paginator feature.
 
 ## [0.7.0] - 2023-01-13
 

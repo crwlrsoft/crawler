@@ -11,7 +11,6 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
-use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -526,49 +525,6 @@ test('You can update the input for further steps with the output of a step that 
     expect($outputs)->toHaveCount(1);
 
     expect($outputs[0]->get())->toBe(['foo' => ' rocks', 'bar' => 'crwlr.software rocks']);
-});
-
-test('Updating the input for further steps with output also works with loop steps', function () {
-    $step1 = helper_getValueReturningStep(' Jump!')
-        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
-            return $input . $output;
-        });
-
-    $step1 = (new Loop($step1))->maxIterations(2);
-
-    $step2 = helper_getInputReturningStep();
-
-    $group = (new Group())
-        ->addStep('foo', $step1)
-        ->addStep('bar', $step2);
-
-    $outputs = helper_invokeStepWithInput($group, 'The Mac Dad will make ya:');
-
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe(['foo' => [' Jump!', ' Jump!'], 'bar' => 'The Mac Dad will make ya: Jump! Jump!']);
-});
-
-test('Updating the input for further steps also works when combining the group output to a single output', function () {
-    $step1 = helper_getValueReturningStep(' Jump!')
-        ->updateInputUsingOutput(function (mixed $input, mixed $output) {
-            return $input . $output;
-        });
-
-    $step1 = (new Loop($step1))->maxIterations(2);
-
-    $group = (new Group())
-        ->addStep($step1)
-        ->addStep(helper_getInputReturningStep());
-
-    $outputs = helper_invokeStepWithInput($group, 'The Mac Dad will make ya:');
-
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe([
-        [' Jump!', ' Jump!'],
-        'The Mac Dad will make ya: Jump! Jump!'
-    ]);
 });
 
 it('knows when at least one of the steps adds something to the final result', function () {
