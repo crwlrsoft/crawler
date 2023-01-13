@@ -197,20 +197,6 @@ test('Initial inputs are reset after the crawler was run', function () {
     expect($results)->toHaveCount(1);
 });
 
-test('The static loop method wraps a Step in a LoopStep object', function () {
-    $step = Mockery::mock(StepInterface::class);
-
-    $step->shouldReceive('invokeStep')->withArgs(function (Input $input) {
-        return $input->get() === 'foo';
-    });
-
-    $loop = Crawler::loop($step);
-
-    $loop->invokeStep(new Input('foo'));
-
-    expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
-});
-
 test('You can add steps and the Crawler class passes on its Logger and also its Loader if needed', function () {
     $step = Mockery::mock(StepInterface::class);
 
@@ -662,10 +648,7 @@ it('sends all outputs to the outputHook when defined', function () {
     $crawler = helper_getDummyCrawler()
         ->input(1)
         ->addStep(helper_getNumberIncrementingStep())
-        ->addStep(
-            Crawler::loop(helper_getNumberIncrementingStep())
-                ->maxIterations(5)
-        )
+        ->addStep(helper_getNumberIncrementingStep())
         ->outputHook(function (Output $output, int $stepIndex, StepInterface $step) use (& $outputs) {
             $outputs[$stepIndex][] = $output->get();
         });
@@ -678,11 +661,9 @@ it('sends all outputs to the outputHook when defined', function () {
 
     expect($outputs[0][0])->toBe(2);
 
-    expect($outputs[1])->toHaveCount(5);
+    expect($outputs[1])->toHaveCount(1);
 
     expect($outputs[1][0])->toBe(3);
-
-    expect($outputs[1][4])->toBe(7);
 });
 
 test(

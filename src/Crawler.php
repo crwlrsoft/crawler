@@ -6,7 +6,6 @@ use Closure;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
-use Crwlr\Crawler\Steps\Loop;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -46,19 +45,6 @@ abstract class Crawler
     abstract protected function userAgent(): UserAgentInterface;
 
     abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
-
-    /**
-     * The loop feature is deprecated
-     *
-     * This method and the Loop class will be removed in v1.0. Probably the only use case is iterating over
-     * paginated list pages, which can be done using the new Paginator functionality.
-     *
-     * @deprecated since v0.7.0
-     */
-    public static function loop(StepInterface $step): Loop
-    {
-        return new Loop($step);
-    }
 
     public static function group(): Group
     {
