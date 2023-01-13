@@ -4,7 +4,6 @@ namespace tests\Steps;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
-use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Xml;
 
 use GuzzleHttp\Psr7\Request;
@@ -127,13 +126,13 @@ test(
         );
 
         $outputs = helper_invokeStepWithInput(
-            Xml::each(Dom::cssSelector('events event'))->extract([
-                'title' => Dom::cssSelector('name'),
-                'location' => Dom::cssSelector('location'),
-                'date' => Dom::cssSelector('date'),
-                'talks' => Xml::each(Dom::cssSelector('talks talk'))->extract([
-                    'title' => Dom::cssSelector('title'),
-                    'speaker' => Dom::cssSelector('speaker'),
+            Xml::each('//events/event')->extract([
+                'title' => '//name',
+                'location' => '//location',
+                'date' => '//date',
+                'talks' => Xml::each('//talks/talk')->extract([
+                    'title' => '//title',
+                    'speaker' => '//speaker',
                 ])
             ]),
             $response,
