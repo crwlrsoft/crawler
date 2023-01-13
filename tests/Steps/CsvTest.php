@@ -57,15 +57,15 @@ it('maps a file', function () {
     expect($outputs[2]->get())->toBe(['id' => '345', 'name' => 'Jane Doe', 'homepage' => 'https://www.jane.doe']);
 });
 
-it('works with a RequestResponseAggregate as input', function () {
+it('works with a RespondedRequest as input', function () {
     $body = <<<CSV
         123,"John Doe","+431234567"
         234,"Jane Doe","+432345678"
         CSV;
 
-    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response(200, [], Utils::streamFor($body)));
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response(200, [], Utils::streamFor($body)));
 
-    $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'name', 'phone']), $aggregate);
+    $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'name', 'phone']), $respondedRequest);
 
     expect($outputs)->toHaveCount(2);
 

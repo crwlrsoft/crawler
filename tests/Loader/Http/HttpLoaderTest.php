@@ -236,14 +236,14 @@ it('automatically handles redirects', function (string $loadingMethod) {
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
-    $requestResponseAggregate = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
+    $respondedRequest = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
 
-    /** @var RespondedRequest $requestResponseAggregate */
-    expect($requestResponseAggregate->requestedUri())->toBe('https://www.crwlr.software/packages');
+    /** @var RespondedRequest $respondedRequest */
+    expect($respondedRequest->requestedUri())->toBe('https://www.crwlr.software/packages');
 
-    expect($requestResponseAggregate->effectiveUri())->toBe('https://www.redirect.com');
+    expect($respondedRequest->effectiveUri())->toBe('https://www.redirect.com');
 
-    expect($requestResponseAggregate->response->getBody()->getContents())->toBe('YES');
+    expect($respondedRequest->response->getBody()->getContents())->toBe('YES');
 })->with(['load', 'loadOrFail']);
 
 it('calls request start and end tracking methods', function (string $loadingMethod) {
@@ -332,7 +332,7 @@ it('tries to get responses from cache', function () {
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromAggregate(
+        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
             new RespondedRequest(new Request('GET', '/'), new Response())
         ));
 
@@ -352,7 +352,7 @@ it('fails when it gets a failed response from cache', function () {
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromAggregate(
+        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
             new RespondedRequest(new Request('GET', '/'), new Response(404))
         ));
 
@@ -380,7 +380,7 @@ it('fails when it gets a failed response from cache in loadOrFail', function () 
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromAggregate(
+        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
             new RespondedRequest(new Request('GET', 'facebook'), new Response(404))
         ));
 

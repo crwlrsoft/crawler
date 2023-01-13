@@ -13,7 +13,7 @@ use stdClass;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
-test('It works with a RequestResponseAggregate as input', function () {
+test('It works with a RespondedRequest as input', function () {
     $step = (new GetLinks());
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(

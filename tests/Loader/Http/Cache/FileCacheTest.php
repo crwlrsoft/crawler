@@ -31,7 +31,7 @@ function helper_addMultipleItemsToCache(array $items, FileCache $cache): void
 
 function helper_basicCacheItemWithRequestUrl(string $requestUrl): HttpResponseCacheItem
 {
-    return HttpResponseCacheItem::fromAggregate(
+    return HttpResponseCacheItem::fromRespondedRequest(
         new RespondedRequest(new Request('GET', $requestUrl), new Response())
     );
 }
@@ -59,8 +59,8 @@ afterEach(function () {
 });
 
 test('It caches HttpResponseCacheItems', function () {
-    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
-    $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response());
+    $cacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
     $cache = new FileCache(helper_cachedir());
 
     expect($cache->set($cacheItem->key(), $cacheItem))->toBeTrue();
@@ -69,8 +69,8 @@ test('It caches HttpResponseCacheItems', function () {
 });
 
 test('It checks if it has a certain key', function () {
-    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
-    $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response());
+    $cacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
     $cache = new FileCache(helper_cachedir());
     $cache->set($cacheItem->key(), $cacheItem);
 
@@ -79,8 +79,8 @@ test('It checks if it has a certain key', function () {
 });
 
 test('It can delete a cache item', function () {
-    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
-    $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response());
+    $cacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
     $cache = new FileCache(helper_cachedir());
     $cache->set($cacheItem->key(), $cacheItem);
     expect($cache->has($cacheItem->key()))->toBeTrue();
@@ -166,9 +166,9 @@ it('compresses cache data when useCompression() is used', function () {
         takimata sanctus est Lorem ipsum dolor sit amet.
         DATA;
 
-    $aggregate = new RespondedRequest(new Request('GET', '/compression'), new Response(body: Utils::streamFor($data)));
+    $respondedRequest = new RespondedRequest(new Request('GET', '/compression'), new Response(body: Utils::streamFor($data)));
 
-    $cacheItem = HttpResponseCacheItem::fromAggregate($aggregate);
+    $cacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
     $cache = new FileCache(helper_cachedir());
 
@@ -196,7 +196,7 @@ it('gets compressed cache items', function () {
 
     $cache->useCompression();
 
-    $cacheItem = HttpResponseCacheItem::fromAggregate(new RespondedRequest(
+    $cacheItem = HttpResponseCacheItem::fromRespondedRequest(new RespondedRequest(
         new Request('GET', '/compression'),
         new Response(body: Utils::streamFor('Hello World'))
     ));
@@ -205,7 +205,7 @@ it('gets compressed cache items', function () {
 
     $retrievedCacheItem = $cache->get($cacheItem->key());
 
-    expect($retrievedCacheItem->aggregate())->toBeInstanceOf(RespondedRequest::class);
+    expect($retrievedCacheItem->respondedRequest())->toBeInstanceOf(RespondedRequest::class);
 
-    expect(Http::getBodyString($retrievedCacheItem->aggregate()))->toBe('Hello World');
+    expect(Http::getBodyString($retrievedCacheItem->respondedRequest()))->toBe('Hello World');
 });

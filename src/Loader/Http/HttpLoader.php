@@ -145,7 +145,7 @@ class HttpLoader extends Loader
             }
 
             if (!$isFromCache && $this->cache) {
-                $responseCacheItem = HttpResponseCacheItem::fromAggregate($respondedRequest);
+                $responseCacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
                 $this->cache->set($responseCacheItem->key(), $responseCacheItem);
             }
@@ -203,7 +203,7 @@ class HttpLoader extends Loader
         $this->callHook('afterLoad', $request);
 
         if (!$isFromCache && $this->cache) {
-            $responseCacheItem = HttpResponseCacheItem::fromAggregate($respondedRequest);
+            $responseCacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
             $this->cache->set($responseCacheItem->key(), $responseCacheItem);
         }
@@ -349,7 +349,7 @@ class HttpLoader extends Loader
 
             $responseCacheItem = $this->cache->get($key);
 
-            $respondedRequest = $responseCacheItem->aggregate();
+            $respondedRequest = $responseCacheItem->respondedRequest();
 
             if ($this->retryCachedErrorResponses && $respondedRequest->response->getStatusCode() >= 400) {
                 $this->logger->info('Cached response was an error response, retry.');
