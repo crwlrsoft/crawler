@@ -49,17 +49,17 @@ final class HttpResponseCacheItem
         ]);
     }
 
-    public static function fromAggregate(RespondedRequest $aggregate): self
+    public static function fromRespondedRequest(RespondedRequest $respondedRequest): self
     {
         return new self(
-            $aggregate->request->getMethod(),
-            $aggregate->requestedUri(),
-            $aggregate->request->getHeaders(),
-            self::copyBody($aggregate->request),
-            $aggregate->effectiveUri(),
-            $aggregate->response->getStatusCode(),
-            $aggregate->response->getHeaders(),
-            self::copyBody($aggregate->response),
+            $respondedRequest->request->getMethod(),
+            $respondedRequest->requestedUri(),
+            $respondedRequest->request->getHeaders(),
+            self::copyBody($respondedRequest->request),
+            $respondedRequest->effectiveUri(),
+            $respondedRequest->response->getStatusCode(),
+            $respondedRequest->response->getHeaders(),
+            self::copyBody($respondedRequest->response),
         );
     }
 
@@ -123,15 +123,15 @@ final class HttpResponseCacheItem
         return serialize($this->toArray());
     }
 
-    public function aggregate(): RespondedRequest
+    public function respondedRequest(): RespondedRequest
     {
-        $aggregate = new RespondedRequest($this->request(), $this->response());
+        $respondedRequest = new RespondedRequest($this->request(), $this->response());
 
-        if ($this->effectiveUri() !== $aggregate->effectiveUri()) {
-            $aggregate->addRedirectUri($this->effectiveUri());
+        if ($this->effectiveUri() !== $respondedRequest->effectiveUri()) {
+            $respondedRequest->addRedirectUri($this->effectiveUri());
         }
 
-        return $aggregate;
+        return $respondedRequest;
     }
 
     public function request(): RequestInterface

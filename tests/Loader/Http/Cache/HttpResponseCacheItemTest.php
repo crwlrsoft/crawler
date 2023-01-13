@@ -13,10 +13,10 @@ it('can be created from primitive values.', function () {
     expect($item)->toBeInstanceOf(HttpResponseCacheItem::class);
 });
 
-it('can be created from a RequestResponseAggregate', function () {
-    $aggregate = new RespondedRequest(new Request('GET', '/'), new Response());
+it('can be created from a RespondedRequest', function () {
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), new Response());
 
-    $item = HttpResponseCacheItem::fromAggregate($aggregate);
+    $item = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
     expect($item)->toBeInstanceOf(HttpResponseCacheItem::class);
 });
@@ -119,44 +119,44 @@ test('You can serialize it', function () {
     );
 });
 
-test('You can hydrate a RequestResponseAggregate from it', function () {
-    $aggregate = new RespondedRequest(
+test('You can hydrate a RespondedRequest from it', function () {
+    $respondedRequest = new RespondedRequest(
         new Request('GET', '/yo', ['key' => 'val'], 'request body'),
         new Response(301, ['Location' => '/yolo'])
     );
 
-    $aggregate->setResponse(new Response(200, ['header' => 'value'], 'response body'));
+    $respondedRequest->setResponse(new Response(200, ['header' => 'value'], 'response body'));
 
-    $item = HttpResponseCacheItem::fromAggregate($aggregate);
+    $item = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
-    $hydratedAggregate = $item->aggregate();
+    $hydratedRespondedRequest = $item->respondedRequest();
 
-    expect($hydratedAggregate->request->getMethod())->toBe('GET');
+    expect($hydratedRespondedRequest->request->getMethod())->toBe('GET');
 
-    expect($hydratedAggregate->requestedUri())->toBe('/yo');
+    expect($hydratedRespondedRequest->requestedUri())->toBe('/yo');
 
-    expect($hydratedAggregate->request->getUri()->__toString())->toBe('/yo');
+    expect($hydratedRespondedRequest->request->getUri()->__toString())->toBe('/yo');
 
-    expect($hydratedAggregate->request->getHeaders())->toBe(['key' => ['val']]);
+    expect($hydratedRespondedRequest->request->getHeaders())->toBe(['key' => ['val']]);
 
-    expect($hydratedAggregate->request->getBody()->getContents())->toBe('request body');
+    expect($hydratedRespondedRequest->request->getBody()->getContents())->toBe('request body');
 
-    expect($hydratedAggregate->effectiveUri())->toBe('/yolo');
+    expect($hydratedRespondedRequest->effectiveUri())->toBe('/yolo');
 
-    expect($hydratedAggregate->response->getStatusCode())->toBe(200);
+    expect($hydratedRespondedRequest->response->getStatusCode())->toBe(200);
 
-    expect($hydratedAggregate->response->getHeaders())->toBe(['header' => ['value']]);
+    expect($hydratedRespondedRequest->response->getHeaders())->toBe(['header' => ['value']]);
 
-    expect($hydratedAggregate->response->getBody()->getContents())->toBe('response body');
+    expect($hydratedRespondedRequest->response->getBody()->getContents())->toBe('response body');
 });
 
 test('You can hydrate a Request object from it', function () {
-    $aggregate = new RespondedRequest(
+    $respondedRequest = new RespondedRequest(
         new Request('GET', '/foo', ['bar' => 'baz'], 'request body'),
         new Response()
     );
 
-    $item = HttpResponseCacheItem::fromAggregate($aggregate);
+    $item = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
     $hydratedRequest = $item->request();
 
@@ -172,9 +172,9 @@ test('You can hydrate a Request object from it', function () {
 test('You can hydrate a Response object from it', function () {
     $response = new Response(404, ['header' => 'value'], 'response boddey');
 
-    $aggregate = new RespondedRequest(new Request('GET', '/'), $response);
+    $respondedRequest = new RespondedRequest(new Request('GET', '/'), $response);
 
-    $item = HttpResponseCacheItem::fromAggregate($aggregate);
+    $item = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
 
     $hydratedResponse = $item->response();
 

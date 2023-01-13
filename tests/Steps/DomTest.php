@@ -45,7 +45,7 @@ test('ResponseInterface is a valid input', function () {
     expect($output)->toHaveCount(0);
 });
 
-test('RequestResponseAggregate is a valid input', function () {
+test('RespondedRequest is a valid input', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root(),
         new RespondedRequest(new Request('GET', '/'), new Response())
