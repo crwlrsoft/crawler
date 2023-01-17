@@ -2,12 +2,12 @@
 
 namespace tests\Loader\Http;
 
-use Crwlr\Crawler\Loader\Http\Cache\FileCache;
+use Crwlr\Crawler\Cache\FileCache;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Request;
@@ -44,7 +44,7 @@ afterEach(function () {
 
 /** @var TestCase $this */
 
-test('It accepts url string as argument to load', function () {
+it('accepts url string as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
@@ -56,7 +56,7 @@ test('It accepts url string as argument to load', function () {
     $httpLoader->loadOrFail('https://www.crwlr.software');
 });
 
-test('It accepts RequestInterface as argument to load', function () {
+it('accepts RequestInterface as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
@@ -76,8 +76,8 @@ test('It does not accept other argument types for the load method', function ($l
     $httpLoader->{$loadMethod}(new stdClass());
 })->with(['load', 'loadOrFail'])->expectError();
 
-test(
-    'It calls the before and after load hooks regardless whether the response was successful or not',
+it(
+    'calls the before and after load hooks regardless whether the response was successful or not',
     function ($responseStatusCode) {
         $httpClient = Mockery::mock(ClientInterface::class);
 
@@ -111,7 +111,7 @@ test(
     }
 )->with([100, 200, 300, 400, 500]);
 
-test('It calls the onSuccess hook on a successful response', function ($responseStatusCode) {
+it('calls the onSuccess hook on a successful response', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
 
     $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response($responseStatusCode));
@@ -135,7 +135,7 @@ test('It calls the onSuccess hook on a successful response', function ($response
     expect($onSuccessWasCalled)->toBeTrue();
 })->with([200, 201, 202]);
 
-test('It calls the onError hook on a failed request', function ($responseStatusCode) {
+it('calls the onError hook on a failed request', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
 
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response($responseStatusCode));
@@ -153,7 +153,7 @@ test('It calls the onError hook on a failed request', function ($responseStatusC
     expect($onErrorWasCalled)->toBeTrue();
 })->with([400, 404, 422, 500]);
 
-test('It throws an Exception when request fails in loadOrFail method', function () {
+it('throws an Exception when request fails in loadOrFail method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(400));
@@ -332,15 +332,60 @@ it('tries to get responses from cache', function () {
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
-            new RespondedRequest(new Request('GET', '/'), new Response())
-        ));
+        ->andReturn(new RespondedRequest(new Request('GET', '/'), new Response()));
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
     $httpLoader->setCache($cache);
 
     $httpLoader->load('https://www.facebook.com');
+});
+
+it('still handles legacy (until v0.7) cached responses', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient->shouldNotReceive('sendRequest');
+
+    $cache = Mockery::mock(CacheInterface::class);
+
+    $cache->shouldReceive('has')->once()->andReturn(true);
+
+    $cache->shouldReceive('get')
+        ->once()
+        ->andReturn([
+            'requestMethod' => 'GET',
+            'requestUri' => 'https://www.example.com/index',
+            'requestHeaders' => ['foo' => ['bar']],
+            'requestBody' => 'requestbody',
+            'effectiveUri' => 'https://www.example.com/home',
+            'responseStatusCode' => 201,
+            'responseHeaders' => ['baz' => ['quz']],
+            'responseBody' => 'responsebody',
+        ]);
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/index');
+
+    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class);
+
+    expect($respondedRequest?->request->getMethod())->toBe('GET');
+
+    expect($respondedRequest?->requestedUri())->toBe('https://www.example.com/index');
+
+    expect($respondedRequest?->request->getHeaders())->toHaveKey('foo');
+
+    expect($respondedRequest?->request->getBody()->getContents())->toBe('requestbody');
+
+    expect($respondedRequest?->effectiveUri())->toBe('https://www.example.com/home');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(201);
+
+    expect($respondedRequest?->response->getHeaders())->toHaveKey('baz');
+
+    expect($respondedRequest?->response->getBody()->getContents())->toBe('responsebody');
 });
 
 it('fails when it gets a failed response from cache', function () {
@@ -352,9 +397,7 @@ it('fails when it gets a failed response from cache', function () {
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
-            new RespondedRequest(new Request('GET', '/'), new Response(404))
-        ));
+        ->andReturn(new RespondedRequest(new Request('GET', '/'), new Response(404)));
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
@@ -380,9 +423,7 @@ it('fails when it gets a failed response from cache in loadOrFail', function () 
 
     $cache->shouldReceive('get')
         ->once()
-        ->andReturn(HttpResponseCacheItem::fromRespondedRequest(
-            new RespondedRequest(new Request('GET', 'facebook'), new Response(404))
-        ));
+        ->andReturn(new RespondedRequest(new Request('GET', 'facebook'), new Response(404)));
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 

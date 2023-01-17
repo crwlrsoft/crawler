@@ -2,7 +2,6 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
-use Crwlr\Crawler\Loader\Http\Cache\HttpResponseCacheItem;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -145,9 +144,7 @@ class HttpLoader extends Loader
             }
 
             if (!$isFromCache && $this->cache) {
-                $responseCacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
-
-                $this->cache->set($responseCacheItem->key(), $responseCacheItem);
+                $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
             }
 
             return $respondedRequest;
@@ -203,9 +200,7 @@ class HttpLoader extends Loader
         $this->callHook('afterLoad', $request);
 
         if (!$isFromCache && $this->cache) {
-            $responseCacheItem = HttpResponseCacheItem::fromRespondedRequest($respondedRequest);
-
-            $this->cache->set($responseCacheItem->key(), $responseCacheItem);
+            $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
         }
 
         return $respondedRequest;
@@ -342,14 +337,17 @@ class HttpLoader extends Loader
             return null;
         }
 
-        $key = HttpResponseCacheItem::keyFromRequest($request);
+        $key = RespondedRequest::cacheKeyFromRequest($request);
 
         if ($this->cache->has($key)) {
             $this->logger->info('Found ' . $request->getUri()->__toString() . ' in cache.');
 
-            $responseCacheItem = $this->cache->get($key);
+            $respondedRequest = $this->cache->get($key);
 
-            $respondedRequest = $responseCacheItem->respondedRequest();
+            // Previously, until v0.7 just used serialized arrays. Leave this for backwards compatibility.
+            if (is_array($respondedRequest)) {
+                $respondedRequest = RespondedRequest::fromArray($respondedRequest);
+            }
 
             if ($this->retryCachedErrorResponses && $respondedRequest->response->getStatusCode() >= 400) {
                 $this->logger->info('Cached response was an error response, retry.');
