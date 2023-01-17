@@ -1,0 +1,220 @@
+a:8:{s:13:"requestMethod";s:3:"GET";s:10:"requestUri";s:74:"https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php";s:14:"requestHeaders";a:3:{s:4:"Host";a:1:{i:0;s:18:"www.crwlr.software";}s:10:"User-Agent";a:1:{i:0;s:117:"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";}s:6:"Cookie";a:2:{i:0;s:20:"XSRF-TOKEN=xsrftoken";i:1;s:29:"crwlrsoftware_session=session";}}s:11:"requestBody";s:0:"";s:12:"effectiveUri";s:74:"https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php";s:18:"responseStatusCode";i:200;s:15:"responseHeaders";a:12:{s:6:"Server";a:1:{i:0;s:12:"nginx/1.21.4";}s:12:"Content-Type";a:1:{i:0;s:24:"text/html; charset=UTF-8";}s:17:"Transfer-Encoding";a:1:{i:0;s:7:"chunked";}s:10:"Connection";a:1:{i:0;s:10:"keep-alive";}s:4:"Vary";a:1:{i:0;s:15:"Accept-Encoding";}s:12:"X-Powered-By";a:1:{i:0;s:9:"PHP/8.1.1";}s:13:"Cache-Control";a:1:{i:0;s:17:"no-cache, private";}s:4:"Date";a:1:{i:0;s:29:"Tue, 03 Jan 2023 12:38:20 GMT";}s:10:"Set-Cookie";a:2:{i:0;s:81:"XSRF-TOKEN=xsrftoken; expires=Tue, 03-Jan-2023 14:38:20 GMT; Max-Age=7200; path=/";i:1;s:100:"crwlrsoftware_session=session; expires=Tue, 03-Jan-2023 14:38:20 GMT; Max-Age=7200; path=/; httponly";}s:15:"X-Frame-Options";a:2:{i:0;s:10:"SAMEORIGIN";i:1;s:4:"DENY";}s:16:"X-XSS-Protection";a:1:{i:0;s:13:"1; mode=block";}s:22:"X-Content-Type-Options";a:2:{i:0;s:7:"nosniff";i:1;s:7:"nosniff";}}s:12:"responseBody";s:39078:"<!doctype html>
+<html lang="en">
+<head>
+<meta charset=utf-8>
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<title>Dealing with HTTP (Url) Query Strings in PHP - crwlr.software Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="csrf-token" content="yolo">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="description" content="There is a new package in town called query-string. It allows to create, access and manipulate query strings for HTTP requests in a very convenient way. Here's a quick overview of what you can do with it and also how it can be used via the url package." />
+<meta name="author" content="Christian Olear" />
+<meta property="og:title" content="Dealing with HTTP (Url) Query Strings in PHP" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php" />
+<meta property="og:description" content="There is a new package in town called query-string. It allows to create, access and manipulate query strings for HTTP requests in a very convenient way. Here's a quick overview of what you can do with it and also how it can be used via the url package." />
+<meta property="og:image" content="https://www.crwlr.software/images/social/blog/query-string-package-release.png">
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:image" content="https://www.crwlr.software/images/social/blog/query-string-package-release-twitter.png" />
+<meta name="twitter:site" content="@crwlrsoft" />
+<meta name="twitter:title" content="Dealing with HTTP (Url) Query Strings in PHP" />
+<meta name="twitter:description" content="There is a new package in town called query-string. It allows to create, access and manipulate query strings for HTTP requests in a very convenient way. Here's a quick overview of what you can do with it and also how it can be used via the url package." />
+<style>/*! tailwindcss v3.0.23 | MIT License | https://tailwindcss.com*/*,:after,:before{border:0 solid #e5e7eb;box-sizing:border-box}:after,:before{--tw-content:""}html{-webkit-text-size-adjust:100%;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;line-height:1.5;-moz-tab-size:4;-o-tab-size:4;tab-size:4}body{line-height:inherit;margin:0}hr{border-top-width:1px;color:inherit;height:0}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{border-collapse:collapse;border-color:inherit;text-indent:0}button,input,optgroup,select,textarea{color:inherit;font-family:inherit;font-size:100%;line-height:inherit;margin:0;padding:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{color:#9ca3af;opacity:1}input:-ms-input-placeholder,textarea:-ms-input-placeholder{color:#9ca3af;opacity:1}input::placeholder,textarea::placeholder{color:#9ca3af;opacity:1}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{height:auto;max-width:100%}[hidden]{display:none}[multiple],[type=date],[type=datetime-local],[type=email],[type=month],[type=number],[type=password],[type=search],[type=tel],[type=text],[type=time],[type=url],[type=week],select,textarea{--tw-shadow:0 0 #0000;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:#fff;border-color:#6b7280;border-radius:0;border-width:1px;font-size:1rem;line-height:1.5rem;padding:.5rem .75rem}[multiple]:focus,[type=date]:focus,[type=datetime-local]:focus,[type=email]:focus,[type=month]:focus,[type=number]:focus,[type=password]:focus,[type=search]:focus,[type=tel]:focus,[type=text]:focus,[type=time]:focus,[type=url]:focus,[type=week]:focus,select:focus,textarea:focus{--tw-ring-inset:var(--tw-empty,/*!*/ /*!*/);--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:#2563eb;--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);border-color:#2563eb;box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);outline:2px solid transparent;outline-offset:2px}input::-moz-placeholder,textarea::-moz-placeholder{color:#6b7280;opacity:1}input:-ms-input-placeholder,textarea:-ms-input-placeholder{color:#6b7280;opacity:1}input::placeholder,textarea::placeholder{color:#6b7280;opacity:1}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-date-and-time-value{min-height:1.5em}::-webkit-datetime-edit,::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-meridiem-field,::-webkit-datetime-edit-millisecond-field,::-webkit-datetime-edit-minute-field,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-second-field,::-webkit-datetime-edit-year-field{padding-bottom:0;padding-top:0}select{-webkit-print-color-adjust:exact;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");background-position:right .5rem center;background-repeat:no-repeat;background-size:1.5em 1.5em;color-adjust:exact;padding-right:2.5rem}[multiple]{-webkit-print-color-adjust:unset;background-image:none;background-position:0 0;background-repeat:unset;background-size:initial;color-adjust:unset;padding-right:.75rem}[type=checkbox],[type=radio]{-webkit-print-color-adjust:exact;--tw-shadow:0 0 #0000;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:#fff;background-origin:border-box;border-color:#6b7280;border-width:1px;color:#2563eb;color-adjust:exact;display:inline-block;flex-shrink:0;height:1rem;padding:0;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;width:1rem}[type=checkbox]{border-radius:0}[type=radio]{border-radius:100%}[type=checkbox]:focus,[type=radio]:focus{--tw-ring-inset:var(--tw-empty,/*!*/ /*!*/);--tw-ring-offset-width:2px;--tw-ring-offset-color:#fff;--tw-ring-color:#2563eb;--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);outline:2px solid transparent;outline-offset:2px}[type=checkbox]:checked,[type=radio]:checked{background-color:currentColor;background-position:50%;background-repeat:no-repeat;background-size:100% 100%;border-color:transparent}[type=checkbox]:checked{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23fff' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E")}[type=radio]:checked{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23fff' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E")}[type=checkbox]:checked:focus,[type=checkbox]:checked:hover,[type=radio]:checked:focus,[type=radio]:checked:hover{background-color:currentColor;border-color:transparent}[type=checkbox]:indeterminate{background-color:currentColor;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3E%3C/svg%3E");background-position:50%;background-repeat:no-repeat;background-size:100% 100%;border-color:transparent}[type=checkbox]:indeterminate:focus,[type=checkbox]:indeterminate:hover{background-color:currentColor;border-color:transparent}[type=file]{background:unset;border-color:inherit;border-radius:0;border-width:0;font-size:unset;line-height:inherit;padding:0}[type=file]:focus{outline:1px auto -webkit-focus-ring-color}*,:after,:before{--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.crwlr-prose{font-weight:300;line-height:2rem}.crwlr-prose h1,.crwlr-prose h2{font-weight:500;margin-bottom:1.75rem;margin-top:3rem}.crwlr-prose h3,.crwlr-prose h4{font-weight:600;margin-bottom:1.25rem;margin-top:2.5rem}.crwlr-prose h1:first-child,.crwlr-prose h2:first-child,.crwlr-prose h3:first-child{margin-top:0}.crwlr-prose h1+h2,.crwlr-prose h2+h3,.crwlr-prose h3+h4{margin-top:.75rem}.crwlr-prose h1{font-size:2.25rem;line-height:2.5rem}.crwlr-prose h2{font-size:1.875rem;line-height:2.25rem}.crwlr-prose h3{font-size:1.5rem;line-height:2rem}.crwlr-prose h4{font-size:1.25rem;line-height:1.75rem}.crwlr-prose strong{font-weight:600}.crwlr-prose p{margin-bottom:1.25rem;margin-top:1.25rem}.crwlr-prose ul{list-style-position:outside;list-style-type:disc;margin-left:1.5rem}.crwlr-prose ul ul,.crwlr-prose ul ul ul{list-style-type:circle}.crwlr-prose a{--tw-text-opacity:1;color:rgb(12 74 110/var(--tw-text-opacity));cursor:pointer;font-weight:600}.crwlr-prose a:hover{--tw-text-opacity:1;color:rgb(12 162 107/var(--tw-text-opacity))}.crwlr-prose pre{margin-bottom:1.25rem;margin-top:1.25rem}.crwlr-prose .no-margin-top{margin-top:0}.crwlr-prose .no-margin-bottom{margin-bottom:0}.crwlr-prose code.hljs{--tw-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color),0 2px 4px -2px var(--tw-shadow-color);--tw-shadow-color:#d6d3d1;--tw-shadow:var(--tw-shadow-colored);border-radius:.5rem;box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);font-size:.875rem;line-height:1.5rem;padding:1.25rem}.crwlr-prose code:not(.hljs){--tw-bg-opacity:1;--tw-text-opacity:1;background-color:rgb(231 229 228/var(--tw-bg-opacity));border-radius:.375rem;color:rgb(6 115 75/var(--tw-text-opacity));display:inline-block;font-size:1rem;line-height:1.5rem;padding-left:.25rem;padding-right:.25rem}.crwlr-prose .date{--tw-text-opacity:1;color:rgb(120 113 108/var(--tw-text-opacity));font-size:.875rem;line-height:1.25rem}.crwlr-prose h1+.date,.crwlr-prose h2+.date{margin-bottom:1.75rem;margin-top:-1.25rem}.crwlr-toc{--tw-border-opacity:1;--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity));border-color:rgb(203 213 225/var(--tw-border-opacity));border-radius:.5rem;border-width:1px;padding:.75rem 1.25rem}.crwlr-prose .crwlr-toc ul,.crwlr-toc ul{list-style-type:none;margin-left:0}.crwlr-prose .crwlr-toc ul ul,.crwlr-toc ul ul{margin-left:1.5rem}.crwlr-toc ul li:before{--tw-text-opacity:1;color:rgb(12 162 107/var(--tw-text-opacity));content:"#";padding-right:.75rem}.crwlr-prose .crwlr-toc a,.crwlr-toc a{--tw-text-opacity:1;color:rgb(41 37 36/var(--tw-text-opacity));font-weight:400}.crwlr-prose .crwlr-toc a:hover,.crwlr-toc a:hover{--tw-text-opacity:1;color:rgb(11 140 94/var(--tw-text-opacity))}.crwlr-docs-h2:before{content:"#"}.crwlr-docs-h2:before,.crwlr-docs-h3:before{--tw-text-opacity:1;color:rgb(12 162 107/var(--tw-text-opacity));padding-right:.75rem}.crwlr-docs-h3:before{content:"##"}.invisible{visibility:hidden}.static{position:static}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.z-10{z-index:10}.z-20{z-index:20}.z-0{z-index:0}.col-span-4{grid-column:span 4/span 4}.float-right{float:right}.clear-both{clear:both}.my-5{margin-bottom:1.25rem;margin-top:1.25rem}.mx-auto{margin-left:auto;margin-right:auto}.mb-7{margin-bottom:1.75rem}.mt-7{margin-top:1.75rem}.mb-5{margin-bottom:1.25rem}.mb-10{margin-bottom:2.5rem}.mb-3{margin-bottom:.75rem}.mb-8{margin-bottom:2rem}.mb-12{margin-bottom:3rem}.ml-3{margin-left:.75rem}.mr-1{margin-right:.25rem}.ml-5{margin-left:1.25rem}.mr-2{margin-right:.5rem}.mr-3{margin-right:.75rem}.mr-5{margin-right:1.25rem}.mt-5{margin-top:1.25rem}.mt-1{margin-top:.25rem}.mr-10{margin-right:2.5rem}.-mt-20{margin-top:-5rem}.ml-7{margin-left:1.75rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.box-content{box-sizing:content-box}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-6{height:1.5rem}.h-4{height:1rem}.h-52{height:13rem}.h-10{height:2.5rem}.h-16{height:4rem}.h-9{height:2.25rem}.h-8{height:2rem}.h-80{height:20rem}.h-full{height:100%}.max-h-max{max-height:-webkit-max-content;max-height:-moz-max-content;max-height:max-content}.w-4{width:1rem}.w-40{width:10rem}.w-full{width:100%}.w-6{width:1.5rem}.w-10{width:2.5rem}.w-\[150\%\]{width:150%}.w-1\/3{width:33.333333%}.w-1\/4{width:25%}.w-\[597px\]{width:597px}.max-w-7xl{max-width:80rem}.max-w-full{max-width:100%}.grow-0{flex-grow:0}.grow{flex-grow:1}.basis-3\/5{flex-basis:60%}.basis-2\/5{flex-basis:40%}.basis-auto{flex-basis:auto}.basis-1\/3{flex-basis:33.333333%}.-rotate-12{--tw-rotate:-12deg}.-rotate-12,.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.list-inside{list-style-position:inside}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-items-stretch{justify-items:stretch}.gap-5{gap:1.25rem}.gap-7{gap:1.75rem}.overflow-hidden{overflow:hidden}.overflow-y-scroll{overflow-y:scroll}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded-md{border-radius:.375rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.rounded{border-radius:.25rem}.rounded-t-md{border-top-left-radius:.375rem;border-top-right-radius:.375rem}.rounded-b-md{border-bottom-left-radius:.375rem;border-bottom-right-radius:.375rem}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-t-8{border-top-width:8px}.border-b-4{border-bottom-width:4px}.border-stone-300{--tw-border-opacity:1;border-color:rgb(214 211 209/var(--tw-border-opacity))}.border-b-slate-300{--tw-border-opacity:1;border-bottom-color:rgb(203 213 225/var(--tw-border-opacity))}.border-t-slate-300{--tw-border-opacity:1;border-top-color:rgb(203 213 225/var(--tw-border-opacity))}.border-t-creen-400{--tw-border-opacity:1;border-top-color:rgb(58 203 150/var(--tw-border-opacity))}.border-b-creen-400{--tw-border-opacity:1;border-bottom-color:rgb(58 203 150/var(--tw-border-opacity))}.bg-gray-200{--tw-bg-opacity:1;background-color:rgb(229 231 235/var(--tw-bg-opacity))}.bg-red-600{--tw-bg-opacity:1;background-color:rgb(220 38 38/var(--tw-bg-opacity))}.bg-yellow-400{--tw-bg-opacity:1;background-color:rgb(250 204 21/var(--tw-bg-opacity))}.bg-green-500{--tw-bg-opacity:1;background-color:rgb(34 197 94/var(--tw-bg-opacity))}.bg-\[\#012B37\]{--tw-bg-opacity:1;background-color:rgb(1 43 55/var(--tw-bg-opacity))}.bg-creen-600{--tw-bg-opacity:1;background-color:rgb(12 162 107/var(--tw-bg-opacity))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity))}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85/var(--tw-bg-opacity))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252/var(--tw-bg-opacity))}.bg-slate-600{--tw-bg-opacity:1;background-color:rgb(71 85 105/var(--tw-bg-opacity))}.p-2{padding:.5rem}.p-5{padding:1.25rem}.p-3{padding:.75rem}.px-7{padding-left:1.75rem;padding-right:1.75rem}.py-3{padding-bottom:.75rem;padding-top:.75rem}.py-2{padding-bottom:.5rem;padding-top:.5rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-8{padding-bottom:2rem;padding-top:2rem}.pb-2{padding-bottom:.5rem}.pt-9{padding-top:2.25rem}.pb-10{padding-bottom:2.5rem}.pl-8{padding-left:2rem}.pb-3{padding-bottom:.75rem}.text-center{text-align:center}.align-middle{vertical-align:middle}.text-2xl{font-size:1.5rem;line-height:2rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-semibold{font-weight:600}.font-medium{font-weight:500}.font-bold{font-weight:700}.font-normal{font-weight:400}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85/var(--tw-text-opacity))}.text-creen-600{--tw-text-opacity:1;color:rgb(12 162 107/var(--tw-text-opacity))}.text-gray-200{--tw-text-opacity:1;color:rgb(229 231 235/var(--tw-text-opacity))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity))}.text-stone-700{--tw-text-opacity:1;color:rgb(68 64 60/var(--tw-text-opacity))}.text-sky-900{--tw-text-opacity:1;color:rgb(12 74 110/var(--tw-text-opacity))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81/var(--tw-text-opacity))}.text-stone-500{--tw-text-opacity:1;color:rgb(120 113 108/var(--tw-text-opacity))}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color),0 4px 6px -4px var(--tw-shadow-color)}.shadow-lg,.shadow-md{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color),0 2px 4px -2px var(--tw-shadow-color)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgba(0,0,0,.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-stone-300{--tw-shadow-color:#d6d3d1;--tw-shadow:var(--tw-shadow-colored)}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.hover\:bg-creen-700:hover{--tw-bg-opacity:1;background-color:rgb(11 140 94/var(--tw-bg-opacity))}.hover\:bg-creen-600:hover{--tw-bg-opacity:1;background-color:rgb(12 162 107/var(--tw-bg-opacity))}.hover\:text-creen-100:hover{--tw-text-opacity:1;color:rgb(198 231 218/var(--tw-text-opacity))}.hover\:text-creen-500:hover{--tw-text-opacity:1;color:rgb(29 189 131/var(--tw-text-opacity))}.hover\:text-creen-600:hover{--tw-text-opacity:1;color:rgb(12 162 107/var(--tw-text-opacity))}.hover\:text-slate-900:hover{--tw-text-opacity:1;color:rgb(15 23 42/var(--tw-text-opacity))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity))}.hover\:shadow-none:hover{--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.focus\:border-creen-400:focus{--tw-border-opacity:1;border-color:rgb(58 203 150/var(--tw-border-opacity))}.focus\:ring:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 #0000)}.focus\:ring-creen-300:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(83 213 165/var(--tw-ring-opacity))}.focus\:ring-opacity-50:focus{--tw-ring-opacity:0.5}.focus\:ring-offset-0:focus{--tw-ring-offset-width:0px}.active\:bg-creen-500:active{--tw-bg-opacity:1;background-color:rgb(29 189 131/var(--tw-bg-opacity))}.active\:text-creen-800:active{--tw-text-opacity:1;color:rgb(6 115 75/var(--tw-text-opacity))}.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}.disabled\:bg-stone-600:disabled{--tw-bg-opacity:1;background-color:rgb(87 83 78/var(--tw-bg-opacity))}@media (min-width:768px){.md\:visible{visibility:visible}.md\:top-3{top:.75rem}.md\:col-span-3{grid-column:span 3/span 3}.md\:mb-0{margin-bottom:0}.md\:ml-8{margin-left:2rem}.md\:inline{display:inline}.md\:flex{display:flex}.md\:hidden{display:none}.md\:w-\[30\%\]{width:30%}.md\:w-3\/5{width:60%}.md\:w-1\/2{width:50%}.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.md\:items-start{align-items:flex-start}.md\:gap-7{gap:1.75rem}.md\:gap-8{gap:2rem}.md\:border-r{border-right-width:1px}.md\:border-r-slate-300{--tw-border-opacity:1;border-right-color:rgb(203 213 225/var(--tw-border-opacity))}.md\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width:1024px){.crwlr-prose .lg\:no-margin-bottom{margin-bottom:0}.lg\:-mt-28{margin-top:-7rem}.lg\:grid{display:grid}.lg\:w-\[23\%\]{width:23%}.lg\:w-2\/3{width:66.666667%}.lg\:w-1\/3{width:33.333333%}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.lg\:items-stretch{align-items:stretch}.lg\:justify-items-stretch{justify-items:stretch}.lg\:gap-5{gap:1.25rem}}@media (min-width:1280px){.xl\:w-1\/5{width:20%}.xl\:w-3\/4{width:75%}} </style>
+<link rel="stylesheet" href="/css/highlight/monokai-sublime.min.css?id=41c020e9bd57b47ab0668140bb6af51b">
+</head><body id="crw" class="bg-slate-700"><svg style="display: none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<symbol id="book" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+</symbol>
+<symbol id="collection" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+</symbol>
+<symbol id="github" fill="currentColor" viewBox="0 0 121 118" stroke="currentColor">
+    <path d="M60.388,0 C27.041,0 0,27.036 0,60.388 C0,87.069 17.303,109.705 41.297,117.69 C44.315,118.249 45.423,116.38 45.423,114.785 C45.423,113.345 45.367,108.588 45.341,103.542 C28.541,107.195 24.996,96.417 24.996,96.417 C22.249,89.437 18.291,87.581 18.291,87.581 C12.812,83.833 18.704,83.91 18.704,83.91 C24.768,84.336 27.961,90.133 27.961,90.133 C33.347,99.365 42.088,96.696 45.534,95.153 C46.076,91.25 47.641,88.586 49.368,87.078 C35.955,85.551 21.855,80.373 21.855,57.234 C21.855,50.641 24.214,45.254 28.077,41.025 C27.45,39.504 25.383,33.362 28.662,25.044 C28.662,25.044 33.733,23.421 45.273,31.234 C50.09,29.896 55.256,29.225 60.388,29.202 C65.52,29.225 70.69,29.896 75.516,31.234 C87.042,23.421 92.106,25.044 92.106,25.044 C95.393,33.362 93.325,39.504 92.698,41.025 C96.57,45.254 98.913,50.641 98.913,57.234 C98.913,80.428 84.786,85.535 71.339,87.03 C73.505,88.904 75.435,92.579 75.435,98.213 C75.435,106.293 75.365,112.796 75.365,114.785 C75.365,116.392 76.452,118.275 79.513,117.682 C103.494,109.688 120.775,87.06 120.775,60.388 C120.775,27.036 93.738,0 60.388,0"></path>
+    <path d="M22.872,86.704 C22.739,87.004 22.267,87.094 21.837,86.888 C21.399,86.691 21.153,86.282 21.295,85.981 C21.425,85.672 21.898,85.586 22.335,85.793 C22.774,85.99 23.024,86.403 22.872,86.704"></path>
+    <path d="M25.318,89.432 C25.03,89.699 24.467,89.575 24.085,89.153 C23.69,88.732 23.616,88.169 23.908,87.898 C24.205,87.631 24.751,87.756 25.147,88.177 C25.542,88.603 25.619,89.162 25.318,89.432"></path>
+    <path d="M27.699,92.91 C27.329,93.167 26.724,92.926 26.35,92.389 C25.98,91.852 25.98,91.208 26.358,90.95 C26.733,90.692 27.329,90.924 27.708,91.457 C28.077,92.003 28.077,92.647 27.699,92.91"></path>
+    <path d="M30.961,96.27 C30.63,96.635 29.925,96.537 29.409,96.039 C28.881,95.552 28.734,94.861 29.066,94.496 C29.401,94.13 30.11,94.233 30.63,94.727 C31.154,95.213 31.314,95.909 30.961,96.27"></path>
+    <path d="M35.461,98.221 C35.315,98.694 34.636,98.909 33.952,98.708 C33.269,98.501 32.822,97.947 32.96,97.469 C33.102,96.993 33.784,96.769 34.473,96.984 C35.155,97.19 35.603,97.74 35.461,98.221"></path>
+    <path d="M40.403,98.583 C40.42,99.081 39.84,99.494 39.122,99.503 C38.4,99.519 37.816,99.116 37.808,98.626 C37.808,98.123 38.375,97.714 39.097,97.702 C39.815,97.688 40.403,98.088 40.403,98.583"></path>
+    <path d="M45.002,97.8 C45.088,98.286 44.589,98.785 43.876,98.918 C43.175,99.046 42.526,98.746 42.437,98.264 C42.35,97.766 42.858,97.267 43.558,97.138 C44.272,97.014 44.911,97.306 45.002,97.8"></path>
+</symbol>
+<symbol id="twitter" viewBox="0 0 400 400">
+<path fill="currentColor" d="M163.4,305.5c88.7,0,137.2-73.5,137.2-137.2c0-2.1,0-4.2-0.1-6.2c9.4-6.8,17.6-15.3,24.1-25
+c-8.6,3.8-17.9,6.4-27.7,7.6c10-6,17.6-15.4,21.2-26.7c-9.3,5.5-19.6,9.5-30.6,11.7c-8.8-9.4-21.3-15.2-35.2-15.2
+c-26.6,0-48.2,21.6-48.2,48.2c0,3.8,0.4,7.5,1.3,11c-40.1-2-75.6-21.2-99.4-50.4c-4.1,7.1-6.5,15.4-6.5,24.2
+c0,16.7,8.5,31.5,21.5,40.1c-7.9-0.2-15.3-2.4-21.8-6c0,0.2,0,0.4,0,0.6c0,23.4,16.6,42.8,38.7,47.3c-4,1.1-8.3,1.7-12.7,1.7
+c-3.1,0-6.1-0.3-9.1-0.9c6.1,19.2,23.9,33.1,45,33.5c-16.5,12.9-37.3,20.6-59.9,20.6c-3.9,0-7.7-0.2-11.5-0.7
+C110.8,297.5,136.2,305.5,163.4,305.5"/>
+</symbol>
+<symbol id="box" fill="none" stroke="currentColor" viewBox="0 0 25 18">
+    <g transform="translate(0.648926, 0.707031)">
+        <polygon stroke-linecap="round" stroke-linejoin="round" points="11.6182861 0 2.32592773 2.53967285 -1.99206185e-14 5.53771973 2.07519531 6.41015625 2.07519531 12.001709 11.6182861 15.9133301 21.0585938 12.001709 21.0585938 6.41015625 23.2336426 5.53771973 20.8463135 2.53967285"></polygon>
+        <polyline stroke-linecap="round" stroke-linejoin="round" points="2.32592773 2.53967285 11.6168213 5.23913574 20.8463135 2.53967285"></polyline>
+        <polyline stroke-linecap="round" stroke-linejoin="round" points="2.07519531 6.41015625 8.70874023 8.62097168 11.6168213 5.23913574 14.430542 8.62097168 21.0585938 6.41015625"></polyline>
+        <line x1="11.6168213" y1="5.23913574" x2="11.6168213" y2="15.9133301"></line>
+    </g>
+</symbol>
+<symbol id="calendar" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+</symbol>
+</defs>
+</svg><nav class="bg-slate-700 h-16 overflow-hidden border-b-4 border-b-creen-400">
+    <div class="w-full max-w-7xl mx-auto flex justify-between h-16 items-center px-5 z-10">
+        <a href="https://www.crwlr.software" id="logo" title="crwlr.software" class="inline-block">
+            <img src="/images/logo-nav-desktop.png" class="h-9 hidden md:inline" alt="crwlr.software logo" />
+            <img src="/images/logo-white-border.png" class="h-8 md:hidden" alt="crwlr.software logo mobile" />
+        </a>
+        <ul id="navlinks" class="flex z-20">
+            <li><a class="text-white hover:text-slate-900 text-lg md:text-xl ml-5 md:ml-8" href="https://www.crwlr.software/packages" title="Overview of PHP packages"
+>Packages</a></li>
+            <li><a class="text-white hover:text-slate-900 text-lg md:text-xl ml-5 md:ml-8" href="https://www.crwlr.software/blog" title="Blog about crawling and scraping with PHP"
+>Blog</a></li>
+            <li><a class="text-white hover:text-slate-900 text-lg md:text-xl ml-5 md:ml-8" href="https://www.crwlr.software/contact" title="Get in touch"
+>Contact</a></li>
+        </ul>
+    </div>
+    <div class="w-[150%] h-80 -rotate-12 bg-creen-600 invisible md:visible -mt-20 lg:-mt-28 z-0"></div>
+</nav>
+<main id="content" class="bg-slate-50 text-stone-700 text-lg">
+<div class="w-full max-w-7xl mx-auto p-5 pt-9 pb-10"><article class="crwlr-prose">
+<h1>Dealing with HTTP (Url) Query Strings in PHP</h1>
+<div class="date">2022-06-02</div>
+<html><body><p><strong>There is a new package in town called <a href="/packages/query-string">query-string</a>. It allows to create, access and manipulate query strings for HTTP requests in a very convenient way. Here's a quick overview of what you can do with it and also how it can be used via the url package.</strong></p>
+<p>The last months I started thinking about improving how you can change a URL's query string. It all started with <a href="https://twitter.com/chrolear/status/1511309249049153545" target="_blank" rel="noopener">this tweet</a> as an answer to <a href="https://twitter.com/heychazza" target="_blank" rel="noopener">@heychazza's</a> tweet about a nice way to build URLs in javascript.</p><p class="text-center"><a href="https://twitter.com/chrolear/status/1511309249049153545" class="inline-block" target="_blank" rel="noopener"><img src="/images/blog/2022-06-02/query-params-tweet.png" class="w-[597px]" alt="Screenshot of a tweet by @chrolear saying: In PHP you can use my url package to get and set query params as array. I Could maybe also add a method to set/add a single param 🤔"></a></p>
+<p>Then last week someone added <a href="https://github.com/crwlrsoft/url/issues/27" target="_blank" rel="noopener">this github issue</a> for the url package, and it got me thinking more about this. I liked the suggested API to get and set query params, but I found that it's not enough for more complex query strings. As query strings are also used in POST requests and sent in the request body, I now finally added a separate <a href="/packages/query-string">query-string package</a> and also implemented it in the <a href="/packages/url/v1.2/query-string">url package</a>. </p>
+<h2>Implementation in the Url Package</h2>
+<p>First off: I set the required PHP version for the new package to 8.0 as the last 7.x version (7.4) is already in the final "security fixes only" phase. The url package currently still requires only 7.2. As I probably plan another BC break for v2 of the url package, for now I just added the query-string package as suggestion to the composer.json. You can manually install it, when you're already on PHP 8.x and want to use the advanced query string functionality.</p>
+<p>When you've installed it via</p>
+<pre><code class="language-bash">composer require crwlr/query-string</code></pre>
+<p>the new <code>queryString()</code> method of the <code>Url</code> class returns an instance of the <code>Query</code> class shipped with the new package. Here's a quick usage example:</p>
+<pre><code class="language-php">$url = Url::parse('https://www.example.com/listing?page[number]=3&amp;page[size]=25');
+
+$url-&gt;queryString()
+    -&gt;get('page')
+    -&gt;set('number', '4');
+
+var_dump($url-&gt;__toString());
+
+// string(68) "https://www.example.com/listing?page%5Bnumber%5D=4&amp;page%5Bsize%5D=25"</code></pre>
+<h2>Standalone Usage</h2>
+<p>If you want to parse query strings standalone, not in the URL context, you can create an instance of the <code>Query</code> class from string or from array:</p>
+<pre><code class="language-php">$query = Query::fromString('foo=bar&amp;baz=quz');
+
+$query = Query::fromArray(['foo' =&gt; 'bar', 'baz' =&gt; 'quz']);</code></pre>
+<h3>Access</h3>
+<p>Here a quick example of different ways how to access query string params:</p>
+<pre><code class="language-php">$fooValue = Query::fromString('foo=bar&amp;baz=quz')-&gt;get('foo'); // string(3) "bar"</code></pre>
+<p>When the requested key is an array, the <code>get()</code> method returns another (child) <code>Query</code> instance that you can query further:</p>
+<pre><code class="language-php">$fooBazValue = Query::fromString('foo[bar]=1&amp;foo[baz]=2&amp;foo[quz]=3')
+    -&gt;get('foo')
+    -&gt;get('baz'); // string(1) "2"</code></pre>
+<p>You can check if a certain key exists in the query:</p>
+<pre><code class="language-php">$query = Query::fromString('foo=1&amp;bar=2');
+
+$query-&gt;has('bar'); // bool(true)
+
+$query-&gt;has('baz'); // bool(false)</code></pre>
+<p>You can get the first or last element of an indexed array:</p>
+<pre><code class="language-php">$query = Query::fromString('foo[]=1&amp;foo[]=2&amp;foo[]=3');
+
+$query-&gt;first('foo'); // string(1) "1"
+
+$query-&gt;last('foo');  // string(1) "3"</code></pre>
+<p>You can check if the value for a certain key is an array of a scalar value:</p>
+<pre><code class="language-php">$query = Query::fromString('foo[]=1&amp;foo[]=2&amp;bar=3');
+
+$query-&gt;isArray('foo'); // bool(true)
+
+$query-&gt;isScalar('foo'); // bool(false)
+
+$query-&gt;isArray('bar'); // bool(false)
+
+$query-&gt;isScalar('bar'); // bool(true)</code></pre>
+<p>And of course you can then convert the query to a string or to an array again:</p>
+<pre><code class="language-php">$query = Query::fromString('foo=bar&amp;baz=quz');
+
+$queryArray = $query-&gt;toArray();
+
+// array(2) {
+//   ["foo"]=&gt;
+//   string(3) "bar"
+//   ["baz"]=&gt;
+//   string(3) "quz"
+// }
+
+$query = Query::fromArray(['foo' =&gt; 'bar', 'baz' =&gt; 'quz']);
+
+$queryString = $query-&gt;toString(); // string(15) "foo=bar&amp;baz=quz"</code></pre>
+<h3>Manipulation</h3>
+<p>You can <strong>set</strong> a certain key:</p>
+<pre><code class="language-php">$query = Query::fromString('foo=bar')-&gt;set('baz', 'quz');
+
+// string(15) "foo=bar&amp;baz=quz"</code></pre>
+<p>Also to an array:</p>
+<pre><code class="language-php">$query = Query::fromString('foo=1&amp;bar=2')
+    -&gt;set('baz', ['3', '4']);
+
+// string(29) "foo=1&amp;bar=2&amp;baz[0]=3&amp;baz[1]=4"</code></pre>
+<p>You can also <strong>append</strong> values <strong>to</strong> an existing array:</p>
+<pre><code class="language-php">$query = Query::fromString('foo[]=1&amp;foo[]=2')
+    -&gt;appendTo('foo', '3');
+
+// string(26) "foo[0]=1&amp;foo[1]=2&amp;foo[2]=3"
+
+$query = Query::fromString('foo[bar]=1&amp;foo[baz]=2')
+    -&gt;appendTo('foo', ['quz' =&gt; '3']);
+
+// string(32) "foo[bar]=1&amp;foo[baz]=2&amp;foo[quz]=3"</code></pre>
+<p><strong>Remove</strong> keys or values from keys:</p>
+<pre><code class="language-php">$query = Query::fromString('foo[]=1&amp;foo[]=2&amp;bar=3&amp;baz=4')
+    -&gt;remove('foo');
+
+// string(11) "bar=3&amp;baz=4"
+
+$query = Query::fromString('foo[]=1&amp;foo[]=2&amp;foo[]=3&amp;foo[]=2')
+    -&gt;removeValueFrom('foo', '2');
+
+// string(17) "foo[0]=1&amp;foo[1]=3"</code></pre>
+<p>And you can <strong>filter</strong> or <strong>map</strong> queries with callback functions:</p>
+<pre><code class="language-php">$query = Query::fromString('no1=12&amp;no2=7&amp;no3=23&amp;no4=9&amp;no5=10')
+    -&gt;filter(function ($value, $key) {
+        return (int) $value &gt;= 10;
+    });
+
+// string(20) "no1=12&amp;no3=23&amp;no5=10"
+
+$query = Query::fromString('foo=1&amp;bar=2&amp;baz=3&amp;quz=4')
+    -&gt;map(function ($value) {
+        return (int) $value + 3;
+    });
+
+// string(23) "foo=4&amp;bar=5&amp;baz=6&amp;quz=7"</code></pre>
+<p>For more details have a look at the <a href="/packages/query-string/v1.0/getting-started">documentation</a>. If you're having any question or issues, don't be shy and reach out on twitter or github.</p></body></html>
+</article>
+<script type="application/ld+json">{"@context":"https:\/\/schema.org","@type":"BlogPosting","headline":"Dealing with HTTP (Url) Query Strings in PHP","author":{"@type":"Person","name":"Christian Olear","alternateName":"Otsch"},"description":"There is a new package in town called query-string. It allows to create, access and manipulate query strings for HTTP requests in a very convenient way. Here's a quick overview of what you can do with it and also how it can be used via the url package.","dateCreated":"2022-06-02","datePublished":"2022-06-02","keywords":"crwlr, url, query-string, query, string, querystring, PHP, HTTP, requests, GET, POST"}</script>
+</div>
+</main>
+<footer class="bg-slate-700 border-t-8 border-t-creen-400">
+    <div class="w-full max-w-7xl mx-auto px-5 py-8 text-white">
+
+        <p class="mb-3 text-center">
+            <a class="text-white hover:text-creen-100 cursor-pointer font-semibold mr-10"
+   href="https://twitter.com/crwlrsoft" target="_blank" rel="noopener"><svg class="inline-block align-middle h-10 w-10 mr-3"><use href="#twitter" /></svg> <span class="align-middle">Twitter</span></a>            <a class="text-white hover:text-creen-100 cursor-pointer font-semibold"
+   href="https://github.com/crwlrsoft" target="_blank" rel="noopener"><svg class="inline-block align-middle h-6 w-6 mr-3"><use href="#github" /></svg> <span class="align-middle">Github</span></a>        </p>
+
+        <p class="text-center">
+            <a class="text-white hover:text-creen-100 cursor-pointer font-semibold mr-3"
+   href="/privacy">Privacy</a> |
+            <a class="text-white hover:text-creen-100 cursor-pointer font-semibold ml-3"
+   href="/imprint">Imprint</a>        </p>
+    </div>
+</footer>
+<script src="/js/highlight.min.js?id=e46338bb5182ab5b40675e85a5cdcc41"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>
+";}

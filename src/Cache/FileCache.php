@@ -1,16 +1,17 @@
 <?php
 
-namespace Crwlr\Crawler\Loader\Http\Cache;
+namespace Crwlr\Crawler\Cache;
 
-use Crwlr\Crawler\Loader\Http\Cache\Exceptions\InvalidArgumentException;
-use Crwlr\Crawler\Loader\Http\Cache\Exceptions\MissingZlibExtensionException;
-use Crwlr\Crawler\Loader\Http\Cache\Exceptions\ReadingCacheFailedException;
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Cache\Exceptions\ReadingCacheFailedException;
 use DateInterval;
 use Exception;
 use Psr\SimpleCache\CacheInterface;
 
 class FileCache implements CacheInterface
 {
+    protected DateInterval|int $ttl = 3600;
+
     protected bool $useCompression = false;
 
     public function __construct(
@@ -25,9 +26,30 @@ class FileCache implements CacheInterface
         return $this;
     }
 
+    public function ttl(DateInterval|int $ttl): static
+    {
+        $this->ttl = $ttl;
+
+        return $this;
+    }
+
+    /**
+     * @throws MissingZlibExtensionException
+     * @throws ReadingCacheFailedException
+     */
     public function has(string $key): bool
     {
-        return file_exists($this->basePath . '/' . $key);
+        if (file_exists($this->basePath . '/' . $key)) {
+            $cacheItem = $this->getCacheItem($key);
+
+            if (!$cacheItem->isExpired()) {
+                return true;
+            }
+
+            $this->delete($key);
+        }
+
+        return false;
     }
 
     /**
@@ -37,30 +59,52 @@ class FileCache implements CacheInterface
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        if ($this->has($key)) {
-            $fileContent = $this->getFileContents($key);
+        if (file_exists($this->basePath . '/' . $key)) {
+            $cacheItem = $this->getCacheItem($key);
 
-            if ($this->useCompression) {
-                $fileContent = $this->decode($fileContent);
+            if (!$cacheItem->isExpired()) {
+                return $cacheItem->value();
             }
 
-            return HttpResponseCacheItem::fromSerialized($fileContent);
+            $this->delete($key);
         }
 
         return $default;
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws MissingZlibExtensionException
+     * @throws ReadingCacheFailedException
+     */
+    protected function getCacheItem(string $key): CacheItem
+    {
+        $fileContent = $this->getFileContents($key);
+
+        if ($this->useCompression) {
+            $fileContent = $this->decode($fileContent);
+        }
+
+        $unserialized = unserialize($fileContent);
+
+        if (!$unserialized instanceof CacheItem) {
+            $unserialized = new CacheItem($unserialized, $key);
+        }
+
+        return $unserialized;
+    }
+
+    /**
      * @throws MissingZlibExtensionException
      */
     public function set(string $key, mixed $value, DateInterval|int|null $ttl = null): bool
     {
-        if (!$value instanceof HttpResponseCacheItem) {
-            throw new InvalidArgumentException('This cache stores only HttpResponseCacheItem objects.');
+        if (!$value instanceof CacheItem) {
+            $value = new CacheItem($value, $key, $ttl ?? $this->ttl);
+        } elseif ($value->key() !== $key) {
+            $value = new CacheItem($value->value(), $key, $ttl ?? $value->ttl);
         }
 
-        $content = $value->serialize();
+        $content = serialize($value);
 
         if ($this->useCompression) {
             $content = $this->encode($content);
@@ -107,7 +151,6 @@ class FileCache implements CacheInterface
 
     /**
      * @param iterable<mixed> $values
-     * @throws InvalidArgumentException
      * @throws MissingZlibExtensionException
      */
     public function setMultiple(iterable $values, DateInterval|int|null $ttl = null): bool

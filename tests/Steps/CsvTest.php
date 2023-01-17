@@ -5,8 +5,6 @@ namespace tests\Steps;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Csv;
-use Crwlr\Crawler\Steps\FilterRules\Comparison;
-use Crwlr\Crawler\Steps\FilterRules\StringCheck;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
