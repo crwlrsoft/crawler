@@ -2,8 +2,11 @@
 
 namespace tests;
 
+use tests\_Stubs\LoaderCollectingStep;
+use tests\_Stubs\MultiLoaderCrawler;
+use tests\_Stubs\PhantasyLoader;
 use Crwlr\Crawler\Crawler;
-use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
@@ -214,6 +217,98 @@ test('You can add steps and the Crawler class passes on its Logger and also its 
 
     $crawler->addStep($step);
 });
+
+test('you can define multiple loaders', function () {
+    $crawler = new MultiLoaderCrawler();
+
+    expect($crawler->getLoader())->toBeArray();
+
+    expect($crawler->getLoader())->toHaveCount(3);
+
+    expect($crawler->getLoader())->toHaveKey('http');
+
+    expect($crawler->getLoader()['http'])->toBeInstanceOf(HttpLoader::class); // @phpstan-ignore-line
+
+    expect($crawler->getLoader())->toHaveKey('phantasy');
+
+    expect($crawler->getLoader()['phantasy'])->toBeInstanceOf(PhantasyLoader::class); // @phpstan-ignore-line
+
+    expect($crawler->getLoader())->toHaveKey('phantasy2');
+
+    expect($crawler->getLoader()['phantasy2'])->toBeInstanceOf(PhantasyLoader::class); // @phpstan-ignore-line
+});
+
+it('passes each of its loaders one by one to its steps', function () {
+    $step = new LoaderCollectingStep();
+
+    (new MultiLoaderCrawler())->addStep($step);
+
+    expect($step->loaders)->toHaveCount(3);
+
+    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
+
+    expect($step->loaders[1])->toBeInstanceOf(PhantasyLoader::class);
+
+    expect($step->loaders[2])->toBeInstanceOf(PhantasyLoader::class);
+});
+
+it('passes on all the loaders to a group step which by default passes all of them to child loading steps', function () {
+    $crawler = new MultiLoaderCrawler();
+
+    $step = new LoaderCollectingStep();
+
+    $crawler
+        ->addStep(
+            Crawler::group()
+                ->addStep(Http::get())
+                ->addStep($step)
+        );
+
+    expect($step->loaders)->toHaveCount(3);
+
+    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
+
+    expect($step->loaders[1])->toBeInstanceOf(PhantasyLoader::class);
+
+    expect($step->loaders[2])->toBeInstanceOf(PhantasyLoader::class);
+});
+
+it('passes only a certain loader when user choses one by calling useLoader() on a step', function () {
+    $step = new LoaderCollectingStep();
+
+    (new MultiLoaderCrawler())->addStep($step->useLoader('http'));
+
+    expect($step->loaders)->toHaveCount(1);
+
+    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
+});
+
+it('passes only a certain loader when user choses one by calling useLoader() on a step inside a group', function () {
+    $crawler = new MultiLoaderCrawler();
+
+    $step = new LoaderCollectingStep();
+
+    $crawler
+        ->addStep(
+            Crawler::group()
+                ->addStep(Http::get())
+                ->addStep($step->useLoader('http'))
+        );
+
+    expect($step->loaders)->toHaveCount(1);
+
+    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
+});
+
+it(
+    'throws an UnknownLoaderKeyException when user wants to chose a loader that was not defined in the crawlers ' .
+    'loader() method',
+    function () {
+        $step = new LoaderCollectingStep();
+
+        (new MultiLoaderCrawler())->addStep($step->useLoader('https'));
+    }
+)->throws(UnknownLoaderKeyException::class);
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
     $step1 = helper_getValueReturningStep('step1 output')->addToResult('step1');

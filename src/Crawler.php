@@ -3,6 +3,8 @@
 namespace Crwlr\Crawler;
 
 use Closure;
+use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
+use Crwlr\Crawler\Loader\AddLoadersToStepAction;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Group;
@@ -18,7 +20,10 @@ abstract class Crawler
 {
     protected UserAgentInterface $userAgent;
 
-    protected LoaderInterface $loader;
+    /**
+     * @var LoaderInterface|array<string, LoaderInterface>
+     */
+    protected LoaderInterface|array $loader;
 
     protected LoggerInterface $logger;
 
@@ -38,13 +43,20 @@ abstract class Crawler
     public function __construct()
     {
         $this->userAgent = $this->userAgent();
+
         $this->logger = $this->logger();
+
         $this->loader = $this->loader($this->userAgent, $this->logger);
     }
 
     abstract protected function userAgent(): UserAgentInterface;
 
-    abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
+    /**
+     * @param UserAgentInterface $userAgent
+     * @param LoggerInterface $logger
+     * @return LoaderInterface|array<string, LoaderInterface>
+     */
+    abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array;
 
     public static function group(): Group
     {
@@ -71,7 +83,10 @@ abstract class Crawler
         return $this->logger;
     }
 
-    public function getLoader(): LoaderInterface
+    /**
+     * @return LoaderInterface|array<string, LoaderInterface>
+     */
+    public function getLoader(): LoaderInterface|array
     {
         return $this->loader;
     }
@@ -106,7 +121,7 @@ abstract class Crawler
      * @param string|StepInterface $stepOrResultKey
      * @param StepInterface|null $step
      * @return $this
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|UnknownLoaderKeyException
      */
     public function addStep(string|StepInterface $stepOrResultKey, ?StepInterface $step = null): static
     {
@@ -120,9 +135,7 @@ abstract class Crawler
 
         $step->addLogger($this->logger);
 
-        if (method_exists($step, 'addLoader')) {
-            $step->addLoader($this->loader);
-        }
+        (new AddLoadersToStepAction($this->loader, $step))->invoke();
 
         $this->steps[] = $step;
 

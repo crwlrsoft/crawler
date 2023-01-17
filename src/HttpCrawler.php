@@ -9,7 +9,10 @@ use Psr\Log\LoggerInterface;
 
 abstract class HttpCrawler extends Crawler
 {
-    protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
+    /**
+     * @return LoaderInterface|array<string, LoaderInterface>
+     */
+    protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
     {
         return new HttpLoader($userAgent, logger: $logger);
     }

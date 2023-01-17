@@ -1,6 +1,6 @@
 <?php
 
-namespace _Integration\Http;
+namespace tests\_Integration\Http;
 
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\HttpLoader;

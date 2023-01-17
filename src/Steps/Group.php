@@ -2,7 +2,9 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\AddLoadersToStepAction;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
@@ -18,7 +20,10 @@ final class Group extends BaseStep
      */
     private array $steps = [];
 
-    private ?LoaderInterface $loader = null;
+    /**
+     * @var LoaderInterface|array<string, LoaderInterface>|null
+     */
+    private null|LoaderInterface|array $loader = null;
 
     /**
      * @param Input $input
@@ -133,8 +138,23 @@ final class Group extends BaseStep
 
         foreach ($this->steps as $step) {
             if (method_exists($step, 'addLoader')) {
-                $step->addLoader($loader);
+                (new AddLoadersToStepAction($loader, $step))->invoke();
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param LoaderInterface[] $loaders
+     * @throws UnknownLoaderKeyException
+     */
+    public function addLoaders(array $loaders): self
+    {
+        $this->loader = $loaders;
+
+        foreach ($this->steps as $step) {
+            (new AddLoadersToStepAction($this->loader, $step))->invoke();
         }
 
         return $this;

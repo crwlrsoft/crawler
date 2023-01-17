@@ -14,9 +14,13 @@ use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
+use Crwlr\Crawler\UserAgents\UserAgent;
 use Exception;
 use Generator;
 use Mockery;
+
+use tests\_Stubs\LoaderCollectingStep;
+use tests\_Stubs\PhantasyLoader;
 
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
@@ -118,6 +122,23 @@ it('also passes on a new loader to all steps when it is added after the steps', 
     $group->addStep($step2);
 
     $group->addLoader(new HttpLoader(new BotUserAgent('MyBot')));
+});
+
+test('you can add multiple loaders', function () {
+    $group = new Group();
+
+    $loaders = [
+        'http' => new HttpLoader(new UserAgent('Youseragent')),
+        'phantasy' => new PhantasyLoader(new UserAgent('Youseragent')),
+    ];
+
+    $step = new LoaderCollectingStep();
+
+    $group->addStep($step);
+
+    $group->addLoaders($loaders);
+
+    expect($step->loaders)->toHaveCount(2);
 });
 
 test('The factory method returns a Group object instance', function () {

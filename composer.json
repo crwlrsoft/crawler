@@ -61,6 +61,11 @@
             "Crwlr\\Crawler\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "tests\\": "tests/"
+        }
+    },
     "scripts": {
         "test": "pest --parallel --exclude-group integration",
         "test-integration": "pest --group integration",

@@ -82,6 +82,9 @@ class Crawler extends HttpCrawler
         return new UserAgent('SomeUserAgent');
     }
 
+    /**
+     * This method is here for the return type, so phpstan doesn't complain.
+     */
     public function getLoader(): TestLoader
     {
         return parent::getLoader(); // @phpstan-ignore-line
