@@ -1,6 +1,6 @@
 <?php
 
-namespace _Integration\Http;
+namespace tests\_Integration\Http;
 
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\LoaderInterface;
@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
 
-class Crawler extends HttpCrawler
+class PublisherExampleCrawler extends HttpCrawler
 {
     public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
@@ -28,7 +28,7 @@ class Crawler extends HttpCrawler
 }
 
 test('Http steps can also deal with multiple URLs as one array input', function () {
-    $crawler = new Crawler();
+    $crawler = new PublisherExampleCrawler();
 
     $crawler
         ->input('http://localhost:8000/publisher/authors')

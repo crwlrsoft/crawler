@@ -4,3 +4,5 @@ vendor
 .php-cs-fixer.cache
 .phpunit.result.cache
 /cachedir
+/tests/Loader/Http/_cachedir/*
+!/tests/Loader/Http/_cachedir/.gitkeep

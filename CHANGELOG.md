@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * __BREAKING__: The `FileCache` now also respects the `ttl` (time to live) argument and by default it is one hour (3600 seconds). If you're using the cache and expect the items to live (basically) forever, please provide a high enough value for default the time to live. When you try to get a cache item that is already expired, it (the file) is immediately deleted.
+* You can now have multiple different loaders in a `Crawler`. To use this, return an array containing your loaders from the protected `Crawler::loader()` method with keys to name them. You can then selectively use them by calling the `Step::useLoader()` method on a loading step with the key of the loader it should use.
 
 ### Removed
-* The loop feature. The only real world use case should be paginating listings and this should be solved with the Paginator feature.
+* __BREAKING__: The loop feature. The only real world use case should be paginating listings and this should be solved with the Paginator feature.
 
 ## [0.7.0] - 2023-01-13
 

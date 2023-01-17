@@ -1,6 +1,6 @@
 <?php
 
-namespace Crwlr\Crawler\Steps\Sitemap;
+namespace tests\Steps\Sitemap;
 
 use Crwlr\Crawler\Steps\Sitemap;
 
