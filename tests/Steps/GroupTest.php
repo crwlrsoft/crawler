@@ -455,79 +455,24 @@ it(
     }
 );
 
-it('doesn\'t output anything when the dontCascade method was called', function () {
-    $step1 = helper_getValueReturningStep('something');
-
-    $step2 = new class () extends Step {
-        protected function invoke(mixed $input): Generator
-        {
-            foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as $number) {
-                yield $number;
-            }
-        }
-    };
-
-    $group = (new Group())
-        ->addStep('foo', $step1)
-        ->addStep('bar', $step2);
-
-    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(10);
-
-    $group->dontCascade();
-
-    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(0);
-
-    // Also doesn't yield when a step is added after the dontCascade() call
-    $group->addStep(helper_getValueReturningStep('something'));
-
-    expect(helper_invokeStepWithInput($group, 'foo'))->toHaveCount(0);
-});
-
-test('It doesn\'t return the output of a step when the dontCascade method was called on that step', function () {
-    $step1 = helper_getValueReturningStep('foo');
-
-    $step2 = helper_getValueReturningStep('bar')->dontCascade();
-
-    $group = (new Group())
-        ->addStep('foo', $step1)
-        ->addStep($step2);
-
-    $outputs = helper_invokeStepWithInput($group, 'foo');
-
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe(['foo' => 'foo']);
-});
-
-test(
-    'It doesn\'t contain the output of a step when the dontCascade method was called on that step and the Group\'s ' .
-    'output is combined',
+it(
+    'excludes the output of a step from the combined group output, when the excludeFromGroupOutput() method was called',
     function () {
-        $step1 = helper_getValueReturningStep('abc');
+        $step1 = helper_getValueReturningStep(['foo' => 'one']);
 
-        $step2 = helper_getValueReturningStep('def')->dontCascade();
+        $step2 = helper_getValueReturningStep(['bar' => 'two'])->excludeFromGroupOutput();
 
-        $group = (new Group())
-            ->addStep('one', $step1)
-            ->addStep('two', $step2);
+        $step3 = helper_getValueReturningStep(['baz' => 'three']);
 
-        $outputs = helper_invokeStepWithInput($group, 'foo');
+        $group = helper_addStepsToGroup(new Group(), $step1, $step2, $step3);
+
+        $outputs = helper_invokeStepWithInput($group);
 
         expect($outputs)->toHaveCount(1);
 
-        expect($outputs[0]->get())->toBe(['one' => 'abc']);
+        expect($outputs[0]->get())->toBe(['foo' => 'one', 'baz' => 'three']);
     }
 );
-
-it('knows if it will cascade its output', function () {
-    $group = new Group();
-
-    expect($group->cascades())->toBeTrue();
-
-    $group->dontCascade();
-
-    expect($group->cascades())->toBeFalse();
-});
 
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
     $step1 = helper_getValueReturningStep(' rocks')

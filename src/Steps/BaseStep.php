@@ -53,8 +53,6 @@ abstract class BaseStep implements StepInterface
      */
     protected array $uniqueOutputKeys = [];
 
-    protected bool $cascades = true;
-
     /**
      * @var FilterInterface[]
      */
@@ -116,18 +114,6 @@ abstract class BaseStep implements StepInterface
         $this->useInputKey = $key;
 
         return $this;
-    }
-
-    final public function dontCascade(): static
-    {
-        $this->cascades = false;
-
-        return $this;
-    }
-
-    final public function cascades(): bool
-    {
-        return $this->cascades;
     }
 
     final public function uniqueInputs(?string $key = null): static

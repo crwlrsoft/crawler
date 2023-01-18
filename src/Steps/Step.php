@@ -19,6 +19,8 @@ abstract class Step extends BaseStep
 {
     protected ?Closure $updateInputUsingOutput = null;
 
+    protected bool $excludeFromGroupOutput = false;
+
     protected ?int $maxOutputs = null;
 
     protected int $currentOutputCount = 0;
@@ -58,6 +60,18 @@ abstract class Step extends BaseStep
         $this->updateInputUsingOutput = $closure;
 
         return $this;
+    }
+
+    public function excludeFromGroupOutput(): static
+    {
+        $this->excludeFromGroupOutput = true;
+
+        return $this;
+    }
+
+    public function shouldOutputBeExcludedFromGroupOutput(): bool
+    {
+        return $this->excludeFromGroupOutput;
     }
 
     final public function maxOutputs(int $maxOutputs): static

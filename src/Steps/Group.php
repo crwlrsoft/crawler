@@ -50,7 +50,7 @@ final class Group extends BaseStep
                     $inputForStepInvocation = $step->callUpdateInputUsingOutput($inputForStepInvocation, $output);
                 }
 
-                if ($this->cascades() && $step->cascades()) {
+                if ($this->includeOutput($step)) {
                     $combinedOutput = $this->addOutputToCombinedOutputs(
                         $output->get(),
                         $combinedOutput,
@@ -61,9 +61,7 @@ final class Group extends BaseStep
             }
         }
 
-        if ($this->cascades()) {
-            yield from $this->prepareCombinedOutputs($combinedOutput, $input);
-        }
+        yield from $this->prepareCombinedOutputs($combinedOutput, $input);
     }
 
     public function addsToOrCreatesResult(): bool
@@ -158,6 +156,18 @@ final class Group extends BaseStep
         }
 
         return $this;
+    }
+
+    protected function includeOutput(StepInterface $step): bool
+    {
+        if (
+            !method_exists($step, 'shouldOutputBeExcludedFromGroupOutput') ||
+            $step->shouldOutputBeExcludedFromGroupOutput() === false
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

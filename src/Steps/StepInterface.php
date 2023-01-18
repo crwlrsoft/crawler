@@ -38,10 +38,6 @@ interface StepInterface
 
     public function uniqueOutputs(?string $key = null): static;
 
-    public function dontCascade(): static;
-
-    public function cascades(): bool;
-
     public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;
 
     public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;

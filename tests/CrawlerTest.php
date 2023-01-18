@@ -538,26 +538,6 @@ test(
     }
 );
 
-it('doesn\'t pass on outputs of one step to the next one when dontCascade was called', function () {
-    $step1 = helper_getInputReturningStep();
-
-    $step1->dontCascade();
-
-    $step2 = Mockery::mock(StepInterface::class);
-
-    $step2->shouldReceive('addLogger', 'addsToOrCreatesResult', 'resetAfterRun');
-
-    $step2->shouldNotReceive('invokeStep');
-
-    $crawler = helper_getDummyCrawler()
-        ->addStep($step1)
-        ->addStep($step2);
-
-    $crawler->input('anything');
-
-    $crawler->runAndTraverse();
-});
-
 test('When final steps return an array you get all values in the defined Result resource', function () {
     $crawler = helper_getDummyCrawler();
 

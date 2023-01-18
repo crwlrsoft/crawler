@@ -526,32 +526,6 @@ it('is possible that a step does not produce any output at all', function () {
     expect($output[0]->get())->toBe('bar');
 });
 
-it('still returns output from invokeStep when dontCascade was called', function () {
-    // Explanation: the Crawler (and Group) class has to take care of not cascading the output to the next step.
-    // But it still needs the output of a step that shouldn't cascade in some cases.
-    $step = helper_getValueReturningStep('something');
-
-    $output = helper_invokeStepWithInput($step);
-
-    expect($output)->toHaveCount(1);
-
-    $step->dontCascade();
-
-    $output = helper_invokeStepWithInput($step);
-
-    expect($output)->toHaveCount(1);
-});
-
-it('tells you if its output shall be cascaded to the next step', function () {
-    $step = helper_getInputReturningStep();
-
-    expect($step->cascades())->toBeTrue();
-
-    $step->dontCascade();
-
-    expect($step->cascades())->toBeFalse();
-});
-
 test('You can add and call an updateInputUsingOutput callback', function () {
     $step = helper_getValueReturningStep('something');
 
