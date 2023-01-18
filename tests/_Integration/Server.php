@@ -77,6 +77,22 @@ if (str_starts_with($route, '/too-many-requests')) {
     return include(__DIR__ . '/_Server/TooManyRequests.php');
 }
 
+if (str_starts_with($route, '/service-unavailable')) {
+    if (str_ends_with($route, '/succeed-on-second-attempt')) {
+        session_start();
+
+        $isSecondRequest = isset($_SESSION["isSecondRequest"]) && $_SESSION["isSecondRequest"] === true;
+
+        if (!$isSecondRequest) {
+            $_SESSION["isSecondRequest"] = true;
+        }
+    }
+
+    $retryAfter = str_ends_with($route, '/retry-after') ? 2 : null;
+
+    return include(__DIR__ . '/_Server/TooManyRequests.php');
+}
+
 if (str_starts_with($route, '/client-error-response')) {
     $responseCodes = [400, 401, 404, 405, 410];
 
@@ -86,9 +102,9 @@ if (str_starts_with($route, '/client-error-response')) {
 }
 
 if (str_starts_with($route, '/server-error-response')) {
-    $responseCodes = [500, 502, 503, 505, 521];
+    $responseCodes = [500, 502, 505, 521];
 
-    http_response_code($responseCodes[rand(0, 4)]);
+    http_response_code($responseCodes[rand(0, 3)]);
 
     return;
 }
