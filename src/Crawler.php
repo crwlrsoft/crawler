@@ -214,7 +214,7 @@ abstract class Crawler
 
         $nextStep = $this->nextStep($stepIndex);
 
-        if ($step->cascades() && $nextStep) {
+        if ($nextStep) {
             foreach ($outputs as $output) {
                 if ($this->monitorMemoryUsage !== false) {
                     $this->logMemoryUsage();
@@ -228,7 +228,7 @@ abstract class Crawler
                     $stepIndex + 1
                 );
             }
-        } elseif ($step->cascades()) {
+        } else {
             if ($this->outputHook) {
                 foreach ($outputs as $output) {
                     $this->outputHook->call($this, $output, $stepIndex, $step);
