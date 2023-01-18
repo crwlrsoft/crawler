@@ -5,9 +5,9 @@ namespace Crwlr\Crawler\Loader\Http;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\RetryErrorResponseHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
-use Crwlr\Crawler\Loader\Http\Politeness\TooManyRequestsHandler;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
@@ -79,10 +79,12 @@ class HttpLoader extends Loader
         ?ClientInterface $httpClient = null,
         ?LoggerInterface $logger = null,
         ?Throttler $throttler = null,
-        protected TooManyRequestsHandler $tooManyRequestsHandler = new TooManyRequestsHandler(),
+        protected RetryErrorResponseHandler $retryErrorResponseHandler = new RetryErrorResponseHandler(),
         array $defaultGuzzleClientConfig = [],
     ) {
         parent::__construct($userAgent, $logger);
+
+        $this->retryErrorResponseHandler->setLogger($this->logger);
 
         $this->httpClient = $httpClient ?? new Client($this->mergeClientConfigWithDefaults($defaultGuzzleClientConfig));
 
@@ -403,15 +405,14 @@ class HttpLoader extends Loader
 
         $respondedRequest = $this->loadViaClientOrHeadlessBrowser($request);
 
-        if ($respondedRequest->response->getStatusCode() === 429) {
-            $respondedRequest = $this->tooManyRequestsHandler->handleRetries(
+        if ($this->retryErrorResponseHandler->shouldWait($respondedRequest)) {
+            $respondedRequest = $this->retryErrorResponseHandler->handleRetries(
                 $respondedRequest,
                 (function () use ($request) {
                     $request = $this->prepareRequest($request);
 
                     return $this->loadViaClientOrHeadlessBrowser($request);
                 })->bindTo($this),
-                $this->logger,
             );
         }
 
