@@ -52,7 +52,7 @@ class SimpleCsvFileStore extends Store
             ($this->filePrefix ? $this->filePrefix . '-' : '') . $this->createTimestamp . '.csv';
     }
 
-    public function anyPropertyIsArray(Result $result): bool
+    protected function anyPropertyIsArray(Result $result): bool
     {
         foreach ($result->toArray() as $value) {
             if (is_array($value)) {
@@ -67,7 +67,7 @@ class SimpleCsvFileStore extends Store
      * @param mixed[] $result
      * @return array<string|int>
      */
-    public function flattenResultArray(array $result): array
+    protected function flattenResultArray(array $result): array
     {
         foreach ($result as $key => $value) {
             if (is_array($value)) {
