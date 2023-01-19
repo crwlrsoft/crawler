@@ -67,6 +67,8 @@ class HttpLoader extends Loader
         'timeout' => 60,
     ];
 
+    protected int $maxRedirects = 10;
+
     protected bool $retryCachedErrorResponses = false;
 
     protected bool $writeOnlyCache = false;
@@ -274,6 +276,13 @@ class HttpLoader extends Loader
         return $this;
     }
 
+    public function setMaxRedirects(int $maxRedirects): static
+    {
+        $this->maxRedirects = $maxRedirects;
+
+        return $this;
+    }
+
     public function robotsTxt(): RobotsTxtHandler
     {
         return $this->robotsTxtHandler;
@@ -450,7 +459,7 @@ class HttpLoader extends Loader
         ?RespondedRequest $respondedRequest = null,
         int $redirectNumber = 0,
     ): RespondedRequest {
-        if ($redirectNumber >= 10) {
+        if ($redirectNumber >= $this->maxRedirects) {
             throw new LoadingException('Too many redirects.');
         }
 

@@ -134,3 +134,25 @@ if (str_starts_with($route, '/publisher')) {
         return include(__DIR__ . '/_Server/Publisher/BookDetailPage.php');
     }
 }
+
+if (str_starts_with($route, '/redirect')) {
+    $redirectNo = (int) ($_GET['no'] ?? 0);
+
+    $stopAt = $_GET['stopAt'] ?? null;
+
+    if ($stopAt && is_numeric($stopAt)) {
+        $stopAt = (int) $stopAt;
+
+        if ($redirectNo >= $stopAt) {
+            echo 'success after ' . $redirectNo . ' redirects';
+
+            return;
+        } else {
+            $stopAt = '&stopAt=' . $stopAt;
+        }
+    } else {
+        $stopAt = '';
+    }
+
+    header('Location: http://localhost:8000/redirect?no=' . ($redirectNo + 1) . $stopAt);
+}
