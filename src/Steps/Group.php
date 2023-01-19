@@ -224,6 +224,8 @@ final class Group extends BaseStep
         foreach ($combinedOutputs as $combinedOutput) {
             $outputData = $this->normalizeCombinedOutputs($combinedOutput);
 
+            $outputData = $this->applyRefiners($outputData, $input->get());
+
             if ($this->passesAllFilters($outputData)) {
                 if ($this->keepInputData === true) {
                     $outputData = $this->addInputDataToOutputData($input->get(), $outputData);

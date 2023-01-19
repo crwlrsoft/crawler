@@ -2,11 +2,13 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
+use Crwlr\Crawler\Steps\Refiners\RefinerInterface;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -57,6 +59,11 @@ abstract class BaseStep implements StepInterface
      * @var FilterInterface[]
      */
     protected array $filters = [];
+
+    /**
+     * @var array<Closure|RefinerInterface|array{ key: string, refiner: Closure|RefinerInterface}>
+     */
+    protected array $refiners = [];
 
     protected bool $keepInputData = false;
 
@@ -167,6 +174,29 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    public function refineOutput(
+        string|Closure|RefinerInterface $keyOrRefiner,
+        null|Closure|RefinerInterface $refiner = null
+    ): static {
+        if ($refiner instanceof RefinerInterface && $this->logger) {
+            $refiner->addLogger($this->logger);
+        } elseif ($keyOrRefiner instanceof RefinerInterface && $this->logger) {
+            $keyOrRefiner->addLogger($this->logger);
+        }
+
+        if (is_string($keyOrRefiner) && $refiner === null) {
+            throw new InvalidArgumentException(
+                'You have to provide a Refiner (Closure or instance of RefinerInterface)'
+            );
+        } elseif (is_string($keyOrRefiner)) {
+            $this->refiners[] = ['key' => $keyOrRefiner, 'refiner' => $refiner];
+        } else {
+            $this->refiners[] = $keyOrRefiner;
+        }
+
+        return $this;
+    }
+
     public function outputKey(string $key): static
     {
         $this->outputKey = $key;
@@ -250,6 +280,37 @@ abstract class BaseStep implements StepInterface
         }
 
         return true;
+    }
+
+    protected function applyRefiners(mixed $outputValue, mixed $inputValue): mixed
+    {
+        foreach ($this->refiners as $refiner) {
+            $outputValueToRefine = $outputValue;
+
+            if (is_array($refiner) && isset($outputValue[$refiner['key']])) {
+                $outputValueToRefine = $outputValue[$refiner['key']];
+            }
+
+            if ($refiner instanceof Closure) {
+                $refinedOutputValue = $refiner->call($this, $outputValueToRefine, $inputValue);
+            } elseif ($refiner instanceof RefinerInterface) {
+                $refinedOutputValue = $refiner->refine($outputValueToRefine);
+            } else {
+                if ($refiner['refiner'] instanceof Closure) {
+                    $refinedOutputValue = $refiner['refiner']->call($this, $outputValueToRefine, $inputValue);
+                } else {
+                    $refinedOutputValue = $refiner['refiner']->refine($outputValueToRefine);
+                }
+            }
+
+            if (is_array($refiner) && isset($outputValue[$refiner['key']])) {
+                $outputValue[$refiner['key']] = $refinedOutputValue;
+            } else {
+                $outputValue = $refinedOutputValue;
+            }
+        }
+
+        return $outputValue;
     }
 
     /**
