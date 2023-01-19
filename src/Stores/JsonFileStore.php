@@ -7,9 +7,9 @@ use Exception;
 
 class JsonFileStore extends Store
 {
-    private int $createTimestamp;
+    protected int $createTimestamp;
 
-    public function __construct(private readonly string $storePath, private readonly ?string $filePrefix = null)
+    public function __construct(protected readonly string $storePath, protected readonly ?string $filePrefix = null)
     {
         $this->createTimestamp = time();
 

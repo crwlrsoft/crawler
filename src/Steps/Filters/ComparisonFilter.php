@@ -7,8 +7,10 @@ use Exception;
 
 class ComparisonFilter extends Filter
 {
-    public function __construct(private readonly ComparisonFilterRule $filterRule, private readonly mixed $compareTo)
-    {
+    public function __construct(
+        protected readonly ComparisonFilterRule $filterRule,
+        protected readonly mixed $compareTo,
+    ) {
     }
 
     /**

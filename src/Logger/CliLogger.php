@@ -5,51 +5,52 @@ namespace Crwlr\Crawler\Logger;
 use DateTime;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Stringable;
 use UnexpectedValueException;
 
 class CliLogger implements LoggerInterface
 {
-    public function emergency(string|\Stringable $message, array $context = []): void
+    public function emergency(string|Stringable $message, array $context = []): void
     {
         $this->log('emergency', $message, $context);
     }
 
-    public function alert(string|\Stringable $message, array $context = []): void
+    public function alert(string|Stringable $message, array $context = []): void
     {
         $this->log('alert', $message, $context);
     }
 
-    public function critical(string|\Stringable $message, array $context = []): void
+    public function critical(string|Stringable $message, array $context = []): void
     {
         $this->log('critical', $message, $context);
     }
 
-    public function error(string|\Stringable $message, array $context = []): void
+    public function error(string|Stringable $message, array $context = []): void
     {
         $this->log('error', $message, $context);
     }
 
-    public function warning(string|\Stringable $message, array $context = []): void
+    public function warning(string|Stringable $message, array $context = []): void
     {
         $this->log('warning', $message, $context);
     }
 
-    public function notice(string|\Stringable $message, array $context = []): void
+    public function notice(string|Stringable $message, array $context = []): void
     {
         $this->log('notice', $message, $context);
     }
 
-    public function info(string|\Stringable $message, array $context = []): void
+    public function info(string|Stringable $message, array $context = []): void
     {
         $this->log('info', $message, $context);
     }
 
-    public function debug(string|\Stringable $message, array $context = []): void
+    public function debug(string|Stringable $message, array $context = []): void
     {
         $this->log('debug', $message, $context);
     }
 
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, string|Stringable $message, array $context = []): void
     {
         if (!is_string($level)) {
             throw new InvalidArgumentException('Level must be string.');
@@ -63,17 +64,17 @@ class CliLogger implements LoggerInterface
         echo $message . "\n";
     }
 
-    private function printTimeAndLevel(string $level): void
+    protected function printTimeAndLevel(string $level): void
     {
         echo $this->time() . " \033[0;" . $this->levelColor($level) . "m[" . strtoupper($level) . "]\033[0m ";
     }
 
-    private function time(): string
+    protected function time(): string
     {
         return (new DateTime())->format('H:i:s:u');
     }
 
-    private function levelColor(string $level): string
+    protected function levelColor(string $level): string
     {
         $levelColors = [
             'emergency' => '91', // bright red

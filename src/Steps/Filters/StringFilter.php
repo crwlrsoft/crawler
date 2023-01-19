@@ -7,8 +7,10 @@ use Exception;
 
 class StringFilter extends Filter
 {
-    public function __construct(private readonly StringFilterRule $filterRule, private readonly string $filterString)
-    {
+    public function __construct(
+        protected readonly StringFilterRule $filterRule,
+        protected readonly string $filterString,
+    ) {
     }
 
     /**

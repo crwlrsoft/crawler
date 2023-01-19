@@ -399,7 +399,7 @@ class HttpLoader extends Loader
      * @throws OperationTimedOut
      * @throws Throwable
      */
-    private function waitForGoAndLoadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
+    protected function waitForGoAndLoadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
         $this->throttler->waitForGo($request->getUri());
 
@@ -432,7 +432,7 @@ class HttpLoader extends Loader
      * @throws OperationTimedOut
      * @throws Throwable
      */
-    private function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
+    protected function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
         if ($this->useHeadlessBrowser) {
             return $this->loadViaHeadlessBrowser($request);
@@ -445,7 +445,7 @@ class HttpLoader extends Loader
      * @throws ClientExceptionInterface
      * @throws LoadingException
      */
-    private function handleRedirects(
+    protected function handleRedirects(
         RequestInterface  $request,
         ?RespondedRequest $respondedRequest = null,
         int $redirectNumber = 0,
@@ -495,7 +495,7 @@ class HttpLoader extends Loader
      * @throws OperationTimedOut
      * @throws Throwable
      */
-    private function loadViaHeadlessBrowser(RequestInterface $request): RespondedRequest
+    protected function loadViaHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
         $browser = $this->getBrowser($request);
 
@@ -528,7 +528,7 @@ class HttpLoader extends Loader
     /**
      * @throws Exception
      */
-    private function getBrowser(RequestInterface $request): Browser
+    protected function getBrowser(RequestInterface $request): Browser
     {
         if (!$this->headlessBrowser || $this->headlessBrowserOptionsDirty) {
             $this->headlessBrowser?->close();
@@ -550,7 +550,7 @@ class HttpLoader extends Loader
         return $this->headlessBrowser;
     }
 
-    private function addCookiesToJar(RespondedRequest $respondedRequest): void
+    protected function addCookiesToJar(RespondedRequest $respondedRequest): void
     {
         if ($this->useCookies) {
             try {
@@ -564,7 +564,7 @@ class HttpLoader extends Loader
     /**
      * @throws Exception
      */
-    private function addCookiesToRequest(RequestInterface $request): RequestInterface
+    protected function addCookiesToRequest(RequestInterface $request): RequestInterface
     {
         if (!$this->useCookies) {
             return $request;
@@ -581,7 +581,7 @@ class HttpLoader extends Loader
      * @param string[] $headers
      * @return string[]
      */
-    private function sanitizeResponseHeaders(array $headers): array
+    protected function sanitizeResponseHeaders(array $headers): array
     {
         foreach ($headers as $key => $value) {
             $headers[$key] = explode(PHP_EOL, $value)[0];
@@ -594,7 +594,7 @@ class HttpLoader extends Loader
      * @param mixed[] $headers
      * @return array<string, string>
      */
-    private function prepareRequestHeadersForHeadlessBrowser(array $headers = []): array
+    protected function prepareRequestHeadersForHeadlessBrowser(array $headers = []): array
     {
         $headers = $this->removeHeadersCausingErrorWithHeadlessBrowser($headers);
 
@@ -607,7 +607,7 @@ class HttpLoader extends Loader
      * @param mixed[] $headers
      * @return mixed[]
      */
-    private function removeHeadersCausingErrorWithHeadlessBrowser(array $headers = []): array
+    protected function removeHeadersCausingErrorWithHeadlessBrowser(array $headers = []): array
     {
         $removeHeaders = ['host'];
 

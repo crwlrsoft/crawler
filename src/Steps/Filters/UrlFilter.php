@@ -7,7 +7,7 @@ use Exception;
 
 class UrlFilter extends Filter
 {
-    public function __construct(private readonly UrlFilterRule $filterRule, private readonly string $filterString)
+    public function __construct(protected readonly UrlFilterRule $filterRule, protected readonly string $filterString)
     {
     }
 

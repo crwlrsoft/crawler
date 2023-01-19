@@ -10,31 +10,31 @@ use Psr\Http\Message\UriInterface;
 
 class Cookie
 {
-    private Url $receivedFromUrl;
+    protected Url $receivedFromUrl;
 
-    private string $receivedFromHost;
+    protected string $receivedFromHost;
 
-    private string $cookieName;
+    protected string $cookieName;
 
-    private string $cookieValue;
+    protected string $cookieValue;
 
-    private ?Date $expires = null;
+    protected ?Date $expires = null;
 
-    private ?int $maxAge = null;
+    protected ?int $maxAge = null;
 
-    private int $receivedAtTimestamp = 0;
+    protected int $receivedAtTimestamp = 0;
 
-    private string $domain;
+    protected string $domain;
 
-    private bool $domainSetViaAttribute = false;
+    protected bool $domainSetViaAttribute = false;
 
-    private ?string $path = null;
+    protected ?string $path = null;
 
-    private bool $secure = false;
+    protected bool $secure = false;
 
-    private bool $httpOnly = false;
+    protected bool $httpOnly = false;
 
-    private string $sameSite = 'Lax';
+    protected string $sameSite = 'Lax';
 
     /**
      * @throws InvalidCookieException
@@ -42,7 +42,7 @@ class Cookie
      */
     public function __construct(
         string|Url              $receivedFromUrl,
-        private readonly string $setCookieHeader,
+        protected readonly string $setCookieHeader,
     ) {
         $this->receivedFromUrl = $receivedFromUrl instanceof Url ? $receivedFromUrl : Url::parse($receivedFromUrl);
 
@@ -169,7 +169,7 @@ class Cookie
     /**
      * @throws InvalidCookieException
      */
-    private function parseSetCookieHeader(string $setCookieHeader): void
+    protected function parseSetCookieHeader(string $setCookieHeader): void
     {
         $splitAtSemicolon = explode(';', $setCookieHeader);
 
@@ -191,7 +191,7 @@ class Cookie
     /**
      * @throws InvalidCookieException
      */
-    private function parseAttribute(string $attribute): void
+    protected function parseAttribute(string $attribute): void
     {
         $splitAtEquals = explode('=', trim($attribute), 2);
 
@@ -221,7 +221,7 @@ class Cookie
      * @throws InvalidCookieException
      * @throws Exception
      */
-    private function checkPrefixes(): void
+    protected function checkPrefixes(): void
     {
         if ($this->hasSecurePrefix() || $this->hasHostPrefix()) {
             if (!$this->isReceivedSecure()) {
@@ -248,12 +248,12 @@ class Cookie
         }
     }
 
-    private function setExpires(string $value): void
+    protected function setExpires(string $value): void
     {
         $this->expires = new Date($value);
     }
 
-    private function setMaxAge(string $value): void
+    protected function setMaxAge(string $value): void
     {
         $this->maxAge = (int) $value;
 
@@ -264,7 +264,7 @@ class Cookie
      * @throws InvalidCookieException
      * @throws Exception
      */
-    private function setDomain(string $value, bool $viaAttribute = false): void
+    protected function setDomain(string $value, bool $viaAttribute = false): void
     {
         if (str_starts_with($value, '.')) {
             $value = substr($value, 1);
@@ -283,7 +283,7 @@ class Cookie
         }
     }
 
-    private function setPath(string $path): void
+    protected function setPath(string $path): void
     {
         $this->path = $path;
     }
@@ -292,7 +292,7 @@ class Cookie
      * @throws InvalidCookieException
      * @throws Exception
      */
-    private function setSecure(): void
+    protected function setSecure(): void
     {
         if (!$this->isReceivedSecure()) {
             throw new InvalidCookieException(
@@ -306,7 +306,7 @@ class Cookie
     /**
      * @throws InvalidCookieException
      */
-    private function setSameSite(string $value): void
+    protected function setSameSite(string $value): void
     {
         $value = strtolower($value);
 
@@ -320,7 +320,7 @@ class Cookie
     /**
      * @throws Exception
      */
-    private function pathMatches(Url $url): bool
+    protected function pathMatches(Url $url): bool
     {
         $path = $this->path() ?? '';
 

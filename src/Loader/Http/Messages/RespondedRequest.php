@@ -14,7 +14,7 @@ class RespondedRequest
     /**
      * @var string[]
      */
-    private array $redirects = [];
+    protected array $redirects = [];
 
     public function __construct(
         public RequestInterface $request,

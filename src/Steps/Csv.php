@@ -19,24 +19,24 @@ class Csv extends Step
     /**
      * @param array<string|null> $columnMapping
      */
-    final public function __construct(protected array $columnMapping = [], protected bool $skipFirstLine = false)
+    public function __construct(protected array $columnMapping = [], protected bool $skipFirstLine = false)
     {
     }
 
     /**
      * @param array<string|null> $columnMapping
      */
-    public static function parseString(array $columnMapping = [], bool $skipFirstLine = false): static
+    public static function parseString(array $columnMapping = [], bool $skipFirstLine = false): self
     {
-        return new static($columnMapping, $skipFirstLine);
+        return new self($columnMapping, $skipFirstLine);
     }
 
     /**
      * @param array<string|null> $columnMapping
      */
-    public static function parseFile(array $columnMapping = [], bool $skipFirstLine = false): static
+    public static function parseFile(array $columnMapping = [], bool $skipFirstLine = false): self
     {
-        $instance = new static($columnMapping, $skipFirstLine);
+        $instance = new self($columnMapping, $skipFirstLine);
 
         $instance->method = 'file';
 
@@ -103,7 +103,7 @@ class Csv extends Step
         }
     }
 
-    private function readFile(string $filePath): Generator
+    protected function readFile(string $filePath): Generator
     {
         $handle = fopen($filePath, 'r');
 
@@ -136,7 +136,7 @@ class Csv extends Step
      * @param string[] $lines
      * @return Generator
      */
-    private function mapLines(array $lines): Generator
+    protected function mapLines(array $lines): Generator
     {
         foreach ($lines as $key => $line) {
             if ($key === 0 && $this->skipFirstLine) {
@@ -157,7 +157,7 @@ class Csv extends Step
      * @param mixed[] $row
      * @return mixed[]
      */
-    private function mapRow(array $row): array
+    protected function mapRow(array $row): array
     {
         $count = 0;
         $mapped = [];
