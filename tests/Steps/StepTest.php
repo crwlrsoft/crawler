@@ -6,6 +6,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Refiners\Str;
 use Crwlr\Crawler\Steps\Step;
 use Exception;
 use Generator;
@@ -713,3 +714,104 @@ it('keeps the original input data when useInputKey() is used', function () {
 
     expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
 });
+
+it('applies a Closure refiner to the steps output', function () {
+    $step = helper_getValueReturningStep('output');
+
+    $step->refineOutput(function (mixed $outputValue) {
+        return $outputValue . ' refined';
+    });
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0]->get())->toBe('output refined');
+});
+
+it('applies an instance of the RefinerInterface to the steps output', function () {
+    $step = helper_getInputReturningStep();
+
+    $step->refineOutput(Str::betweenFirst('foo', 'baz'));
+
+    $outputs = helper_invokeStepWithInput($step, 'foo bar baz');
+
+    expect($outputs[0]->get())->toBe('bar');
+});
+
+it('applies multiple refiners to the steps output in the order they\'re added', function () {
+    $step = helper_getInputReturningStep();
+
+    $step
+        ->refineOutput(Str::betweenFirst('foo', 'baz'))
+        ->refineOutput(function (mixed $outputValue) {
+            return $outputValue . ' refined';
+        })
+        ->refineOutput(function (mixed $outputValue) {
+            return $outputValue . ', and refined further';
+        });
+
+    $outputs = helper_invokeStepWithInput($step, 'foo bar baz');
+
+    expect($outputs[0]->get())->toBe('bar refined, and refined further');
+});
+
+it('applies refiners to certain keys from array output when the key is provided', function () {
+    $step = helper_getInputReturningStep();
+
+    $step
+        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('baz', function (mixed $outputValue) {
+            return 'refined ' . $outputValue;
+        });
+
+    $outputs = helper_invokeStepWithInput(
+        $step,
+        ['foo' => 'lorem ipsum dolor', 'bar' => 'bla', 'baz' => 'quz'],
+    );
+
+    expect($outputs[0]->get())->toBe([
+        'foo' => 'ipsum',
+        'bar' => 'bla',
+        'baz' => 'refined quz',
+    ]);
+});
+
+test('you can apply multiple refiners to the same output array key', function () {
+    $step = helper_getInputReturningStep();
+
+    $step
+        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('foo', function (mixed $outputValue) {
+            return $outputValue . ' yolo';
+        });
+
+    $outputs = helper_invokeStepWithInput(
+        $step,
+        ['foo' => 'lorem ipsum dolor', 'bar' => 'bla'],
+    );
+
+    expect($outputs[0]->get())->toBe([
+        'foo' => 'ipsum yolo',
+        'bar' => 'bla',
+    ]);
+});
+
+it(
+    'uses the original input value when applying a refiner, not only the value of an input array key chosen via ' .
+    'useInputKey()',
+    function () {
+        $step = helper_getInputReturningStep();
+
+        $step
+            ->useInputKey('bar')
+            ->refineOutput(function (mixed $outputValue, mixed $originalInputValue) {
+                return $originalInputValue;
+            });
+
+        $outputs = helper_invokeStepWithInput(
+            $step,
+            ['foo' => 'one', 'bar' => 'two'],
+        );
+
+        expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two']);
+    }
+);

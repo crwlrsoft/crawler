@@ -196,6 +196,8 @@ abstract class Step extends BaseStep
     private function invokeAndYield(mixed $validInputValue, Input $input): Generator
     {
         foreach ($this->invoke($validInputValue) as $outputData) {
+            $outputData = $this->applyRefiners($outputData, $input->get());
+
             if ($this->maxOutputsExceeded() || !$this->passesAllFilters($outputData)) {
                 continue;
             }
