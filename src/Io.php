@@ -4,7 +4,7 @@ namespace Crwlr\Crawler;
 
 class Io
 {
-    private string|int|float|bool|null $key = null;
+    protected string|int|float|bool|null $key = null;
 
     public function __construct(
         protected mixed $value,
@@ -69,7 +69,7 @@ class Io
         return true;
     }
 
-    private function valueToString(mixed $value): string
+    protected function valueToString(mixed $value): string
     {
         if (is_array($value) || is_object($value)) {
             return md5(serialize($this->value));

@@ -102,7 +102,7 @@ abstract class Loader implements LoaderInterface
         return $this->logger;
     }
 
-    private function addHookCallback(string $hook, callable $callback): void
+    protected function addHookCallback(string $hook, callable $callback): void
     {
         $this->hooks[$hook][] = $callback;
     }

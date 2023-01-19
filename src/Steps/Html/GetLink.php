@@ -153,13 +153,13 @@ class GetLink extends Step
             ($this->onHost === null || $this->isOnHost($link));
     }
 
-    private function isOnSameDomain(Url $link): bool
+    protected function isOnSameDomain(Url $link): bool
     {
         return ($this->onSameDomain && $this->baseUri->isDomainEqualIn($link)) ||
             ($this->onSameDomain === false && !$this->baseUri->isDomainEqualIn($link));
     }
 
-    private function isOnSameHost(Url $link): bool
+    protected function isOnSameHost(Url $link): bool
     {
         return ($this->onSameHost && $this->baseUri->isHostEqualIn($link)) ||
             ($this->onSameHost === false && !$this->baseUri->isHostEqualIn($link));
@@ -168,7 +168,7 @@ class GetLink extends Step
     /**
      * @throws Exception
      */
-    private function isOnDomain(Url $link): bool
+    protected function isOnDomain(Url $link): bool
     {
         if (is_array($this->onDomain)) {
             foreach ($this->onDomain as $domain) {
@@ -184,7 +184,7 @@ class GetLink extends Step
     /**
      * @throws Exception
      */
-    private function isOnHost(Url $link): bool
+    protected function isOnHost(Url $link): bool
     {
         if (is_array($this->onHost)) {
             foreach ($this->onHost as $host) {
@@ -201,7 +201,7 @@ class GetLink extends Step
      * @param mixed[] $array
      * @return bool
      */
-    private function isArrayWithOnlyStrings(array $array): bool
+    protected function isArrayWithOnlyStrings(array $array): bool
     {
         foreach ($array as $element) {
             if (!is_string($element)) {

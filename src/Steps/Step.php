@@ -55,7 +55,7 @@ abstract class Step extends BaseStep
      * In groups all the steps are called with the same Input, but with this callback it's possible to adjust the input
      * for the following steps.
      */
-    final public function updateInputUsingOutput(Closure $closure): static
+    public function updateInputUsingOutput(Closure $closure): static
     {
         $this->updateInputUsingOutput = $closure;
 
@@ -74,7 +74,7 @@ abstract class Step extends BaseStep
         return $this->excludeFromGroupOutput;
     }
 
-    final public function maxOutputs(int $maxOutputs): static
+    public function maxOutputs(int $maxOutputs): static
     {
         $this->maxOutputs = $maxOutputs;
 
@@ -84,7 +84,7 @@ abstract class Step extends BaseStep
     /**
      * If the user set a callback to update the input (see above) => call it.
      */
-    final public function callUpdateInputUsingOutput(Input $input, Output $output): Input
+    public function callUpdateInputUsingOutput(Input $input, Output $output): Input
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
             return new Input(
@@ -190,6 +190,15 @@ abstract class Step extends BaseStep
         return new Crawler($this->validateAndSanitizeStringOrHttpResponse($inputValue, $exceptionMessage));
     }
 
+    protected function getSingleElementFromArray(mixed $inputValue): mixed
+    {
+        if (is_array($inputValue) && count($inputValue) === 1) {
+            return reset($inputValue);
+        }
+
+        return $inputValue;
+    }
+
     /**
      * @throws Exception
      */
@@ -227,14 +236,5 @@ abstract class Step extends BaseStep
     private function maxOutputsExceeded(): bool
     {
         return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
-    }
-
-    private function getSingleElementFromArray(mixed $inputValue): mixed
-    {
-        if (is_array($inputValue) && count($inputValue) === 1) {
-            return reset($inputValue);
-        }
-
-        return $inputValue;
     }
 }

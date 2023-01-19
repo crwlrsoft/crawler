@@ -13,17 +13,17 @@ class Throttler
     /**
      * @var array<string, Microseconds>
      */
-    private array $latestRequestTimes = [];
+    protected array $latestRequestTimes = [];
 
     /**
      * @var array<string, Microseconds>
      */
-    private array $latestResponseTimes = [];
+    protected array $latestResponseTimes = [];
 
     /**
      * @var array<string, Microseconds>
      */
-    private array $latestDurations = [];
+    protected array $latestDurations = [];
 
     protected Microseconds|MultipleOf $from;
     protected Microseconds|MultipleOf $to;
@@ -138,7 +138,7 @@ class Throttler
         return $domain;
     }
 
-    private function calcWaitUntil(string $domain): Microseconds
+    protected function calcWaitUntil(string $domain): Microseconds
     {
         $latestResponseDuration = $this->latestDurations[$domain];
 
@@ -159,7 +159,7 @@ class Throttler
         return $this->latestResponseTimes[$domain]->add($waitValue);
     }
 
-    private function getRandBetween(Microseconds $from, Microseconds $to): Microseconds
+    protected function getRandBetween(Microseconds $from, Microseconds $to): Microseconds
     {
         if ($from->equals($to)) {
             return $from;
@@ -168,7 +168,7 @@ class Throttler
         return new Microseconds(rand($from->value, $to->value));
     }
 
-    private function validateFromAndTo(): void
+    protected function validateFromAndTo(): void
     {
         if (!$this->fromAndToAreOfSameType()) {
             throw new InvalidArgumentException('From and to values must be of the same type (Seconds or MultipleOf).');

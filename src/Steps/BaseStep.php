@@ -116,28 +116,28 @@ abstract class BaseStep implements StepInterface
         return $this->addToResult !== false;
     }
 
-    final public function useInputKey(string $key): static
+    public function useInputKey(string $key): static
     {
         $this->useInputKey = $key;
 
         return $this;
     }
 
-    final public function uniqueInputs(?string $key = null): static
+    public function uniqueInputs(?string $key = null): static
     {
         $this->uniqueInput = $key ?? true;
 
         return $this;
     }
 
-    final public function uniqueOutputs(?string $key = null): static
+    public function uniqueOutputs(?string $key = null): static
     {
         $this->uniqueOutput = $key ?? true;
 
         return $this;
     }
 
-    final public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
     {
         if (is_string($keyOrFilter) && $filter === null) {
             throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
@@ -155,7 +155,7 @@ abstract class BaseStep implements StepInterface
     /**
      * @throws Exception
      */
-    final public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
+    public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
     {
         if (empty($this->filters)) {
             throw new Exception('No where before orWhere');

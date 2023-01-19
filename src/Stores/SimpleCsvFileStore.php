@@ -7,11 +7,11 @@ use Exception;
 
 class SimpleCsvFileStore extends Store
 {
-    private int $createTimestamp;
+    protected int $createTimestamp;
 
-    private bool $isFirstResult = true;
+    protected bool $isFirstResult = true;
 
-    public function __construct(private readonly string $storePath, private readonly ?string $filePrefix = null)
+    public function __construct(protected readonly string $storePath, protected readonly ?string $filePrefix = null)
     {
         $this->createTimestamp = time();
 

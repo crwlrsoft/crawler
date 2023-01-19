@@ -8,9 +8,9 @@ use InvalidArgumentException;
 
 class Date
 {
-    private ?DateTime $dateTime = null;
+    protected ?DateTime $dateTime = null;
 
-    public function __construct(private readonly string $httpDateString)
+    public function __construct(protected readonly string $httpDateString)
     {
     }
 

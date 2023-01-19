@@ -34,11 +34,11 @@ abstract class Crawler
      */
     protected array $steps = [];
 
-    private ?StoreInterface $store = null;
+    protected ?StoreInterface $store = null;
 
-    private bool|int $monitorMemoryUsage = false;
+    protected bool|int $monitorMemoryUsage = false;
 
-    private ?Closure $outputHook = null;
+    protected ?Closure $outputHook = null;
 
     public function __construct()
     {
@@ -208,7 +208,7 @@ abstract class Crawler
     /**
      * @return Generator<Output>
      */
-    private function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
+    protected function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
     {
         $outputs = $step->invokeStep($input);
 
@@ -245,7 +245,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnResults(Generator $outputs): Generator
+    protected function storeAndReturnResults(Generator $outputs): Generator
     {
         if ($this->anyResultKeysDefinedInSteps()) {
             yield from $this->storeAndReturnDefinedResults($outputs);
@@ -258,7 +258,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnDefinedResults(Generator $outputs): Generator
+    protected function storeAndReturnDefinedResults(Generator $outputs): Generator
     {
         $results = [];
 
@@ -283,7 +283,7 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    private function storeAndReturnOutputsAsResults(Generator $outputs): Generator
+    protected function storeAndReturnOutputsAsResults(Generator $outputs): Generator
     {
         foreach ($outputs as $output) {
             $result = new Result();
@@ -306,14 +306,14 @@ abstract class Crawler
      * @return Input[]
      * @throws Exception
      */
-    private function prepareInput(): array
+    protected function prepareInput(): array
     {
         return array_map(function ($input) {
             return new Input($input);
         }, $this->inputs);
     }
 
-    private function anyResultKeysDefinedInSteps(): bool
+    protected function anyResultKeysDefinedInSteps(): bool
     {
         foreach ($this->steps as $step) {
             if ($step->addsToOrCreatesResult()) {
@@ -324,7 +324,7 @@ abstract class Crawler
         return false;
     }
 
-    private function logMemoryUsage(): void
+    protected function logMemoryUsage(): void
     {
         $memoryUsage = memory_get_usage();
 
@@ -333,17 +333,17 @@ abstract class Crawler
         }
     }
 
-    private function firstStep(): ?StepInterface
+    protected function firstStep(): ?StepInterface
     {
         return $this->steps[0] ?? null;
     }
 
-    private function nextStep(int $afterIndex): ?StepInterface
+    protected function nextStep(int $afterIndex): ?StepInterface
     {
         return $this->steps[$afterIndex + 1] ?? null;
     }
 
-    private function reset(): void
+    protected function reset(): void
     {
         $this->inputs = [];
 

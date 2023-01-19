@@ -13,7 +13,7 @@ class CookieJar
     /**
      * @var Cookie[][]
      */
-    private array $jar = [];
+    protected array $jar = [];
 
     /**
      * @param string $domain
