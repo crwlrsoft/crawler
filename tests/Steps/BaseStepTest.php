@@ -22,7 +22,7 @@ class TestStep extends BaseStep
 
         yield new Output('yo');
     }
-};
+}
 
 test('You can set a filter and passesAllFilters() tells if an output value passes that filter', function () {
     $step = new TestStep();
@@ -113,6 +113,22 @@ it('uses a key from an object when providing a key to the filter() method', func
     helper_invokeStepWithInput($step, new Input(
         helper_getStdClassWithData(['vendor' => 'illuminate', 'package' => 'support'])
     ));
+
+    expect($step->passesAllFilters)->toBeFalse();
+});
+
+it('filters using a custom Closure filter', function () {
+    $step = new TestStep();
+
+    $step->where('bar', Filter::custom(function (mixed $value) {
+        return in_array($value, ['one', 'two', 'three'], true);
+    }));
+
+    helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
+
+    expect($step->passesAllFilters)->toBeTrue();
+
+    helper_invokeStepWithInput($step, ['foo' => 'three', 'bar' => 'four']);
 
     expect($step->passesAllFilters)->toBeFalse();
 });
