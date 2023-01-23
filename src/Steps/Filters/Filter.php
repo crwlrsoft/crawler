@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Filters;
 
+use Closure;
 use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
 use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
 use Crwlr\Crawler\Steps\Filters\Enums\StringLengthFilterRule;
@@ -118,6 +119,11 @@ abstract class Filter implements FilterInterface
     public static function urlPathMatches(string $urlPathMatchesValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::PathMatches, $urlPathMatchesValue);
+    }
+
+    public static function custom(Closure $closure): ClosureFilter
+    {
+        return new ClosureFilter($closure);
     }
 
     public function useKey(string $key): static
