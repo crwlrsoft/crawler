@@ -18,6 +18,12 @@ class StringLengthFilter extends Filter
      */
     public function evaluate(mixed $valueInQuestion): bool
     {
-        return $this->filterRule->evaluate($this->getKey($valueInQuestion), $this->compareToLength);
+        $valueInQuestion = $this->getKey($valueInQuestion);
+
+        if (!is_string($valueInQuestion)) {
+            return false;
+        }
+
+        return $this->filterRule->evaluate($valueInQuestion, $this->compareToLength);
     }
 }
