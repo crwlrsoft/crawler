@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 
 use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
 use Crwlr\Crawler\Steps\Filters\Enums\StringFilterRule;
+use Crwlr\Crawler\Steps\Filters\Enums\StringLengthFilterRule;
 use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
 use Exception;
 use InvalidArgumentException;
@@ -44,47 +45,77 @@ abstract class Filter implements FilterInterface
         return new ComparisonFilter(ComparisonFilterRule::LessThanOrEqual, $lessThanOrEqualValue);
     }
 
-    public static function stringContains(mixed $containsValue): StringFilter
+    public static function stringContains(string $containsValue): StringFilter
     {
         return new StringFilter(StringFilterRule::Contains, $containsValue);
     }
 
-    public static function stringStartsWith(mixed $startsWithValue): StringFilter
+    public static function stringStartsWith(string $startsWithValue): StringFilter
     {
         return new StringFilter(StringFilterRule::StartsWith, $startsWithValue);
     }
 
-    public static function stringEndsWith(mixed $endsWithValue): StringFilter
+    public static function stringEndsWith(string $endsWithValue): StringFilter
     {
         return new StringFilter(StringFilterRule::EndsWith, $endsWithValue);
     }
 
-    public static function urlScheme(mixed $urlSchemeValue): UrlFilter
+    public static function stringLengthEqual(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::Equal, $length);
+    }
+
+    public static function stringLengthNotEqual(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::NotEqual, $length);
+    }
+
+    public static function stringLengthGreaterThan(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::GreaterThan, $length);
+    }
+
+    public static function stringLengthGreaterThanOrEqual(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::GreaterThanOrEqual, $length);
+    }
+
+    public static function stringLengthLessThan(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::LessThan, $length);
+    }
+
+    public static function stringLengthLessThanOrEqual(int $length): StringLengthFilter
+    {
+        return new StringLengthFilter(StringLengthFilterRule::LessThanOrEqual, $length);
+    }
+
+    public static function urlScheme(string $urlSchemeValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::Scheme, $urlSchemeValue);
     }
 
-    public static function urlHost(mixed $urlHostValue): UrlFilter
+    public static function urlHost(string $urlHostValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::Host, $urlHostValue);
     }
 
-    public static function urlDomain(mixed $urlDomainValue): UrlFilter
+    public static function urlDomain(string $urlDomainValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::Domain, $urlDomainValue);
     }
 
-    public static function urlPath(mixed $urlPathValue): UrlFilter
+    public static function urlPath(string $urlPathValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::Path, $urlPathValue);
     }
 
-    public static function urlPathStartsWith(mixed $urlPathStartsWithValue): UrlFilter
+    public static function urlPathStartsWith(string $urlPathStartsWithValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::PathStartsWith, $urlPathStartsWithValue);
     }
 
-    public static function urlPathMatches(mixed $urlPathMatchesValue): UrlFilter
+    public static function urlPathMatches(string $urlPathMatchesValue): UrlFilter
     {
         return new UrlFilter(UrlFilterRule::PathMatches, $urlPathMatchesValue);
     }
