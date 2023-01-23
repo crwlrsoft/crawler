@@ -174,7 +174,7 @@ abstract class Filter implements FilterInterface
         }
 
         if (
-            (is_array($value) && !isset($value[$this->useKey])) ||
+            (is_array($value) && !array_key_exists($this->useKey, $value)) ||
             (is_object($value) && !property_exists($value, $this->useKey))
         ) {
             throw new Exception('Key to filter by does not exist in output.');
