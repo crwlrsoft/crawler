@@ -267,7 +267,7 @@ it('automatically passes on the base url to dom query instances when the input i
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract([
             'one' => Dom::cssSelector('#one')->attribute('href')->toAbsoluteUrl(),
-            'two' => Dom::cssSelector('#two')->attribute('href')->toAbsoluteUrl(),
+            'two' => Dom::cssSelector('#two')->link(),
         ]),
         new RespondedRequest(
             new Request('GET', 'https://www.example.com/home'),
