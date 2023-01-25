@@ -143,6 +143,22 @@ it(
     }
 );
 
+it('gets an absolute link from the href attribute of a link element, when the link() method is called', function () {
+    $html = '<div id="foo"><a class="bar" href="/foo/bar">Foo</a></div>';
+
+    $domCrawler = new Crawler($html);
+
+    $selector = new CssSelector('#foo .bar');
+
+    $selector->setBaseUrl('https://www.example.com/');
+
+    expect($selector->apply($domCrawler))->toBe('Foo');
+
+    $selector->link();
+
+    expect($selector->apply($domCrawler))->toBe('https://www.example.com/foo/bar');
+});
+
 it('gets only the first matching element when the first() method is called', function () {
     $domCrawler = new Crawler(helper_getSimpleListHtml());
 

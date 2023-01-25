@@ -162,6 +162,17 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
+    public function link(): self
+    {
+        $this->target = SelectorTarget::Attribute;
+
+        $this->attributeName = 'href';
+
+        $this->toAbsoluteUrl = true;
+
+        return $this;
+    }
+
     /**
      * Call this method and the selected value will be converted to an absolute url when apply() is called.
      *
