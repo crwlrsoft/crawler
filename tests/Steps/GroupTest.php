@@ -11,7 +11,7 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Group;
 use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
-use Crwlr\Crawler\Steps\Refiners\Str;
+use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -1040,7 +1040,7 @@ it('applies an instance of the RefinerInterface to the steps output', function (
     $group = (new Group())
         ->addStep($step1)
         ->addStep($step2)
-        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'));
+        ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'));
 
     $outputs = helper_invokeStepWithInput($group);
 
@@ -1055,7 +1055,7 @@ it('applies multiple refiners to the steps output in the order they\'re added', 
     $group = (new Group())
         ->addStep($step1)
         ->addStep($step2)
-        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
         ->refineOutput('bar', fn (mixed $outputValue) => $outputValue . ' refined');
 
     $outputs = helper_invokeStepWithInput($group);
@@ -1071,7 +1071,7 @@ test('you can apply multiple refiners to the same output array key', function ()
     $group = (new Group())
         ->addStep($step1)
         ->addStep($step2)
-        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
         ->refineOutput('foo', fn (mixed $outputValue) => $outputValue . ' refined');
 
     $outputs = helper_invokeStepWithInput($group);

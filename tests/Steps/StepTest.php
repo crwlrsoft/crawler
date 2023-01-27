@@ -6,7 +6,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
-use Crwlr\Crawler\Steps\Refiners\Str;
+use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Exception;
 use Generator;
@@ -730,7 +730,7 @@ it('applies a Closure refiner to the steps output', function () {
 it('applies an instance of the RefinerInterface to the steps output', function () {
     $step = helper_getInputReturningStep();
 
-    $step->refineOutput(Str::betweenFirst('foo', 'baz'));
+    $step->refineOutput(StringRefiner::betweenFirst('foo', 'baz'));
 
     $outputs = helper_invokeStepWithInput($step, 'foo bar baz');
 
@@ -741,7 +741,7 @@ it('applies multiple refiners to the steps output in the order they\'re added', 
     $step = helper_getInputReturningStep();
 
     $step
-        ->refineOutput(Str::betweenFirst('foo', 'baz'))
+        ->refineOutput(StringRefiner::betweenFirst('foo', 'baz'))
         ->refineOutput(function (mixed $outputValue) {
             return $outputValue . ' refined';
         })
@@ -758,7 +758,7 @@ it('applies refiners to certain keys from array output when the key is provided'
     $step = helper_getInputReturningStep();
 
     $step
-        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
         ->refineOutput('baz', function (mixed $outputValue) {
             return 'refined ' . $outputValue;
         });
@@ -779,7 +779,7 @@ test('you can apply multiple refiners to the same output array key', function ()
     $step = helper_getInputReturningStep();
 
     $step
-        ->refineOutput('foo', Str::betweenFirst('lorem', 'dolor'))
+        ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
         ->refineOutput('foo', function (mixed $outputValue) {
             return $outputValue . ' yolo';
         });
