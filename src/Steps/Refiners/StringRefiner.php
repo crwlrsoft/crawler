@@ -10,7 +10,7 @@ use Crwlr\Crawler\Steps\Refiners\String\StrBetweenFirst;
 use Crwlr\Crawler\Steps\Refiners\String\StrBetweenLast;
 use Crwlr\Crawler\Steps\Refiners\String\StrReplace;
 
-class Str
+class StringRefiner
 {
     public static function afterFirst(string $first): StrAfterFirst
     {
