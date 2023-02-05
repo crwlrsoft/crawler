@@ -71,6 +71,8 @@ it('says it has not finished when an initial response with pagination links is p
         $respondedRequest->request,
         $respondedRequest,
     );
+
+    expect($paginator->hasFinished())->toBeFalse();
 });
 
 it('has finished when the loaded pages count exceeds the max pages limit', function () {

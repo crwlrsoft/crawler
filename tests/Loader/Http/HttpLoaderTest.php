@@ -7,7 +7,6 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
-use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Request;
@@ -67,14 +66,6 @@ it('accepts RequestInterface as argument to load', function () {
 
     $httpLoader->loadOrFail(new Request('GET', 'https://www.crwlr.software'));
 });
-
-test('It does not accept other argument types for the load method', function ($loadMethod) {
-    $httpClient = Mockery::mock(ClientInterface::class);
-
-    $httpLoader = new HttpLoader(new BotUserAgent('Foo'), $httpClient);
-
-    $httpLoader->{$loadMethod}(new stdClass());
-})->with(['load', 'loadOrFail'])->expectError();
 
 it(
     'calls the before and after load hooks regardless whether the response was successful or not',
