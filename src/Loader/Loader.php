@@ -51,9 +51,16 @@ abstract class Loader implements LoaderInterface
         $this->addHookCallback('afterLoad', $callback);
     }
 
-    public function setCache(CacheInterface $cache): void
+    public function setCache(CacheInterface $cache): static
     {
         $this->cache = $cache;
+
+        return $this;
+    }
+
+    public function userAgent(): UserAgentInterface
+    {
+        return $this->userAgent;
     }
 
     /**
@@ -90,11 +97,6 @@ abstract class Loader implements LoaderInterface
         foreach ($this->hooks[$hook] as $callback) {
             call_user_func($callback, ...$arguments);
         }
-    }
-
-    public function userAgent(): UserAgentInterface
-    {
-        return $this->userAgent;
     }
 
     protected function logger(): LoggerInterface
