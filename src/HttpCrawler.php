@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler;
 
+use Crwlr\Crawler\HttpCrawler\AnonymousHttpCrawlerBuilder;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -15,5 +16,10 @@ abstract class HttpCrawler extends Crawler
     protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
     {
         return new HttpLoader($userAgent, logger: $logger);
+    }
+
+    public static function make(): HttpCrawler\AnonymousHttpCrawlerBuilder
+    {
+        return new AnonymousHttpCrawlerBuilder();
     }
 }
