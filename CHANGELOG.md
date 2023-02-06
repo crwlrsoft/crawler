@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New filters to filter by string length, with the same options as the comparison filters (equal, not equal, greater than,...).
 * New `Filter::custom()` that you can use with a Closure, so you're not limited to the available filters only.
 * New method `DomQuery::link()` as a shortcut for `DomQuery::attribute('href')->toAbsoluteUrl()`.
+* New static method `HttpCrawler::make()` returning an instance of the new class `AnonymousHttpCrawlerBuilder`. This makes it possible to create your own Crawler instance with a one-liner like: `HttpCrawler::make()->withBotUserAgent('MyCrawler')`. There's also a `withUserAgent()` method to create an instance with a normal (non bot) user agent.
 
 ### Changed
 * __BREAKING__: The `FileCache` now also respects the `ttl` (time to live) argument and by default it is one hour (3600 seconds). If you're using the cache and expect the items to live (basically) forever, please provide a high enough value for default the time to live. When you try to get a cache item that is already expired, it (the file) is immediately deleted.
