@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2023-x-x
+## [1.0.0] - 2023-02-08
 
 ### Added
 * New method `Step::refineOutput()` to manually refine step output values. It takes either a `Closure` or an instance of the new `RefinerInterface` as argument. If the step produces array output, you can provide a key from the array output, to refine, as first argument and the refiner as second argument. You can call the method multiple times and all the refiners will be applied to the outputs in the order you add them. If you want to refine multiple output array keys with a `Closure`, you can skip providing a key and the `Closure` will receive the full output array for refinement. As mentioned you can provide an instance of the `RefinerInterface`. There are already a few implementations: `StringRefiner::afterFirst()`, `StringRefiner::afterLast()`, `StringRefiner::beforeFirst()`, `StringRefiner::beforeLast()`, `StringRefiner::betweenFirst()`, `StringRefiner::betweenLast()` and `StringRefiner::replace()`.
