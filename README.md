@@ -14,7 +14,8 @@ To give you an overview, here's a list of things that it helps you with:
 * [__Crawl__ (load) all pages of a website](https://www.crwlr.software/packages/crawler/included-steps/http#crawling) &#x1F577;
 * [Use __cookies__ (or don't)](https://www.crwlr.software/packages/crawler/the-crawler/loaders#http-loader) &#x1F36A;
 * [Use any __HTTP methods__ (GET, POST,...) and send any headers or body](https://www.crwlr.software/packages/crawler/included-steps/http#http-requests)
-* [Iterate over __paginated__ list pages](https://www.crwlr.software/packages/crawler/steps-and-data-flow/loops) &#x1F501;
+* [Easily iterate over __paginated__ list pages()]
+* [Iterate over __paginated__ list pages](https://www.crwlr.software/packages/crawler/included-steps/http#paginating) &#x1F501;
 * Extract data from:
     * [__HTML__](https://www.crwlr.software/packages/crawler/included-steps/html#extracting-data) and also [__XML__](https://www.crwlr.software/packages/crawler/included-steps/xml) (using CSS selectors or XPath queries)
     * [__JSON__](https://www.crwlr.software/packages/crawler/included-steps/json) (using dot notation)
