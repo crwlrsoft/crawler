@@ -17,9 +17,6 @@ jobs:
           php-version: '8.1'
           coverage: none
 
-      - name: Check PHP Version
-        run: php -v
-
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
@@ -41,9 +38,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-
-      - name: Check PHP Version
-        run: php -v
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
@@ -67,9 +61,6 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
 
-      - name: Check PHP Version
-        run: php -v
-
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
@@ -92,9 +83,6 @@ jobs:
         with:
           php-version: '8.1'
           coverage: none
-
-      - name: Check PHP Version
-        run: php -v
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
