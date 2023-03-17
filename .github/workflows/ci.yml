@@ -20,7 +20,7 @@ jobs:
         run: php -v
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
 
       - name: Run PHP CS Fixer
         run: composer cs
@@ -45,7 +45,7 @@ jobs:
         run: php -v
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
 
       - name: Run tests
         run: composer test
@@ -70,7 +70,7 @@ jobs:
         run: php -v
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
 
       - name: Install chrome
         uses: browser-actions/setup-chrome@latest
@@ -95,7 +95,7 @@ jobs:
         run: php -v
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
 
       - name: Run PHPStan
         run: composer stan
