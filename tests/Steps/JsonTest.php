@@ -153,3 +153,23 @@ it('also works with JS style JSON objects without quotes around keys', function 
 
     expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
 });
+
+it('also correctly fixes keys without quotes, even when values contain colons', function () {
+    $jsonString = <<<JSON
+        {
+            foo: "https://www.example.com",
+            bar: 2,
+            "baz": "some: thing"
+        }
+        JSON;
+
+    $outputs = helper_invokeStepWithInput(Json::get(['foo', 'bar', 'baz']), $jsonString);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe([
+        'foo' => 'https://www.example.com',
+        'bar' => 2,
+        'baz' => 'some: thing',
+    ]);
+});
