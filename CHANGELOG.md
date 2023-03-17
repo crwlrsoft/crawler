@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2023-03-17
+### Fixed
+* JSON step: improve attempt to fix JSON string having keys without quotes.
+
 ## [1.0.0] - 2023-02-08
 
 ### Added

@@ -89,18 +89,32 @@ class Json extends Step
      */
     protected function fixJsonString(string $jsonString): string
     {
-        return preg_replace_callback('/(\w+):/i', function ($match) {
-            $key = $match[1];
+        return preg_replace_callback(
+            '/(?:(\w+):(\s*".+?"\s*(?:,|}))|(\w+):(\s*[^"]+?\s*(?:,|})))/i',
+            function ($match) {
+                if (count($match) === 3) {
+                    $key = $match[1];
 
-            if (!str_starts_with($key, '"')) {
-                $key = '"' . $key;
-            }
+                    $value = $match[2];
+                } elseif (count($match) === 5) {
+                    $key = $match[3];
 
-            if (!str_ends_with($key, '"')) {
-                $key = $key . '"';
-            }
+                    $value = $match[4];
+                } else {
+                    return $match[0];
+                }
 
-            return $key . ':';
-        }, $jsonString) ?? $jsonString;
+                if (!str_starts_with($key, '"')) {
+                    $key = '"' . $key;
+                }
+
+                if (!str_ends_with($key, '"')) {
+                    $key = $key . '"';
+                }
+
+                return $key . ':' . $value;
+            },
+            $jsonString
+        ) ?? $jsonString;
     }
 }
