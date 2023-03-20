@@ -173,3 +173,21 @@ it('also correctly fixes keys without quotes, even when values contain colons', 
         'baz' => 'some: thing',
     ]);
 });
+
+it('also correctly fixes keys without quotes, when the value is an empty string', function () {
+    $jsonString = <<<JSON
+        {
+            foo: "",
+            "bar": "baz"
+        }
+        JSON;
+
+    $outputs = helper_invokeStepWithInput(Json::get(['foo', 'bar']), $jsonString);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBe([
+        'foo' => '',
+        'bar' => 'baz',
+    ]);
+});
