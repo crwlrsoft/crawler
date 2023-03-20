@@ -90,7 +90,7 @@ class Json extends Step
     protected function fixJsonString(string $jsonString): string
     {
         return preg_replace_callback(
-            '/(?:(\w+):(\s*".+?"\s*(?:,|}))|(\w+):(\s*[^"]+?\s*(?:,|})))/i',
+            '/(?:(\w+):(\s*".*?"\s*(?:,|}))|(\w+):(\s*[^"]+?\s*(?:,|})))/i',
             function ($match) {
                 if (count($match) === 3) {
                     $key = $match[1];
