@@ -388,11 +388,18 @@ abstract class BaseStep implements StepInterface
             $result->set($addToResultObject, $output);
         }
 
-        if (($addToResultObject === true || is_array($addToResultObject)) && is_array($output)) {
+        if (
+            ($addToResultObject === true || is_array($addToResultObject)) &&
+            (is_array($output) || (is_object($output) && method_exists($output, '__serialize')))
+        ) {
+            if (!is_array($output)) {
+                $output = $output->__serialize();
+            }
+
             foreach ($output as $key => $value) {
                 if ($addToResultObject === true) {
                     $result->set(is_string($key) ? $key : '', $value);
-                } elseif (is_array($addToResultObject) && in_array($key, $addToResultObject, true)) {
+                } elseif ($this->shouldBeAdded($key, $addToResultObject)) {
                     $result->set($this->choseResultKey($key), $value);
                 }
             }
@@ -407,14 +414,76 @@ abstract class BaseStep implements StepInterface
      */
     protected function choseResultKey(int|string $keyInOutput): string
     {
-        if (is_array($this->addToResult)) {
-            $mapToKey = array_search($keyInOutput, $this->addToResult, true);
+        if (is_string($keyInOutput)) {
+            if (is_array($this->addToResult)) {
+                if (in_array($keyInOutput, $this->addToResult, true)) {
+                    $mapTo = array_search($keyInOutput, $this->addToResult, true);
 
-            if (is_string($mapToKey)) {
-                return $mapToKey;
+                    return is_string($mapTo) ? $mapTo : $keyInOutput;
+                }
+
+                foreach ($this->getAliasesForOutputKey($keyInOutput) as $alias) {
+                    if (in_array($alias, $this->addToResult, true)) {
+                        $mapTo = array_search($alias, $this->addToResult, true);
+
+                        return is_string($mapTo) ? $mapTo : $alias;
+                    }
+                }
+            } elseif (is_bool($this->addToResult)) {
+                return $keyInOutput;
+            }
+        } elseif (is_string($this->addToResult)) {
+            return $this->addToResult;
+        }
+
+        return '';
+    }
+
+    /**
+     * If you want to define aliases for certain output keys that can be used with addToResult, define this method in
+     * the child class and return the mappings.
+     *
+     * @return array<string, string>  alias => output key
+     */
+    protected function outputKeyAliases(): array
+    {
+        return [];
+    }
+
+    /**
+     * @param string $key
+     * @return string[]
+     */
+    protected function getAliasesForOutputKey(string $key): array
+    {
+        $aliases = [];
+
+        foreach ($this->outputKeyAliases() as $alias => $outputKey) {
+            if ($outputKey === $key) {
+                $aliases[] = $alias;
             }
         }
 
-        return is_string($keyInOutput) ? $keyInOutput : '';
+        return $aliases;
+    }
+
+    /**
+     * @param string $key
+     * @param string[] $addToResultKeys
+     * @return bool
+     */
+    protected function shouldBeAdded(string $key, array $addToResultKeys): bool
+    {
+        if (in_array($key, $addToResultKeys, true)) {
+            return true;
+        }
+
+        foreach ($this->getAliasesForOutputKey($key) as $alias) {
+            if (in_array($alias, $addToResultKeys, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
