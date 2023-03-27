@@ -178,6 +178,17 @@ class Http extends LoadingStep
         }
     }
 
+    protected function outputKeyAliases(): array
+    {
+        return [
+            'url' => 'effectiveUri',
+            'uri' => 'effectiveUri',
+            'status' => 'responseStatusCode',
+            'headers' => 'responseHeaders',
+            'body' => 'responseBody',
+        ];
+    }
+
     protected function getResponseFromInputUri(UriInterface $input): ?RespondedRequest
     {
         $request = $this->getRequestFromInputUri($input);

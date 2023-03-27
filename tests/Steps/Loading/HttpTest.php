@@ -5,18 +5,21 @@ namespace tests\Steps\Loading;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
-test('It can be invoked with a string as input', function () {
+it('can be invoked with a string as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
 
     $loader->shouldReceive('load')->once();
@@ -26,7 +29,7 @@ test('It can be invoked with a string as input', function () {
     helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
 });
 
-test('It can be invoked with a PSR-7 Uri object as input', function () {
+it('can be invoked with a PSR-7 Uri object as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
 
     $loader->shouldReceive('load')->once();
@@ -36,7 +39,7 @@ test('It can be invoked with a PSR-7 Uri object as input', function () {
     helper_traverseIterable($step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/'))));
 });
 
-test('It throws an InvalidArgumentExpection when invoked with something else as input', function () {
+it('throws an InvalidArgumentExpection when invoked with something else as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
 
     $step = (new Http('GET'))->addLoader($loader);
@@ -115,7 +118,7 @@ test('You can set the http version for the request via constructor', function (s
     helper_traverseIterable($step->invokeStep(new Input('https://packagist.org/packages/crwlr/url')));
 })->with(['1.0', '1.1', '2.0']);
 
-test('It has static methods to create instances with all the different http methods', function (string $httpMethod) {
+it('has static methods to create instances with all the different http methods', function (string $httpMethod) {
     $loader = Mockery::mock(HttpLoader::class);
 
     $loader->shouldReceive('load')->withArgs(function (RequestInterface $request) use ($httpMethod) {
@@ -143,3 +146,62 @@ it(
         helper_traverseIterable($step->invokeStep(new Input('https://example.com/otsch')));
     }
 )->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+test(
+    'you can add response properties to the result with their aliases',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('load')->once()->andReturn(
+            new RespondedRequest(
+                new Request('GET', 'https://www.example.com/testresponse'),
+                new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody'))
+            )
+        );
+
+        $step = Http::get()
+            ->addLoader($loader)
+            ->addToResult(['url', 'status', 'headers', 'body']);
+
+        $outputs = helper_invokeStepWithInput($step);
+
+        expect($outputs)->toHaveCount(1);
+
+        expect($outputs[0]->result)->toBeInstanceOf(Result::class);
+
+        expect($outputs[0]->result?->toArray())->toBe([
+            'url' => 'https://www.example.com/testresponse',
+            'status' => 202,
+            'headers' => ['foo' => ['bar']],
+            'body' => 'testbody',
+        ]);
+    }
+);
+
+test(
+    'the value behind url and uri is the effectiveUri',
+    function (string $outputKey) {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/testresponse'),
+            new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody'))
+        );
+
+        $respondedRequest->addRedirectUri('https://www.example.com/testresponseredirect');
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()
+            ->addLoader($loader)
+            ->addToResult([$outputKey]);
+
+        $outputs = helper_invokeStepWithInput($step);
+
+        expect($outputs)->toHaveCount(1);
+
+        expect($outputs[0]->result)->toBeInstanceOf(Result::class);
+
+        expect($outputs[0]->result?->toArray())->toBe([$outputKey => 'https://www.example.com/testresponseredirect']);
+    }
+)->with(['url', 'uri']);

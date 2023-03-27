@@ -815,3 +815,37 @@ it(
         expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two']);
     }
 );
+
+test('you can define aliases for output keys for addToResult()', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield [
+                'foo' => 'one',
+                'bar' => 'two',
+                'baz' => 'three',
+            ];
+        }
+
+        protected function outputKeyAliases(): array
+        {
+            return [
+                'woo' => 'foo',
+                'war' => 'bar',
+                'waz' => 'baz',
+            ];
+        }
+    };
+
+    $step->addToResult(['woo', 'far' => 'war', 'waz']);
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0]->result)->toBeInstanceOf(Result::class);
+
+    expect($outputs[0]->result?->toArray())->toBe([
+        'woo' => 'one',
+        'far' => 'two',
+        'waz' => 'three',
+    ]);
+});
