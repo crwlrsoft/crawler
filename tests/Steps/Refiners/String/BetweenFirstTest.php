@@ -13,12 +13,16 @@ it('logs a warning and returns the unchanged value when $value is not of type st
         ->addLogger(new CliLogger())
         ->refine($value);
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('Refiner Str::betweenFirst() can\'t be applied to value of type ' . gettype($value));
 
     expect($refinedValue)->toBe($value);
-})->with([123, 12.3, true]);
+})->with([
+    [123],
+    [12.3],
+    [true],
+]);
 
 it('gets the (trimmed) string between the first occurrence of start and the next occurrence of end', function () {
     $refiner = StringRefiner::betweenFirst('foo', 'bar');

@@ -12,6 +12,7 @@ use DateTimeImmutable;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use PHPUnit\Framework\TestCase;
 
 function helper_cachedir(): string
 {
@@ -55,6 +56,8 @@ afterEach(function () {
 
     rmdir(helper_cachedir());
 });
+
+/** @var TestCase $this */
 
 it('caches a simple value', function () {
     $cache = new FileCache(helper_cachedir());
@@ -277,6 +280,8 @@ it('compresses cache data when useCompression() is used', function () {
 
     $uncompressedFileSize = filesize(helper_cachedir() . '/' . $respondedRequest->cacheKey());
 
+    expect($uncompressedFileSize)->not()->toBeFalse();
+
     clearstatcache(); // Results of filesize() are cached. Clear that to get correct result for compressed file size.
 
     $cache->useCompression();
@@ -284,6 +289,10 @@ it('compresses cache data when useCompression() is used', function () {
     $cache->set($respondedRequest->cacheKey(), $respondedRequest);
 
     $compressedFileSize = filesize(helper_cachedir() . '/' . $respondedRequest->cacheKey());
+
+    expect($compressedFileSize)->not()->toBeFalse();
+
+    /** @var int $uncompressedFileSize */
 
     expect($compressedFileSize)->toBeLessThan($uncompressedFileSize);
 

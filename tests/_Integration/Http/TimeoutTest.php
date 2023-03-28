@@ -34,5 +34,5 @@ it('Fails when timeout is exceeded', function () {
 
     $crawler->runAndTraverse();
 
-    expect($this->getActualOutput())->toContain('Operation timed out');
+    expect($this->getActualOutputForAssertion())->toContain('Operation timed out');
 });

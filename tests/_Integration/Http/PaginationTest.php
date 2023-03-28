@@ -49,5 +49,5 @@ it('only iterates pagination until max pages limit is reached', function () {
 
     expect($results)->toHaveCount(2);
 
-    expect($this->getActualOutput())->toContain('Max pages limit reached');
+    expect($this->getActualOutputForAssertion())->toContain('Max pages limit reached');
 });

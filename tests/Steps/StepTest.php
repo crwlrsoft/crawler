@@ -41,7 +41,7 @@ test('You can add a logger and it is available within the invoke method', functi
 
     helper_traverseIterable($step->invokeStep(new Input('test')));
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('logging works');
 });

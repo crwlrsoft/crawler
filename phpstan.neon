@@ -7,4 +7,4 @@ parameters:
         analyse:
             - tests/_Integration/_Server
     ignoreErrors:
-        - "#^Call to an undefined method Pest\\\\Expectation\\|Pest\\\\Support\\\\Extendable\\:\\:\\S+\\(\\)\\.$#"
+        - "#^Call to an undefined method Pest\\\\PendingCalls\\\\TestCall\\|Pest\\\\Support\\\\HigherOrderTapProxy\\:\\:(with|throws)\\(\\).$#"

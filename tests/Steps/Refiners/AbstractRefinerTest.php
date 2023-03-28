@@ -30,7 +30,7 @@ it('takes a logger that can be used in the Refiner', function () {
 
     $refiner->refine('foo');
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('logging works');
 });
@@ -38,7 +38,7 @@ it('takes a logger that can be used in the Refiner', function () {
 it('provides a method for children to log a warning if the type of the incoming value is wrong', function () {
     (new SomeRefiner())->addLogger(new CliLogger())->testLogTypeWarning();
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('Refiner Some::staticMethodName() can\'t be applied to value of type string');
 });

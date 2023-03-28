@@ -9,6 +9,7 @@ use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 
@@ -20,6 +21,8 @@ function helper_wait300ms(): void
     while ((microtime(true) - $start) < 0.3) {
     }
 }
+
+/** @var TestCase $this */
 
 it('throttles requests to the same domain', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
@@ -90,7 +93,7 @@ it('respects rules from robots.txt from load method', function () {
 
     expect($response)->toBeNull();
 
-    $output = $this->getActualOutput(); // @phpstan-ignore-line
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('Loaded https://www.crwlr.software/robots.txt');
 
@@ -118,7 +121,7 @@ it('does not respect rules from robots.txt when user agent isn\'t instance of Bo
 
     expect($response)->toBeInstanceOf(RespondedRequest::class);
 
-    $output = $this->getActualOutput(); // @phpstan-ignore-line
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->not()->toContain('Loaded https://www.crwlr.software/robots.txt');
 

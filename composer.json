@@ -42,14 +42,13 @@
         "chrome-php/chrome": "^1.7"
     },
     "require-dev": {
-        "pestphp/pest": "^1.21",
+        "pestphp/pest": "^2.3",
         "mockery/mockery": "^1.5",
         "phpstan/phpstan": "^1.4",
         "phpstan/phpstan-mockery": "^1.0",
         "phpstan/extension-installer": "^1.1",
         "phpstan/phpstan-phpunit": "^1.0",
         "friendsofphp/php-cs-fixer": "^3.6",
-        "pestphp/pest-plugin-parallel": "^1.0",
         "spatie/invade": "^1.0",
         "symfony/process": "^6.0"
     },

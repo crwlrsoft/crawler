@@ -100,7 +100,13 @@ it(
 
         expect($afterLoadWasCalled)->toBeTrue();
     }
-)->with([100, 200, 300, 400, 500]);
+)->with([
+    [100],
+    [200],
+    [300],
+    [400],
+    [500],
+]);
 
 it('calls the onSuccess hook on a successful response', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
@@ -124,7 +130,11 @@ it('calls the onSuccess hook on a successful response', function ($responseStatu
     $httpLoader->loadOrFail('https://www.otsch.codes');
 
     expect($onSuccessWasCalled)->toBeTrue();
-})->with([200, 201, 202]);
+})->with([
+    [200],
+    [201],
+    [202],
+]);
 
 it('calls the onError hook on a failed request', function ($responseStatusCode) {
     $httpClient = Mockery::mock(ClientInterface::class);
@@ -142,7 +152,12 @@ it('calls the onError hook on a failed request', function ($responseStatusCode) 
     $httpLoader->load('https://www.otsch.codes');
 
     expect($onErrorWasCalled)->toBeTrue();
-})->with([400, 404, 422, 500]);
+})->with([
+    [400],
+    [404],
+    [422],
+    [500],
+]);
 
 it('throws an Exception when request fails in loadOrFail method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
@@ -262,7 +277,7 @@ it('calls request start and end tracking methods', function (string $loadingMeth
 
     $httpLoader->{$loadingMethod}('https://www.twitter.com');
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('Track request start https://www.twitter.com');
 
@@ -278,7 +293,7 @@ it('automatically logs loading success message', function ($loadingMethod) {
 
     $httpLoader->{$loadingMethod}(new Request('GET', 'https://phpstan.org/'));
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('Loaded https://phpstan.org/');
 })->with(['load', 'loadOrFail']);
@@ -292,7 +307,7 @@ it('automatically logs loading error message in normal load method', function ()
 
     $httpLoader->load(new Request('GET', 'https://phpstan.org/'));
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('Failed to load https://phpstan.org/');
 });

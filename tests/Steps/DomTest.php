@@ -56,7 +56,11 @@ test('RespondedRequest is a valid input', function () {
 
 test('For other inputs an InvalidArgumentException is thrown', function (mixed $input) {
     helper_traverseIterable(helper_getDomStepInstance()::root()->invokeStep(new Input($input)));
-})->throws(InvalidArgumentException::class)->with([123, 123.456, new stdClass()]);
+})->throws(InvalidArgumentException::class)->with([
+    [123],
+    [123.456],
+    [new stdClass()],
+]);
 
 it('outputs a single string when argument for extract is a selector string matching only one element', function () {
     $outputs = helper_invokeStepWithInput(

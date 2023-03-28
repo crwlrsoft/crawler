@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 test('It prints a message', function () {
     $logger = new CliLogger();
     $logger->log('info', 'Some log message.');
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
     expect($output)->toContain('Some log message.');
 });
 
 test('It prints the log level', function () {
     $logger = new CliLogger();
     $logger->log('alert', 'Everybody panic!');
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
     expect($output)->toContain('[ALERT]');
 });
 
@@ -30,7 +30,7 @@ test('It starts with printing the time', function () {
 test('It has methods for all the log levels', function ($logLevel) {
     $logger = new CliLogger();
     $logger->{$logLevel}('Some message');
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
     expect($output)->toContain('Some message');
     expect($output)->toContain('[' . strtoupper($logLevel) . ']');
 })->with([

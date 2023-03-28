@@ -126,7 +126,7 @@ it('fails silently when parsing fails', function () {
 
     expect($robotsTxt->isAllowed('/anything'))->toBeTrue();
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('Failed to parse robots.txt');
 });
