@@ -212,7 +212,7 @@ it('logs that max pages limit was reached when it was reached', function () {
 
     $paginator->logWhenFinished(new CliLogger());
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('Max pages limit reached');
 });
@@ -248,7 +248,7 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $paginator->logWhenFinished(new CliLogger());
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->not()->toContain('Max pages limit reached');
 

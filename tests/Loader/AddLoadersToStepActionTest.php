@@ -31,7 +31,7 @@ function helper_getLoaders(): array
 
 it('does not cause an error when called with a non loading step', function () {
     (new AddLoadersToStepAction(helper_getLoaders(), Html::root()->extract([])));
-});
+})->throwsNoExceptions();
 
 it('adds the loader to the step when invoked with a single loader', function () {
     $loader = new HttpLoader(new UserAgent('Foo'), logger: new CliLogger());

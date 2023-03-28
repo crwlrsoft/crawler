@@ -13,12 +13,16 @@ it('logs a warning and returns the unchanged value when $value is not of type st
         ->addLogger(new CliLogger())
         ->refine($value);
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('Refiner Str::beforeLast() can\'t be applied to value of type ' . gettype($value));
 
     expect($refinedValue)->toBe($value);
-})->with([123, 12.3, true]);
+})->with([
+    [123],
+    [12.3],
+    [true],
+]);
 
 it('returns the string before the last occurrence of another string', function () {
     expect(StringRefiner::beforeLast('foo')->refine('yo lo foo boo choo foo gnu'))->toBe('yo lo foo boo choo');

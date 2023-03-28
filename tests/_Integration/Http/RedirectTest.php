@@ -64,7 +64,7 @@ it('stops at 10 redirects by default', function () {
 
     expect($results)->toHaveCount(0);
 
-    $logOutput = $this->getActualOutput();
+    $logOutput = $this->getActualOutputForAssertion();
 
     expect($logOutput)->toContain('Failed to load http://localhost:8000/redirect?stopAt=11: Too many redirects.');
 });

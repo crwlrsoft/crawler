@@ -112,9 +112,9 @@ test(
 
         $crawler->addStep(Http::get()); // adding steps passes on logger and loader, should use the same instances
 
-        expect($crawler->getUserAgent()->testProperty)->toBe('bar'); // @phpstan-ignore-line
+        expect($crawler->getUserAgent()->testProperty)->toBe('bar');
 
-        expect($crawler->getLogger()->testProperty)->toBe('bar');  // @phpstan-ignore-line
+        expect($crawler->getLogger()->testProperty)->toBe('bar');
 
         expect($crawler->getLoader()->testProperty)->toBe('bar');  // @phpstan-ignore-line
 
@@ -673,7 +673,7 @@ it(
 
         $crawler->runAndTraverse();
 
-        $output = $this->getActualOutput();
+        $output = $this->getActualOutputForAssertion();
 
         $outputLines = explode("\n", $output);
 
@@ -712,7 +712,7 @@ it('logs memory usage if you want it to', function () {
 
     $crawler->runAndTraverse();
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     expect($output)->toContain('memory usage: ');
 });
@@ -763,7 +763,7 @@ it('just runs the crawler and dumps all results as array when runAndDump() is ca
         ])
         ->runAndDump();
 
-    $actualOutput = $this->getActualOutput();
+    $actualOutput = $this->getActualOutputForAssertion();
 
     expect(explode('array(2)', $actualOutput))->toHaveCount(3);
 
