@@ -157,6 +157,18 @@ abstract class Crawler
     }
 
     /**
+     * Easy way to just crawl and dump the results
+     *
+     * @throws Exception
+     */
+    public function runAndDump(): void
+    {
+        foreach ($this->run() as $result) {
+            var_dump($result->toArray());
+        }
+    }
+
+    /**
      * Run the Crawler
      *
      * Handles calling all the steps and cascading the data from step to step.
