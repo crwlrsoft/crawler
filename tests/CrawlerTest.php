@@ -754,3 +754,32 @@ test(
         expect($results[0]->toArray())->toBe(['foo' => 'bar', 'baz' => 'quz']);
     }
 );
+
+it('just runs the crawler and dumps all results as array when runAndDump() is called', function () {
+    helper_getDummyCrawlerWithInputReturningStep()
+        ->inputs([
+            ['foo' => 'one', 'bar' => 'two'],
+            ['baz' => 'three', 'quz' => 'four'],
+        ])
+        ->runAndDump();
+
+    $actualOutput = $this->getActualOutput();
+
+    expect(explode('array(2)', $actualOutput))->toHaveCount(3);
+
+    expect($actualOutput)->toContain('["foo"]=>');
+
+    expect($actualOutput)->toContain('string(3) "one"');
+
+    expect($actualOutput)->toContain('["bar"]=>');
+
+    expect($actualOutput)->toContain('string(3) "two"');
+
+    expect($actualOutput)->toContain('["baz"]=>');
+
+    expect($actualOutput)->toContain('string(5) "three"');
+
+    expect($actualOutput)->toContain('["quz"]=>');
+
+    expect($actualOutput)->toContain('string(4) "four"');
+});
