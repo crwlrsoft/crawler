@@ -44,6 +44,8 @@ class HttpCrawl extends Http
      */
     protected array $loadedUrls = [];
 
+    protected int $yieldedResponseCount = 0;
+
     public function __construct(array $headers = [], string $httpVersion = '1.1')
     {
         parent::__construct(headers: $headers, httpVersion: $httpVersion);
@@ -135,6 +137,8 @@ class HttpCrawl extends Http
 
         if ($response !== null) {
             if (!$this->inputIsSitemap && $this->matchesAllCriteria(Url::parse($input))) {
+                $this->yieldedResponseCount++;
+
                 yield $response;
             }
 
@@ -142,7 +146,11 @@ class HttpCrawl extends Http
 
             $depth = 1;
 
-            while (!$this->depthIsExceeded($depth) && !empty($this->urls)) {
+            while (
+                !$this->depthIsExceeded($depth) &&
+                !empty($this->urls) &&
+                (!$this->maxOutputs || $this->yieldedResponseCount < $this->maxOutputs)
+            ) {
                 yield from $this->loadUrls();
 
                 $depth++;
@@ -185,6 +193,12 @@ class HttpCrawl extends Http
 
                 if ($yieldResponse['yield'] === true) {
                     yield $response;
+
+                    $this->yieldedResponseCount++;
+
+                    if ($this->maxOutputs && $this->yieldedResponseCount >= $this->maxOutputs) {
+                        break;
+                    }
                 }
 
                 $newUrls = array_merge($newUrls, $this->getUrlsFromHtmlDocument($response));

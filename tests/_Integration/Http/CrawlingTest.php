@@ -371,3 +371,19 @@ it(
         expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment2');
     }
 );
+
+it('stops crawling when maxOutputs is reached', function () {
+    $crawler = (new Crawler())
+        ->input('http://www.example.com/crawling/main')
+        ->addStep(
+            Http::crawl()
+                ->keepUrlFragment()
+                ->maxOutputs(4)
+        );
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(4);
+
+    expect($crawler->getLoader()->loadedUrls)->toHaveCount(4);
+});
