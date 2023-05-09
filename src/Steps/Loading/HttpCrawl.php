@@ -32,6 +32,8 @@ class HttpCrawl extends Http
 
     protected bool $loadAll = false;
 
+    protected bool $keepUrlFragment = false;
+
     /**
      * @var array<string,array<string,bool>>
      */
@@ -103,6 +105,13 @@ class HttpCrawl extends Http
     public function loadAllButYieldOnlyMatching(): static
     {
         $this->loadAll = true;
+
+        return $this;
+    }
+
+    public function keepUrlFragment(): static
+    {
+        $this->keepUrlFragment = true;
 
         return $this;
     }
@@ -209,7 +218,7 @@ class HttpCrawl extends Http
         $urls = [];
 
         foreach ($domCrawler->filter('urlset url loc') as $url) {
-            $url = Url::parse($url->textContent);
+            $url = $this->handleUrlFragment(Url::parse($url->textContent));
 
             if (!$this->isOnSameHostOrDomain($url)) {
                 continue;
@@ -246,7 +255,7 @@ class HttpCrawl extends Http
         foreach ($domCrawler->filter('a') as $link) {
             $linkElement = new Crawler($link);
 
-            $url = $baseUrl->resolve($linkElement->attr('href') ?? '');
+            $url = $this->handleUrlFragment($baseUrl->resolve($linkElement->attr('href') ?? ''));
 
             if (!$this->isOnSameHostOrDomain($url)) {
                 continue;
@@ -335,5 +344,17 @@ class HttpCrawl extends Http
     protected function matchesCustomCriteria(Url $url, ?Crawler $linkElement): bool
     {
         return $this->customClosure === null || $this->customClosure->call($this, $url, $linkElement);
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function handleUrlFragment(Url $url): Url
+    {
+        if (!$this->keepUrlFragment) {
+            $url->fragment('');
+        }
+
+        return $url;
     }
 }

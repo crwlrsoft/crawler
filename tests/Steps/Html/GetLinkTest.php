@@ -12,7 +12,7 @@ use InvalidArgumentException;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
-test('It works with a RespondedRequest as input', function () {
+it('works with a RespondedRequest as input', function () {
     $step = (new GetLink());
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
@@ -25,7 +25,7 @@ test('It works with a RespondedRequest as input', function () {
     expect($link[0]->get())->toBe('https://www.crwl.io/blog');
 });
 
-test('It does not work with something else as input', function () {
+it('does not work with something else as input', function () {
     $step = (new GetLink());
 
     helper_traverseIterable($step->invokeStep(new Input(new Response())));
@@ -364,4 +364,31 @@ it('works correctly when HTML contains a base tag', function () {
     ));
 
     expect($links[0]->get())->toBe('https://www.example.com/c/e');
+});
+
+it('throws away the URL fragment part when withoutFragment() was called', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head></head>
+        <body><a href="/foo/bar#fragment">link</a></body>
+        </html>
+        HTML;
+
+    $step = (new GetLink());
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/foo/baz'),
+        new Response(200, [], $html)
+    );
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar#fragment');
+
+    $step->withoutFragment();
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar');
 });

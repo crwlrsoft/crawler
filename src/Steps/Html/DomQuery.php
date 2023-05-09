@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Url\Url;
+use Exception;
 use InvalidArgumentException;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -23,6 +24,8 @@ abstract class DomQuery implements DomQueryInterface
     protected bool $onlyOddMatches = false;
 
     protected bool $toAbsoluteUrl = false;
+
+    protected bool $withFragment = true;
 
     protected ?string $baseUrl = null;
 
@@ -173,6 +176,13 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
+    public function withoutFragment(): self
+    {
+        $this->withFragment = false;
+
+        return $this;
+    }
+
     /**
      * Call this method and the selected value will be converted to an absolute url when apply() is called.
      *
@@ -259,9 +269,21 @@ abstract class DomQuery implements DomQueryInterface
         );
 
         if ($this->toAbsoluteUrl && $this->baseUrl !== null) {
-            $target = Url::parse($this->baseUrl)->resolve($target);
+            $target = $this->handleUrlFragment(Url::parse($this->baseUrl)->resolve($target));
         }
 
         return $target;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function handleUrlFragment(Url $url): Url
+    {
+        if (!$this->withFragment) {
+            $url->fragment('');
+        }
+
+        return $url;
     }
 }

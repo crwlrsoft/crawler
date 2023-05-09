@@ -10,8 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `Crawler::runAndDump()` as a simple way to just run a crawler and dump all results, each as an array.
 * `addToResult()` now also works with serializable objects.
 * If you know certain keys that the output of a step will contain, you can now also define aliases for those keys, to be used with `addToResult()`. The output of an `Http` step (`RespondedRequest`) contains the keys `requestUri` and `effectiveUri`. The aliases `url` and `uri` refer to `effectiveUri`, so `addToResult(['url'])` will add the `effectiveUri` as `url` to the result object.
+* The `GetLink` (`Html::getLink()`) and `GetLinks` (`Html::getLinks()`) steps, as well as the abstract `DomQuery` (parent of `CssSelector` (/`Dom::cssSelector`) and `XPathQuery` (/`Dom::xPath`)) now have a method `withoutFragment()` to get links respectively URLs without their fragment part.
 
 ### Fixed
+* The `HttpCrawl` step (`Http::crawl()`) by default now removes the fragment part of URLs to not load the same page multiple times, because in almost any case, servers won't respond with different content based on the fragment. That's why this change is considered non-breaking. For the rare cases when servers respond with different content based on the fragment, you can call the new `keepUrlFragment()` method of the step.
 * A so-called byte order mark at the beginning of a file (/string) can cause issues. So just remove it, when a step's input string starts with a UTF-8 BOM.
 
 ## [1.0.2] - 2023-03-20
