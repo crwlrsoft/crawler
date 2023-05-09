@@ -3,13 +3,18 @@
 namespace tests\Steps;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\BaseStep;
 use Crwlr\Crawler\Steps\Filters\Filter;
+use Crwlr\Crawler\Steps\Step;
 use Generator;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 
 use function tests\helper_getStdClassWithData;
+use function tests\helper_getStepFilesContent;
 use function tests\helper_invokeStepWithInput;
 
 class TestStep extends BaseStep
@@ -138,3 +143,41 @@ it('throws an exception when you provide a string as first argument to filter bu
 
     $step->where('test');
 })->throws(InvalidArgumentException::class);
+
+it('removes an UTF-8 byte order mark from the beginning of a string', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield $input;
+        }
+
+        protected function validateAndSanitizeInput(mixed $input): mixed
+        {
+            return parent::validateAndSanitizeStringOrHttpResponse($input);
+        }
+    };
+
+    $stringWithBom = helper_getStepFilesContent('Xml/rss-with-bom.xml');
+
+    $response = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/rss'),
+        new Response(body: $stringWithBom)
+    );
+
+    $outputs = helper_invokeStepWithInput($step, $response);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBeString();
+
+    expect(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
+
+    // Also test with string as input.
+    $outputs = helper_invokeStepWithInput($step, $stringWithBom);
+
+    expect($outputs)->toHaveCount(1);
+
+    expect($outputs[0]->get())->toBeString();
+
+    expect(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
+});
