@@ -129,11 +129,11 @@ abstract class Step extends BaseStep
         $inputValue = $this->getSingleElementFromArray($inputValue);
 
         if (is_object($inputValue) && method_exists($inputValue, '__toString')) {
-            return $inputValue->__toString();
+            return $this->removeUtf8BomFromString($inputValue->__toString());
         }
 
         if (is_string($inputValue)) {
-            return $inputValue;
+            return $this->removeUtf8BomFromString($inputValue);
         }
 
         throw new InvalidArgumentException($exceptionMessage);
@@ -153,7 +153,7 @@ abstract class Step extends BaseStep
             $inputValue instanceof RespondedRequest ||
             ($inputValue instanceof ResponseInterface && !$allowOnlyRespondedRequest)
         ) {
-            return Http::getBodyString($inputValue);
+            return $this->removeUtf8BomFromString(Http::getBodyString($inputValue));
         }
 
         return $this->validateAndSanitizeStringOrStringable($inputValue, $exceptionMessage);
@@ -236,5 +236,23 @@ abstract class Step extends BaseStep
     private function maxOutputsExceeded(): bool
     {
         return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
+    }
+
+    /**
+     * Sometimes there can be a so-called byte order mark character as first characters in a text file. See:
+     * https://stackoverflow.com/questions/53303571/why-does-the-filereader-stream-read-239-187-191-from-a-textfile
+     * 239, 187, 191 is the BOM for UTF-8. Remove it, as it is unnecessary and can cause issues when a string
+     * needs to start with a certain character.
+     *
+     * @param string $string
+     * @return string
+     */
+    private function removeUtf8BomFromString(string $string): string
+    {
+        if (substr($string, 0, 3) === (chr(239) . chr(187) . chr(191))) {
+            return substr($string, 3);
+        }
+
+        return $string;
     }
 }

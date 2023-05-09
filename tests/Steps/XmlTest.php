@@ -9,23 +9,13 @@ use Crwlr\Crawler\Steps\Xml;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 
+use function tests\helper_getStepFilesContent;
 use function tests\helper_invokeStepWithInput;
-
-function helper_getXmlContent(string $fileName): string
-{
-    $content = file_get_contents(__DIR__ . '/_Files/Xml/' . $fileName);
-
-    if ($content === false) {
-        return '';
-    }
-
-    return $content;
-}
 
 it('returns single strings when extract is called with a selector only', function () {
     $output = helper_invokeStepWithInput(
         Xml::each('bookstore/book')->extract('//title'),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(4);
@@ -38,7 +28,7 @@ it('returns single strings when extract is called with a selector only', functio
 it('extracts data from an XML document with XPath queries per default', function () {
     $output = helper_invokeStepWithInput(
         Xml::each('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml')
     );
 
     expect($output)->toHaveCount(4);
@@ -67,7 +57,7 @@ it('can also extract data using CSS selectors', function () {
             'author' => Dom::cssSelector('author'),
             'year' => Dom::cssSelector('year'),
         ]),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml')
     );
 
     expect($output)->toHaveCount(4);
@@ -84,7 +74,7 @@ it('can also extract data using CSS selectors', function () {
 it('returns only one (compound) output when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::root()->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);
@@ -95,7 +85,7 @@ it('returns only one (compound) output when the root method is used', function (
 it('extracts the data of the first matching element when the first method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::first('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);
@@ -108,7 +98,7 @@ it('extracts the data of the first matching element when the first method is use
 it('extracts the data of the last matching element when the last method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::last('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getXmlContent('bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml')
     );
 
     expect($output)->toHaveCount(1);
@@ -122,7 +112,7 @@ test(
     function () {
         $response = new RespondedRequest(
             new Request('GET', 'https://www.example.com/events.xml'),
-            new Response(body: helper_getXmlContent('events.xml'))
+            new Response(body: helper_getStepFilesContent('Xml/events.xml'))
         );
 
         $outputs = helper_invokeStepWithInput(
@@ -173,3 +163,23 @@ test(
         ]);
     }
 );
+
+it('works when the response string starts with an UTF-8 byte order mark character', function () {
+    $response = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/rss'),
+        new Response(body: helper_getStepFilesContent('Xml/rss-with-bom.xml'))
+    );
+
+    $outputs = helper_invokeStepWithInput(
+        Xml::each('//channel/item')->extract([
+            'url' => '//link',
+            'title' => '//title',
+        ]),
+        $response,
+    );
+
+    expect($outputs[0]->get())->toBe([
+        'url' => 'https://www.example.com/story/1234567/foo-bar-baz?ref=rss',
+        'title' => 'Some title',
+    ]);
+});

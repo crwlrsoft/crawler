@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `addToResult()` now also works with serializable objects.
 * If you know certain keys that the output of a step will contain, you can now also define aliases for those keys, to be used with `addToResult()`. The output of an `Http` step (`RespondedRequest`) contains the keys `requestUri` and `effectiveUri`. The aliases `url` and `uri` refer to `effectiveUri`, so `addToResult(['url'])` will add the `effectiveUri` as `url` to the result object.
 
+### Fixed
+* A so-called byte order mark at the beginning of a file (/string) can cause issues. So just remove it, when a step's input string starts with a UTF-8 BOM.
+
 ## [1.0.2] - 2023-03-20
 ### Fixed
 * JSON step: another fix for JSON strings having keys without quotes with empty string value.
