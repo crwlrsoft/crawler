@@ -13,7 +13,7 @@ use stdClass;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
-test('It works with a RespondedRequest as input', function () {
+it('works with a RespondedRequest as input', function () {
     $step = (new GetLinks());
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
@@ -26,7 +26,7 @@ test('It works with a RespondedRequest as input', function () {
     expect($links[0]->get())->toBe('https://www.example.com/blog');
 });
 
-test('It does not work with something else as input', function () {
+it('does not work with something else as input', function () {
     $step = new GetLinks();
 
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
@@ -381,4 +381,38 @@ it('works correctly when HTML contains a base tag', function () {
     expect($links[1]->get())->toBe('https://www.example.com/f/g');
 
     expect($links[2]->get())->toBe('https://www.example.com/c/h');
+});
+
+it('throws away the URL fragment part when withoutFragment() was called', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head></head>
+        <body>
+            <a href="/foo/bar#fragment">link</a> <br>
+            <a href="/baz#quz-fragment">another link</a> <br>
+        </body>
+        </html>
+        HTML;
+
+    $step = (new GetLinks());
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/foo/baz'),
+        new Response(200, [], $html)
+    );
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar#fragment');
+
+    expect($links[1]->get())->toBe('https://www.example.com/baz#quz-fragment');
+
+    $step->withoutFragment();
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar');
+
+    expect($links[1]->get())->toBe('https://www.example.com/baz');
 });

@@ -29,6 +29,8 @@ class GetLink extends Step
      */
     protected ?array $onHost = null;
 
+    protected bool $withFragment = true;
+
     public function __construct(protected ?string $selector = null)
     {
     }
@@ -62,7 +64,9 @@ class GetLink extends Step
                 continue;
             }
 
-            $linkUrl = $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '');
+            $linkUrl = $this->handleUrlFragment(
+                $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '')
+            );
 
             if ($this->matchesAdditionalCriteria($linkUrl)) {
                 yield $linkUrl->__toString();
@@ -129,6 +133,13 @@ class GetLink extends Step
         $hosts = is_string($hosts) ? [$hosts] : $hosts;
 
         $this->onHost = $this->onHost ? array_merge($this->onHost, $hosts) : $hosts;
+
+        return $this;
+    }
+
+    public function withoutFragment(): static
+    {
+        $this->withFragment = false;
 
         return $this;
     }
@@ -210,5 +221,17 @@ class GetLink extends Step
         }
 
         return true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function handleUrlFragment(Url $url): Url
+    {
+        if (!$this->withFragment) {
+            $url->fragment('');
+        }
+
+        return $url;
     }
 }

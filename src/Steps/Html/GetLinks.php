@@ -25,7 +25,9 @@ class GetLinks extends GetLink
                 continue;
             }
 
-            $linkUrl = $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '');
+            $linkUrl = $this->handleUrlFragment(
+                $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '')
+            );
 
             if ($this->matchesAdditionalCriteria($linkUrl)) {
                 yield $linkUrl->__toString();

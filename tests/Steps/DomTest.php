@@ -286,3 +286,36 @@ it('automatically passes on the base url to dom query instances when the input i
         'two' => 'https://www.example.com/yo/lo',
     ]);
 });
+
+it('removes the fragment part from URLs when the withoutFragment method is called on a DomQuery instance', function () {
+    $body = <<<HTML
+        <p>
+            <a id="one" href="/foo#foo">one</a> <br>
+            <a id="two" href="/bar#bar">two</a> <br>
+            <a id="three" href="/baz#baz">three</a> <br>
+            <a id="four" href="/quz#quz">four</a> <br>
+        </p>
+        HTML;
+
+    $output = helper_invokeStepWithInput(
+        helper_getDomStepInstance()::root()->extract([
+            'one' => Dom::cssSelector('#one')->link(),
+            'two' => Dom::xPath('//a[@id=\'two\']')->link(),
+            'three' => Dom::cssSelector('#three')->link()->withoutFragment(),
+            'four' => Dom::xPath('//a[@id=\'four\']')->link()->withoutFragment(),
+        ]),
+        new RespondedRequest(
+            new Request('GET', 'https://www.example.com/home'),
+            new Response(body: $body)
+        ),
+    );
+
+    expect($output)->toHaveCount(1);
+
+    expect($output[0]->get())->toBe([
+        'one' => 'https://www.example.com/foo#foo',
+        'two' => 'https://www.example.com/bar#bar',
+        'three' => 'https://www.example.com/baz',
+        'four' => 'https://www.example.com/quz',
+    ]);
+});

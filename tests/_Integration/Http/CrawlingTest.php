@@ -342,3 +342,32 @@ it(
         expect($results)->toHaveCount(3);
     }
 );
+
+it(
+    'keeps the fragment parts in URLs and treats the same URL with a different fragment part as separate URLs when ' .
+    'keepUrlFragment() was called',
+    function () {
+        // Explanation: in almost all cases URLs with a fragment part at the end (#something) will respond with the
+        // same content. So, to avoid loading the same page multiple times, the step throws away the fragment part of
+        // discovered URLs by default.
+        $crawler = (new Crawler())
+            ->input('http://www.example.com/crawling/main')
+            ->addStep(Http::crawl()->keepUrlFragment()->addToResult(['url']));
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(8);
+
+        $urls = [];
+
+        foreach ($results as $result) {
+            $urls[] = $result->get('url');
+        }
+
+        expect($urls)->toContain('http://www.example.com/crawling/sub2');
+
+        expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment1');
+
+        expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment2');
+    }
+);

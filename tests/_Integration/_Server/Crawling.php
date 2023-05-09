@@ -32,7 +32,9 @@ if ($route === '/crawling/main') {
         <body>
             <a href="/crawling/sub1">Subpage 1</a> <br>
             <a href="/crawling/sub2">Subpage 2</a> <br>
-            
+            <a href="/crawling/sub2#fragment1">Subpage 2 - Fragment 1</a> <br>
+            <a href="/crawling/sub2#fragment2">Subpage 2 - Fragment 2</a> <br>
+
             <a href="https://www.crwlr.software/packages/crawler">External link</a>
         </body>
         </html>
@@ -45,9 +47,9 @@ if ($route === '/crawling/sub1') {
         <html lang="en">
         <body>
             <a href="/crawling/sub1/sub1">Subpage 1 of Subpage 1</a> <br>
-            
+
             <a href="https://www.foo.com">External link</a>
-            
+
             <a href="http://foo.example.com/crawling/main-on-subdomain">Link to subdomain</a>
         </body>
         </html>
