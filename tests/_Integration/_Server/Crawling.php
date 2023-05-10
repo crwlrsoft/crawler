@@ -45,8 +45,13 @@ if ($route === '/crawling/sub1') {
     echo <<<HTML
         <!doctype html>
         <html lang="en">
+        <head>
+            <title>foo</title>
+            <base href="/crawling/">
+            <link rel="canonical" href="/crawling/sub1/sub1" />
+        </head>
         <body>
-            <a href="/crawling/sub1/sub1">Subpage 1 of Subpage 1</a> <br>
+            <a href="sub1/sub1">Subpage 1 of Subpage 1</a> <br>
 
             <a href="https://www.foo.com">External link</a>
 
@@ -84,6 +89,10 @@ if ($route === '/crawling/sub2/sub1') {
     echo <<<HTML
         <!doctype html>
         <html lang="en">
+        <head>
+            <title>foo</title>
+            <link rel="canonical" href="/crawling/sub1/sub1" />
+        </head>
         <body>
             <a href="/crawling/sub2/sub1/sub1">Subpage 1 of Subpage 1 of Subpage 2</a>
         </body>

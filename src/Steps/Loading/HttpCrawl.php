@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Loading;
 
 use Closure;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Loading\Http\Document;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
@@ -33,6 +34,8 @@ class HttpCrawl extends Http
     protected bool $loadAll = false;
 
     protected bool $keepUrlFragment = false;
+
+    protected bool $useCanonicalLinks = false;
 
     /**
      * @var array<string,array<string,bool>>
@@ -118,6 +121,13 @@ class HttpCrawl extends Http
         return $this;
     }
 
+    public function useCanonicalLinks(): static
+    {
+        $this->useCanonicalLinks = true;
+
+        return $this;
+    }
+
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         return $this->validateAndSanitizeToUriInterface($input);
@@ -133,6 +143,10 @@ class HttpCrawl extends Http
 
         $response = $this->loader->load($this->getRequestFromInputUri($input));
 
+        $initialResponseDocument = new Document($response);
+
+        $this->setResponseCanonicalUrl($response, $initialResponseDocument);
+
         $this->addLoadedUrlsFromResponse($response);
 
         if ($response !== null) {
@@ -142,7 +156,7 @@ class HttpCrawl extends Http
                 yield $response;
             }
 
-            $this->urls = $this->getUrlsFromInitialResponse($response);
+            $this->urls = $this->getUrlsFromInitialResponse($response, $initialResponseDocument);
 
             $depth = 1;
 
@@ -189,9 +203,17 @@ class HttpCrawl extends Http
             $response = $this->getResponseFromInputUri($uri);
 
             if ($response !== null) {
+                $document = new Document($response, $this->logger);
+
+                $this->setResponseCanonicalUrl($response, $document);
+
+                $yieldResponse = $this->yieldResponse($document, $yieldResponse['yield']);
+
                 $this->addLoadedUrlsFromResponse($response);
 
-                if ($yieldResponse['yield'] === true) {
+                $newUrls = array_merge($newUrls, $this->getUrlsFromHtmlDocument($document));
+
+                if ($yieldResponse) {
                     yield $response;
 
                     $this->yieldedResponseCount++;
@@ -200,8 +222,6 @@ class HttpCrawl extends Http
                         break;
                     }
                 }
-
-                $newUrls = array_merge($newUrls, $this->getUrlsFromHtmlDocument($response));
             }
         }
 
@@ -212,12 +232,14 @@ class HttpCrawl extends Http
      * @return array<string,array<string,bool>>
      * @throws Exception
      */
-    protected function getUrlsFromInitialResponse(RespondedRequest $respondedRequest): array
+    protected function getUrlsFromInitialResponse(RespondedRequest $respondedRequest, ?Document $document = null): array
     {
         if ($this->inputIsSitemap) {
             return $this->getUrlsFromSitemap($respondedRequest);
         } else {
-            return $this->getUrlsFromHtmlDocument($respondedRequest);
+            $document = $document ?? new Document($respondedRequest);
+
+            return $this->getUrlsFromHtmlDocument($document);
         }
     }
 
@@ -258,18 +280,16 @@ class HttpCrawl extends Http
      * @return array<string,array<string,bool>>
      * @throws Exception
      */
-    protected function getUrlsFromHtmlDocument(RespondedRequest $respondedRequest): array
+    protected function getUrlsFromHtmlDocument(Document $document): array
     {
-        $domCrawler = new Crawler(Http::getBodyString($respondedRequest));
-
-        $baseUrl = Url::parse($respondedRequest->effectiveUri());
+        $this->addCanonicalUrlToLoadedUrls($document);
 
         $urls = [];
 
-        foreach ($domCrawler->filter('a') as $link) {
+        foreach ($document->dom()->filter('a') as $link) {
             $linkElement = new Crawler($link);
 
-            $url = $this->handleUrlFragment($baseUrl->resolve($linkElement->attr('href') ?? ''));
+            $url = $this->handleUrlFragment($document->baseUrl()->resolve($linkElement->attr('href') ?? ''));
 
             if (!$this->isOnSameHostOrDomain($url)) {
                 continue;
@@ -303,6 +323,35 @@ class HttpCrawl extends Http
             if (!isset($this->loadedUrls[$loadedUrl])) {
                 $this->loadedUrls[$loadedUrl] = true;
             }
+        }
+    }
+
+    protected function addCanonicalUrlToLoadedUrls(Document $document): void
+    {
+        if ($this->useCanonicalLinks && !isset($this->loadedUrls[$document->canonicalUrl()])) {
+            $this->loadedUrls[$document->canonicalUrl()] = true;
+        }
+    }
+
+    /**
+     * Yield response only if the URL matches the defined criteria and if the canonical URL isn't already among the
+     * loaded URLs (and of course, the user decided that canonical links shall be used, because this is optional).
+     */
+    protected function yieldResponse(Document $document, bool $urlMatchesCriteria): bool
+    {
+        if (!$urlMatchesCriteria) {
+            return false;
+        }
+
+        return !$this->useCanonicalLinks || !array_key_exists($document->canonicalUrl(), $this->loadedUrls);
+    }
+
+    protected function setResponseCanonicalUrl(RespondedRequest $respondedRequest, Document $document): void
+    {
+        if ($this->useCanonicalLinks && $respondedRequest->effectiveUri() !== $document->canonicalUrl()) {
+            $this->logger?->info('Canonical link URL of this document is: ' . $document->canonicalUrl());
+
+            $respondedRequest->addRedirectUri($document->canonicalUrl());
         }
     }
 
