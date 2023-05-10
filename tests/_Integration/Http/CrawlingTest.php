@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
+use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -386,4 +387,35 @@ it('stops crawling when maxOutputs is reached', function () {
     expect($results)->toHaveCount(4);
 
     expect($crawler->getLoader()->loadedUrls)->toHaveCount(4);
+});
+
+it('uses canonical links when useCanonicalLinks() is called', function () {
+    $crawler = (new Crawler())
+        ->input('http://www.example.com/crawling/main')
+        ->addStep(
+            Http::crawl()
+                ->useCanonicalLinks()
+                ->addToResult(['url'])
+        );
+
+    $results = helper_generatorToArray($crawler->run());
+
+    $resultUrls = array_map(function (Result $result) {
+        return $result->get('url');
+    }, $results);
+
+    expect($resultUrls)->toBe([
+        'http://www.example.com/crawling/main',
+        'http://www.example.com/crawling/sub1/sub1',        // actual loaded url was sub1, but canonical is sub1/sub1
+        'http://www.example.com/crawling/sub2',
+        'http://www.example.com/crawling/sub2/sub1/sub1',
+    ]);
+
+    expect($crawler->getLoader()->loadedUrls)->toBe([
+        'http://www.example.com/crawling/main',
+        'http://www.example.com/crawling/sub1',             // => /crawling/sub1/sub1 => this URL wasn't loaded yet,
+        'http://www.example.com/crawling/sub2',             // so when the link is discovered it won't load it.
+        'http://www.example.com/crawling/sub2/sub1',        // => /crawling/sub1/sub1 => this URL was already loaded,
+        'http://www.example.com/crawling/sub2/sub1/sub1',   // so the response is not yielded as a separate result.
+    ]);
 });
