@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+* `Http` steps can now receive body and headers from input data (instead of statically defining them via argument like `Http::method(headers: ...)`) using the new methods `useInputKeyAsBody(<key>)` and `useInputKeyAsHeader(<key>, <asHeader>)` or `useInputKeyAsHeaders(<key>)`. Further, when invoked with associative array input data, the step will by default use the value from `url` or `uri` for the request URL. If the input array contains the URL in a key with a different name, you can use the new `useInputKeyAsUrl(<key>)` method. That was basically already possible with the existing `useInputKey(<key>)` method, because the URL is the main input argument for the step. But if you want to use it in combination with the other new `useInputKeyAsXyz()` methods, you have to use `useInputKeyAsUrl()`, because using `useInputKey(<key>)` would invoke the whole step with that key only.
 * `Crawler::runAndDump()` as a simple way to just run a crawler and dump all results, each as an array.
 * `addToResult()` now also works with serializable objects.
 * If you know certain keys that the output of a step will contain, you can now also define aliases for those keys, to be used with `addToResult()`. The output of an `Http` step (`RespondedRequest`) contains the keys `requestUri` and `effectiveUri`. The aliases `url` and `uri` refer to `effectiveUri`, so `addToResult(['url'])` will add the `effectiveUri` as `url` to the result object.
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The `HttpCrawl` step (`Http::crawl()`) by default now removes the fragment part of URLs to not load the same page multiple times, because in almost any case, servers won't respond with different content based on the fragment. That's why this change is considered non-breaking. For the rare cases when servers respond with different content based on the fragment, you can call the new `keepUrlFragment()` method of the step.
 * Although the `HttpCrawl` step (`Http::crawl()`) already respected the limit of outputs defined via the `maxOutputs()` method, it actually didn't stop loading pages. The limit had no effect on loading, only on passing on outputs (responses) to the next step. This is fixed in this version.
 * A so-called byte order mark at the beginning of a file (/string) can cause issues. So just remove it, when a step's input string starts with a UTF-8 BOM.
+* There seems to be an issue in guzzle when it gets a PSR-7 request object with a header with multiple string values (as array, like: `['accept-encoding' => ['gzip', 'deflate', 'br']]`). When testing it happened that it only sent the last part (in this case `br`). Therefor the `HttpLoader` now prepares headers before sending (in this case to: `['accept-encoding' => ['gzip, deflate, br']]`).
 
 ## [1.0.2] - 2023-03-20
 ### Fixed

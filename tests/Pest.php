@@ -2,13 +2,16 @@
 
 namespace tests;
 
+use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
+use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use GuzzleHttp\Psr7\Response;
@@ -244,4 +247,19 @@ function helper_getFastLoader(UserAgentInterface $userAgent, ?LoggerInterface $l
         ->waitAtLeast(Microseconds::fromSeconds(0.0001));
 
     return $loader;
+}
+
+function helper_getFastCrawler(): HttpCrawler
+{
+    return new class () extends HttpCrawler {
+        protected function userAgent(): UserAgentInterface
+        {
+            return new UserAgent('TestBot');
+        }
+
+        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
+        {
+            return helper_getFastLoader($userAgent, $logger);
+        }
+    };
 }
