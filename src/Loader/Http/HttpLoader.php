@@ -392,6 +392,14 @@ class HttpLoader extends Loader
     {
         $request = $request->withHeader('User-Agent', $this->userAgent->__toString());
 
+        // When writing tests I found that guzzle somehow messed up headers with multiple strings as value in the PSR-7
+        // request object. It sent only the last part of the array, instead of concatenating the array of strings to a
+        // comma separated string. Don't know if that happens with all handlers (curl, stream), will investigate
+        // further. But until this is fixed, we just prepare the headers ourselves.
+        foreach ($request->getHeaders() as $headerName => $headerValues) {
+            $request = $request->withHeader($headerName, $request->getHeaderLine($headerName));
+        }
+
         return $this->addCookiesToRequest($request);
     }
 

@@ -205,3 +205,203 @@ test(
         expect($outputs[0]->result?->toArray())->toBe([$outputKey => 'https://www.example.com/testresponseredirect']);
     }
 )->with(['url', 'uri']);
+
+it('gets the URL for the request from an input array when useInputKeyAsUrl() was called', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader->shouldReceive('load')->withArgs(function (RequestInterface $request) use ($inputArray) {
+        return $request->getUri()->__toString() === $inputArray['someUrl'];
+    })->once()->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+it(
+    'automatically gets the URL for the request from an input array when it contains an url or uri key',
+    function ($key) {
+        $inputArray = [
+            'foo' => 'bar',
+            $key => 'https://www.example.com/baz',
+        ];
+
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('load')->withArgs(function (RequestInterface $request) use ($inputArray, $key) {
+            return $request->getUri()->__toString() === $inputArray[$key];
+        })->once()->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+        $step = Http::get()
+            ->addLoader($loader);
+
+        helper_invokeStepWithInput($step, $inputArray);
+    }
+)->with(['url', 'uri']);
+
+it('gets the body for the request from an input array when useInputKeyAsBody() was called', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+        'someBodyThatIUsedToKnow' => 'foo=bar&baz=quz',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            return $request->getBody()->getContents() === $inputArray['someBodyThatIUsedToKnow'];
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl')
+        ->useInputKeyAsBody('someBodyThatIUsedToKnow');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+it('gets as single header for the request from an input array when useInputKeyAsHeader() was called', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+        'someHeader' => 'someHeaderValue',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            return $request->getHeader('header-name-x') === [$inputArray['someHeader']];
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl')
+        ->useInputKeyAsHeader('someHeader', 'header-name-x');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+it('uses the input key as header name if no header name defined as argument', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'url' => 'https://www.example.com/baz',
+        'header-name' => 'someHeaderValue',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            return $request->getHeader('header-name') === [$inputArray['header-name']];
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->addLoader($loader)
+        ->useInputKeyAsHeader('header-name');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+it('merges header values if you provide a static header value and use an input value as header', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+        'someHeader' => 'someHeaderValue',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            return $request->getHeader('header-name-x') === ['foo', $inputArray['someHeader']];
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get(['header-name-x' => 'foo'])
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl')
+        ->useInputKeyAsHeader('someHeader', 'header-name-x');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+test('you can use useInputKeyAsHeader() multiple times', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+        'someHeader' => 'someHeaderValue',
+        'anotherHeader' => 'anotherHeaderValue',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            return $request->getHeader('header-name-x') === [$inputArray['someHeader']] &&
+                $request->getHeader('header-name-y') === [$inputArray['anotherHeader']];
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl')
+        ->useInputKeyAsHeader('someHeader', 'header-name-x')
+        ->useInputKeyAsHeader('anotherHeader', 'header-name-y');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});
+
+it('gets multiple headers from an input array using useInputKeyAsHeaders()', function () {
+    $inputArray = [
+        'foo' => 'bar',
+        'someUrl' => 'https://www.example.com/baz',
+        'customHeaders' => [
+            'header-name-x' => 'foo',
+            'header-name-y' => ['bar', 'baz'],
+        ]
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) use ($inputArray) {
+            $customHeaders = $inputArray['customHeaders'];
+
+            $yHeaderExpectedValue = array_merge(['quz'], $customHeaders['header-name-y']);
+
+            return $request->getHeader('header-name-x') === [$customHeaders['header-name-x']] &&
+                $request->getHeader('header-name-y') === $yHeaderExpectedValue;
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
+
+    $step = Http::get(['header-name-y' => 'quz'])
+        ->addLoader($loader)
+        ->useInputKeyAsUrl('someUrl')
+        ->useInputKeyAsHeaders('customHeaders');
+
+    helper_invokeStepWithInput($step, $inputArray);
+});

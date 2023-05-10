@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
@@ -21,9 +22,27 @@ class Http extends LoadingStep
 
     protected bool $yieldErrorResponses = false;
 
+    protected ?string $useAsUrl = null;
+
+    protected ?string $useAsBody = null;
+
+    protected ?string $inputBody = null;
+
+    protected ?string $useAsHeaders = null;
+
+    /**
+     * @var null|array<string, string>
+     */
+    protected ?array $useAsHeader = null;
+
+    /**
+     * @var null|array<string, string|string[]>
+     */
+    protected ?array $inputHeaders = null;
+
     /**
      * @param string $method
-     * @param array|(string|string[])[] $headers
+     * @param array<string, string|string[]> $headers
      * @param string|StreamInterface|null $body
      * @param string $httpVersion
      */
@@ -144,11 +163,75 @@ class Http extends LoadingStep
     }
 
     /**
+     * Chose key from array input to use its value as request URL
+     *
+     * If input is an array with string keys, you can define which key from that array should be used as the URL for
+     * the HTTP request.
+     */
+    public function useInputKeyAsUrl(string $key): static
+    {
+        $this->useAsUrl = $key;
+
+        return $this;
+    }
+
+    /**
+     * Chose key from array input to use its value as request body
+     *
+     * If input is an array with string keys, you can define which key from that array should be used as the body for
+     * the HTTP request.
+     */
+    public function useInputKeyAsBody(string $key): static
+    {
+        $this->useAsBody = $key;
+
+        return $this;
+    }
+
+    /**
+     * Chose key from array input to use its value as a request header
+     *
+     * If input is an array with string keys, you can choose a key from that array and map it to an HTTP request header.
+     */
+    public function useInputKeyAsHeader(string $key, string $asHeader = null): static
+    {
+        $asHeader = $asHeader ?? $key;
+
+        if ($this->useAsHeader === null) {
+            $this->useAsHeader = [];
+        }
+
+        $this->useAsHeader[$key] = $asHeader;
+
+        return $this;
+    }
+
+    /**
+     * Chose key from array input to use its value as request headers
+     *
+     * If input is an array with string keys, you can choose a key from that array that will be used as headers for the
+     * HTTP request. So, the value behind that array key, has to be an array with header names as keys. If you want to
+     * map just one single HTTP header from input, use the `useInputKeyAsHeader()` method.
+     */
+    public function useInputKeyAsHeaders(string $key): static
+    {
+        $this->useAsHeaders = $key;
+
+        return $this;
+    }
+
+    /**
      * @return UriInterface|UriInterface[]
      * @throws InvalidArgumentException
      */
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
+        $this->getBodyFromArrayInput($input);
+
+        $this->getHeadersFromArrayInput($input);
+
+        $input = $this->getUrlFromArrayInput($input);
+
         if (is_array($input)) {
             foreach ($input as $key => $url) {
                 $input[$key] = $this->validateAndSanitizeToUriInterface($url);
@@ -176,6 +259,8 @@ class Http extends LoadingStep
                 yield $response;
             }
         }
+
+        $this->resetInputRequestParams();
     }
 
     protected function outputKeyAliases(): array
@@ -189,6 +274,9 @@ class Http extends LoadingStep
         ];
     }
 
+    /**
+     * @throws LoadingException
+     */
     protected function getResponseFromInputUri(UriInterface $input): ?RespondedRequest
     {
         $request = $this->getRequestFromInputUri($input);
@@ -198,9 +286,16 @@ class Http extends LoadingStep
 
     protected function getRequestFromInputUri(UriInterface $uri): RequestInterface
     {
-        return new Request($this->method, $uri, $this->headers, $this->body, $this->httpVersion);
+        $body = $this->inputBody ?? $this->body;
+
+        $headers = $this->inputHeaders ? $this->mergeHeaders() : $this->headers;
+
+        return new Request($this->method, $uri, $headers, $body, $this->httpVersion);
     }
 
+    /**
+     * @throws LoadingException
+     */
     protected function getResponseFromRequest(RequestInterface $request): ?RespondedRequest
     {
         if ($this->stopOnErrorResponse) {
@@ -214,5 +309,166 @@ class Http extends LoadingStep
         }
 
         return null;
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function getUrlFromArrayInput(mixed $input): mixed
+    {
+        if ($this->useAsUrl) {
+            if (!is_array($input)) {
+                $this->logger?->warning('Input is not array, therefore can\'t get URL from input by key.');
+            } elseif (array_key_exists($this->useAsUrl, $input)) {
+                return [$input[$this->useAsUrl]];
+            } else {
+                $this->logger?->warning(
+                    'Input key ' . $this->useAsUrl . ' that should be used as request URL isn\'t present in input.'
+                );
+            }
+        } elseif (is_array($input) && array_key_exists('url', $input)) {
+            return $input['url'];
+        } elseif (is_array($input) && array_key_exists('uri', $input)) {
+            return $input['uri'];
+        }
+
+        return $input;
+    }
+
+    protected function getBodyFromArrayInput(mixed $input): void
+    {
+        if ($this->useAsBody) {
+            if (!is_array($input)) {
+                $this->logger?->warning('Input is not array, therefore can\'t get body from input by key.');
+            } elseif (array_key_exists($this->useAsBody, $input)) {
+                $this->inputBody = $input[$this->useAsBody];
+            } else {
+                $this->logger?->warning(
+                    'Input key ' . $this->useAsBody . ' that should be used as request body isn\'t present in input.'
+                );
+            }
+        }
+    }
+
+    protected function getHeadersFromArrayInput(mixed $input): void
+    {
+        if ($this->useAsHeaders) {
+            if (!is_array($input)) {
+                $this->logger?->warning('Input is not array, therefore can\'t get headers from input by key.');
+            } elseif (array_key_exists($this->useAsHeaders, $input)) {
+                $this->inputHeaders = $input[$this->useAsHeaders];
+            } else {
+                $this->logger?->warning(
+                    'Input key ' . $this->useAsHeaders . ' that should be used as request headers isn\'t present in ' .
+                    'input.'
+                );
+            }
+        }
+
+        if (is_array($this->useAsHeader)) {
+            if (!is_array($input)) {
+                $this->logger?->warning('Input is not array, therefore can\'t get header from input by key.');
+            } else {
+                foreach ($this->useAsHeader as $inputKey => $headerName) {
+                    $this->addToInputHeadersFromInput($input, $inputKey, $headerName);
+                }
+            }
+        }
+    }
+
+    protected function addToInputHeadersFromInput(mixed $input, string $inputKey, string $headerName): void
+    {
+        if (!is_array($this->inputHeaders)) {
+            $this->inputHeaders = [];
+        }
+
+        if (!array_key_exists($inputKey, $input)) {
+            $this->logger?->warning(
+                'Input key ' . $inputKey . ' that should be used as a request header, isn\'t present in input.'
+            );
+
+            return;
+        }
+
+        $inputValue = $input[$inputKey];
+
+        if (!array_key_exists($headerName, $this->inputHeaders)) {
+            $this->inputHeaders[$headerName] = is_array($inputValue) ? $inputValue : [$inputValue];
+
+            return;
+        }
+
+        $this->inputHeaders[$headerName] = $this->addValuesToHeaderArray(
+            is_array($this->inputHeaders[$headerName]) ? $this->inputHeaders[$headerName] : [],
+            is_array($inputValue) ? $inputValue : [$inputValue],
+        );
+    }
+
+    /**
+     * @return array<string, string[]>
+     */
+    protected function mergeHeaders(): array
+    {
+        $headers = $this->normalizeHeaders($this->headers);
+
+        if (is_array($this->inputHeaders)) {
+            foreach ($this->inputHeaders as $headerName => $value) {
+                if (!array_key_exists($headerName, $headers)) {
+                    $headers[$headerName] = is_array($value) ? $value : [$value];
+
+                    continue;
+                }
+
+                if (!in_array($value, $headers[$headerName], true)) {
+                    if (is_array($value)) {
+                        $headers[$headerName] = $this->addValuesToHeaderArray($headers[$headerName], $value);
+                    } elseif (!in_array($value, $headers[$headerName], true)) {
+                        $headers[$headerName][] = $value;
+                    }
+                } else {
+                    $headers[$headerName] = [$headers[$headerName], $value];
+                }
+            }
+        }
+
+        return $headers;
+    }
+
+    /**
+     * @param array<string, string|string[]> $headers
+     * @return array<string, string[]>
+     */
+    protected function normalizeHeaders(array $headers): array
+    {
+        $normalized = [];
+
+        foreach ($headers as $headerName => $value) {
+            $normalized[$headerName] = is_array($value) ? $value : [$value];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param string[] $headers
+     * @param string[] $values
+     * @return string[]
+     */
+    protected function addValuesToHeaderArray(array $headers, array $values): array
+    {
+        foreach ($values as $value) {
+            if (!in_array($value, $headers, true)) {
+                $headers[] = $value;
+            }
+        }
+
+        return $headers;
+    }
+
+    protected function resetInputRequestParams(): void
+    {
+        $this->inputHeaders = null;
+
+        $this->inputBody = null;
     }
 }
