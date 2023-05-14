@@ -17,4 +17,6 @@ interface FilterInterface
     public function addOr(FilterInterface $filter): void;
 
     public function getOr(): ?FilterInterface;
+
+    public function negate(): NegatedFilter;
 }
