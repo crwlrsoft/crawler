@@ -160,6 +160,11 @@ abstract class Filter implements FilterInterface
         return $this->or instanceof FilterInterface ? $this->or : null;
     }
 
+    public function negate(): NegatedFilter
+    {
+        return new NegatedFilter($this);
+    }
+
     /**
      * @throws Exception
      */
