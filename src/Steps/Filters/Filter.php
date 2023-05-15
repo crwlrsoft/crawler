@@ -178,6 +178,14 @@ abstract class Filter implements FilterInterface
             throw new InvalidArgumentException('Can only filter by key with array or object output.');
         }
 
+        if (is_object($value) && !property_exists($value, $this->useKey) && method_exists($value, '__serialize')) {
+            $serialized = $value->__serialize();
+
+            if (array_key_exists($this->useKey, $serialized)) {
+                $value = $serialized;
+            }
+        }
+
         if (
             (is_array($value) && !array_key_exists($this->useKey, $value)) ||
             (is_object($value) && !property_exists($value, $this->useKey))

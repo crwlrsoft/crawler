@@ -142,6 +142,10 @@ abstract class BaseStep implements StepInterface
         if (is_string($keyOrFilter) && $filter === null) {
             throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
         } elseif (is_string($keyOrFilter)) {
+            if ($this->isOutputKeyAlias($keyOrFilter)) {
+                $keyOrFilter = $this->getOutputKeyAliasRealKey($keyOrFilter);
+            }
+
             $filter->useKey($keyOrFilter);
 
             $this->filters[] = $filter;
@@ -465,6 +469,18 @@ abstract class BaseStep implements StepInterface
         }
 
         return $aliases;
+    }
+
+    protected function isOutputKeyAlias(string $key): bool
+    {
+        return array_key_exists($key, $this->outputKeyAliases());
+    }
+
+    protected function getOutputKeyAliasRealKey(string $key): string
+    {
+        $mapping = $this->outputKeyAliases();
+
+        return $mapping[$key];
     }
 
     /**

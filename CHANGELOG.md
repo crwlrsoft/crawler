@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Although the `HttpCrawl` step (`Http::crawl()`) already respected the limit of outputs defined via the `maxOutputs()` method, it actually didn't stop loading pages. The limit had no effect on loading, only on passing on outputs (responses) to the next step. This is fixed in this version.
 * A so-called byte order mark at the beginning of a file (/string) can cause issues. So just remove it, when a step's input string starts with a UTF-8 BOM.
 * There seems to be an issue in guzzle when it gets a PSR-7 request object with a header with multiple string values (as array, like: `['accept-encoding' => ['gzip', 'deflate', 'br']]`). When testing it happened that it only sent the last part (in this case `br`). Therefor the `HttpLoader` now prepares headers before sending (in this case to: `['accept-encoding' => ['gzip, deflate, br']]`).
+* You can now also use the output key aliases when filtering step outputs. You can even use keys that are only present in the serialized version of an output object.
 
 ## [1.0.2] - 2023-03-20
 ### Fixed
