@@ -6,6 +6,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Exception;
@@ -848,4 +849,67 @@ test('you can define aliases for output keys for addToResult()', function () {
         'far' => 'two',
         'waz' => 'three',
     ]);
+});
+
+test('you can filter outputs using an output key alias', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield [
+                'foo' => 'one',
+                'bar' => 'two',
+            ];
+        }
+
+        protected function outputKeyAliases(): array
+        {
+            return [
+                'baz' => 'bar',
+            ];
+        }
+    };
+
+    $step->where('baz', Filter::equal('two'));
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0])->toBeInstanceOf(Output::class);
+});
+
+it('can filter by a key that only exists in the serialized version of an output object', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield new class () {
+                public string $foo = 'one';
+
+                public string $bar = 'two';
+
+                /**
+                 * @return string[]
+                 */
+                public function __serialize(): array
+                {
+                    return [
+                        'foo' => $this->foo,
+                        'bar' => $this->bar,
+                        'baz' => $this->bar,
+                    ];
+                }
+            };
+        }
+
+        protected function outputKeyAliases(): array
+        {
+            return [
+                'quz' => 'baz',
+            ];
+        }
+    };
+
+    $step->where('quz', Filter::equal('two'));
+
+    $outputs = helper_invokeStepWithInput($step);
+
+    expect($outputs[0])->toBeInstanceOf(Output::class);
 });
