@@ -3,6 +3,8 @@
 namespace Crwlr\Crawler\Steps;
 
 use Adbar\Dot;
+use Crwlr\Utils\Json as JsonUtil;
+use Crwlr\Utils\Exceptions\InvalidJsonException;
 use Generator;
 
 class Json extends Step
@@ -37,16 +39,12 @@ class Json extends Step
 
     protected function invoke(mixed $input): Generator
     {
-        $array = json_decode($input, true);
+        try {
+            $array = JsonUtil::stringToArray($input);
+        } catch (InvalidJsonException) {
+            $this->logger?->warning('Failed to decode JSON string.');
 
-        if ($array === null) {
-            $array = json_decode($this->fixJsonString($input), true);
-
-            if ($array === null) {
-                $this->logger?->warning('Failed to decode JSON string.');
-
-                return;
-            }
+            return;
         }
 
         $dot = new Dot($array);
@@ -79,42 +77,5 @@ class Json extends Step
         }
 
         return $mapped;
-    }
-
-    /**
-     * Try to fix JSON keys without quotes
-     *
-     * PHPs json_decode() doesn't work with JSON objects where the keys are not wrapped in quotes.
-     * This method tries to fix this, when json_decode() fails to parse a JSON string.
-     */
-    protected function fixJsonString(string $jsonString): string
-    {
-        return preg_replace_callback(
-            '/(?:(\w+):(\s*".*?"\s*(?:,|}))|(\w+):(\s*[^"]+?\s*(?:,|})))/i',
-            function ($match) {
-                if (count($match) === 3) {
-                    $key = $match[1];
-
-                    $value = $match[2];
-                } elseif (count($match) === 5) {
-                    $key = $match[3];
-
-                    $value = $match[4];
-                } else {
-                    return $match[0];
-                }
-
-                if (!str_starts_with($key, '"')) {
-                    $key = '"' . $key;
-                }
-
-                if (!str_ends_with($key, '"')) {
-                    $key = $key . '"';
-                }
-
-                return $key . ':' . $value;
-            },
-            $jsonString
-        ) ?? $jsonString;
     }
 }
