@@ -43,7 +43,7 @@ class SchemaOrg extends Step
 
     protected function invoke(mixed $input): Generator
     {
-        $data = \Crwlr\SchemaOrg\SchemaOrg::fromHtml($input);
+        $data = \Crwlr\SchemaOrg\SchemaOrg::fromHtml($input, $this->logger);
 
         foreach ($data as $schemaOrgObject) {
             if ($this->onlyType && $schemaOrgObject->getType() !== $this->onlyType) {

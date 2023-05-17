@@ -31,7 +31,7 @@
         "ext-dom": "*",
         "php": "^8.1",
         "crwlr/robots-txt": "^1.1",
-        "crwlr/schema-org": "^0.1.0",
+        "crwlr/schema-org": "^0.2.0",
         "crwlr/url": "^2.0",
         "psr/log": "^2.0|^3.0",
         "symfony/dom-crawler": "^6.0",
@@ -39,7 +39,8 @@
         "psr/simple-cache": "^1.0|^2.0|^3.0",
         "guzzlehttp/guzzle": "^7.4",
         "adbario/php-dot-notation": "^3.1",
-        "chrome-php/chrome": "^1.7"
+        "chrome-php/chrome": "^1.7",
+        "crwlr/utils": "^1.0"
     },
     "require-dev": {
         "pestphp/pest": "^2.3",
