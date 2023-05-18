@@ -14,10 +14,8 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 
-function helper_cachedir(): string
-{
-    return __DIR__ . '/_cachedir';
-}
+use function tests\helper_cachedir;
+use function tests\helper_resetCacheDir;
 
 /**
  * @param mixed[] $items
@@ -35,26 +33,8 @@ function helper_respondedRequestWithRequestUrl(string $requestUrl): RespondedReq
     return new RespondedRequest(new Request('GET', $requestUrl), new Response());
 }
 
-beforeEach(function () {
-    if (!file_exists(helper_cachedir())) {
-        mkdir(helper_cachedir());
-    }
-});
-
 afterEach(function () {
-    $files = scandir(helper_cachedir());
-
-    if (is_array($files)) {
-        foreach ($files as $file) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-
-            unlink(helper_cachedir() . '/' . $file);
-        }
-    }
-
-    rmdir(helper_cachedir());
+    helper_resetCacheDir();
 });
 
 /** @var TestCase $this */

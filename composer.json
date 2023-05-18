@@ -67,7 +67,7 @@
         }
     },
     "scripts": {
-        "test": "pest --parallel --exclude-group integration",
+        "test": "pest --exclude-group integration",
         "test-integration": "pest --group integration",
         "stan": "phpstan analyse",
         "cs": "php-cs-fixer fix -v --dry-run",

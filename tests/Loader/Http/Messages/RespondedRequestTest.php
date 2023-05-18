@@ -114,6 +114,26 @@ test('when request was redirected the effective uri is the redirect uri', functi
     expect($respondedRequest->effectiveUri())->toBe('/redirect-uri');
 });
 
+test('the allUris() method returns all unique URIs', function () {
+    $request = new Request('GET', '/request-uri');
+
+    $response = new Response(301, ['Location' => '/redirect-uri']);
+
+    $respondedRequest = new RespondedRequest($request, $response);
+
+    $respondedRequest->setResponse(new Response(301, ['Location' => '/request-uri']));
+
+    $respondedRequest->setResponse(new Response(301, ['Location' => '/another-redirect-uri']));
+
+    $respondedRequest->setResponse(new Response(200));
+
+    expect($respondedRequest->allUris())->toBe([
+        '/request-uri',
+        '/redirect-uri',
+        '/another-redirect-uri',
+    ]);
+});
+
 it('can be serialized', function () {
     $respondedRequest = new RespondedRequest(
         new Request('POST', '/home', ['key' => 'val'], 'bod'),

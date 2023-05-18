@@ -263,3 +263,25 @@ function helper_getFastCrawler(): HttpCrawler
         }
     };
 }
+
+function helper_cachedir(): string
+{
+    return __DIR__ . '/_Temp/_cachedir';
+}
+
+function helper_resetCacheDir(): void
+{
+    $dir = helper_cachedir();
+
+    $files = scandir($dir);
+
+    if (is_array($files)) {
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..' || $file === '.gitkeep') {
+                continue;
+            }
+
+            @unlink($dir . '/' . $file);
+        }
+    }
+}
