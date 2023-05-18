@@ -124,7 +124,7 @@ class FileCache implements CacheInterface
 
         if (is_array($allFiles)) {
             foreach ($allFiles as $file) {
-                if ($file !== '.' && $file !== '..' && !$this->delete($file)) {
+                if ($file !== '.' && $file !== '..' && $file !== '.gitkeep' && !$this->delete($file)) {
                     return false;
                 }
             }

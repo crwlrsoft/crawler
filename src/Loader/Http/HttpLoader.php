@@ -9,6 +9,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\RetryErrorResponseHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Loader;
+use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
@@ -72,6 +73,11 @@ class HttpLoader extends Loader
     protected bool $retryCachedErrorResponses = false;
 
     protected bool $writeOnlyCache = false;
+
+    /**
+     * @var array<int, FilterInterface>
+     */
+    protected array $cacheUrlFilters = [];
 
     /**
      * @param mixed[] $defaultGuzzleClientConfig
@@ -147,8 +153,8 @@ class HttpLoader extends Loader
                 $this->callHook('onError', $request, $respondedRequest->response);
             }
 
-            if (!$isFromCache && $this->cache) {
-                $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
+            if (!$isFromCache) {
+                $this->addToCache($respondedRequest);
             }
 
             return $respondedRequest;
@@ -203,8 +209,8 @@ class HttpLoader extends Loader
 
         $this->callHook('afterLoad', $request);
 
-        if (!$isFromCache && $this->cache) {
-            $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
+        if (!$isFromCache) {
+            $this->addToCache($respondedRequest);
         }
 
         return $respondedRequest;
@@ -307,6 +313,13 @@ class HttpLoader extends Loader
         return $this;
     }
 
+    public function cacheOnlyWhereUrl(FilterInterface $filter): static
+    {
+        $this->cacheUrlFilters[] = $filter;
+
+        return $this;
+    }
+
     /**
      * @param mixed[] $config
      * @return mixed[]
@@ -322,6 +335,10 @@ class HttpLoader extends Loader
         return $merged;
     }
 
+    /**
+     * @throws LoadingException
+     * @throws Exception
+     */
     protected function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
     {
         if (!$this->robotsTxtHandler->isAllowed($uri)) {
@@ -370,6 +387,31 @@ class HttpLoader extends Loader
         }
 
         return null;
+    }
+
+    /**
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    protected function addToCache(RespondedRequest $respondedRequest): void
+    {
+        if ($this->cache && $this->shouldResponseBeCached($respondedRequest)) {
+            $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
+        }
+    }
+
+    protected function shouldResponseBeCached(RespondedRequest $respondedRequest): bool
+    {
+        if (!empty($this->cacheUrlFilters)) {
+            foreach ($this->cacheUrlFilters as $filter) {
+                foreach ($respondedRequest->allUris() as $url) {
+                    if (!$filter->evaluate($url)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

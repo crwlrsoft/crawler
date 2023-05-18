@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
+use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Request;
@@ -17,8 +18,10 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
-use stdClass;
 use Throwable;
+
+use function tests\helper_cachedir;
+use function tests\helper_resetCacheDir;
 
 function helper_nonBotUserAgent(): UserAgent
 {
@@ -26,19 +29,7 @@ function helper_nonBotUserAgent(): UserAgent
 }
 
 afterEach(function () {
-    $dir = __DIR__ . '/_cachedir';
-
-    $files = scandir($dir);
-
-    if (is_array($files)) {
-        foreach ($files as $file) {
-            if ($file === '.' || $file === '..' || $file === '.gitkeep') {
-                continue;
-            }
-
-            @unlink($dir . '/' . $file);
-        }
-    }
+    helper_resetCacheDir();
 });
 
 /** @var TestCase $this */
@@ -465,7 +456,7 @@ test(
             ->twice()
             ->andReturn(new Response(404), new Response(200));
 
-        $cache = new FileCache(__DIR__ . '/_cachedir');
+        $cache = new FileCache(helper_cachedir());
 
         $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
@@ -492,7 +483,7 @@ it(
 
         $httpClient->shouldReceive('sendRequest')->twice()->andReturn(new Response());
 
-        $cache = new FileCache(__DIR__ . '/_cachedir');
+        $cache = new FileCache(helper_cachedir());
 
         $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
@@ -509,6 +500,72 @@ it(
             $httpLoader->{$loadingMethod}('https://www.example.com/articles/123');
         } catch (Throwable $exception) {
         }
+    }
+)->with(['load', 'loadOrFail']);
+
+test(
+    'When cache filters are defined via the cacheOnlyWhereUrl() method it caches only responses for matching URLs',
+    function (string $loadingMethod) {
+        $httpClient = Mockery::mock(ClientInterface::class);
+
+        $httpClient
+            ->shouldReceive('sendRequest')
+            ->twice()
+            ->andReturnUsing(function (Request $request) {
+                return new Response(200, body: $request->getUri() . ' response');
+            });
+
+        $cache = new FileCache(helper_cachedir());
+
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+        $httpLoader->setCache($cache);
+
+        $httpLoader->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'));
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/foo/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeNull();
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/bar/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
+    }
+)->with(['load', 'loadOrFail']);
+
+test(
+    'When multiple cache filters are defined via the cacheOnlyWhereUrl() method, all of them are used',
+    function (string $loadingMethod) {
+        $httpClient = Mockery::mock(ClientInterface::class);
+
+        $httpClient
+            ->shouldReceive('sendRequest')
+            ->times(3)
+            ->andReturnUsing(function (Request $request) {
+                return new Response(200, body: $request->getUri() . ' response');
+            });
+
+        $cache = new FileCache(helper_cachedir());
+
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+        $httpLoader->setCache($cache);
+
+        $httpLoader
+            ->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'))
+            ->cacheOnlyWhereUrl(Filter::urlHost('www.example.com'));
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/foo/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeNull();
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.crwlr.software/bar/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeNull();
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/bar/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
     }
 )->with(['load', 'loadOrFail']);
 

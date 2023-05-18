@@ -4,9 +4,7 @@ namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
-use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\LoadingStep;
-use Crwlr\Crawler\UserAgents\UserAgent;
 use Generator;
 use Mockery;
 

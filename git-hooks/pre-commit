@@ -3,7 +3,7 @@
 
 run('composer test', 'Unit tests');
 run('composer test-integration', 'Integration tests');
-run('composer cs', 'PHP Coding Standards Fixer');
+run('composer cs-fix', 'PHP Coding Standards Fixer');
 run('composer stan', 'PHPStan');
 exit(0);
 

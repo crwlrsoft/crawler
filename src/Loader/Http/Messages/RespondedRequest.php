@@ -87,6 +87,20 @@ class RespondedRequest
         return $this->request->getUri();
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function allUris(): array
+    {
+        $uris = [$this->requestedUri() => $this->requestedUri()];
+
+        foreach ($this->redirects as $redirect) {
+            $uris[$redirect] = $redirect;
+        }
+
+        return array_values($uris);
+    }
+
     public function isRedirect(): bool
     {
         return $this->response->getStatusCode() >= 300 && $this->response->getStatusCode() < 400;
