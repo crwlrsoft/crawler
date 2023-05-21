@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-05-21
+
 ### Added
 * `Http` steps can now receive body and headers from input data (instead of statically defining them via argument like `Http::method(headers: ...)`) using the new methods `useInputKeyAsBody(<key>)` and `useInputKeyAsHeader(<key>, <asHeader>)` or `useInputKeyAsHeaders(<key>)`. Further, when invoked with associative array input data, the step will by default use the value from `url` or `uri` for the request URL. If the input array contains the URL in a key with a different name, you can use the new `useInputKeyAsUrl(<key>)` method. That was basically already possible with the existing `useInputKey(<key>)` method, because the URL is the main input argument for the step. But if you want to use it in combination with the other new `useInputKeyAsXyz()` methods, you have to use `useInputKeyAsUrl()`, because using `useInputKey(<key>)` would invoke the whole step with that key only.
 * `Crawler::runAndDump()` as a simple way to just run a crawler and dump all results, each as an array.
