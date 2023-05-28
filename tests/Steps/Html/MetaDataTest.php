@@ -69,10 +69,10 @@ it('returns only the meta tags defined via the only() method', function () {
         </html>
         HTML;
 
-    $outputs = helper_invokeStepWithInput(Html::metaData()->only(['title', 'description']), $html);
+    $outputs = helper_invokeStepWithInput(Html::metaData()->only(['description', 'og:title']), $html);
 
     expect($outputs[0]->get())->toBe([
-        'title' => 'Hello World!',
         'description' => 'This is a page saying: Hello World!',
+        'og:title' => 'Hello World!',
     ]);
 });
