@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-05-28
+* Using the `only()` method of the `MetaData` (`Html::metaData()`) step class, the `title` property was always contained in the output, even if not listed in the `only` properties. This is fixed now.
+
 ## [1.1.1] - 2023-05-28
 ### Fixed
 * There was an issue when adding multiple associative arrays with the same key to a `Result` object: let's say you're having a step producing array output like: `['bar' => 'something', 'baz' => 'something else']` and it (the whole array) shall be added to the result property `foo`. When the step produced multiple such array outputs, that led to a result like `['bar' => '...', 'baz' => '...', ['bar' => '...', 'baz' => '...'], ['bar' => '...', 'baz' => '...']`. Now it's fixed to result in `[['bar' => '...', 'baz' => '...'], ['bar' => '...', 'baz' => '...'], ['bar' => '...', 'baz' => '...']`.

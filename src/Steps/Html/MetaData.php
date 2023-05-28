@@ -29,7 +29,7 @@ class MetaData extends Step
      */
     protected function invoke(mixed $input): Generator
     {
-        $data = ['title' => $this->getTitle($input)];
+        $data = $this->addToData([], 'title', $this->getTitle($input));
 
         foreach ($input->filter('meta') as $metaElement) {
             /** @var DOMElement $metaElement */
@@ -40,7 +40,7 @@ class MetaData extends Step
             }
 
             if (!empty($metaName) && (empty($this->onlyKeys) || in_array($metaName, $this->onlyKeys, true))) {
-                $data[$metaName] = $metaElement->getAttribute('content');
+                $data = $this->addToData($data, $metaName, $metaElement->getAttribute('content'));
             }
         }
 
@@ -61,5 +61,18 @@ class MetaData extends Step
         }
 
         return '';
+    }
+
+    /**
+     * @param array<string, string> $data
+     * @return array<string, string>
+     */
+    protected function addToData(array $data, string $key, string $value): array
+    {
+        if (empty($this->onlyKeys) || in_array($key, $this->onlyKeys, true)) {
+            $data[$key] = $value;
+        }
+
+        return $data;
     }
 }
