@@ -23,10 +23,10 @@ final class Result
         }
 
         if (array_key_exists($key, $this->data)) {
-            if (is_array($this->data[$key])) {
-                $this->data[$key][] = $value;
-            } else {
+            if (!is_array($this->data[$key]) || $this->isAssociativeArray($this->data[$key])) {
                 $this->data[$key] = [$this->data[$key], $value];
+            } else {
+                $this->data[$key][] = $value;
             }
         } else {
             $this->data[$key] = $value;
@@ -61,5 +61,17 @@ final class Result
         }
 
         return 'unnamed' . $i;
+    }
+
+    /**
+     * @param mixed[] $array
+     */
+    private function isAssociativeArray(array $array): bool
+    {
+        foreach ($array as $key => $value) {
+            return is_string($key);
+        }
+
+        return false;
     }
 }

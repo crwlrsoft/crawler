@@ -80,3 +80,18 @@ test('you can create a new instance from another instance', function () {
 
     expect($instance2->get('baz'))->toBe('quz');
 });
+
+test('it makes a proper array of arrays if you repeatedly add (associative) arrays with the same key', function () {
+    $result = new Result();
+
+    $result->set('foo', ['bar' => 'one', 'baz' => 'two']);
+
+    expect($result->get('foo'))->toBe(['bar' => 'one', 'baz' => 'two']);
+
+    $result->set('foo', ['bar' => 'three', 'baz' => 'four']);
+
+    expect($result->get('foo'))->toBe([
+        ['bar' => 'one', 'baz' => 'two'],
+        ['bar' => 'three', 'baz' => 'four'],
+    ]);
+});
