@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2023-06-29
+### Fixed
+* Improved `Json` step: if the target of the "each" (like `Json::each('target', [...])`) does not exist in the input JSON data, the step yields nothing and logs a warning.
+
 ## [1.1.2] - 2023-05-28
+### Fixed
 * Using the `only()` method of the `MetaData` (`Html::metaData()`) step class, the `title` property was always contained in the output, even if not listed in the `only` properties. This is fixed now.
 
 ## [1.1.1] - 2023-05-28

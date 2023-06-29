@@ -3,12 +3,16 @@
 namespace tests\Steps;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Json;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use PHPUnit\Framework\TestCase;
 
 use function tests\helper_invokeStepWithInput;
+
+/** @var TestCase $this */
 
 it('accepts RespondedRequest as input', function () {
     $json = '{ "data": { "foo": "bar" } }';
@@ -136,6 +140,22 @@ test('When the root element is an array you can use each with empty string as pa
     expect($output[2]->get())->toBe(['nickname' => 'Poppi']);
 
     expect($output[3]->get())->toBe(['nickname' => 'Dominik']);
+});
+
+it('yields no results and logs a warning when the target for "each" does not exist', function () {
+    $jsonString = '{ "foo": { "bar": [{ "number": "one" }, { "number": "two" }] } }';
+
+    $step = Json::each('boo.bar', ['number']);
+
+    $step->addLogger(new CliLogger());
+
+    $output = helper_invokeStepWithInput($step, $jsonString);
+
+    expect($output)->toHaveCount(0);
+
+    $logOutput = $this->getActualOutputForAssertion();
+
+    expect($logOutput)->toContain('The target of "each" does not exist in the JSON data.');
 });
 
 it('also works with JS style JSON objects without quotes around keys', function () {

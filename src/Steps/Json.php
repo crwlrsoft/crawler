@@ -54,8 +54,12 @@ class Json extends Step
         } else {
             $each = $this->each === '' ? $dot->get() : $dot->get($this->each);
 
-            foreach ($each as $item) {
-                yield $this->mapProperties(new Dot($item));
+            if (!is_iterable($each)) {
+                $this->logger?->warning('The target of "each" does not exist in the JSON data.');
+            } else {
+                foreach ($each as $item) {
+                    yield $this->mapProperties(new Dot($item));
+                }
             }
         }
     }
