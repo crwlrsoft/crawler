@@ -39,7 +39,7 @@ it('can be invoked with a PSR-7 Uri object as input', function () {
     helper_traverseIterable($step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/'))));
 });
 
-it('throws an InvalidArgumentExpection when invoked with something else as input', function () {
+it('throws an InvalidArgumentException when invoked with something else as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
 
     $step = (new Http('GET'))->addLoader($loader);
