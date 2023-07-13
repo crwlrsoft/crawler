@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Loading;
 
 use Closure;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Loading\Http\Document;
 use Crwlr\Crawler\Steps\Sitemap\GetUrlsFromSitemap;
 use Crwlr\Url\Url;
@@ -289,6 +290,10 @@ class HttpCrawl extends Http
 
         foreach ($document->dom()->filter('a') as $link) {
             $linkElement = new Crawler($link);
+
+            if (GetLink::isSpecialNonHttpLink($linkElement)) {
+                continue;
+            }
 
             $url = $this->handleUrlFragment($document->baseUrl()->resolve($linkElement->attr('href') ?? ''));
 

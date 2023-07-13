@@ -20,17 +20,10 @@ class GetLinks extends GetLink
         $selector = $this->selector ?? 'a';
 
         foreach ($input->filter($selector) as $link) {
-            if ($link->nodeName !== 'a') {
-                $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
-                continue;
-            }
+            $linkUrl = $this->getLinkUrl($link);
 
-            $linkUrl = $this->handleUrlFragment(
-                $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '')
-            );
-
-            if ($this->matchesAdditionalCriteria($linkUrl)) {
-                yield $linkUrl->__toString();
+            if ($linkUrl) {
+                yield (string) $linkUrl;
             }
         }
     }
