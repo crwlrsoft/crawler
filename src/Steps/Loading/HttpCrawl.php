@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Loading;
 use Closure;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http\Document;
+use Crwlr\Crawler\Steps\Sitemap\GetUrlsFromSitemap;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
@@ -249,7 +250,7 @@ class HttpCrawl extends Http
      */
     protected function getUrlsFromSitemap(RespondedRequest $respondedRequest): array
     {
-        $domCrawler = new Crawler(Http::getBodyString($respondedRequest));
+        $domCrawler = GetUrlsFromSitemap::fixUrlSetTag(new Crawler(Http::getBodyString($respondedRequest)));
 
         $urls = [];
 

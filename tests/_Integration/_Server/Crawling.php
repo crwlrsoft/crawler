@@ -25,6 +25,20 @@ if ($route === '/crawling/sitemap.xml') {
 XML;
 }
 
+if ($route === '/crawling/sitemap2.xml') {
+    echo <<<XML
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/typo3/sysext/seo/Resources/Public/CSS/Sitemap.xsl"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>http://www.example.com/crawling/main</loc></url>
+<url><loc>http://www.example.com/crawling/sub1</loc></url>
+<url><loc>http://www.example.com/crawling/sub1/sub1</loc></url>
+<url><loc>http://www.example.com/crawling/sub2</loc></url>
+<url><loc>http://www.example.com/crawling/sub2/sub1</loc></url>
+<url><loc>http://www.example.com/crawling/sub2/sub1/sub1</loc></url>
+</urlset>
+XML;
+}
+
 if ($route === '/crawling/main') {
     echo <<<HTML
         <!doctype html>
