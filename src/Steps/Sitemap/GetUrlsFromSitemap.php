@@ -10,6 +10,24 @@ class GetUrlsFromSitemap extends Step
 {
     protected bool $withData = false;
 
+    /**
+     * Remove attributes from a sitemap's <urlset> tag
+     *
+     * Symfony's DomCrawler component has problems when a sitemap's <urlset> tag contains certain attributes.
+     * So, if the count of urls in the sitemap is zero, try to remove all attributes from the <urlset> tag.
+     *
+     * @param Crawler $dom
+     * @return Crawler
+     */
+    public static function fixUrlSetTag(Crawler $dom): Crawler
+    {
+        if ($dom->filter('urlset url')->count() === 0) {
+            return new Crawler(preg_replace('/<urlset.+>/', '<urlset>', $dom->outerHtml()));
+        }
+
+        return $dom;
+    }
+
     public function withData(): static
     {
         $this->withData = true;
@@ -22,11 +40,7 @@ class GetUrlsFromSitemap extends Step
      */
     protected function invoke(mixed $input): Generator
     {
-        if ($input->filter('urlset url')->count() === 0) {
-            $xml = preg_replace('/<urlset.+>/', '<urlset>', $input->outerHtml());
-
-            $input = new Crawler($xml);
-        }
+        $input = self::fixUrlSetTag($input);
 
         foreach ($input->filter('urlset url') as $urlNode) {
             $urlNode = new Crawler($urlNode);

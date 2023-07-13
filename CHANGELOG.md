@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2023-07-14
+### Fixed
+* The `Http::crawl()` step now also work with sitemaps as input URL, where the `<urlset>` tag contains attributes that would cause the symfony DomCrawler to not find any elements.
+
 ## [1.1.3] - 2023-06-29
 ### Fixed
 * Improved `Json` step: if the target of the "each" (like `Json::each('target', [...])`) does not exist in the input JSON data, the step yields nothing and logs a warning.

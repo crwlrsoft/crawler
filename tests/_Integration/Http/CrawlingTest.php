@@ -188,6 +188,19 @@ it('fails to extract URLs if you provide a sitemap as input and don\'t call inpu
     expect($crawler->getLoader()->loadedUrls)->toHaveCount(1);
 });
 
+it(
+    'extracts URLs from a sitemap where the <urlset> tag contains attributes that cause symfony DomCrawler to fail',
+    function () {
+        $crawler = (new Crawler())
+            ->input('http://www.example.com/crawling/sitemap2.xml')
+            ->addStep(Http::crawl()->inputIsSitemap());
+
+        $crawler->runAndTraverse();
+
+        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
+    }
+);
+
 it('loads only pages where the path starts with a certain string when method pathStartsWith() is called', function () {
     $crawler = (new Crawler())
         ->input('http://www.example.com/crawling/sitemap.xml')
