@@ -15,9 +15,6 @@ class GetUrlsFromSitemap extends Step
      *
      * Symfony's DomCrawler component has problems when a sitemap's <urlset> tag contains certain attributes.
      * So, if the count of urls in the sitemap is zero, try to remove all attributes from the <urlset> tag.
-     *
-     * @param Crawler $dom
-     * @return Crawler
      */
     public static function fixUrlSetTag(Crawler $dom): Crawler
     {
