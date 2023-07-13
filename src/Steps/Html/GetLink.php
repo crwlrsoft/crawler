@@ -6,6 +6,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Url\Url;
+use DOMNode;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -35,6 +36,15 @@ class GetLink extends Step
     {
     }
 
+    public static function isSpecialNonHttpLink(Crawler $linkElement): bool
+    {
+        $href = $linkElement->attr('href') ?? '';
+
+        return str_starts_with($href, 'mailto:') ||
+            str_starts_with($href, 'tel:') ||
+            str_starts_with($href, 'javascript:');
+    }
+
     protected function validateAndSanitizeInput(mixed $input): Crawler
     {
         if (!$input instanceof RespondedRequest) {
@@ -58,18 +68,10 @@ class GetLink extends Step
         $selector = $this->selector ?? 'a';
 
         foreach ($input->filter($selector) as $link) {
-            if ($link->nodeName !== 'a') {
-                $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
+            $linkUrl = $this->getLinkUrl($link);
 
-                continue;
-            }
-
-            $linkUrl = $this->handleUrlFragment(
-                $this->baseUri->resolve((new Crawler($link))->attr('href') ?? '')
-            );
-
-            if ($this->matchesAdditionalCriteria($linkUrl)) {
-                yield $linkUrl->__toString();
+            if ($linkUrl) {
+                yield (string) $linkUrl;
 
                 break;
             }
@@ -151,6 +153,34 @@ class GetLink extends Step
         if (!empty($baseHref)) {
             $this->baseUri = $this->baseUri->resolve($baseHref);
         }
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function getLinkUrl(DOMNode $link): ?Url
+    {
+        if ($link->nodeName !== 'a') {
+            $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
+
+            return null;
+        }
+
+        $link = new Crawler($link);
+
+        if (self::isSpecialNonHttpLink($link)) {
+            return null;
+        }
+
+        $linkUrl = $this->handleUrlFragment(
+            $this->baseUri->resolve($link->attr('href') ?? '')
+        );
+
+        if ($this->matchesAdditionalCriteria($linkUrl)) {
+            return $linkUrl;
+        }
+
+        return null;
     }
 
     /**

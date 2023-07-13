@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.5] - 2023-07-14
+### Fixed
+* The `Http::crawl()` step, as well as the `Html::getLink()` and `Html::getLinks()` steps now ignore links, when the `href` attribute starts with `mailto:`, `tel:` or `javascript:`. For the crawl step it obviously makes no sense, but it's also considered a bugfix for the getLink(s) steps, because they are meant to deliver absolute HTTP URLs. If you want to get the values of such links, use the HTML data extraction step.
+
 ## [1.1.4] - 2023-07-14
 ### Fixed
 * The `Http::crawl()` step now also work with sitemaps as input URL, where the `<urlset>` tag contains attributes that would cause the symfony DomCrawler to not find any elements.

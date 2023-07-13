@@ -416,3 +416,37 @@ it('throws away the URL fragment part when withoutFragment() was called', functi
 
     expect($links[1]->get())->toBe('https://www.example.com/baz');
 });
+
+it('ignores special non HTTP links', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head></head>
+        <body>
+        <a href="mailto:somebody@example.com">mailto link</a>
+        <a href="/one">link one</a>
+        <a href="javascript:alert('hello');">javascript link</a>
+        <a href="/two">link two</a>
+        <a href="tel:+499123456789">phone link</a>
+        <a href="/three">link three</a>
+        </body>
+        </html>
+        HTML;
+
+    $step = (new GetLinks());
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/home'),
+        new Response(200, [], $html)
+    );
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links)->toHaveCount(3);
+
+    expect($links[0]->get())->toBe('https://www.example.com/one');
+
+    expect($links[1]->get())->toBe('https://www.example.com/two');
+
+    expect($links[2]->get())->toBe('https://www.example.com/three');
+});

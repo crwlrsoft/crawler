@@ -50,6 +50,10 @@ if ($route === '/crawling/main') {
             <a href="/crawling/sub2#fragment2">Subpage 2 - Fragment 2</a> <br>
 
             <a href="https://www.crwlr.software/packages/crawler">External link</a>
+
+            <a href="mailto:somebody@example.com">mailto link</a>
+            <a href="javascript:alert('hello');">javascript link</a>
+            <a href="tel:+499123456789">phone link</a>
         </body>
         </html>
         HTML;
