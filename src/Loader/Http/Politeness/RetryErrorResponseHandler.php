@@ -109,7 +109,7 @@ class RetryErrorResponseHandler
         $statusCode = $response->getStatusCode();
 
         if (array_key_exists($statusCode, $this->waitErrors)) {
-            return $statusCode . ' (' . $this->waitErrors[$statusCode] . ')';
+            return sprintf('%s (%s)', $statusCode, $this->waitErrors[$statusCode]);
         }
 
         return '?';
@@ -138,14 +138,16 @@ class RetryErrorResponseHandler
 
     /**
      * @throws LoadingException
+     * @return never
      */
-    protected function retryAfterExceedsLimitMessage(ResponseInterface $response): string
+    protected function retryAfterExceedsLimitMessage(ResponseInterface $response)
     {
         $statusCodeAndReasonPhrase = $this->getResponseCodeAndReasonPhrase($response);
 
-        $message = 'Retry-After header in ' . $statusCodeAndReasonPhrase . ' response, requires to wait longer ' .
-            'than the defined max wait time for this case. If you want to increase this limit, set it ' .
-            'in the ErrorResponseHandler of your HttpLoader instance.';
+        $message = sprintf(
+            'Retry-After header in %s response indicates a too long wait, see your HttpLoader::retryErrorResponseHandler',
+            $statusCodeAndReasonPhrase
+        );
 
         $this->logger?->error($message);
 

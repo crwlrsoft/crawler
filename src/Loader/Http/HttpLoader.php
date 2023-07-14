@@ -101,16 +101,22 @@ class HttpLoader extends Loader
         });
 
         $this->onError(function (RequestInterface $request, Exception|Error|ResponseInterface $exceptionOrResponse, $logger) {
-            $logMessage = 'Failed to load ' . $request->getUri()->__toString() . ': ';
+            if (! $exceptionOrResponse instanceof ResponseInterface) {
+                $logger->error(sprintf(
+                    'Failed to load %s: %s',
+                    $request->getUri()->__toString(),
+                    $exceptionOrResponse->getMessage()
+                ));
 
-            if ($exceptionOrResponse instanceof ResponseInterface) {
-                $logMessage .= 'got response ' . $exceptionOrResponse->getStatusCode() . ' - ' .
-                    $exceptionOrResponse->getReasonPhrase();
-            } else {
-                $logMessage .= $exceptionOrResponse->getMessage();
+                return;
             }
 
-            $logger->error($logMessage);
+            $logger->error(sprintf(
+                'Failed to load %s: got response %s - %s',
+                $request->getUri()->__toString(),
+                $exceptionOrResponse->getStatusCode(),
+                $exceptionOrResponse->getReasonPhrase()
+            ));
         });
 
         $this->cookieJar = new CookieJar();

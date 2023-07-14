@@ -38,7 +38,11 @@ class JsonFileStore extends Store
 
     public function filePath(): string
     {
-        return $this->storePath . '/' .
-          ($this->filePrefix ? $this->filePrefix . '-' : '') . $this->createTimestamp . '.json';
+        return sprintf(
+            '%s/%s%s.json',
+            $this->storePath
+            $this->filePrefix ? $this->filePrefix . '-' : '',
+            $this->createTimestamp
+        );
     }
 }

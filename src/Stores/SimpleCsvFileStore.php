@@ -48,8 +48,12 @@ class SimpleCsvFileStore extends Store
 
     public function filePath(): string
     {
-        return $this->storePath . '/' .
-            ($this->filePrefix ? $this->filePrefix . '-' : '') . $this->createTimestamp . '.csv';
+        return sprintf(
+            '%s/%s%s.csv',
+            $this->storePath,
+            $this->filePrefix ? $this->filePrefix . '-' : '',
+            $this->createTimestamp
+        );
     }
 
     protected function anyPropertyIsArray(Result $result): bool
