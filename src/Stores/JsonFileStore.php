@@ -40,7 +40,7 @@ class JsonFileStore extends Store
     {
         return sprintf(
             '%s/%s%s.json',
-            $this->storePath
+            $this->storePath,
             $this->filePrefix ? $this->filePrefix . '-' : '',
             $this->createTimestamp
         );
