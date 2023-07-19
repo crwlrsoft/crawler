@@ -560,7 +560,7 @@ class HttpLoader extends Loader
 
         $page = $browser->createPage();
 
-        $statusCode = 500;
+        $statusCode = 200;
 
         $responseHeaders = [];
 
@@ -573,8 +573,13 @@ class HttpLoader extends Loader
             }
         );
 
-        $page->navigate($request->getUri()->__toString())
+        $this->throttler->trackRequestStartFor($request->getUri());
+
+        $page
+            ->navigate($request->getUri()->__toString())
             ->waitForNavigation();
+
+        $this->throttler->trackRequestEndFor($request->getUri());
 
         $html = $page->getHtml();
 

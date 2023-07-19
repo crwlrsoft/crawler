@@ -8,6 +8,10 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Response;
+use HeadlessChromium\Browser;
+use HeadlessChromium\Communication\Session;
+use HeadlessChromium\Page;
+use HeadlessChromium\PageUtils\PageNavigation;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
@@ -40,6 +44,57 @@ it('throttles requests to the same domain', function ($loadingMethod) {
     $loader = new HttpLoader(new UserAgent('SomeUserAgent'), $httpClient);
 
     $loader->{$loadingMethod}('https://www.example.com/foo');
+
+    $firstResponse = microtime(true);
+
+    $loader->{$loadingMethod}('https://www.example.com/bar');
+
+    $secondResponse = microtime(true);
+
+    $diff = $secondResponse - $firstResponse;
+
+    expect($diff)->toBeGreaterThan(0.3);
+
+    expect($diff)->toBeLessThan(0.62);
+})->with(['load', 'loadOrFail']);
+
+it('also throttles requests using the headless browser', function ($loadingMethod) {
+    $browserMock = Mockery::mock(Browser::class);
+
+    $pageMock = Mockery::mock(Page::class);
+
+    $sessionMock = Mockery::mock(Session::class);
+
+    $sessionMock->shouldReceive('once');
+
+    $pageMock->shouldReceive('getSession')->andReturn($sessionMock);
+
+    $pageNavigationMock = Mockery::mock(PageNavigation::class);
+
+    $pageNavigationMock->shouldReceive('waitForNavigation');
+
+    $pageMock
+        ->shouldReceive('navigate')
+        ->once()
+        ->andReturnUsing(function (string $url) use ($pageNavigationMock) {
+            helper_wait300ms();
+
+            return $pageNavigationMock;
+        });
+
+    $pageMock->shouldReceive('getHtml')->andReturn('<html>foo</html>');
+
+    $browserMock->shouldReceive('createPage')->andReturn($pageMock);
+
+    $loader = new HttpLoader(new UserAgent('SomeUserAgent'));
+
+    invade($loader)->headlessBrowser = $browserMock;
+
+    $loader->useHeadlessBrowser();
+
+    $loader->{$loadingMethod}('https://www.example.com/foo');
+
+    $pageMock->shouldReceive('navigate')->andReturn($pageNavigationMock);
 
     $firstResponse = microtime(true);
 
