@@ -105,7 +105,7 @@ class Throttler
             return;
         }
 
-        $waitUntil = $this->calcWaitUntil($domain);
+        $waitUntil = $this->calcWaitUntil($this->latestDurations[$domain], $this->latestResponseTimes[$domain]);
 
         $now = $this->time();
 
@@ -138,10 +138,10 @@ class Throttler
         return $domain;
     }
 
-    protected function calcWaitUntil(string $domain): Microseconds
-    {
-        $latestResponseDuration = $this->latestDurations[$domain];
-
+    protected function calcWaitUntil(
+        Microseconds $latestResponseDuration,
+        Microseconds $latestResponseTime
+    ): Microseconds {
         $from = $this->from instanceof MultipleOf ? $this->from->calc($latestResponseDuration) : $this->from;
 
         $to = $this->to instanceof MultipleOf ? $this->to->calc($latestResponseDuration) : $this->to;
@@ -156,7 +156,7 @@ class Throttler
             $waitValue = $this->max;
         }
 
-        return $this->latestResponseTimes[$domain]->add($waitValue);
+        return $latestResponseTime->add($waitValue);
     }
 
     protected function getRandBetween(Microseconds $from, Microseconds $to): Microseconds
