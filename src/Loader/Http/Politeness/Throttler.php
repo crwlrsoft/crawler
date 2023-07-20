@@ -2,9 +2,9 @@
 
 namespace Crwlr\Crawler\Loader\Http\Politeness;
 
-use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Url\Url;
+use Crwlr\Utils\Microseconds;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 

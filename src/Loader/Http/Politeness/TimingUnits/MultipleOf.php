@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler\Loader\Http\Politeness\TimingUnits;
 
+use Crwlr\Utils\Microseconds;
+
 class MultipleOf
 {
     public function __construct(public readonly float $factor)

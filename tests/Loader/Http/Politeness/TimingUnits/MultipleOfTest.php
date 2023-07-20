@@ -2,8 +2,8 @@
 
 namespace tests\Loader\Http\Politeness\TimingUnits;
 
-use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
+use Crwlr\Utils\Microseconds;
 
 it('calculates the multiple of a Microseconds instance', function () {
     expect(
