@@ -3,9 +3,9 @@
 namespace tests\Loader\Http\Politeness;
 
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
-use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\Microseconds;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Url\Url;
+use Crwlr\Utils\Microseconds;
 use InvalidArgumentException;
 
 it('waits between 1.0 and 2.0 times of the time span that the last request took by default', function () {
