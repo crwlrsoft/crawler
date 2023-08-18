@@ -19,6 +19,7 @@ abstract class Loader implements LoaderInterface
      */
     protected array $hooks = [
         'beforeLoad' => [],
+        'onCacheHit' => [],
         'onSuccess' => [],
         'onError' => [],
         'afterLoad' => [],
@@ -34,6 +35,11 @@ abstract class Loader implements LoaderInterface
     public function beforeLoad(callable $callback): void
     {
         $this->addHookCallback('beforeLoad', $callback);
+    }
+
+    public function onCacheHit(callable $callback): void
+    {
+        $this->addHookCallback('onCacheHit', $callback);
     }
 
     public function onSuccess(callable $callback): void

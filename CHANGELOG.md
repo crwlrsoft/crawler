@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2023-08-18
+### Added
+* New `onCacheHit` hook in the `Loader` class (in addition to `beforeLoad`, `onSuccess`, `onError` and `afterLoad`) that is called in the `HttpLoader` class when a response for a request was found in the cache.
+
 ### Deprecated
 * Moved the `Microseconds` value object class to the crwlr/utils package, as it is a very useful and universal tool. The class in this package still exists, but just extends the class from the utils package and will be removed in v2. So, if you're using this class, please change to use the version from the utils package.
 

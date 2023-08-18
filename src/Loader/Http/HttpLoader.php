@@ -143,6 +143,10 @@ class HttpLoader extends Loader
 
             $isFromCache = $respondedRequest !== null;
 
+            if ($isFromCache) {
+                $this->callHook('onCacheHit', $request, $respondedRequest->response);
+            }
+
             if (!$respondedRequest) {
                 $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
             }
@@ -196,6 +200,10 @@ class HttpLoader extends Loader
         $respondedRequest = $this->getFromCache($request);
 
         $isFromCache = $respondedRequest !== null;
+
+        if ($isFromCache) {
+            $this->callHook('onCacheHit', $request, $respondedRequest->response);
+        }
 
         if (!$respondedRequest) {
             $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
