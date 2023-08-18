@@ -416,7 +416,7 @@ it('returns only unique outputs when outputs are objects and uniqueOutput was ca
     expect(helper_invokeStepWithInput($group))->toHaveCount(0);
 
     $incrementNumberCallback = function (mixed $input) {
-        return $input+1;
+        return $input + 1;
     };
 
     helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2);
@@ -447,7 +447,7 @@ it(
         $group->resetAfterRun();
 
         $incrementNumberCallback = function (mixed $input) {
-            return $input+1;
+            return $input + 1;
         };
 
         helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2);
