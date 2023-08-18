@@ -9,7 +9,7 @@ use Psr\SimpleCache\CacheInterface;
 
 test('You can set multiple hook callbacks for one type and they are executed when called', function (string $hookName) {
     $loader = new class (new BotUserAgent('FooBot'), $hookName) extends Loader {
-        public function __construct(BotUserAgent $userAgent, private string $hookName)
+        public function __construct(BotUserAgent $userAgent, private readonly string $hookName)
         {
             parent::__construct($userAgent);
         }
@@ -45,6 +45,7 @@ test('You can set multiple hook callbacks for one type and they are executed whe
     expect($callback3Called)->toBeTrue();
 })->with([
     'beforeLoad',
+    'onCacheHit',
     'onSuccess',
     'onError',
     'afterLoad',
@@ -65,7 +66,10 @@ test('You can set a cache and use it in the load function', function () {
     };
 
     $cache = Mockery::mock(CacheInterface::class);
+
     $cache->shouldReceive('get')->with('foo')->once();
+
     $loader->setCache($cache);
+
     $loader->load('something');
 });

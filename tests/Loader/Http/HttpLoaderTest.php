@@ -150,6 +150,37 @@ it('calls the onError hook on a failed request', function ($responseStatusCode) 
     [500],
 ]);
 
+it('calls the onCacheHit hook when a response for the request was found in the cache', function (string $loadMethod) {
+    $cache = new FileCache(helper_cachedir());
+
+    $userAgent = helper_nonBotUserAgent();
+
+    $respondedRequest = new RespondedRequest(
+        new Request(
+            'GET',
+            'https://www.example.com/foo',
+            ['Host' => ['www.example.com'], 'User-Agent' => [(string) $userAgent]],
+        ),
+        new Response(body: 'Hello World!')
+    );
+
+    $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+    $httpLoader = new HttpLoader($userAgent);
+
+    $httpLoader->setCache($cache);
+
+    $onCacheHitWasCalled = false;
+
+    $httpLoader->onCacheHit(function () use (& $onCacheHitWasCalled) {
+        $onCacheHitWasCalled = true;
+    });
+
+    $httpLoader->{$loadMethod}('https://www.example.com/foo');
+
+    expect($onCacheHitWasCalled)->toBeTrue();
+})->with(['load', 'loadOrFail']);
+
 it('throws an Exception when request fails in loadOrFail method', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
