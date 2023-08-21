@@ -527,8 +527,6 @@ class HttpLoader extends Loader
 
         $response = $this->httpClient->sendRequest($request);
 
-        $this->throttler->trackRequestEndFor($request->getUri());
-
         if (!$respondedRequest) {
             $respondedRequest = new RespondedRequest($request, $response);
         } else {
@@ -545,6 +543,8 @@ class HttpLoader extends Loader
             $redirectNumber++;
 
             return $this->handleRedirects($newRequest, $respondedRequest, $redirectNumber);
+        } else {
+            $this->throttler->trackRequestEndFor($respondedRequest->request->getUri());
         }
 
         return $respondedRequest;

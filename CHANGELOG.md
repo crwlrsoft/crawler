@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2023-08-21
+### Fixed
+* When a URL redirects, the `trackRequestEndFor()` method of the `HttpLoader`'s `Throttler` instance is called only once at the end and with the original request URL.
+
 ## [1.2.0] - 2023-08-18
 ### Added
 * New `onCacheHit` hook in the `Loader` class (in addition to `beforeLoad`, `onSuccess`, `onError` and `afterLoad`) that is called in the `HttpLoader` class when a response for a request was found in the cache.

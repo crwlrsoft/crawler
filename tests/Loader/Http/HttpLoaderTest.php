@@ -306,6 +306,48 @@ it('calls request start and end tracking methods', function (string $loadingMeth
     expect($output)->toContain('Track request end https://www.twitter.com');
 })->with(['load', 'loadOrFail']);
 
+it(
+    'calls trackRequestEndFor only once and with the original request URL when there is a redirect',
+    function (string $loadingMethod) {
+        $httpClient = Mockery::mock(ClientInterface::class);
+
+        $httpClient
+            ->shouldReceive('sendRequest')
+            ->once()
+            ->withArgs(function (Request $request) {
+                return (string) $request->getUri() === 'https://www.example.com/foo';
+            })
+            ->andReturn(new Response(301, ['Location' => 'https://www.example.com/bar']));
+
+        $httpClient
+            ->shouldReceive('sendRequest')
+            ->once()
+            ->withArgs(function (Request $request) {
+                return (string) $request->getUri() === 'https://www.example.com/bar';
+            })
+            ->andReturn(new Response(200));
+
+        $throttler = new class () extends Throttler {
+            public function trackRequestEndFor(UriInterface $url): void
+            {
+                echo 'Track request end ' . $url . PHP_EOL;
+
+                parent::trackRequestEndFor($url);
+            }
+        };
+
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient, throttler: $throttler);
+
+        $httpLoader->{$loadingMethod}('https://www.example.com/foo');
+
+        $output = $this->getActualOutputForAssertion();
+
+        expect($output)->toContain('Track request end https://www.example.com/foo');
+
+        expect(count(explode('Track request end', $output)))->toBe(2);
+    }
+)->with(['load', 'loadOrFail']);
+
 it('automatically logs loading success message', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
 
