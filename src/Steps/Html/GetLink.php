@@ -32,9 +32,7 @@ class GetLink extends Step
 
     protected bool $withFragment = true;
 
-    public function __construct(protected ?string $selector = null)
-    {
-    }
+    public function __construct(protected ?string $selector = null) {}
 
     public static function isSpecialNonHttpLink(Crawler $linkElement): bool
     {

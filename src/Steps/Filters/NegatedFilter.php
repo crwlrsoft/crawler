@@ -4,9 +4,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 
 final class NegatedFilter implements FilterInterface
 {
-    public function __construct(private readonly FilterInterface $filter)
-    {
-    }
+    public function __construct(private readonly FilterInterface $filter) {}
 
     public function useKey(string $key): static
     {

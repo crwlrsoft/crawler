@@ -10,9 +10,7 @@ class Date
 {
     protected ?DateTime $dateTime = null;
 
-    public function __construct(protected readonly string $httpDateString)
-    {
-    }
+    public function __construct(protected readonly string $httpDateString) {}
 
     /**
      * @throws InvalidArgumentException

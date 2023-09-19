@@ -10,8 +10,7 @@ class ComparisonFilter extends Filter
     public function __construct(
         protected readonly ComparisonFilterRule $filterRule,
         protected readonly mixed $compareTo,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws Exception

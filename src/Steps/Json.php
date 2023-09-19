@@ -12,9 +12,7 @@ class Json extends Step
     /**
      * @param mixed[] $propertyMapping
      */
-    final public function __construct(protected array $propertyMapping = [], protected ?string $each = null)
-    {
-    }
+    final public function __construct(protected array $propertyMapping = [], protected ?string $each = null) {}
 
     /**
      * @param mixed[] $propertyMapping

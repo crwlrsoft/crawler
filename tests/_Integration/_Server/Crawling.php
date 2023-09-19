@@ -54,6 +54,8 @@ if ($route === '/crawling/main') {
             <a href="mailto:somebody@example.com">mailto link</a>
             <a href="javascript:alert('hello');">javascript link</a>
             <a href="tel:+499123456789">phone link</a>
+
+            <a href="//">broken link</a>
         </body>
         </html>
         HTML;

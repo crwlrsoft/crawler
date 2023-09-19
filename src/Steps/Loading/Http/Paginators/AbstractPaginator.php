@@ -9,9 +9,7 @@ use Psr\Http\Message\RequestInterface;
 
 abstract class AbstractPaginator implements PaginatorInterface
 {
-    public function __construct(protected int $maxPages = Paginator::MAX_PAGES_DEFAULT)
-    {
-    }
+    public function __construct(protected int $maxPages = Paginator::MAX_PAGES_DEFAULT) {}
 
     public function prepareRequest(
         RequestInterface $request,

@@ -9,8 +9,7 @@ class ClosureFilter extends Filter
 {
     public function __construct(
         protected readonly Closure $closure,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws Exception

@@ -19,9 +19,7 @@ class Csv extends Step
     /**
      * @param array<string|null> $columnMapping
      */
-    public function __construct(protected array $columnMapping = [], protected bool $skipFirstLine = false)
-    {
-    }
+    public function __construct(protected array $columnMapping = [], protected bool $skipFirstLine = false) {}
 
     /**
      * @param array<string|null> $columnMapping

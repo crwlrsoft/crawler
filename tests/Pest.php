@@ -47,9 +47,7 @@ uses()
 function helper_getValueReturningStep(mixed $value): Step
 {
     return new class ($value) extends Step {
-        public function __construct(private mixed $value)
-        {
-        }
+        public function __construct(private mixed $value) {}
 
         protected function invoke(mixed $input): Generator
         {
@@ -93,9 +91,7 @@ function helper_getStepYieldingMultipleNumbers(): Step
 function helper_getStepYieldingArrayWithNumber(int $number): Step
 {
     return new class ($number) extends Step {
-        public function __construct(private int $number)
-        {
-        }
+        public function __construct(private int $number) {}
 
         protected function invoke(mixed $input): Generator
         {
@@ -119,9 +115,7 @@ function helper_getStepYieldingMultipleArraysWithNumber(): Step
 function helper_getStepYieldingObjectWithNumber(int $number): Step
 {
     return new class ($number) extends Step {
-        public function __construct(private int $number)
-        {
-        }
+        public function __construct(private int $number) {}
 
         protected function invoke(mixed $input): Generator
         {

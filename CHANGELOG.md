@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2023-09-19
+### Fixed
+* Fix in `HttpCrawl` (`Http::crawl()`) step: when a page contains a broken link, that can't be resolved and throws an `Exception` from the URL library, ignore the link and log a warning message.
+* Minor fix for merging HTTP headers when an `Http` step gets both, statically defined headers and headers to use from array input.
+
 ## [1.2.1] - 2023-08-21
 ### Fixed
 * When a URL redirects, the `trackRequestEndFor()` method of the `HttpLoader`'s `Throttler` instance is called only once at the end and with the original request URL.

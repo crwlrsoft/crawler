@@ -27,8 +27,7 @@ class RetryErrorResponseHandler
         protected int $retries = 2,
         protected array $wait = [10, 60],
         protected int $maxWait = 60,
-    ) {
-    }
+    ) {}
 
     public function shouldWait(RespondedRequest $respondedRequest): bool
     {
