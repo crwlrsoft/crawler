@@ -6,9 +6,7 @@ use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
 
 class StrBetweenFirst extends AbstractRefiner
 {
-    public function __construct(protected readonly string $start, protected readonly string $end)
-    {
-    }
+    public function __construct(protected readonly string $start, protected readonly string $end) {}
 
     public function refine(mixed $value): mixed
     {

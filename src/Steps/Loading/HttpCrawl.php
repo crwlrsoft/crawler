@@ -12,6 +12,7 @@ use Exception;
 use Generator;
 use Psr\Http\Message\UriInterface;
 use Symfony\Component\DomCrawler\Crawler;
+use Throwable;
 
 class HttpCrawl extends Http
 {
@@ -295,7 +296,13 @@ class HttpCrawl extends Http
                 continue;
             }
 
-            $url = $this->handleUrlFragment($document->baseUrl()->resolve($linkElement->attr('href') ?? ''));
+            try {
+                $url = $this->handleUrlFragment($document->baseUrl()->resolve($linkElement->attr('href') ?? ''));
+            } catch (Throwable) {
+                $this->logger?->warning('Failed to resolve a link with href: ' . $linkElement->attr('href'));
+
+                continue;
+            }
 
             if (!$this->isOnSameHostOrDomain($url)) {
                 continue;

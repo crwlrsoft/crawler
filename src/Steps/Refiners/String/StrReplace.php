@@ -13,8 +13,7 @@ class StrReplace extends AbstractRefiner
     public function __construct(
         protected readonly string|array $search,
         protected readonly string|array $replace,
-    ) {
-    }
+    ) {}
 
     public function refine(mixed $value): mixed
     {

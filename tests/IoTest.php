@@ -7,8 +7,7 @@ use Crwlr\Crawler\Result;
 
 function helper_getIoInstance(mixed $value, ?Result $result = null, ?Result $addLaterToResult = null): Io
 {
-    return new class ($value, $result, $addLaterToResult) extends Io {
-    };
+    return new class ($value, $result, $addLaterToResult) extends Io {};
 }
 
 it('can be created with only a value.', function () {

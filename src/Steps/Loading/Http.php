@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
 use Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface;
+use Crwlr\Crawler\Utils\HttpHeaders;
 use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
@@ -51,8 +52,7 @@ class Http extends LoadingStep
         protected readonly array $headers = [],
         protected readonly string|StreamInterface|null $body = null,
         protected readonly string $httpVersion = '1.1',
-    ) {
-    }
+    ) {}
 
     /**
      * @param array|(string|string[])[] $headers
@@ -288,7 +288,7 @@ class Http extends LoadingStep
     {
         $body = $this->inputBody ?? $this->body;
 
-        $headers = $this->inputHeaders ? $this->mergeHeaders() : $this->headers;
+        $headers = $this->mergeHeaders();
 
         return new Request($this->method, $uri, $headers, $body, $this->httpVersion);
     }
@@ -398,10 +398,7 @@ class Http extends LoadingStep
             return;
         }
 
-        $this->inputHeaders[$headerName] = $this->addValuesToHeaderArray(
-            is_array($this->inputHeaders[$headerName]) ? $this->inputHeaders[$headerName] : [],
-            is_array($inputValue) ? $inputValue : [$inputValue],
-        );
+        $this->inputHeaders = HttpHeaders::addTo(HttpHeaders::normalize($this->inputHeaders), $headerName, $inputValue);
     }
 
     /**
@@ -409,57 +406,12 @@ class Http extends LoadingStep
      */
     protected function mergeHeaders(): array
     {
-        $headers = $this->normalizeHeaders($this->headers);
+        $headers = HttpHeaders::normalize($this->headers);
 
         if (is_array($this->inputHeaders)) {
-            foreach ($this->inputHeaders as $headerName => $value) {
-                if (!array_key_exists($headerName, $headers)) {
-                    $headers[$headerName] = is_array($value) ? $value : [$value];
+            $inputHeaders = HttpHeaders::normalize($this->inputHeaders);
 
-                    continue;
-                }
-
-                if (!in_array($value, $headers[$headerName], true)) {
-                    if (is_array($value)) {
-                        $headers[$headerName] = $this->addValuesToHeaderArray($headers[$headerName], $value);
-                    } elseif (!in_array($value, $headers[$headerName], true)) {
-                        $headers[$headerName][] = $value;
-                    }
-                } else {
-                    $headers[$headerName] = [$headers[$headerName], $value];
-                }
-            }
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @param array<string, string|string[]> $headers
-     * @return array<string, string[]>
-     */
-    protected function normalizeHeaders(array $headers): array
-    {
-        $normalized = [];
-
-        foreach ($headers as $headerName => $value) {
-            $normalized[$headerName] = is_array($value) ? $value : [$value];
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * @param string[] $headers
-     * @param string[] $values
-     * @return string[]
-     */
-    protected function addValuesToHeaderArray(array $headers, array $values): array
-    {
-        foreach ($values as $value) {
-            if (!in_array($value, $headers, true)) {
-                $headers[] = $value;
-            }
+            $headers = HttpHeaders::merge($headers, $inputHeaders);
         }
 
         return $headers;

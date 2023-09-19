@@ -11,9 +11,7 @@ class AddLoadersToStepAction
      * @param LoaderInterface|array<string, LoaderInterface> $loaders
      * @param StepInterface $step
      */
-    public function __construct(protected LoaderInterface|array $loaders, protected StepInterface $step)
-    {
-    }
+    public function __construct(protected LoaderInterface|array $loaders, protected StepInterface $step) {}
 
     /**
      * @return void

@@ -9,9 +9,7 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 
 class AnonymousHttpCrawlerBuilder
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function withBotUserAgent(string $productToken): HttpCrawler
     {

@@ -31,8 +31,7 @@ abstract class DomQuery implements DomQueryInterface
 
     public function __construct(
         public readonly string $query
-    ) {
-    }
+    ) {}
 
     /**
      * When there is a <base> tag with a href attribute in an HTML document all links in the document must be resolved

@@ -10,8 +10,7 @@ class StringFilter extends Filter
     public function __construct(
         protected readonly StringFilterRule $filterRule,
         protected readonly string $filterString,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws Exception

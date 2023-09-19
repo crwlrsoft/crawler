@@ -13,8 +13,7 @@ class BotUserAgent implements BotUserAgentInterface
         protected string $productToken,
         protected ?string $infoUri = null,
         protected ?string $version = null
-    ) {
-    }
+    ) {}
 
     public static function make(string $productToken, ?string $crawlerInfoUri = null, ?string $version = null): self
     {

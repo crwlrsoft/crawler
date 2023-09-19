@@ -2,6 +2,4 @@
 
 namespace Crwlr\Crawler;
 
-class Output extends Io
-{
-}
+class Output extends Io {}

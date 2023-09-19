@@ -6,9 +6,7 @@ use Crwlr\Utils\Microseconds;
 
 class MultipleOf
 {
-    public function __construct(public readonly float $factor)
-    {
-    }
+    public function __construct(public readonly float $factor) {}
 
     public function calc(Microseconds $microseconds): Microseconds
     {

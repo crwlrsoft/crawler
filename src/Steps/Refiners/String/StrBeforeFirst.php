@@ -6,9 +6,7 @@ use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
 
 class StrBeforeFirst extends AbstractRefiner
 {
-    public function __construct(protected readonly string $first)
-    {
-    }
+    public function __construct(protected readonly string $first) {}
 
     public function refine(mixed $value): mixed
     {

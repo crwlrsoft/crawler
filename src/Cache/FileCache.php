@@ -16,8 +16,7 @@ class FileCache implements CacheInterface
 
     public function __construct(
         protected readonly string $basePath,
-    ) {
-    }
+    ) {}
 
     public function useCompression(): static
     {
