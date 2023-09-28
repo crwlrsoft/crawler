@@ -16,6 +16,7 @@ use Crwlr\Url\Url;
 use Error;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use HeadlessChromium\Browser;
@@ -79,6 +80,8 @@ class HttpLoader extends Loader
      */
     protected array $cacheUrlFilters = [];
 
+    protected ?ProxyManager $proxies = null;
+
     /**
      * @param mixed[] $defaultGuzzleClientConfig
      */
@@ -123,22 +126,26 @@ class HttpLoader extends Loader
     /**
      * @param mixed $subject
      * @return RespondedRequest|null
-     * @throws LoadingException
-     * @throws Exception
      */
     public function load(mixed $subject): ?RespondedRequest
     {
-        $request = $this->validateSubjectType($subject);
+        try {
+            $request = $this->validateSubjectType($subject);
+        } catch (InvalidArgumentException) {
+            $this->logger->error('Invalid input URL: ' . var_export($subject, true));
 
-        if (!$this->isAllowedToBeLoaded($request->getUri())) {
             return null;
         }
 
-        $request = $this->prepareRequest($request);
-
-        $this->callHook('beforeLoad', $request);
-
         try {
+            if (!$this->isAllowedToBeLoaded($request->getUri())) {
+                return null;
+            }
+
+            $request = $this->prepareRequest($request);
+
+            $this->callHook('beforeLoad', $request);
+
             $respondedRequest = $this->getFromCache($request);
 
             $isFromCache = $respondedRequest !== null;
@@ -174,54 +181,45 @@ class HttpLoader extends Loader
         }
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws CommunicationException
-     * @throws CommunicationException\CannotReadResponse
-     * @throws CommunicationException\InvalidResponse
-     * @throws CommunicationException\ResponseHasError
-     * @throws LoadingException
-     * @throws NavigationExpired
-     * @throws NoResponseAvailable
-     * @throws OperationTimedOut
-     * @throws Throwable
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
     public function loadOrFail(mixed $subject): RespondedRequest
     {
         $request = $this->validateSubjectType($subject);
 
-        $this->isAllowedToBeLoaded($request->getUri(), true);
+        try {
+            $this->isAllowedToBeLoaded($request->getUri(), true);
 
-        $request = $this->prepareRequest($request);
+            $request = $this->prepareRequest($request);
 
-        $this->callHook('beforeLoad', $request);
+            $this->callHook('beforeLoad', $request);
 
-        $respondedRequest = $this->getFromCache($request);
+            $respondedRequest = $this->getFromCache($request);
 
-        $isFromCache = $respondedRequest !== null;
+            $isFromCache = $respondedRequest !== null;
 
-        if ($isFromCache) {
-            $this->callHook('onCacheHit', $request, $respondedRequest->response);
+            if ($isFromCache) {
+                $this->callHook('onCacheHit', $request, $respondedRequest->response);
+            }
+
+            if (!$respondedRequest) {
+                $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
+            }
+
+            if ($respondedRequest->response->getStatusCode() >= 400) {
+                throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
+            }
+
+            $this->callHook('onSuccess', $request, $respondedRequest->response);
+
+            $this->callHook('afterLoad', $request);
+
+            if (!$isFromCache) {
+                $this->addToCache($respondedRequest);
+            }
+
+            return $respondedRequest;
+        } catch (Throwable $exception) {
+            throw LoadingException::from($exception);
         }
-
-        if (!$respondedRequest) {
-            $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
-        }
-
-        if ($respondedRequest->response->getStatusCode() >= 400) {
-            throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
-        }
-
-        $this->callHook('onSuccess', $request, $respondedRequest->response);
-
-        $this->callHook('afterLoad', $request);
-
-        if (!$isFromCache) {
-            $this->addToCache($respondedRequest);
-        }
-
-        return $respondedRequest;
     }
 
     public function dontUseCookies(): static
@@ -329,6 +327,41 @@ class HttpLoader extends Loader
     }
 
     /**
+     * @throws Exception
+     */
+    public function useProxy(string $proxyUrl): void
+    {
+        $this->checkIfProxiesCanBeUsed();
+
+        $this->proxies = new ProxyManager([$proxyUrl]);
+    }
+
+    /**
+     * @param string[] $proxyUrls
+     * @throws Exception
+     */
+    public function useRotatingProxies(array $proxyUrls): void
+    {
+        $this->checkIfProxiesCanBeUsed();
+
+        $this->proxies = new ProxyManager($proxyUrls);
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    protected function checkIfProxiesCanBeUsed(): void
+    {
+        if (!$this->usesHeadlessBrowser() && !$this->httpClient instanceof Client) {
+            throw new Exception(
+                'The included proxy feature can only be used when using a guzzle HTTP client or headless chrome ' .
+                'browser for loading.'
+            );
+        }
+    }
+
+    /**
      * @param mixed[] $config
      * @return mixed[]
      */
@@ -424,12 +457,15 @@ class HttpLoader extends Loader
 
     /**
      * @throws InvalidArgumentException
-     * @throws InvalidUrlException
      */
     protected function validateSubjectType(RequestInterface|string $requestOrUri): RequestInterface
     {
         if (is_string($requestOrUri)) {
-            return new Request('GET', Url::parsePsr7($requestOrUri));
+            try {
+                return new Request('GET', Url::parsePsr7($requestOrUri));
+            } catch (InvalidUrlException) {
+                throw new InvalidArgumentException('Invalid URL.');
+            }
         }
 
         return $requestOrUri;
@@ -454,7 +490,6 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @return RespondedRequest
      * @throws ClientExceptionInterface
      * @throws CommunicationException
      * @throws CommunicationException\CannotReadResponse
@@ -464,7 +499,8 @@ class HttpLoader extends Loader
      * @throws NavigationExpired
      * @throws NoResponseAvailable
      * @throws OperationTimedOut
-     * @throws Throwable
+     * @throws GuzzleException
+     * @throws Exception
      */
     protected function waitForGoAndLoadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
@@ -487,17 +523,17 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @param RequestInterface $request
-     * @return RespondedRequest
      * @throws ClientExceptionInterface
      * @throws CommunicationException
      * @throws CommunicationException\CannotReadResponse
      * @throws CommunicationException\InvalidResponse
      * @throws CommunicationException\ResponseHasError
+     * @throws GuzzleException
+     * @throws LoadingException
      * @throws NavigationExpired
      * @throws NoResponseAvailable
      * @throws OperationTimedOut
-     * @throws Throwable
+     * @throws Exception
      */
     protected function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
@@ -511,6 +547,7 @@ class HttpLoader extends Loader
     /**
      * @throws ClientExceptionInterface
      * @throws LoadingException
+     * @throws GuzzleException
      */
     protected function handleRedirects(
         RequestInterface  $request,
@@ -525,7 +562,11 @@ class HttpLoader extends Loader
             $this->throttler->trackRequestStartFor($request->getUri());
         }
 
-        $response = $this->httpClient->sendRequest($request);
+        if ($this->proxies && $this->httpClient instanceof Client) {
+            $response = $this->sendProxiedRequestUsingGuzzle($request, $this->httpClient);
+        } else {
+            $response = $this->httpClient->sendRequest($request);
+        }
 
         if (!$respondedRequest) {
             $respondedRequest = new RespondedRequest($request, $response);
@@ -551,8 +592,23 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @param RequestInterface $request
-     * @return RespondedRequest
+     * @throws GuzzleException
+     */
+    protected function sendProxiedRequestUsingGuzzle(RequestInterface $request, Client $client): ResponseInterface
+    {
+        return $client->request(
+            $request->getMethod(),
+            $request->getUri(),
+            [
+                'headers' => $request->getHeaders(),
+                'proxy' => $this->proxies?->getProxy(),
+                'version' => $request->getProtocolVersion(),
+                'body' => $request->getBody(),
+            ],
+        );
+    }
+
+    /**
      * @throws CommunicationException
      * @throws CommunicationException\CannotReadResponse
      * @throws CommunicationException\InvalidResponse
@@ -560,7 +616,7 @@ class HttpLoader extends Loader
      * @throws NavigationExpired
      * @throws NoResponseAvailable
      * @throws OperationTimedOut
-     * @throws Throwable
+     * @throws Exception
      */
     protected function loadViaHeadlessBrowser(RequestInterface $request): RespondedRequest
     {
@@ -602,7 +658,7 @@ class HttpLoader extends Loader
      */
     protected function getBrowser(RequestInterface $request): Browser
     {
-        if (!$this->headlessBrowser || $this->headlessBrowserOptionsDirty) {
+        if (!$this->headlessBrowser || $this->shouldRenewHeadlessBrowserInstance()) {
             $this->headlessBrowser?->close();
 
             $options = $this->headlessBrowserOptions;
@@ -614,12 +670,21 @@ class HttpLoader extends Loader
                 $this->prepareRequestHeadersForHeadlessBrowser($request->getHeaders()),
             );
 
+            if (!empty($this->proxies)) {
+                $options['proxyServer'] = $this->proxies->getProxy();
+            }
+
             $this->headlessBrowser = (new BrowserFactory($this->chromeExecutable))->createBrowser($options);
 
             $this->headlessBrowserOptionsDirty = false;
         }
 
         return $this->headlessBrowser;
+    }
+
+    protected function shouldRenewHeadlessBrowserInstance(): bool
+    {
+        return $this->headlessBrowserOptionsDirty || ($this->proxies && $this->proxies->hasMultipleProxies());
     }
 
     protected function addCookiesToJar(RespondedRequest $respondedRequest): void

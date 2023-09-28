@@ -27,7 +27,7 @@ function helper_createResponseBodyWithPaginationLinks(array $links): string
     $body = '<div class="pagination">';
 
     foreach ($links as $url => $text) {
-        $body .= '<a href="' . $url .'">' . $text . '</a> ' . PHP_EOL;
+        $body .= '<a href="' . $url . '">' . $text . '</a> ' . PHP_EOL;
     }
 
     return $body . '</div>';

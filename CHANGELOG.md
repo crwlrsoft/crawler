@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## Added
+* New methods `HttpLoader::useProxy()` and `HttpLoader::useRotatingProxies([...])` to define proxies that the loader shall use. They can be used with a guzzle HTTP client instance (default) and when the loader uses the headless chrome browser. Using them when providing some other PSR-18 implementation will throw an exception.
+
+### Fixed
+* The `HttpLoader::load()` implementation won't throw any exception, because it shouldn't kill a crawler run. When you want any loading error to end the whole crawler execution `HttpLoader::loadOrFail()` should be used. Also adapted the phpdoc in the `LoaderInterface`.
 
 ## [1.2.2] - 2023-09-19
 ### Fixed
