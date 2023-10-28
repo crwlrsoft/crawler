@@ -724,7 +724,7 @@ it('sends all outputs to the outputHook when defined', function () {
         ->input(1)
         ->addStep(helper_getNumberIncrementingStep())
         ->addStep(helper_getNumberIncrementingStep())
-        ->outputHook(function (Output $output, int $stepIndex, StepInterface $step) use (& $outputs) {
+        ->outputHook(function (Output $output, int $stepIndex, StepInterface $step) use (&$outputs) {
             $outputs[$stepIndex][] = $output->get();
         });
 

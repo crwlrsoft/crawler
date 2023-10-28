@@ -631,7 +631,7 @@ class HttpLoader extends Loader
 
         $page->getSession()->once(
             "method:Network.responseReceived",
-            function ($params) use (& $statusCode, & $responseHeaders) {
+            function ($params) use (&$statusCode, &$responseHeaders) {
                 $statusCode = $params['response']['status'];
 
                 $responseHeaders = $this->sanitizeResponseHeaders($params['response']['headers']);
