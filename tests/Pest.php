@@ -5,6 +5,7 @@ namespace tests;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
@@ -14,7 +15,9 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Utils\Microseconds;
 use Generator;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\Process\Process;
@@ -256,6 +259,34 @@ function helper_getFastCrawler(): HttpCrawler
             return helper_getFastLoader($userAgent, $logger);
         }
     };
+}
+
+/**
+ * @param array<string, string|string[]> $requestHeaders
+ * @param array<string, string|string[]> $responseHeaders
+ */
+function helper_getRespondedRequest(
+    string $method = 'GET',
+    string $url = 'https://www.example.com/foo',
+    array $requestHeaders = [],
+    ?string $requestBody = null,
+    int $statusCode = 200,
+    array $responseHeaders = [],
+    ?string $responseBody = null,
+): RespondedRequest {
+    if ($requestBody !== null) {
+        $request = new Request($method, $url, $requestHeaders, Utils::streamFor($requestBody));
+    } else {
+        $request = new Request($method, $url, $requestHeaders);
+    }
+
+    if ($responseBody !== null) {
+        $response = new Response($statusCode, $responseHeaders, body: Utils::streamFor($responseBody));
+    } else {
+        $response = new Response($statusCode, $responseHeaders);
+    }
+
+    return new RespondedRequest($request, $response);
 }
 
 function helper_cachedir(): string

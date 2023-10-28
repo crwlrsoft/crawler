@@ -1056,7 +1056,7 @@ it('applies multiple refiners to the steps output in the order they\'re added', 
         ->addStep($step1)
         ->addStep($step2)
         ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
-        ->refineOutput('bar', fn (mixed $outputValue) => $outputValue . ' refined');
+        ->refineOutput('bar', fn(mixed $outputValue) => $outputValue . ' refined');
 
     $outputs = helper_invokeStepWithInput($group);
 
@@ -1072,7 +1072,7 @@ test('you can apply multiple refiners to the same output array key', function ()
         ->addStep($step1)
         ->addStep($step2)
         ->refineOutput('foo', StringRefiner::betweenFirst('lorem', 'dolor'))
-        ->refineOutput('foo', fn (mixed $outputValue) => $outputValue . ' refined');
+        ->refineOutput('foo', fn(mixed $outputValue) => $outputValue . ' refined');
 
     $outputs = helper_invokeStepWithInput($group);
 
@@ -1090,7 +1090,7 @@ it(
         $group = (new Group())
             ->addStep($step1)
             ->addStep($step2)
-            ->refineOutput(fn (mixed $outputValue, mixed $originalInputValue) => $originalInputValue);
+            ->refineOutput(fn(mixed $outputValue, mixed $originalInputValue) => $originalInputValue);
 
         $outputs = helper_invokeStepWithInput($group, ['yo' => 'lo']);
 

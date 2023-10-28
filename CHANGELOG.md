@@ -5,8 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## Added
-* New methods `HttpLoader::useProxy()` and `HttpLoader::useRotatingProxies([...])` to define proxies that the loader shall use. They can be used with a guzzle HTTP client instance (default) and when the loader uses the headless chrome browser. Using them when providing some other PSR-18 implementation will throw an exception.
+
+## [1.3.0] - 2023-10-28
+### Added
+* New methods `HttpLoader::useProxy()` and `HttpLoader::useRotatingProxies([...])` to define proxies that the loader shall use. They can be used with a guzzle HTTP client instance (default) and when the loader uses the headless Chrome browser. Using them when providing some other PSR-18 implementation will throw an exception.
+* New `QueryParamsPaginator` to paginate by increasing and/or decreasing one or multiple query params, either in the URL or in the body of requests. Can be created via static method `Crwlr\Crawler\Steps\Loading\Http\Paginator::queryParams()`.
+* New method `stopWhen` in the new `Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator` class (for more info see the deprecation below). You can pass implementations of the new `StopRule` interface or custom closures to that method and then, every time the Paginator receives a loaded response to process, those stop rules are called with the response. If any of the conditions of the stop rules is met, the Paginator stops paginating. Of course also added a few stop rules to use with that new method: `IsEmptyInHtml`, `IsEmptyInJson`, `IsEmptyInXml` and `IsEmptyResponse`, also available via static methods: `PaginatorStopRules::isEmptyInHtml()`, `PaginatorStopRules::isEmptyInJson()`, `PaginatorStopRules::isEmptyInXml()` and `PaginatorStopRules::isEmptyResponse()`.
+
+### Deprecated
+* Deprecated the `Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface` and the `Crwlr\Crawler\Steps\Loading\Http\Paginators\AbstractPaginator`. Instead, added a new version of the `AbstractPaginator` as `Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator` that can be used. Usually there shouldn't be a problem switching from the old to the new version. If you want to make your custom paginator implementation ready for v2 of the library, extend the new `AbstractPaginator` class, implement your own `getNextRequest` method (new requirement, with a default implementation in the abstract class, which will be removed in v2) and check if properties and methods of your existing class don't collide with the new properties and methods in the abstract class.
 
 ### Fixed
 * The `HttpLoader::load()` implementation won't throw any exception, because it shouldn't kill a crawler run. When you want any loading error to end the whole crawler execution `HttpLoader::loadOrFail()` should be used. Also adapted the phpdoc in the `LoaderInterface`.

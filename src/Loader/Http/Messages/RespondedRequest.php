@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http\Messages;
 
 use Crwlr\Crawler\Steps\Loading\Http;
+use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -41,9 +42,12 @@ class RespondedRequest
         return $respondedRequest;
     }
 
+    /**
+     * @deprecated You can use RequestKey::from() directly instead.
+     */
     public static function cacheKeyFromRequest(RequestInterface $request): string
     {
-        return self::cacheKeyFromRequestData(self::requestDataFromRequest($request));
+        return RequestKey::from($request);
     }
 
     /**
@@ -137,39 +141,7 @@ class RespondedRequest
 
     public function cacheKey(): string
     {
-        return self::cacheKeyFromRequestData(self::requestDataFromRequest($this->request));
-    }
-
-    /**
-     * @return mixed[]
-     */
-    protected static function requestDataFromRequest(RequestInterface $request): array
-    {
-        return [
-            'requestMethod' => $request->getMethod(),
-            'requestUri' => $request->getUri()->__toString(),
-            'requestHeaders' => $request->getHeaders(),
-            'requestBody' => Http::getBodyString($request),
-        ];
-    }
-
-    /**
-     * @param mixed[] $requestData
-     */
-    protected static function cacheKeyFromRequestData(array $requestData): string
-    {
-        // Remove cookies when building the key, so cache doesn't depend on sessions
-        if (isset($requestData['requestHeaders']['Cookie'])) {
-            unset($requestData['requestHeaders']['Cookie']);
-        }
-
-        if (isset($requestData['requestHeaders']['cookie'])) {
-            unset($requestData['requestHeaders']['cookie']);
-        }
-
-        $serialized = serialize($requestData);
-
-        return md5($serialized);
+        return RequestKey::from($this->request);
     }
 
     /**
