@@ -40,7 +40,7 @@
         "guzzlehttp/guzzle": "^7.4",
         "adbario/php-dot-notation": "^3.1",
         "chrome-php/chrome": "^1.7",
-        "crwlr/utils": "^1.0"
+        "crwlr/utils": "^1.1"
     },
     "require-dev": {
         "pestphp/pest": "^2.3",
