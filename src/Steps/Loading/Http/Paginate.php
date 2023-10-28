@@ -2,16 +2,20 @@
 
 namespace Crwlr\Crawler\Steps\Loading\Http;
 
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
+use Exception;
 use Generator;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 class Paginate extends Http
 {
     public function __construct(
-        protected Http\PaginatorInterface $paginator,
+        protected Http\PaginatorInterface|AbstractPaginator $paginator,
         string $method = 'GET',
         array $headers = [],
         string|StreamInterface|null $body = null,
@@ -22,10 +26,11 @@ class Paginate extends Http
 
     /**
      * @param UriInterface $input
+     * @throws LoadingException
      */
     protected function invoke(mixed $input): Generator
     {
-        $request = $this->paginator->prepareRequest($this->getRequestFromInputUri($input));
+        $request = $this->getRequestFromInput($input);
 
         $response = $this->getResponseFromRequest($request);
 
@@ -33,18 +38,22 @@ class Paginate extends Http
             yield $response;
         }
 
-        $this->paginator->processLoaded($input, $request, $response);
+        try {
+            $this->paginator->processLoaded($input, $request, $response);
+        } catch (Exception $exception) {
+            $this->logger?->error('Paginate Error: ' . $exception->getMessage());
+        }
 
         while (!$this->paginator->hasFinished()) {
-            $nextUrl = $this->paginator->getNextUrl();
-
-            if (!$nextUrl) {
-                break;
+            if (!method_exists($this->paginator, 'getNextRequest')) { // Remove in v2
+                $request = $this->getNextRequestLegacy($response);
+            } else {
+                $request = $this->paginator->getNextRequest();
             }
 
-            $nextUrl = Url::parsePsr7($nextUrl);
-
-            $request = $this->paginator->prepareRequest($this->getRequestFromInputUri($nextUrl), $response);
+            if (!$request) {
+                break;
+            }
 
             $response = $this->getResponseFromRequest($request);
 
@@ -52,7 +61,11 @@ class Paginate extends Http
                 yield $response;
             }
 
-            $this->paginator->processLoaded($nextUrl, $request, $response);
+            try {
+                $this->paginator->processLoaded($request->getUri(), $request, $response);
+            } catch (Exception $exception) {
+                $this->logger?->error('Paginate Error: ' . $exception->getMessage());
+            }
         }
 
         if ($this->logger) {
@@ -67,5 +80,38 @@ class Paginate extends Http
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         return $this->validateAndSanitizeToUriInterface($input);
+    }
+
+    protected function getRequestFromInput(mixed $input): RequestInterface
+    {
+        if (method_exists($this->paginator, 'prepareRequest')) {
+            return $this->paginator->prepareRequest($this->getRequestFromInputUri($input));
+        }
+
+        return $this->getRequestFromInputUri($input);
+    }
+
+    /**
+     * @deprecated Legacy method, remove in v2
+     */
+    protected function getNextRequestLegacy(?RespondedRequest $previousResponse): ?RequestInterface
+    {
+        if (!method_exists($this->paginator, 'getNextUrl')) {
+            return null;
+        }
+
+        $nextUrl = $this->paginator->getNextUrl();
+
+        if (!$nextUrl) {
+            return null;
+        }
+
+        $request = $this->getRequestFromInputUri(Url::parsePsr7($nextUrl));
+
+        if (method_exists($this->paginator, 'prepareRequest')) {
+            $request = $this->paginator->prepareRequest($request, $previousResponse);
+        }
+
+        return $request;
     }
 }

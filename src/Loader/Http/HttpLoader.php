@@ -11,6 +11,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
 use Error;
@@ -406,7 +407,7 @@ class HttpLoader extends Loader
             return null;
         }
 
-        $key = RespondedRequest::cacheKeyFromRequest($request);
+        $key = RequestKey::from($request);
 
         if ($this->cache->has($key)) {
             $this->logger->info('Found ' . $request->getUri()->__toString() . ' in cache.');

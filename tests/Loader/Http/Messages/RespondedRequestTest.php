@@ -195,36 +195,6 @@ it('can be created from a serialized array', function () {
     expect($respondedRequest->effectiveUri())->toBe('/bar');
 });
 
-it('makes a cache key from a Request object', function () {
-    $request = new Request('GET', 'https://www.crwlr.software/packages', ['accept-encoding' => 'gzip, deflate, br']);
-
-    expect(RespondedRequest::cacheKeyFromRequest($request))->toBe('fc2a9e78c97e68674201853cea4a3d74');
-
-    $request = $request->withAddedHeader('accept-language', 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7');
-
-    expect(RespondedRequest::cacheKeyFromRequest($request))->not()->toBe('fc2a9e78c97e68674201853cea4a3d74');
-});
-
-test('when creating the key it ignores cookies in the sent headers', function () {
-    $request = new Request('GET', 'https://www.crwlr.software/packages', ['accept-encoding' => 'gzip, deflate, br']);
-
-    $keyWithoutCookie = RespondedRequest::cacheKeyFromRequest($request);
-
-    $request = new Request('GET', 'https://www.crwlr.software/packages', [
-        'accept-encoding' => 'gzip, deflate, br',
-        'Cookie' => 'cookieName=v4lu3',
-    ]);
-
-    expect(RespondedRequest::cacheKeyFromRequest($request))->toBe($keyWithoutCookie);
-
-    $request = new Request('GET', 'https://www.crwlr.software/packages', [
-        'accept-encoding' => 'gzip, deflate, br',
-        'cookie' => 'cookieName=v4lu3',
-    ]);
-
-    expect(RespondedRequest::cacheKeyFromRequest($request))->toBe($keyWithoutCookie);
-});
-
 it('generates a cache key for an instance', function () {
     $respondedRequest = new RespondedRequest(new Request('GET', '/foo/bar'), new Response());
 

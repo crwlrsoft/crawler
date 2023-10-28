@@ -6,17 +6,16 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\SimpleWebsitePaginator;
 use Crwlr\Url\Url;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
+
+use Psr\Http\Message\RequestInterface;
+
+use function tests\helper_getRespondedRequest;
 
 function helper_getRespondedRequestWithResponseBody(string $urlPath, string $body): RespondedRequest
 {
-    return new RespondedRequest(
-        new Request('GET', 'https://www.example.com' . $urlPath),
-        new Response(200, body: Utils::streamFor($body)),
-    );
+    return helper_getRespondedRequest(url: 'https://www.example.com' . $urlPath, responseBody: $body);
 }
 
 /**
@@ -44,7 +43,7 @@ it('says it has finished when no initial response was provided yet', function ()
 it('says it has finished when a response is provided, but it has no pagination links', function () {
     $paginator = new SimpleWebsitePaginator('.pagination', 3);
 
-    $respondedRequest = helper_getRespondedRequestWithResponseBody('listing', '<div class="listing"></div>');
+    $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing', '<div class="listing"></div>');
 
     $paginator->processLoaded(
         $respondedRequest->request->getUri(),
@@ -232,13 +231,17 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
 
-    $paginator->getNextUrl();
+    $paginator->getNextRequest();
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=2', $responseBody);
 
+    $paginator->logWhenFinished(new CliLogger());
+
     $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
 
-    $paginator->getNextUrl();
+    $paginator->logWhenFinished(new CliLogger());
+
+    $paginator->getNextRequest();
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=3', $responseBody);
 
@@ -250,7 +253,108 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $output = $this->getActualOutputForAssertion();
 
-    expect($output)->not()->toContain('Max pages limit reached');
+    expect($output)
+        ->not()->toContain('Max pages limit reached')
+        ->and($output)
+        ->toContain('All found pagination links loaded');
+});
 
-    expect($output)->toContain('All found pagination links loaded');
+it(
+    'always creates upcoming requests from the parent request, where a link was found (which does not have to be ' .
+    'the latest processed response)',
+    function () {
+        $paginator = new SimpleWebsitePaginator('.pagination', 3);
+
+        $responseBody = <<<HTML
+        <div class="pagination">
+            <a href="/list?page=1">Page One</a>
+            <a href="/list?page=2">Page Two</a>
+            <a href="/list?page=3">Page Three</a>
+        </div>
+        HTML;
+
+        $respondedRequest = helper_getRespondedRequest(
+            'GET',
+            'https://www.example.com/list?page=1',
+            ['foo' => 'bar'],
+            responseBody: $responseBody,
+        );
+
+        $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+
+        $responseBody = <<<HTML
+            <div class="pagination">
+                <a href="/list?page=4">Page One</a>
+                <a href="/list?page=5">Page Two</a>
+                <a href="/list?page=6">Page Three</a>
+            </div>
+            HTML;
+
+        $respondedRequest = helper_getRespondedRequest(
+            'GET',
+            'https://www.example.com/list?page=2',
+            ['foo' => 'baz'],
+            responseBody: $responseBody,
+        );
+
+        $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+
+        $nextRequest = $paginator->getNextRequest();
+
+        expect($nextRequest?->getHeader('foo'))->toBe(['bar']);
+    }
+);
+
+it('cleans up the stored parent requests always when getting the next request to load', function () {
+    $paginator = new class ('.pagination') extends SimpleWebsitePaginator {
+        /**
+         * @return array<string, RequestInterface>
+         */
+        public function parentRequests(): array
+        {
+            return $this->parentRequests;
+        }
+    };
+
+    $responseBody = <<<HTML
+        <div class="pagination">
+            <a href="/list?page=2">Page Two</a>
+            <a href="/list?page=3">Page Three</a>
+        </div>
+        HTML;
+
+    $respondedRequest = helper_getRespondedRequest(
+        'GET',
+        'https://www.example.com/list?page=1',
+        ['foo' => 'bar'],
+        responseBody: $responseBody,
+    );
+
+    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+
+    expect(count($paginator->parentRequests()))->toBe(1);
+
+    $nextRequest = $paginator->getNextRequest();
+
+    if (!$nextRequest) {
+        $this->fail('failed to get next request');
+    }
+
+    $respondedRequest = new RespondedRequest($nextRequest, new Response());
+
+    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+
+    expect(count($paginator->parentRequests()))->toBe(1);
+
+    $nextRequest = $paginator->getNextRequest();
+
+    if (!$nextRequest) {
+        $this->fail('failed to get next request');
+    }
+
+    $respondedRequest = new RespondedRequest($nextRequest, new Response());
+
+    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+
+    expect(count($paginator->parentRequests()))->toBe(0);
 });
