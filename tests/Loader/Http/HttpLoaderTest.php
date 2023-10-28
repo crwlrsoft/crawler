@@ -75,13 +75,13 @@ it(
 
         $beforeLoadWasCalled = false;
 
-        $httpLoader->beforeLoad(function () use (& $beforeLoadWasCalled) {
+        $httpLoader->beforeLoad(function () use (&$beforeLoadWasCalled) {
             $beforeLoadWasCalled = true;
         });
 
         $afterLoadWasCalled = false;
 
-        $httpLoader->beforeLoad(function () use (& $afterLoadWasCalled) {
+        $httpLoader->beforeLoad(function () use (&$afterLoadWasCalled) {
             $afterLoadWasCalled = true;
         });
 
@@ -108,7 +108,7 @@ it('calls the onSuccess hook on a successful response', function ($responseStatu
 
     $onSuccessWasCalled = false;
 
-    $httpLoader->onSuccess(function () use (& $onSuccessWasCalled) {
+    $httpLoader->onSuccess(function () use (&$onSuccessWasCalled) {
         $onSuccessWasCalled = true;
     });
 
@@ -136,7 +136,7 @@ it('calls the onError hook on a failed request', function ($responseStatusCode) 
 
     $onErrorWasCalled = false;
 
-    $httpLoader->onError(function () use (& $onErrorWasCalled) {
+    $httpLoader->onError(function () use (&$onErrorWasCalled) {
         $onErrorWasCalled = true;
     });
 
@@ -172,7 +172,7 @@ it('calls the onCacheHit hook when a response for the request was found in the c
 
     $onCacheHitWasCalled = false;
 
-    $httpLoader->onCacheHit(function () use (& $onCacheHitWasCalled) {
+    $httpLoader->onCacheHit(function () use (&$onCacheHitWasCalled) {
         $onCacheHitWasCalled = true;
     });
 
@@ -190,7 +190,7 @@ it('throws an Exception when request fails in loadOrFail method', function () {
 
     $onErrorWasCalled = false;
 
-    $httpLoader->onError(function () use (& $onErrorWasCalled) {
+    $httpLoader->onError(function () use (&$onErrorWasCalled) {
         $onErrorWasCalled = true;
     });
 
@@ -475,7 +475,7 @@ it('fails when it gets a failed response from cache', function () {
 
     $onErrorWasCalled = false;
 
-    $httpLoader->onError(function () use (& $onErrorWasCalled) {
+    $httpLoader->onError(function () use (&$onErrorWasCalled) {
         $onErrorWasCalled = true;
     });
 

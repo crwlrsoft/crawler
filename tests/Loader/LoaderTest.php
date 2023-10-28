@@ -26,15 +26,15 @@ test('You can set multiple hook callbacks for one type and they are executed whe
         }
     };
     $callback1Called = false;
-    $loader->{$hookName}(function () use (& $callback1Called) {
+    $loader->{$hookName}(function () use (&$callback1Called) {
         $callback1Called = true;
     });
     $callback2Called = false;
-    $loader->{$hookName}(function () use (& $callback2Called) {
+    $loader->{$hookName}(function () use (&$callback2Called) {
         $callback2Called = true;
     });
     $callback3Called = false;
-    $loader->{$hookName}(function () use (& $callback3Called) {
+    $loader->{$hookName}(function () use (&$callback3Called) {
         $callback3Called = true;
     });
 
