@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2023-11-30
+### Fixed
+* Support the new Symfony v7.0
+
 ## [1.3.0] - 2023-10-28
 ### Added
 * New methods `HttpLoader::useProxy()` and `HttpLoader::useRotatingProxies([...])` to define proxies that the loader shall use. They can be used with a guzzle HTTP client instance (default) and when the loader uses the headless Chrome browser. Using them when providing some other PSR-18 implementation will throw an exception.
