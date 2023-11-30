@@ -31,7 +31,7 @@
         "ext-dom": "*",
         "php": "^8.1",
         "crwlr/robots-txt": "^1.1",
-        "crwlr/schema-org": "^0.2.0",
+        "crwlr/schema-org": "^0.3.0",
         "crwlr/url": "^2.1",
         "psr/log": "^2.0|^3.0",
         "symfony/dom-crawler": "^6.0|^7.0",

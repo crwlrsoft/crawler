@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.1] - 2023-11-30
 ### Fixed
-* Support the new Symfony v7.0
+* Support usage with the new Symfony major version v7.
 
 ## [1.3.0] - 2023-10-28
 ### Added
