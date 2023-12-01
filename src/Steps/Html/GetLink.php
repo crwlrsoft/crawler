@@ -32,7 +32,12 @@ class GetLink extends Step
 
     protected bool $withFragment = true;
 
-    public function __construct(protected ?string $selector = null) {}
+    protected null|string|CssSelector $selector = null;
+
+    public function __construct(null|string|CssSelector $selector = null)
+    {
+        $this->selector = is_string($selector) ? new CssSelector($selector) : $selector;
+    }
 
     public static function isSpecialNonHttpLink(Crawler $linkElement): bool
     {
@@ -65,7 +70,11 @@ class GetLink extends Step
 
         $selector = $this->selector ?? 'a';
 
-        foreach ($input->filter($selector) as $link) {
+        if (is_string($selector)) {
+            $selector = new CssSelector($selector);
+        }
+
+        foreach ($selector->filter($input) as $link) {
             $linkUrl = $this->getLinkUrl($link);
 
             if ($linkUrl) {
