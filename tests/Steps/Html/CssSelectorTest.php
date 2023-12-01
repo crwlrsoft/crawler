@@ -3,9 +3,14 @@
 namespace tests\Steps\Html;
 
 use Crwlr\Crawler\Steps\Html\CssSelector;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_getSimpleListHtml;
+
+it('throws an exception when created with an invalid CSS Selector', function ($selector) {
+    new CssSelector($selector);
+})->throws(InvalidDomQueryException::class)->with(['.foo;', '.foo:before']);
 
 test('The apply method returns a string for a single match', function () {
     $html = '<div class="item">test</div>';

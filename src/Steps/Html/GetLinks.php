@@ -19,7 +19,11 @@ class GetLinks extends GetLink
 
         $selector = $this->selector ?? 'a';
 
-        foreach ($input->filter($selector) as $link) {
+        if (is_string($selector)) {
+            $selector = new CssSelector($selector);
+        }
+
+        foreach ($selector->filter($input) as $link) {
             $linkUrl = $this->getLinkUrl($link);
 
             if ($linkUrl) {

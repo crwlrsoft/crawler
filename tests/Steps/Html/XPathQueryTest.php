@@ -2,10 +2,15 @@
 
 namespace tests\Steps\Html;
 
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
 use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_getSimpleListHtml;
+
+it('throws an exception when created with an invalid XPath query', function () {
+    new XPathQuery('//a/@@bob/uncle');
+})->throws(InvalidDomQueryException::class);
 
 test('The apply method returns a string for a single match', function () {
     $xml = '<item>test</item>';
