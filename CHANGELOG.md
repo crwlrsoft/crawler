@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.3] - 2023-12-01
+### Fixed
+* Add forgotten getter method to get the DOM query that is attached to an `InvalidDomQueryException` instance.
+
 ## [1.3.2] - 2023-12-01
 ### Fixed
 * When creating a `CssSelector` or `XPathQuery` instance with invalid selector/query syntax, an `InvalidDomQueryException` is now immediately thrown. This change is considered to be not only non-breaking, but actually a fix, because the `CssSelector` would otherwise throw an exception later when the `apply()` method is called. The `XPathQuery` would silently return no result without notifying you of the invalid query and generate a PHP warning.

@@ -38,4 +38,9 @@ class InvalidDomQueryException extends Exception
     {
         $this->query = $domQuery;
     }
+
+    public function getDomQuery(): string
+    {
+        return $this->query;
+    }
 }
