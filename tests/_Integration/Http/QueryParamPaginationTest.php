@@ -89,3 +89,25 @@ it('paginates only until the max pages limit', function () {
 
     expect($results)->toHaveCount(2);
 });
+
+it('resets the finished paginating state after each processed (/paginated) input', function () {
+    $crawler = new QueryParamPaginationCrawler();
+
+    $crawler
+        ->inputs([
+            'http://localhost:8000/query-param-pagination?page=1',
+            'http://localhost:8000/query-param-pagination?page=1&foo=bar',
+        ])
+        ->addStep(
+            Http::get()
+                ->paginate(
+                    QueryParamsPaginator::paramsInUrl(2)
+                        ->increase('page')
+                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items'))
+                )->addToResult(['body'])
+        );
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(4);
+});

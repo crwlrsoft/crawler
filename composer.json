@@ -69,7 +69,7 @@
     "scripts": {
         "test": "pest --exclude-group integration",
         "test-integration": "pest --group integration",
-        "stan": "phpstan analyse",
+        "stan": "@php -d memory_limit=4G vendor/bin/phpstan analyse",
         "cs": "php-cs-fixer fix -v --dry-run",
         "cs-fix": "php-cs-fixer fix -v",
         "add-git-hooks": "@php bin/add-git-hooks"

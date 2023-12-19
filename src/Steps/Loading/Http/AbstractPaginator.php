@@ -44,6 +44,25 @@ abstract class AbstractPaginator
         return $this->hasFinished || $this->maxPagesReached();
     }
 
+    /**
+     * When a paginate step is called with multiple inputs, like:
+     *
+     * ['https://www.example.com/listing1', 'https://www.example.com/listing2', ...]
+     *
+     * it always has to start paginating again for each listing base URL.
+     * Therefore, we reset the state after finishing paginating one base input.
+     * Except for $this->found, because if it would be the case that the exact same pages are
+     * discovered whilst paginating, we don't want to load the exact same pages again and again.
+     */
+    public function resetFinished(): void
+    {
+        $this->hasFinished = false;
+
+        $this->loadedCount = 0;
+
+        $this->latestRequest = null;
+    }
+
     public function stopWhen(Closure|StopRule $callback): self
     {
         $this->stopRules[] = $callback;

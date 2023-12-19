@@ -51,3 +51,15 @@ it('only iterates pagination until max pages limit is reached', function () {
 
     expect($this->getActualOutputForAssertion())->toContain('Max pages limit reached');
 });
+
+it('resets the finished paginating state after each processed (/paginated) input', function () {
+    $crawler = new PaginationCrawler();
+
+    $crawler
+        ->inputs(['http://localhost:8000/paginated-listing', 'http://localhost:8000/paginated-listing?foo=bar'])
+        ->addStep(Http::get()->paginate('#pagination', 2)->outputKey('response'));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(4);
+});
