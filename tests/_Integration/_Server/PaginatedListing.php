@@ -7,7 +7,12 @@
 <div id="listing">
     <?php
         $page = $_GET['page'] ?? 1;
+        $additionalFooQueryParam = '';
         $itemsPerPage = 3;
+
+        if (!empty($_GET['foo'])) {
+            $additionalFooQueryParam = '&foo=' . $_GET['foo'];
+        }
 
         if ($page < 4) {
             for ($i = 1; $i < 4; $i++) {
@@ -27,11 +32,11 @@
 
     <div id="pagination">
         <?php if ($page > 1) { ?>
-            <a id="prevPage" href="/paginated-listing?page=<?=($page - 1)?>">&lt;&lt;</a>
+            <a id="prevPage" href="/paginated-listing?page=<?=($page - 1) . $additionalFooQueryParam?>">&lt;&lt;</a>
         <?php } ?>
 
         <?php if ($page < 4) { ?>
-            <a id="nextPage" href="/paginated-listing?page=<?=($page + 1)?>">&gt;&gt;</a>
+            <a id="nextPage" href="/paginated-listing?page=<?=($page + 1) . $additionalFooQueryParam?>">&gt;&gt;</a>
         <?php } ?>
     </div>
 </div>

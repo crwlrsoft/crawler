@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2023-12-19
+### Fixed
+* Reset paginator state after finishing paginating for one base input, to enable paginating multiple listings of the same structure.
+
 ## [1.3.3] - 2023-12-01
 ### Fixed
 * Add forgotten getter method to get the DOM query that is attached to an `InvalidDomQueryException` instance.
