@@ -300,6 +300,30 @@ it('gets compressed cache items', function () {
     expect(Http::getBodyString($retrievedCacheItem))->toBe('Hello World');
 });
 
+it('is also able to decode uncompressed cache files when useCompression() is used', function () {
+    $cache = new FileCache(helper_cachedir());
+
+    $respondedRequest = new RespondedRequest(new Request('GET', '/yo'), new Response(body: Utils::streamFor('Yo')));
+
+    $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+    $retrievedCacheItem = $cache->get($respondedRequest->cacheKey());
+
+    expect($retrievedCacheItem)
+        ->toBeInstanceOf(RespondedRequest::class)
+        ->and(Http::getBodyString($retrievedCacheItem))
+        ->toBe('Yo');
+
+    $cache->useCompression();
+
+    $retrievedCacheItem = $cache->get($respondedRequest->cacheKey());
+
+    expect($retrievedCacheItem)
+        ->toBeInstanceOf(RespondedRequest::class)
+        ->and(Http::getBodyString($retrievedCacheItem))
+        ->toBe('Yo');
+});
+
 test('you can change the default ttl', function () {
     $cache = new FileCache(helper_cachedir());
 
