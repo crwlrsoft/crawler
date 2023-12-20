@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2023-12-20
+### Fixed
+* The `FileCache` can now also read uncompressed cache files when compression is activated.
+
 ## [1.3.4] - 2023-12-19
 ### Fixed
 * Reset paginator state after finishing paginating for one base input, to enable paginating multiple listings of the same structure.

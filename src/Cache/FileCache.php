@@ -209,6 +209,12 @@ class FileCache implements CacheInterface
      */
     protected function decode(string $content): string
     {
+        $isEncoded = 0 === mb_strpos($content, "\x1f" . "\x8b" . "\x08", 0, "US-ASCII");
+
+        if (!$isEncoded) {
+            return $content;
+        }
+
         if (!function_exists('gzdecode')) {
             throw new MissingZlibExtensionException('FileCache compression needs PHP ext-zlib installed.');
         }
