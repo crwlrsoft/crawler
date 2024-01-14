@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading\Http\Paginators\QueryParams;
 
+use Adbar\Dot;
 use Crwlr\QueryString\Query;
 use Exception;
 
@@ -9,7 +10,8 @@ class Decrementor extends AbstractQueryParamManipulator
 {
     public function __construct(
         string $queryParamName,
-        protected int $decrement = 1
+        protected int $decrement = 1,
+        protected bool $useDotNotation = false,
     ) {
         parent::__construct($queryParamName);
     }
@@ -19,6 +21,15 @@ class Decrementor extends AbstractQueryParamManipulator
      */
     public function execute(Query $query): Query
     {
+        if ($this->useDotNotation) {
+            $dot = (new Dot($query->toArray()))->set(
+                $this->queryParamName,
+                (string) ($this->getCurrentValueAsIntUsingDotNotation($query) - $this->decrement)
+            );
+
+            return new Query($dot->all());
+        }
+
         return $query->set(
             $this->queryParamName,
             (string) ($this->getCurrentValueAsInt($query) - $this->decrement),

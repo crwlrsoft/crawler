@@ -24,3 +24,11 @@ it('increments a query param value by a certain number', function () {
 
     expect($query->get('foo'))->toBe('20');
 });
+
+it('increments a non first level query param value by a certain number', function () {
+    $incrementor = new Incrementor('foo.bar.baz', 7, true);
+
+    $query = Query::fromString('foo[bar][baz]=3');
+
+    expect($incrementor->execute($query)->toString())->toBe('foo%5Bbar%5D%5Bbaz%5D=10');
+});
