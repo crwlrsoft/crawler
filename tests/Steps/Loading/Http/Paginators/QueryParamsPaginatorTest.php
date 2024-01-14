@@ -47,3 +47,28 @@ it('increases and decreases values in query params in the body', function () {
         ->and($nextRequest?->getBody()->getContents())
         ->toBe('page=2&offset=40&foo=30&bar=-10');
 });
+
+it('increases and decreases non first level (of query array) parameters using dot notation', function () {
+    $paginator = QueryParamsPaginator::paramsInBody()
+        ->increaseUsingDotNotation('pagination.page')
+        ->increase('pagination.size', 5, true)
+        ->decreaseUsingDotNotation('pagination2.page')
+        ->decrease('pagination2.size', 5, true);
+
+    $request = new Request(
+        'POST',
+        'https://www.example.com/list',
+        body: 'pagination[page]=1&pagination[size]=25&pagination2[page]=1&pagination2[size]=25&foo=bar',
+    );
+
+    $respondedRequest = new RespondedRequest($request, new Response());
+
+    $paginator->processLoaded($request->getUri(), $request, $respondedRequest);
+
+    $nextRequest = $paginator->getNextRequest();
+
+    expect($nextRequest?->getBody()->getContents())
+        ->toBe(
+            'pagination%5Bpage%5D=2&pagination%5Bsize%5D=30&pagination2%5Bpage%5D=0&pagination2%5Bsize%5D=20&foo=bar'
+        );
+});

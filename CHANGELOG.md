@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2024-01-14
+### Added
+* The `QueryParamsPaginator` can now also increase and decrease non first level query param values like `foo[bar][baz]=5` using dot notation: `QueryParamsPaginator::paramsInUrl()->increaseUsingDotNotation('foo.bar.baz', 5)`.
+
 ## [1.3.5] - 2023-12-20
 ### Fixed
 * The `FileCache` can now also read uncompressed cache files when compression is activated.

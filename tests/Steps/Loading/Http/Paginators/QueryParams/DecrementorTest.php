@@ -24,3 +24,11 @@ it('reduces a query param value by a certain number', function () {
 
     expect($query->get('foo'))->toBe('-10');
 });
+
+it('reduces a non first level query param value by a certain number', function () {
+    $decrementor = new Decrementor('foo.bar.baz', 7, true);
+
+    $query = Query::fromString('foo[bar][baz]=10');
+
+    expect($decrementor->execute($query)->toString())->toBe('foo%5Bbar%5D%5Bbaz%5D=3');
+});

@@ -53,16 +53,30 @@ class QueryParamsPaginator extends Http\AbstractPaginator
         return $this;
     }
 
-    public function increase(string $queryParamName, int $by = 1): self
+    public function increase(string $queryParamName, int $by = 1, bool $useDotNotation = false): self
     {
-        $this->manipulators[] = new Incrementor($queryParamName, $by);
+        $this->manipulators[] = new Incrementor($queryParamName, $by, $useDotNotation);
 
         return $this;
     }
 
-    public function decrease(string $queryParamName, int $by = 1): self
+    public function increaseUsingDotNotation(string $queryParamName, int $by = 1): self
     {
-        $this->manipulators[] = new Decrementor($queryParamName, $by);
+        $this->manipulators[] = new Incrementor($queryParamName, $by, true);
+
+        return $this;
+    }
+
+    public function decrease(string $queryParamName, int $by = 1, bool $useDotNotation = false): self
+    {
+        $this->manipulators[] = new Decrementor($queryParamName, $by, $useDotNotation);
+
+        return $this;
+    }
+
+    public function decreaseUsingDotNotation(string $queryParamName, int $by = 1): self
+    {
+        $this->manipulators[] = new Decrementor($queryParamName, $by, true);
 
         return $this;
     }
