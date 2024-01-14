@@ -22,6 +22,9 @@ abstract class AbstractQueryParamManipulator implements QueryParamManipulator
         return $fallbackValue;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getCurrentValueUsingDotNotation(Query $query, mixed $fallbackValue = null): mixed
     {
         $dot = new Dot($query->toArray());
@@ -34,15 +37,14 @@ abstract class AbstractQueryParamManipulator implements QueryParamManipulator
      */
     protected function getCurrentValueAsInt(Query $query): int
     {
-        $currentValue = $this->getCurrentValue($query);
-
-        return $currentValue === null ? 0 : (int) $currentValue;
+        return (int) $this->getCurrentValue($query);
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getCurrentValueAsIntUsingDotNotation(Query $query): int
     {
-        $currentValue = $this->getCurrentValueUsingDotNotation($query);
-
-        return $currentValue === null ? 0 : (int) $currentValue;
+        return (int) $this->getCurrentValueUsingDotNotation($query);
     }
 }
