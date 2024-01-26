@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Html2Text\Exceptions\InvalidHtmlException;
+use Crwlr\Html2Text\Html2Text;
 use Crwlr\Url\Url;
 use Exception;
 use InvalidArgumentException;
@@ -28,6 +30,8 @@ abstract class DomQuery implements DomQueryInterface
     protected bool $withFragment = true;
 
     protected ?string $baseUrl = null;
+
+    protected ?Html2Text $html2TextConverter = null;
 
     public function __construct(
         public readonly string $query
@@ -56,6 +60,7 @@ abstract class DomQuery implements DomQueryInterface
 
     /**
      * @return string[]|string|null
+     * @throws InvalidHtmlException|Exception
      */
     public function apply(Crawler $domCrawler): array|string|null
     {
@@ -134,6 +139,17 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
+    public function formattedText(?Html2Text $converter = null): self
+    {
+        $this->target = SelectorTarget::FormattedText;
+
+        if ($converter) {
+            $this->html2TextConverter = $converter;
+        }
+
+        return $this;
+    }
+
     public function html(): self
     {
         $this->target = SelectorTarget::Html;
@@ -196,6 +212,8 @@ abstract class DomQuery implements DomQueryInterface
 
     /**
      * Automatically called when used in a Dom step.
+     *
+     * @throws Exception
      */
     public function setBaseUrl(string $baseUrl): static
     {
@@ -259,13 +277,25 @@ abstract class DomQuery implements DomQueryInterface
         return $newDomCrawler;
     }
 
+    /**
+     * @throws InvalidHtmlException
+     * @throws Exception
+     */
     protected function getTarget(Crawler $filtered): string
     {
-        $target = trim(
-            $this->attributeName ?
-                $filtered->attr($this->attributeName) :
-                $filtered->{strtolower($this->target->name)}()
-        );
+        if ($this->target === SelectorTarget::FormattedText) {
+            if (!$this->html2TextConverter) {
+                $this->html2TextConverter = new Html2Text();
+            }
+
+            $target = $this->html2TextConverter->convertHtmlToText($filtered->outerHtml());
+        } else {
+            $target = trim(
+                $this->attributeName ?
+                    $filtered->attr($this->attributeName) :
+                    $filtered->{strtolower($this->target->name)}()
+            );
+        }
 
         if ($this->toAbsoluteUrl && $this->baseUrl !== null) {
             $target = $this->handleUrlFragment(Url::parse($this->baseUrl)->resolve($target));

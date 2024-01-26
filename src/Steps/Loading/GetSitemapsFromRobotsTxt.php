@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
+use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -10,6 +11,9 @@ use Psr\Http\Message\UriInterface;
 
 class GetSitemapsFromRobotsTxt extends LoadingStep
 {
+    /**
+     * @throws InvalidRobotsTxtFileException
+     */
     protected function invoke(mixed $input): Generator
     {
         if (!method_exists($this->loader, 'robotsTxt')) {

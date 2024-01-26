@@ -400,6 +400,7 @@ class HttpLoader extends Loader
 
     /**
      * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws Exception
      */
     protected function getFromCache(RequestInterface $request): ?RespondedRequest
     {
@@ -549,6 +550,7 @@ class HttpLoader extends Loader
      * @throws ClientExceptionInterface
      * @throws LoadingException
      * @throws GuzzleException
+     * @throws Exception
      */
     protected function handleRedirects(
         RequestInterface  $request,

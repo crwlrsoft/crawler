@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Cache;
 
 use DateInterval;
 use DateTimeImmutable;
+use Exception;
 
 class CacheItem
 {
@@ -36,6 +37,9 @@ class CacheItem
         return $this->value;
     }
 
+    /**
+     * @throws Exception
+     */
     public function isExpired(): bool
     {
         $ttl = $this->ttl instanceof DateInterval ? $this->ttl : new DateInterval('PT' . $this->ttl . 'S');

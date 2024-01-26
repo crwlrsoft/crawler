@@ -359,6 +359,9 @@ class HttpCrawl extends Http
         return !$this->useCanonicalLinks || !array_key_exists($document->canonicalUrl(), $this->loadedUrls);
     }
 
+    /**
+     * @throws Exception
+     */
     protected function setResponseCanonicalUrl(RespondedRequest $respondedRequest, Document $document): void
     {
         if ($this->useCanonicalLinks && $respondedRequest->effectiveUri() !== $document->canonicalUrl()) {

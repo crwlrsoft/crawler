@@ -4,6 +4,7 @@ namespace tests\Steps\Html;
 
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
+use Crwlr\Html2Text\Html2Text;
 use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_getSimpleListHtml;
@@ -93,6 +94,42 @@ it('does not contain text of children when innerText is called', function () {
     $domCrawler = new Crawler($html);
 
     expect((new CssSelector('.item'))->innerText()->apply($domCrawler))->toBe('test');
+});
+
+it('returns formatted text when formattedText() is called', function () {
+    $html = '<article id="a"><h1>headline</h1><p>paragraph</p><ul><li>item 1</li><li>item 2</li></ul></article>';
+
+    $domCrawler = new Crawler($html);
+
+    expect((new CssSelector('#a'))->formattedText()->apply($domCrawler))
+        ->toBe(<<<TEXT
+        # headline
+
+        paragraph
+
+        * item 1
+        * item 2
+        TEXT);
+});
+
+test('you can provide your own converter instance to get formattedText()', function () {
+    $html = '<article id="a"><h1>headline</h1><p>paragraph</p><ul><li>item 1</li><li>item 2</li></ul></article>';
+
+    $domCrawler = new Crawler($html);
+
+    $converter = new Html2Text();
+
+    $converter->removeConverter('ul');
+
+    expect((new CssSelector('#a'))->formattedText($converter)->apply($domCrawler))
+        ->toBe(<<<TEXT
+        # headline
+
+        paragraph
+
+        item 1
+        item 2
+        TEXT);
 });
 
 it('gets the contents of an attribute using the attribute method', function () {

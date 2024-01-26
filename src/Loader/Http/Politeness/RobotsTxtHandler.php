@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Crwlr\RobotsTxt\RobotsTxt;
 use Crwlr\Url\Url;
 use Exception;
@@ -62,12 +63,16 @@ class RobotsTxtHandler
 
     /**
      * @return string[]
+     * @throws InvalidRobotsTxtFileException
      */
     public function getSitemaps(string|UriInterface|Url $url): array
     {
         return $this->getRobotsTxtFor($url)->sitemaps();
     }
 
+    /**
+     * @throws InvalidRobotsTxtFileException|Exception
+     */
     protected function getRobotsTxtFor(string|UriInterface|Url $url): RobotsTxt
     {
         $url = $this->getUrlInstance($url);

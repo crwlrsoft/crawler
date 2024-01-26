@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2024-01-26
+### Added
+* The `DomQuery` class (parent of `CssSelector` (`Dom::cssSelector`) and `XPathQuery` (`Dom::xPath`)) has a new method `formattedText()` that uses the new crwlr/html-2-text package to convert the HTML to formatted plain text. You can also provide a customized instance of the `Html2Text` class to the `formattedText()` method.
+
 ## [1.4.0] - 2024-01-14
 ### Added
 * The `QueryParamsPaginator` can now also increase and decrease non first level query param values like `foo[bar][baz]=5` using dot notation: `QueryParamsPaginator::paramsInUrl()->increaseUsingDotNotation('foo.bar.baz', 5)`.

@@ -130,6 +130,9 @@ final class Group extends BaseStep
         return $this;
     }
 
+    /**
+     * @throws UnknownLoaderKeyException
+     */
     public function addLoader(LoaderInterface $loader): self
     {
         $this->loader = $loader;

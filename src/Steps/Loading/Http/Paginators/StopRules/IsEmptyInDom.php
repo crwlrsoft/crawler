@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Loading\Http\Paginators\StopRules;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Psr\Http\Message\RequestInterface;
 use Symfony\Component\DomCrawler\Crawler;
@@ -13,6 +14,9 @@ abstract class IsEmptyInDom implements StopRule
 {
     public function __construct(protected string|DomQueryInterface $selector) {}
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public function shouldStop(RequestInterface $request, ?RespondedRequest $respondedRequest): bool
     {
         if (!$respondedRequest) {

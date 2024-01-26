@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Url\Url;
@@ -34,6 +35,9 @@ class GetLink extends Step
 
     protected null|string|CssSelector $selector = null;
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public function __construct(null|string|CssSelector $selector = null)
     {
         $this->selector = is_string($selector) ? new CssSelector($selector) : $selector;
@@ -153,6 +157,9 @@ class GetLink extends Step
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getBaseFromDocument(Crawler $document): void
     {
         $baseHref = DomQuery::getBaseHrefFromDocument($document);
