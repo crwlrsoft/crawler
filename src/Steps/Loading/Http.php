@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator;
 use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
@@ -138,6 +139,9 @@ class Http extends LoadingStep
         return $contents;
     }
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public function paginate(
         PaginatorInterface|AbstractPaginator|string $paginator,
         int $defaultPaginatorMaxPages = Paginator::MAX_PAGES_DEFAULT

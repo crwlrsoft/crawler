@@ -7,6 +7,7 @@ use Crwlr\Crawler\Cache\Exceptions\ReadingCacheFailedException;
 use DateInterval;
 use Exception;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class FileCache implements CacheInterface
 {
@@ -33,8 +34,7 @@ class FileCache implements CacheInterface
     }
 
     /**
-     * @throws MissingZlibExtensionException
-     * @throws ReadingCacheFailedException
+     * @throws MissingZlibExtensionException|ReadingCacheFailedException|Exception|InvalidArgumentException
      */
     public function has(string $key): bool
     {
@@ -52,9 +52,7 @@ class FileCache implements CacheInterface
     }
 
     /**
-     * @throws ReadingCacheFailedException
-     * @throws MissingZlibExtensionException
-     * @throws Exception
+     * @throws ReadingCacheFailedException|MissingZlibExtensionException|Exception|InvalidArgumentException
      */
     public function get(string $key, mixed $default = null): mixed
     {
@@ -117,6 +115,9 @@ class FileCache implements CacheInterface
         return unlink($this->basePath . '/' . $key);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function clear(): bool
     {
         $allFiles = scandir($this->basePath);
@@ -134,8 +135,7 @@ class FileCache implements CacheInterface
 
     /**
      * @return iterable<mixed>
-     * @throws MissingZlibExtensionException
-     * @throws ReadingCacheFailedException
+     * @throws MissingZlibExtensionException|ReadingCacheFailedException|InvalidArgumentException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {

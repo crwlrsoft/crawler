@@ -39,11 +39,25 @@ if ($route === '/crawling/sitemap2.xml') {
 XML;
 }
 
-if ($route === '/crawling/main') {
+if ($route === '/crawling' || $route === '/crawling/redirect') {
+    header('Location: http://www.example.com/crawling/main?redirect=1', true, 301);
+
+    return '';
+}
+
+if ($route === '/crawling/main' || $route === '/crawling/main?redirect=1') {
+    $showRedirectLinkHtml = '';
+
+    if (!empty($_GET['redirect'] ?? null)) {
+        $showRedirectLinkHtml = PHP_EOL . '<a href="/crawling">link</a>';
+    }
+
     echo <<<HTML
         <!doctype html>
         <html lang="en">
         <body>
+            {$showRedirectLinkHtml}
+
             <a href="/crawling/sub1">Subpage 1</a> <br>
             <a href="/crawling/sub2">Subpage 2</a> <br>
             <a href="/crawling/sub2#fragment1">Subpage 2 - Fragment 1</a> <br>

@@ -13,6 +13,7 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Url;
 use Crwlr\Utils\Microseconds;
 use GuzzleHttp\Client;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -91,6 +92,8 @@ class Crawler extends HttpCrawler
         return parent::getLoader(); // @phpstan-ignore-line
     }
 }
+
+/** @var TestCase $this */
 
 it('stays on the same host by default', function () {
     $crawler = (new Crawler())
@@ -417,18 +420,39 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
         return $result->get('url');
     }, $results);
 
-    expect($resultUrls)->toBe([
-        'http://www.example.com/crawling/main',
-        'http://www.example.com/crawling/sub1/sub1',        // actual loaded url was sub1, but canonical is sub1/sub1
-        'http://www.example.com/crawling/sub2',
-        'http://www.example.com/crawling/sub2/sub1/sub1',
-    ]);
+    expect($resultUrls)
+        ->toBe([
+            'http://www.example.com/crawling/main',
+            'http://www.example.com/crawling/sub1/sub1',       // actual loaded url was sub1, but canonical is sub1/sub1
+            'http://www.example.com/crawling/sub2',
+            'http://www.example.com/crawling/sub2/sub1/sub1',
+        ])
+        ->and($crawler->getLoader()->loadedUrls)
+        ->toBe([
+            'http://www.example.com/crawling/main',
+            'http://www.example.com/crawling/sub1',            // => /crawling/sub1/sub1 => this URL wasn't loaded yet,
+            'http://www.example.com/crawling/sub2',            // so when the link is discovered it won't load it.
+            'http://www.example.com/crawling/sub2/sub1',       // => /crawling/sub1/sub1 => this URL was already loaded,
+            'http://www.example.com/crawling/sub2/sub1/sub1',  // so the response is not yielded as a separate result.
+        ]);
+});
 
-    expect($crawler->getLoader()->loadedUrls)->toBe([
-        'http://www.example.com/crawling/main',
-        'http://www.example.com/crawling/sub1',             // => /crawling/sub1/sub1 => this URL wasn't loaded yet,
-        'http://www.example.com/crawling/sub2',             // so when the link is discovered it won't load it.
-        'http://www.example.com/crawling/sub2/sub1',        // => /crawling/sub1/sub1 => this URL was already loaded,
-        'http://www.example.com/crawling/sub2/sub1/sub1',   // so the response is not yielded as a separate result.
-    ]);
+it('does not yield the same page twice when a URL was redirected to an already loaded page', function () {
+    $crawler = (new Crawler())
+        ->input('http://www.example.com/crawling/redirect')
+        ->addStep(Http::crawl()->addToResult(['url']));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    $resultUrls = array_map(function (Result $result) {
+        return $result->get('url');
+    }, $results);
+
+    expect($resultUrls)
+        ->toContain('http://www.example.com/crawling/main')
+        ->and($resultUrls)
+        ->not()
+        ->toContain('http://www.example.com/crawling/redirect')
+        ->and($this->getActualOutputForAssertion())
+        ->toContain('Was already loaded before. Do not process this page again.');
 });

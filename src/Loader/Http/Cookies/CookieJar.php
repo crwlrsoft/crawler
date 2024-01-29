@@ -75,6 +75,9 @@ class CookieJar
         return $cookiesToSend;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getForDomainFromUrl(string|UriInterface|Url $url): ?string
     {
         if (!$url instanceof Url) {

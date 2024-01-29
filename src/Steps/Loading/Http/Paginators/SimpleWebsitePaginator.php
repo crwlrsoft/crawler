@@ -6,6 +6,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
@@ -36,6 +37,9 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
      */
     protected array $parentRequests = [];
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public function __construct(string|DomQueryInterface $paginationLinksSelector, int $maxPages = 1000)
     {
         if (is_string($paginationLinksSelector)) {

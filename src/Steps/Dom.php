@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
 use Exception;
 use Generator;
@@ -75,11 +76,17 @@ abstract class Dom extends Step
         return $instance;
     }
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public static function cssSelector(string $selector): CssSelector
     {
         return new CssSelector($selector);
     }
 
+    /**
+     * @throws InvalidDomQueryException
+     */
     public static function xPath(string $query): XPathQuery
     {
         return new XPathQuery($query);

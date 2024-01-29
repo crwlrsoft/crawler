@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Loader\Http\Messages;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
+use Exception;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -17,6 +18,9 @@ class RespondedRequest
      */
     protected array $redirects = [];
 
+    /**
+     * @throws Exception
+     */
     public function __construct(
         public RequestInterface $request,
         public ResponseInterface $response,
@@ -27,6 +31,7 @@ class RespondedRequest
     /**
      * @param mixed[] $data
      * @return RespondedRequest
+     * @throws Exception
      */
     public static function fromArray(array $data): RespondedRequest
     {
@@ -69,6 +74,7 @@ class RespondedRequest
 
     /**
      * @param mixed[] $data
+     * @throws Exception
      */
     public function __unserialize(array $data): void
     {
@@ -118,6 +124,9 @@ class RespondedRequest
         return $this->redirects;
     }
 
+    /**
+     * @throws Exception
+     */
     public function setResponse(ResponseInterface $response): void
     {
         $this->response = $response;
@@ -127,6 +136,9 @@ class RespondedRequest
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function addRedirectUri(?string $redirectUri = null): void
     {
         $redirectUri = Url::parse($this->effectiveUri())

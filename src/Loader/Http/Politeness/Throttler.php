@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Loader\Http\Politeness;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Url\Url;
 use Crwlr\Utils\Microseconds;
+use Exception;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
@@ -75,6 +76,9 @@ class Throttler
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function trackRequestStartFor(UriInterface $url): void
     {
         $domain = $this->getDomain($url);
@@ -82,6 +86,9 @@ class Throttler
         $this->latestRequestTimes[$domain] = $this->time();
     }
 
+    /**
+     * @throws Exception
+     */
     public function trackRequestEndFor(UriInterface $url): void
     {
         $domain = $this->getDomain($url);
@@ -97,6 +104,9 @@ class Throttler
         unset($this->latestRequestTimes[$domain]);
     }
 
+    /**
+     * @throws Exception
+     */
     public function waitForGo(UriInterface $url): void
     {
         $domain = $this->getDomain($url);
@@ -123,6 +133,9 @@ class Throttler
         return Microseconds::fromSeconds(microtime(true));
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getDomain(UriInterface $url): string
     {
         $domain = Url::parse($url)->domain();
