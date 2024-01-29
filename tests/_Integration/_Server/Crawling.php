@@ -48,7 +48,7 @@ if ($route === '/crawling' || $route === '/crawling/redirect') {
 if ($route === '/crawling/main' || $route === '/crawling/main?redirect=1') {
     $showRedirectLinkHtml = '';
 
-    if (!empty($_GET['redirect'])) {
+    if (!empty($_GET['redirect'] ?? null)) {
         $showRedirectLinkHtml = PHP_EOL . '<a href="/crawling">link</a>';
     }
 
@@ -56,6 +56,8 @@ if ($route === '/crawling/main' || $route === '/crawling/main?redirect=1') {
         <!doctype html>
         <html lang="en">
         <body>
+            {$showRedirectLinkHtml}
+
             <a href="/crawling/sub1">Subpage 1</a> <br>
             <a href="/crawling/sub2">Subpage 2</a> <br>
             <a href="/crawling/sub2#fragment1">Subpage 2 - Fragment 1</a> <br>
@@ -68,7 +70,6 @@ if ($route === '/crawling/main' || $route === '/crawling/main?redirect=1') {
             <a href="tel:+499123456789">phone link</a>
 
             <a href="//">broken link</a>
-            ${$showRedirectLinkHtml}
         </body>
         </html>
         HTML;

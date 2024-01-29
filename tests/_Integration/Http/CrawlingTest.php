@@ -451,15 +451,7 @@ it('does not yield the same page twice when a URL was redirected to an already l
         ->toContain('http://www.example.com/crawling/main')
         ->and($resultUrls)
         ->not()
-        ->toContain('http://www.example.com/crawling/redirect');
-
-    $output = $this->getActualOutputForAssertion();
-
-    if (!str_contains($output, 'Was already loaded before. Do not process this page again.')) {
-        error_log(var_export('---debug----', true));
-        error_log(var_export($output, true));
-        error_log(var_export('---debug----', true));
-    }
-
-    expect($output)->toContain('Was already loaded before. Do not process this page again.');
+        ->toContain('http://www.example.com/crawling/redirect')
+        ->and($this->getActualOutputForAssertion())
+        ->toContain('Was already loaded before. Do not process this page again.');
 });
