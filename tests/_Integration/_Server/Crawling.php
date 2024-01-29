@@ -39,7 +39,19 @@ if ($route === '/crawling/sitemap2.xml') {
 XML;
 }
 
-if ($route === '/crawling/main') {
+if ($route === '/crawling' || $route === '/crawling/redirect') {
+    header('Location: http://www.example.com/crawling/main?redirect=1', true, 301);
+
+    return '';
+}
+
+if ($route === '/crawling/main' || $route === '/crawling/main?redirect=1') {
+    $showRedirectLinkHtml = '';
+
+    if (!empty($_GET['redirect'])) {
+        $showRedirectLinkHtml = PHP_EOL . '<a href="/crawling">link</a>';
+    }
+
     echo <<<HTML
         <!doctype html>
         <html lang="en">
@@ -56,6 +68,7 @@ if ($route === '/crawling/main') {
             <a href="tel:+499123456789">phone link</a>
 
             <a href="//">broken link</a>
+            ${$showRedirectLinkHtml}
         </body>
         </html>
         HTML;

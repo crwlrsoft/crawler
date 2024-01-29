@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.5.0] - 2024-01-26
+## [1.5.0] - 2024-01-29
 ### Added
 * The `DomQuery` class (parent of `CssSelector` (`Dom::cssSelector`) and `XPathQuery` (`Dom::xPath`)) has a new method `formattedText()` that uses the new crwlr/html-2-text package to convert the HTML to formatted plain text. You can also provide a customized instance of the `Html2Text` class to the `formattedText()` method.
+
+### Fixed
+* The `Http::crawl()` step won't yield a page again if a newly found URL responds with a redirect to a previously loaded URL.
 
 ## [1.4.0] - 2024-01-14
 ### Added
