@@ -420,20 +420,21 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
         return $result->get('url');
     }, $results);
 
-    expect($resultUrls)->toBe([
-        'http://www.example.com/crawling/main',
-        'http://www.example.com/crawling/sub1/sub1',        // actual loaded url was sub1, but canonical is sub1/sub1
-        'http://www.example.com/crawling/sub2',
-        'http://www.example.com/crawling/sub2/sub1/sub1',
-    ]);
-
-    expect($crawler->getLoader()->loadedUrls)->toBe([
-        'http://www.example.com/crawling/main',
-        'http://www.example.com/crawling/sub1',             // => /crawling/sub1/sub1 => this URL wasn't loaded yet,
-        'http://www.example.com/crawling/sub2',             // so when the link is discovered it won't load it.
-        'http://www.example.com/crawling/sub2/sub1',        // => /crawling/sub1/sub1 => this URL was already loaded,
-        'http://www.example.com/crawling/sub2/sub1/sub1',   // so the response is not yielded as a separate result.
-    ]);
+    expect($resultUrls)
+        ->toBe([
+            'http://www.example.com/crawling/main',
+            'http://www.example.com/crawling/sub1/sub1',       // actual loaded url was sub1, but canonical is sub1/sub1
+            'http://www.example.com/crawling/sub2',
+            'http://www.example.com/crawling/sub2/sub1/sub1',
+        ])
+        ->and($crawler->getLoader()->loadedUrls)
+        ->toBe([
+            'http://www.example.com/crawling/main',
+            'http://www.example.com/crawling/sub1',            // => /crawling/sub1/sub1 => this URL wasn't loaded yet,
+            'http://www.example.com/crawling/sub2',            // so when the link is discovered it won't load it.
+            'http://www.example.com/crawling/sub2/sub1',       // => /crawling/sub1/sub1 => this URL was already loaded,
+            'http://www.example.com/crawling/sub2/sub1/sub1',  // so the response is not yielded as a separate result.
+        ]);
 });
 
 it('does not yield the same page twice when a URL was redirected to an already loaded page', function () {
