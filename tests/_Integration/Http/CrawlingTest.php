@@ -13,6 +13,7 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Url\Url;
 use Crwlr\Utils\Microseconds;
 use GuzzleHttp\Client;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -91,6 +92,8 @@ class Crawler extends HttpCrawler
         return parent::getLoader(); // @phpstan-ignore-line
     }
 }
+
+/** @var TestCase $this */
 
 it('stays on the same host by default', function () {
     $crawler = (new Crawler())
@@ -431,4 +434,32 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
         'http://www.example.com/crawling/sub2/sub1',        // => /crawling/sub1/sub1 => this URL was already loaded,
         'http://www.example.com/crawling/sub2/sub1/sub1',   // so the response is not yielded as a separate result.
     ]);
+});
+
+it('does not yield the same page twice when a URL was redirected to an already loaded page', function () {
+    $crawler = (new Crawler())
+        ->input('http://www.example.com/crawling/redirect')
+        ->addStep(Http::crawl()->addToResult(['url']));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    $resultUrls = array_map(function (Result $result) {
+        return $result->get('url');
+    }, $results);
+
+    expect($resultUrls)
+        ->toContain('http://www.example.com/crawling/main')
+        ->and($resultUrls)
+        ->not()
+        ->toContain('http://www.example.com/crawling/redirect');
+
+    $output = $this->getActualOutputForAssertion();
+
+    if (!str_contains($output, 'Was already loaded before. Do not process this page again.')) {
+        error_log(var_export('---debug----', true));
+        error_log(var_export($output, true));
+        error_log(var_export('---debug----', true));
+    }
+
+    expect($output)->toContain('Was already loaded before. Do not process this page again.');
 });

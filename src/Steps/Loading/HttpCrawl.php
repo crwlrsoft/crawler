@@ -205,7 +205,7 @@ class HttpCrawl extends Http
 
             $response = $this->getResponseFromInputUri($uri);
 
-            if ($response !== null) {
+            if ($response !== null && !$this->wasAlreadyLoaded($response)) {
                 $document = new Document($response, $this->logger);
 
                 $this->setResponseCanonicalUrl($response, $document);
@@ -337,6 +337,35 @@ class HttpCrawl extends Http
                 $this->loadedUrls[$loadedUrl] = true;
             }
         }
+    }
+
+    /**
+     * If the loaded response had a redirect, it can be that it was a redirect to a page that was already loaded before.
+     * In that case, don't yield that response again.
+     *
+     * @param RespondedRequest $respondedRequest
+     * @return bool
+     */
+    protected function wasAlreadyLoaded(RespondedRequest $respondedRequest): bool
+    {
+        if (
+            array_key_exists($respondedRequest->requestedUri(), $this->loadedUrls) ||
+            array_key_exists($respondedRequest->effectiveUri(), $this->loadedUrls)
+        ) {
+            $this->logger?->info('Was already loaded before. Do not process this page again.');
+
+            return true;
+        }
+
+        foreach ($respondedRequest->redirects() as $url) {
+            if (array_key_exists($url, $this->loadedUrls)) {
+                $this->logger?->info('Was already loaded before. Do not process this page again.');
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function addCanonicalUrlToLoadedUrls(Document $document): void
