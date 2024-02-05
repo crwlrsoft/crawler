@@ -3,6 +3,7 @@
 namespace tests\Loader\Http;
 
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\HeadlessBrowserLoaderHelper;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
@@ -86,9 +87,13 @@ it('also throttles requests using the headless browser', function ($loadingMetho
 
     $browserMock->shouldReceive('createPage')->andReturn($pageMock);
 
+    $browserHelperMock = Mockery::mock(HeadlessBrowserLoaderHelper::class);
+
+    $browserHelperMock->shouldReceive('getBrowser')->andReturn($browserMock);
+
     $loader = new HttpLoader(new UserAgent('SomeUserAgent'));
 
-    invade($loader)->headlessBrowser = $browserMock;
+    invade($loader)->browserHelper = $browserHelperMock;
 
     $loader->useHeadlessBrowser();
 

@@ -160,7 +160,7 @@ it('can also use a proxy when using the headless browser', function () {
         ->toBeInstanceOf(Result::class)
         ->and($results[0]->get('body'))
         ->toContain('["Accept-Language"]=&gt;' . PHP_EOL . '  string(35) "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"');
-});
+})->only();
 
 it('can also use rotating proxies when using the headless browser', function () {
     $crawler = helper_getFastCrawler();
@@ -199,4 +199,4 @@ it('can also use rotating proxies when using the headless browser', function () 
         ->toBeInstanceOf(Result::class)
         ->and($results[2]->get('body'))
         ->toContain('Port: 8001');          // And finally the third request with the first proxy again.
-});
+})->only();
