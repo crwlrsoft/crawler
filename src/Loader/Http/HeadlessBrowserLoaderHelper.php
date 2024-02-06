@@ -2,9 +2,20 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Exception;
+use GuzzleHttp\Psr7\Response;
 use HeadlessChromium\Browser;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Exception\CommunicationException;
+use HeadlessChromium\Exception\CommunicationException\CannotReadResponse;
+use HeadlessChromium\Exception\CommunicationException\InvalidResponse;
+use HeadlessChromium\Exception\CommunicationException\ResponseHasError;
+use HeadlessChromium\Exception\JavascriptException;
+use HeadlessChromium\Exception\NavigationExpired;
+use HeadlessChromium\Exception\NoResponseAvailable;
+use HeadlessChromium\Exception\OperationTimedOut;
 use Psr\Http\Message\RequestInterface;
 
 class HeadlessBrowserLoaderHelper
@@ -23,6 +34,55 @@ class HeadlessBrowserLoaderHelper
     protected ?Browser $browser = null;
 
     protected ?string $proxy = null;
+
+    /**
+     * @throws OperationTimedOut
+     * @throws CommunicationException
+     * @throws NoResponseAvailable
+     * @throws NavigationExpired
+     * @throws InvalidResponse
+     * @throws CannotReadResponse
+     * @throws ResponseHasError
+     * @throws JavascriptException
+     * @throws Exception
+     */
+    public function navigateToPageAndGetRespondedRequest(
+        RequestInterface $request,
+        Throttler $throttler,
+        ?string $proxy = null,
+    ): RespondedRequest {
+        $browser = $this->getBrowser($request, $proxy);
+
+        $page = $browser->createPage();
+
+        $statusCode = 200;
+
+        $responseHeaders = [];
+
+        $page->getSession()->once(
+            "method:Network.responseReceived",
+            function ($params) use (&$statusCode, &$responseHeaders) {
+                $statusCode = $params['response']['status'];
+
+                $responseHeaders = $this->sanitizeResponseHeaders($params['response']['headers']);
+            }
+        );
+
+        $throttler->trackRequestStartFor($request->getUri());
+
+        $page
+            ->navigate($request->getUri()->__toString())
+            ->waitForNavigation();
+
+        $throttler->trackRequestEndFor($request->getUri());
+
+        $html = $page->getHtml();
+
+        return new RespondedRequest(
+            $request,
+            new Response($statusCode, $responseHeaders, $html)
+        );
+    }
 
     /**
      * @throws Exception
