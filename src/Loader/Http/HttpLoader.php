@@ -76,6 +76,9 @@ class HttpLoader extends HttpBaseLoader
         });
     }
 
+    /**
+     * @throws LoadingException
+     */
     public function loadOrFail(mixed $subject): RespondedRequest
     {
         return $this->handleLoadOrFail($subject, function (RequestInterface $request) {

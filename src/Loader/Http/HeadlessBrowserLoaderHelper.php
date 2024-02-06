@@ -16,6 +16,7 @@ use HeadlessChromium\Exception\JavascriptException;
 use HeadlessChromium\Exception\NavigationExpired;
 use HeadlessChromium\Exception\NoResponseAvailable;
 use HeadlessChromium\Exception\OperationTimedOut;
+use HeadlessChromium\Page;
 use Psr\Http\Message\RequestInterface;
 
 class HeadlessBrowserLoaderHelper
@@ -32,6 +33,8 @@ class HeadlessBrowserLoaderHelper
     protected bool $optionsDirty = false;
 
     protected ?Browser $browser = null;
+
+    protected ?Page $page = null;
 
     protected ?string $proxy = null;
 
@@ -53,13 +56,13 @@ class HeadlessBrowserLoaderHelper
     ): RespondedRequest {
         $browser = $this->getBrowser($request, $proxy);
 
-        $page = $browser->createPage();
+        $this->page = $browser->createPage();
 
         $statusCode = 200;
 
         $responseHeaders = [];
 
-        $page->getSession()->once(
+        $this->page->getSession()->once(
             "method:Network.responseReceived",
             function ($params) use (&$statusCode, &$responseHeaders) {
                 $statusCode = $params['response']['status'];
@@ -70,13 +73,13 @@ class HeadlessBrowserLoaderHelper
 
         $throttler->trackRequestStartFor($request->getUri());
 
-        $page
+        $this->page
             ->navigate($request->getUri()->__toString())
             ->waitForNavigation();
 
         $throttler->trackRequestEndFor($request->getUri());
 
-        $html = $page->getHtml();
+        $html = $this->page->getHtml();
 
         return new RespondedRequest(
             $request,
@@ -84,24 +87,14 @@ class HeadlessBrowserLoaderHelper
         );
     }
 
-    /**
-     * @throws Exception
-     */
-    public function getBrowser(
-        RequestInterface $request,
-        ?string $proxy = null,
-    ): Browser {
-        if (!$this->browser || $this->shouldRenewBrowser($proxy)) {
-            $this->closeBrowser();
-
-            $options = $this->optionsFromRequest($request, $proxy);
-
-            $this->browser = (new BrowserFactory($this->executable))->createBrowser($options);
-
-            $this->optionsDirty = false;
-        }
-
+    public function getOpenBrowser(): ?Browser
+    {
         return $this->browser;
+    }
+
+    public function getOpenPage(): ?Page
+    {
+        return $this->page;
     }
 
     /**
@@ -160,6 +153,26 @@ class HeadlessBrowserLoaderHelper
         }
 
         return $headers;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function getBrowser(
+        RequestInterface $request,
+        ?string $proxy = null,
+    ): Browser {
+        if (!$this->browser || $this->shouldRenewBrowser($proxy)) {
+            $this->closeBrowser();
+
+            $options = $this->optionsFromRequest($request, $proxy);
+
+            $this->browser = (new BrowserFactory($this->executable))->createBrowser($options);
+
+            $this->optionsDirty = false;
+        }
+
+        return $this->browser;
     }
 
     protected function shouldRenewBrowser(?string $proxy): bool
