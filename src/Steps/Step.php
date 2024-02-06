@@ -147,6 +147,10 @@ abstract class Step extends BaseStep
         string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
         bool $allowOnlyRespondedRequest = false
     ): string {
+        if (is_array($inputValue) && count($inputValue) > 1 && array_key_exists('response', $inputValue)) {
+            $inputValue = $inputValue['response'];
+        }
+
         $inputValue = $this->getSingleElementFromArray($inputValue);
 
         if (
