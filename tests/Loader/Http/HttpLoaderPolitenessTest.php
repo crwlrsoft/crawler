@@ -87,9 +87,12 @@ it('also throttles requests using the headless browser', function ($loadingMetho
 
     $browserMock->shouldReceive('createPage')->andReturn($pageMock);
 
-    $browserHelperMock = Mockery::mock(HeadlessBrowserLoaderHelper::class);
+    $browserHelperMock = Mockery::mock(HeadlessBrowserLoaderHelper::class)->makePartial();
 
-    $browserHelperMock->shouldReceive('getBrowser')->andReturn($browserMock);
+    $browserHelperMock
+        ->shouldAllowMockingProtectedMethods()
+        ->shouldReceive('getBrowser')
+        ->andReturn($browserMock);
 
     $loader = new HttpLoader(new UserAgent('SomeUserAgent'));
 
@@ -112,7 +115,7 @@ it('also throttles requests using the headless browser', function ($loadingMetho
     expect($diff)->toBeGreaterThan(0.3);
 
     expect($diff)->toBeLessThan(0.62);
-})->with(['load', 'loadOrFail'])->skip('Have to rewrite this somehow');
+})->with(['load', 'loadOrFail']);
 
 it('does not throttle requests to different domains', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
