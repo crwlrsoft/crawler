@@ -12,12 +12,6 @@ use Crwlr\Url\Url;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Psr7\Response;
-use HeadlessChromium\Browser;
-use HeadlessChromium\Exception\CommunicationException;
-use HeadlessChromium\Exception\NavigationExpired;
-use HeadlessChromium\Exception\NoResponseAvailable;
-use HeadlessChromium\Exception\OperationTimedOut;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -73,7 +67,9 @@ class HttpLoader extends HttpBaseLoader
     {
         return $this->handleLoad($subject, function (RequestInterface $request) {
             if ($this->useHeadlessBrowser) {
-                return $this->loadViaHeadlessBrowser($request);
+                $proxy = $this->proxies?->getProxy() ?? null;
+
+                return $this->browserHelper()->navigateToPageAndGetRespondedRequest($request, $this->throttler, $proxy);
             }
 
             return $this->handleRedirects($request);
@@ -84,7 +80,9 @@ class HttpLoader extends HttpBaseLoader
     {
         return $this->handleLoadOrFail($subject, function (RequestInterface $request) {
             if ($this->useHeadlessBrowser) {
-                return $this->loadViaHeadlessBrowser($request);
+                $proxy = $this->proxies?->getProxy() ?? null;
+
+                return $this->browserHelper()->navigateToPageAndGetRespondedRequest($request, $this->throttler, $proxy);
             }
 
             return $this->handleRedirects($request);
@@ -236,51 +234,6 @@ class HttpLoader extends HttpBaseLoader
         );
     }
 
-    /**
-     * @throws CommunicationException
-     * @throws CommunicationException\CannotReadResponse
-     * @throws CommunicationException\InvalidResponse
-     * @throws CommunicationException\ResponseHasError
-     * @throws NavigationExpired
-     * @throws NoResponseAvailable
-     * @throws OperationTimedOut
-     * @throws Exception
-     */
-    protected function loadViaHeadlessBrowser(RequestInterface $request): RespondedRequest
-    {
-        $browser = $this->getBrowser($request);
-
-        $page = $browser->createPage();
-
-        $statusCode = 200;
-
-        $responseHeaders = [];
-
-        $page->getSession()->once(
-            "method:Network.responseReceived",
-            function ($params) use (&$statusCode, &$responseHeaders) {
-                $statusCode = $params['response']['status'];
-
-                $responseHeaders = $this->browserHelper()->sanitizeResponseHeaders($params['response']['headers']);
-            }
-        );
-
-        $this->throttler->trackRequestStartFor($request->getUri());
-
-        $page
-            ->navigate($request->getUri()->__toString())
-            ->waitForNavigation();
-
-        $this->throttler->trackRequestEndFor($request->getUri());
-
-        $html = $page->getHtml();
-
-        return new RespondedRequest(
-            $request,
-            new Response($statusCode, $responseHeaders, $html)
-        );
-    }
-
     protected function browserHelper(): HeadlessBrowserLoaderHelper
     {
         if (!$this->browserHelper) {
@@ -288,17 +241,5 @@ class HttpLoader extends HttpBaseLoader
         }
 
         return $this->browserHelper;
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function getBrowser(RequestInterface $request): Browser
-    {
-        if (!empty($this->proxies)) {
-            return $this->browserHelper()->getBrowser($request, $this->proxies->getProxy());
-        }
-
-        return $this->browserHelper()->getBrowser($request);
     }
 }

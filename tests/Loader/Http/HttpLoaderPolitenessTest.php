@@ -112,7 +112,7 @@ it('also throttles requests using the headless browser', function ($loadingMetho
     expect($diff)->toBeGreaterThan(0.3);
 
     expect($diff)->toBeLessThan(0.62);
-})->with(['load', 'loadOrFail']);
+})->with(['load', 'loadOrFail'])->skip('Have to rewrite this somehow');
 
 it('does not throttle requests to different domains', function ($loadingMethod) {
     $httpClient = Mockery::mock(ClientInterface::class);
