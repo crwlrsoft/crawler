@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
+use Closure;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -22,6 +23,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 abstract class HttpBaseLoader extends Loader
 {
@@ -159,6 +161,130 @@ abstract class HttpBaseLoader extends Loader
     protected function checkIfProxiesCanBeUsed(): void
     {
         return;
+    }
+
+    protected function handleLoad(mixed $subject, Closure $loadingCallback): ?RespondedRequest
+    {
+        try {
+            $request = $this->validateSubjectType($subject);
+        } catch (InvalidArgumentException) {
+            $this->logger->error('Invalid input URL: ' . var_export($subject, true));
+
+            return null;
+        }
+
+        try {
+            if (!$this->isAllowedToBeLoaded($request->getUri())) {
+                return null;
+            }
+
+            $isFromCache = false;
+
+            $respondedRequest = $this->tryLoading($request, $loadingCallback, $isFromCache);
+
+            if ($respondedRequest->response->getStatusCode() < 400) {
+                $this->callHook('onSuccess', $request, $respondedRequest->response);
+            } else {
+                $this->callHook('onError', $request, $respondedRequest->response);
+            }
+
+            if (!$isFromCache) {
+                $this->addToCache($respondedRequest);
+            }
+
+            return $respondedRequest;
+        } catch (Throwable $exception) {
+            // Don't move to finally so hooks don't run before it.
+            $this->throttler->trackRequestEndFor($request->getUri());
+
+            $this->callHook('onError', $request, $exception);
+
+            return null;
+        } finally {
+            $this->callHook('afterLoad', $request);
+        }
+    }
+
+    /**
+     * @throws LoadingException
+     */
+    protected function handleLoadOrFail(mixed $subject, Closure $loadingCallback): RespondedRequest
+    {
+        $request = $this->validateSubjectType($subject);
+
+        try {
+            $this->isAllowedToBeLoaded($request->getUri(), true);
+
+            $isFromCache = false;
+
+            $respondedRequest = $this->tryLoading($request, $loadingCallback, $isFromCache);
+
+            if ($respondedRequest->response->getStatusCode() >= 400) {
+                throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
+            }
+
+            $this->callHook('onSuccess', $request, $respondedRequest->response);
+
+            $this->callHook('afterLoad', $request);
+
+            if (!$isFromCache) {
+                $this->addToCache($respondedRequest);
+            }
+
+            return $respondedRequest;
+        } catch (Throwable $exception) {
+            throw LoadingException::from($exception);
+        }
+    }
+
+    /**
+     * @throws LoadingException|Throwable|\Psr\SimpleCache\InvalidArgumentException
+     */
+    protected function tryLoading(
+        RequestInterface $request,
+        Closure $loadingCallback,
+        bool &$isFromCache,
+    ): RespondedRequest {
+        $request = $this->prepareRequest($request);
+
+        $this->callHook('beforeLoad', $request);
+
+        $respondedRequest = $this->getFromCache($request);
+
+        $isFromCache = $respondedRequest !== null;
+
+        if ($isFromCache) {
+            $this->callHook('onCacheHit', $request, $respondedRequest->response);
+        }
+
+        if (!$respondedRequest) {
+            $respondedRequest = $this->waitForGoAndLoad($request, $loadingCallback);
+        }
+
+        return $respondedRequest;
+    }
+
+    /**
+     * @throws LoadingException|Throwable
+     */
+    protected function waitForGoAndLoad(RequestInterface $request, Closure $loadingCallback): RespondedRequest
+    {
+        $this->throttler->waitForGo($request->getUri());
+
+        $respondedRequest = $loadingCallback($request);
+
+        if ($this->retryErrorResponseHandler->shouldWait($respondedRequest)) {
+            $respondedRequest = $this->retryErrorResponseHandler->handleRetries(
+                $respondedRequest,
+                function () use ($loadingCallback, $request) {
+                    $request = $this->prepareRequest($request);
+
+                    return $loadingCallback($request);
+                },
+            );
+        }
+
+        return $respondedRequest;
     }
 
     /**
