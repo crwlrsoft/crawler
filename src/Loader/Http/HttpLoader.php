@@ -18,13 +18,11 @@ use HeadlessChromium\Exception\CommunicationException;
 use HeadlessChromium\Exception\NavigationExpired;
 use HeadlessChromium\Exception\NoResponseAvailable;
 use HeadlessChromium\Exception\OperationTimedOut;
-use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 class HttpLoader extends HttpBaseLoader
 {
@@ -73,97 +71,24 @@ class HttpLoader extends HttpBaseLoader
      */
     public function load(mixed $subject): ?RespondedRequest
     {
-        try {
-            $request = $this->validateSubjectType($subject);
-        } catch (InvalidArgumentException) {
-            $this->logger->error('Invalid input URL: ' . var_export($subject, true));
-
-            return null;
-        }
-
-        try {
-            if (!$this->isAllowedToBeLoaded($request->getUri())) {
-                return null;
+        return $this->handleLoad($subject, function (RequestInterface $request) {
+            if ($this->useHeadlessBrowser) {
+                return $this->loadViaHeadlessBrowser($request);
             }
 
-            $request = $this->prepareRequest($request);
-
-            $this->callHook('beforeLoad', $request);
-
-            $respondedRequest = $this->getFromCache($request);
-
-            $isFromCache = $respondedRequest !== null;
-
-            if ($isFromCache) {
-                $this->callHook('onCacheHit', $request, $respondedRequest->response);
-            }
-
-            if (!$respondedRequest) {
-                $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
-            }
-
-            if ($respondedRequest->response->getStatusCode() < 400) {
-                $this->callHook('onSuccess', $request, $respondedRequest->response);
-            } else {
-                $this->callHook('onError', $request, $respondedRequest->response);
-            }
-
-            if (!$isFromCache) {
-                $this->addToCache($respondedRequest);
-            }
-
-            return $respondedRequest;
-        } catch (Throwable $exception) {
-            // Don't move to finally so hooks don't run before it.
-            $this->throttler->trackRequestEndFor($request->getUri());
-
-            $this->callHook('onError', $request, $exception);
-
-            return null;
-        } finally {
-            $this->callHook('afterLoad', $request);
-        }
+            return $this->handleRedirects($request);
+        });
     }
 
     public function loadOrFail(mixed $subject): RespondedRequest
     {
-        $request = $this->validateSubjectType($subject);
-
-        try {
-            $this->isAllowedToBeLoaded($request->getUri(), true);
-
-            $request = $this->prepareRequest($request);
-
-            $this->callHook('beforeLoad', $request);
-
-            $respondedRequest = $this->getFromCache($request);
-
-            $isFromCache = $respondedRequest !== null;
-
-            if ($isFromCache) {
-                $this->callHook('onCacheHit', $request, $respondedRequest->response);
+        return $this->handleLoadOrFail($subject, function (RequestInterface $request) {
+            if ($this->useHeadlessBrowser) {
+                return $this->loadViaHeadlessBrowser($request);
             }
 
-            if (!$respondedRequest) {
-                $respondedRequest = $this->waitForGoAndLoadViaClientOrHeadlessBrowser($request);
-            }
-
-            if ($respondedRequest->response->getStatusCode() >= 400) {
-                throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
-            }
-
-            $this->callHook('onSuccess', $request, $respondedRequest->response);
-
-            $this->callHook('afterLoad', $request);
-
-            if (!$isFromCache) {
-                $this->addToCache($respondedRequest);
-            }
-
-            return $respondedRequest;
-        } catch (Throwable $exception) {
-            throw LoadingException::from($exception);
-        }
+            return $this->handleRedirects($request);
+        });
     }
 
     public function useHeadlessBrowser(): static
@@ -173,6 +98,9 @@ class HttpLoader extends HttpBaseLoader
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function useHttpClient(): static
     {
         $this->useHeadlessBrowser = false;
@@ -241,61 +169,6 @@ class HttpLoader extends HttpBaseLoader
         }
 
         return $merged;
-    }
-
-    /**
-     * @throws ClientExceptionInterface
-     * @throws CommunicationException
-     * @throws CommunicationException\CannotReadResponse
-     * @throws CommunicationException\InvalidResponse
-     * @throws CommunicationException\ResponseHasError
-     * @throws LoadingException
-     * @throws NavigationExpired
-     * @throws NoResponseAvailable
-     * @throws OperationTimedOut
-     * @throws GuzzleException
-     * @throws Exception
-     */
-    protected function waitForGoAndLoadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
-    {
-        $this->throttler->waitForGo($request->getUri());
-
-        $respondedRequest = $this->loadViaClientOrHeadlessBrowser($request);
-
-        if ($this->retryErrorResponseHandler->shouldWait($respondedRequest)) {
-            $respondedRequest = $this->retryErrorResponseHandler->handleRetries(
-                $respondedRequest,
-                (function () use ($request) {
-                    $request = $this->prepareRequest($request);
-
-                    return $this->loadViaClientOrHeadlessBrowser($request);
-                })->bindTo($this),
-            );
-        }
-
-        return $respondedRequest;
-    }
-
-    /**
-     * @throws ClientExceptionInterface
-     * @throws CommunicationException
-     * @throws CommunicationException\CannotReadResponse
-     * @throws CommunicationException\InvalidResponse
-     * @throws CommunicationException\ResponseHasError
-     * @throws GuzzleException
-     * @throws LoadingException
-     * @throws NavigationExpired
-     * @throws NoResponseAvailable
-     * @throws OperationTimedOut
-     * @throws Exception
-     */
-    protected function loadViaClientOrHeadlessBrowser(RequestInterface $request): RespondedRequest
-    {
-        if ($this->useHeadlessBrowser) {
-            return $this->loadViaHeadlessBrowser($request);
-        }
-
-        return $this->handleRedirects($request);
     }
 
     /**
