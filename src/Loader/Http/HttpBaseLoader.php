@@ -31,7 +31,7 @@ abstract class HttpBaseLoader extends Loader
 
     protected bool $useCookies = true;
 
-    protected RobotsTxtHandler $robotsTxtHandler;
+    protected ?RobotsTxtHandler $robotsTxtHandler = null;
 
     protected Throttler $throttler;
 
@@ -77,8 +77,6 @@ abstract class HttpBaseLoader extends Loader
 
         $this->cookieJar = new CookieJar();
 
-        $this->robotsTxtHandler = new RobotsTxtHandler($this, $this->logger);
-
         $this->throttler = $throttler ?? new Throttler();
     }
 
@@ -103,6 +101,22 @@ abstract class HttpBaseLoader extends Loader
 
     public function robotsTxt(): RobotsTxtHandler
     {
+        if (!$this->robotsTxtHandler) {
+            if (!$this instanceof HttpLoader) {
+                $this->robotsTxtHandler = new RobotsTxtHandler(
+                    new HttpLoader(
+                        $this->userAgent,
+                        logger: $this->logger,
+                        throttler: $this->throttler,
+                        retryErrorResponseHandler: $this->retryErrorResponseHandler,
+                    ),
+                    $this->logger,
+                );
+            } else {
+                $this->robotsTxtHandler = new RobotsTxtHandler($this, $this->logger);
+            }
+        }
+
         return $this->robotsTxtHandler;
     }
 
@@ -293,7 +307,7 @@ abstract class HttpBaseLoader extends Loader
      */
     protected function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
     {
-        if (!$this->robotsTxtHandler->isAllowed($uri)) {
+        if (!$this->robotsTxt()->isAllowed($uri)) {
             $message = 'Crawler is not allowed to load ' . $uri . ' according to robots.txt file.';
 
             $this->logger->warning($message);
