@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2024-02-07
+### Fixed
+* Issue in `GetUrlsFromSitemap` (`Sitemap::getUrlsFromSitemap()`) step when XML content has no line breaks.
+
 ## [1.5.1] - 2024-02-06
 ### Fixed
 * For being more flexible to build a separate headless browser loader (in an extension package) extract the most basic HTTP loader functionality to a new `HttpBaseLoader` and important functionality for the headless browser loader to a new `HeadlessBrowserLoaderHelper`. Further, also share functionality from the `Http` steps via a new abstract `HttpBase` step. It's considered a fix, because there's no new functionality, just refactoring existing code for better extendability.
