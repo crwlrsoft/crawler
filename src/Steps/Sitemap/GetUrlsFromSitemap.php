@@ -19,7 +19,7 @@ class GetUrlsFromSitemap extends Step
     public static function fixUrlSetTag(Crawler $dom): Crawler
     {
         if ($dom->filter('urlset url')->count() === 0) {
-            return new Crawler(preg_replace('/<urlset.+>/', '<urlset>', $dom->outerHtml()));
+            return new Crawler(preg_replace('/<urlset.+?>/', '<urlset>', $dom->outerHtml()));
         }
 
         return $dom;
