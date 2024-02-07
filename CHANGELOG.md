@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2024-02-07
+### Fixed
+* Merge `HttpBaseLoader` back to `HttpLoader`. It's probably not a good idea to have multiple loaders. At least not multiple loaders just for HTTP. It should be enough to publicly expose the `HeadlessBrowserLoaderHelper` via `HttpLoader::browserHelper()` for the extension steps. But keep the `HttpBase` step, to share the general HTTP functionality implemented there.
+
 ## [1.5.2] - 2024-02-07
 ### Fixed
 * Issue in `GetUrlsFromSitemap` (`Sitemap::getUrlsFromSitemap()`) step when XML content has no line breaks.

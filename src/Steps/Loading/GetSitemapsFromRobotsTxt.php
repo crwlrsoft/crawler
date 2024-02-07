@@ -2,7 +2,6 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
-use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Exception;
 use Generator;
@@ -12,7 +11,7 @@ use Psr\Http\Message\UriInterface;
 class GetSitemapsFromRobotsTxt extends LoadingStep
 {
     /**
-     * @throws InvalidRobotsTxtFileException
+     * @throws InvalidRobotsTxtFileException|Exception
      */
     protected function invoke(mixed $input): Generator
     {
@@ -20,7 +19,6 @@ class GetSitemapsFromRobotsTxt extends LoadingStep
             throw new Exception('The Loader doesn\'t expose the RobotsTxtHandler.');
         }
 
-        /** @var RobotsTxtHandler $robotsTxtHandler */
         $robotsTxtHandler = $this->loader->robotsTxt();
 
         foreach ($robotsTxtHandler->getSitemaps($input) as $sitemapUrl) {
