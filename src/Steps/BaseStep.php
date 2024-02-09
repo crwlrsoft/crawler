@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Adbar\Dot;
 use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Io;
@@ -400,6 +401,8 @@ abstract class BaseStep implements StepInterface
                 $output = $output->__serialize();
             }
 
+            $output = $this->serializeElementsOfOutputArray($output);
+
             foreach ($output as $key => $value) {
                 if ($addToResultObject === true) {
                     $result->set(is_string($key) ? $key : '', $value);
@@ -407,9 +410,36 @@ abstract class BaseStep implements StepInterface
                     $result->set($this->choseResultKey($key), $value);
                 }
             }
+
+            if (is_array($addToResultObject)) {
+                $this->tryToAddMissingKeysUsingDotNotation($output, $addToResultObject, $result);
+            }
         }
 
         return $result;
+    }
+
+    /**
+     * @param mixed[] $output
+     * @return mixed[]
+     */
+    protected function serializeElementsOfOutputArray(array $output): array
+    {
+        foreach ($output as $key => $value) {
+            if (is_object($value)) {
+                if (method_exists($value, 'toArrayForAddToResult')) {
+                    $output[$key] = $value->toArrayForAddToResult();
+                } elseif (method_exists($value, '__serialize')) {
+                    $output[$key] = $value->__serialize();
+                }
+            }
+
+            if (is_array($value)) {
+                $output[$key] = $this->serializeElementsOfOutputArray($value);
+            }
+        }
+
+        return $output;
     }
 
     /**
@@ -441,6 +471,27 @@ abstract class BaseStep implements StepInterface
         }
 
         return '';
+    }
+
+    /**
+     * @param mixed[] $output
+     * @param array<int|string, string> $addToResult
+     */
+    protected function tryToAddMissingKeysUsingDotNotation(array $output, array $addToResult, Result $result): void
+    {
+        $outputDot = new Dot($output);
+
+        foreach ($addToResult as $resultKeyOrInt => $potentialDotNotationKey) {
+            $resultKey = is_int($resultKeyOrInt) ? $potentialDotNotationKey : $resultKeyOrInt;
+
+            if ($result->get($resultKey) === null) {
+                $valueUsingDotNotation = $outputDot->get($potentialDotNotationKey);
+
+                if ($valueUsingDotNotation !== null) {
+                    $result->set($resultKey, $valueUsingDotNotation);
+                }
+            }
+        }
     }
 
     /**

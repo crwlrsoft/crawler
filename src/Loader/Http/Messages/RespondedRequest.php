@@ -73,6 +73,28 @@ class RespondedRequest
     }
 
     /**
+     * @return mixed[]
+     */
+    public function toArrayForAddToResult(): array
+    {
+        $serialized = $this->__serialize();
+
+        $mapping = [
+            'url' => 'effectiveUri',
+            'uri' => 'effectiveUri',
+            'status' => 'responseStatusCode',
+            'headers' => 'responseHeaders',
+            'body' => 'responseBody',
+        ];
+
+        foreach ($mapping as $newKey => $originalKey) {
+            $serialized[$newKey] = $serialized[$originalKey];
+        }
+
+        return $serialized;
+    }
+
+    /**
      * @param mixed[] $data
      * @throws Exception
      */

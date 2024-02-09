@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2024-02-09
+### Added
+* Enable dot notation in `Step::addToResult()`, so you can get data from nested output, like: `$step->addToResult(['url' => 'response.url', 'status' => 'response.status', 'foo' => 'bar'])`.
+* When a step adds output properties to the result, and the output contains objects, it tries to serialize those objects to arrays, by calling `__serialize()`. If you want an object to be serialized differently for that purpose, you can define a `toArrayForAddToResult()` method in that class. When that method exists, it's preferred to the `__serialize()` method.
+* Implemented above-mentioned `toArrayForAddToResult()` method in the `RespondedRequest` class, so on every step that somehow yields a `RespondedRequest` object, you can use the keys `url`, `uri`, `status`, `headers` and `body` with the `addToResult()` method. Previously this only worked for `Http` steps, because it defines output key aliases (`HttpBase::outputKeyAliases()`). Now, in combination with the ability to use dot notation when adding data to the result, if your custom step returns nested output like `['response' => RespondedRequest, 'foo' => 'bar']`, you can add response data to the result like this `$step->addToResult(['url' => 'response.url', 'body' => 'response.body'])`.
+
 ## [1.5.3] - 2024-02-07
 ### Fixed
 * Merge `HttpBaseLoader` back to `HttpLoader`. It's probably not a good idea to have multiple loaders. At least not multiple loaders just for HTTP. It should be enough to publicly expose the `HeadlessBrowserLoaderHelper` via `HttpLoader::browserHelper()` for the extension steps. But keep the `HttpBase` step, to share the general HTTP functionality implemented there.
