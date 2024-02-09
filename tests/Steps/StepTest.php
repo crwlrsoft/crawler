@@ -3,6 +3,7 @@
 namespace tests\Steps;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
@@ -11,6 +12,8 @@ use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Exception;
 use Generator;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -98,6 +101,41 @@ it('picks keys from the output array when you pass an array of keys to addToResu
     expect($output[0]->result)->toBeInstanceOf(Result::class);
 
     expect($output[0]->result?->toArray())->toBe(['firstname' => 'Christian', 'surname' => 'Olear']);
+});
+
+it('is able to pick keys from nested (array) output using dot notation', function () {
+    $step = helper_getValueReturningStep([
+        'users' => [
+            ['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'],
+            ['user' => 'juerx', 'firstname' => 'Jürgen', 'surname' => 'Müller'],
+            ['user' => 'sandy', 'firstname' => 'Sandra', 'surname' => 'Mayr'],
+        ],
+        'foo' => 'bar',
+    ])
+        ->addToResult(['nickname' => 'users.0.user', 'foo']);
+
+    $output = helper_invokeStepWithInput($step);
+
+    expect($output[0]->result)->toBeInstanceOf(Result::class);
+
+    expect($output[0]->result?->toArray())->toBe(['foo' => 'bar', 'nickname' => 'otsch']);
+});
+
+it('picks keys from nested output including a RespondedRequest object', function () {
+    $step = helper_getValueReturningStep([
+        'response' => new RespondedRequest(
+            new Request('GET', 'https://www.example.com/something'),
+            new Response(200, body: 'Hi :)'),
+        ),
+        'foo' => 'bar',
+    ])
+        ->addToResult(['content' => 'response.body']);
+
+    $output = helper_invokeStepWithInput($step);
+
+    expect($output[0]->result)->toBeInstanceOf(Result::class);
+
+    expect($output[0]->result?->toArray())->toBe(['content' => 'Hi :)']);
 });
 
 it('maps output keys to different result keys when defined in the array passed to addToResult()', function () {

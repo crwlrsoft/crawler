@@ -195,6 +195,29 @@ it('can be created from a serialized array', function () {
     expect($respondedRequest->effectiveUri())->toBe('/bar');
 });
 
+it('has a serializeForAddToResult() method', function () {
+    $respondedRequest = new RespondedRequest(
+        new Request('POST', '/home', ['key' => 'val'], 'bod'),
+        new Response(201, ['k' => 'v'], 'res')
+    );
+
+    expect($respondedRequest->toArrayForAddToResult())->toBe([
+        'requestMethod' => 'POST',
+        'requestUri' => '/home',
+        'requestHeaders' => ['key' => ['val']],
+        'requestBody' => 'bod',
+        'effectiveUri' => '/home',
+        'responseStatusCode' => 201,
+        'responseHeaders' => ['k' => ['v']],
+        'responseBody' => 'res',
+        'url' => '/home',
+        'uri' => '/home',
+        'status' => 201,
+        'headers' => ['k' => ['v']],
+        'body' => 'res',
+    ]);
+});
+
 it('generates a cache key for an instance', function () {
     $respondedRequest = new RespondedRequest(new Request('GET', '/foo/bar'), new Response());
 
