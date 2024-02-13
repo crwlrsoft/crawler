@@ -224,11 +224,8 @@ abstract class Crawler
     /**
      * @return Generator<Output|Result>
      */
-    protected function invokeStepsRecursive(
-        Input $input,
-        StepInterface $step,
-        int $stepIndex,
-    ): Generator {
+    protected function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
+    {
         $outputs = $step->invokeStep($input);
 
         $nextStep = $this->nextStep($stepIndex);
