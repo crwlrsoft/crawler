@@ -699,6 +699,203 @@ it(
     }
 );
 
+it(
+    'immediately calls the store for each final output when addToResult() was not called',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step1 called');
+
+                yield '1-1';
+
+                yield '1-2';
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step2 called: ' . $input);
+
+                yield $input . ' 2-1';
+
+                yield $input . ' 2-2';
+            }
+        };
+
+        $step3 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step3 called: ' . $input);
+
+                yield $input . ' 3-1';
+
+                yield $input . ' 3-2';
+            }
+        };
+
+        $step4 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step4 called: ' . $input);
+
+                yield $input . ' 4-1';
+
+                yield $input . ' 4-2';
+            }
+        };
+
+        $store = new class () extends Store {
+            public function store(Result $result): void
+            {
+                $this->logger?->info('Stored a result: ' . $result->get('unnamed'));
+            }
+        };
+
+        $crawler = helper_getDummyCrawler()
+            ->input('input')
+            ->addStep($step1)
+            ->addStep($step2)
+            ->addStep($step3)
+            ->addStep($step4)
+            ->setStore($store);
+
+        $crawler->runAndTraverse();
+
+        $output = $this->getActualOutputForAssertion();
+
+        $outputLines = explode("\n", $output);
+
+        expect($outputLines[0])
+            ->toContain('step1 called')
+            ->and($outputLines[1])->toContain('step2 called: 1-1')
+            ->and($outputLines[2])->toContain('step3 called: 1-1 2-1')
+            ->and($outputLines[3])->toContain('step4 called: 1-1 2-1 3-1')
+            ->and($outputLines[4])->toContain('Stored a result: 1-1 2-1 3-1 4-1')
+            ->and($outputLines[5])->toContain('Stored a result: 1-1 2-1 3-1 4-2')
+            ->and($outputLines[6])->toContain('step4 called: 1-1 2-1 3-2')
+            ->and($outputLines[7])->toContain('Stored a result: 1-1 2-1 3-2 4-1')
+            ->and($outputLines[8])->toContain('Stored a result: 1-1 2-1 3-2 4-2')
+            ->and($outputLines[9])->toContain('step3 called: 1-1 2-2')
+            ->and($outputLines[10])->toContain('step4 called: 1-1 2-2 3-1')
+            ->and($outputLines[11])->toContain('Stored a result: 1-1 2-2 3-1 4-1')
+            ->and($outputLines[12])->toContain('Stored a result: 1-1 2-2 3-1 4-2')
+            ->and($outputLines[13])->toContain('step4 called: 1-1 2-2 3-2')
+            ->and($outputLines[14])->toContain('Stored a result: 1-1 2-2 3-2 4-1')
+            ->and($outputLines[15])->toContain('Stored a result: 1-1 2-2 3-2 4-2')
+            ->and($outputLines[16])->toContain('step2 called: 1-2')
+            ->and($outputLines[17])->toContain('step3 called: 1-2 2-1')
+            ->and($outputLines[18])->toContain('step4 called: 1-2 2-1 3-1')
+            ->and($outputLines[19])->toContain('Stored a result: 1-2 2-1 3-1 4-1')
+            ->and($outputLines[20])->toContain('Stored a result: 1-2 2-1 3-1 4-2')
+            ->and($outputLines[21])->toContain('step4 called: 1-2 2-1 3-2')
+            ->and($outputLines[22])->toContain('Stored a result: 1-2 2-1 3-2 4-1')
+            ->and($outputLines[23])->toContain('Stored a result: 1-2 2-1 3-2 4-2')
+            ->and($outputLines[24])->toContain('step3 called: 1-2 2-2')
+            ->and($outputLines[25])->toContain('step4 called: 1-2 2-2 3-1')
+            ->and($outputLines[26])->toContain('Stored a result: 1-2 2-2 3-1 4-1')
+            ->and($outputLines[27])->toContain('Stored a result: 1-2 2-2 3-1 4-2')
+            ->and($outputLines[28])->toContain('step4 called: 1-2 2-2 3-2')
+            ->and($outputLines[29])->toContain('Stored a result: 1-2 2-2 3-2 4-1')
+            ->and($outputLines[30])->toContain('Stored a result: 1-2 2-2 3-2 4-2');
+    }
+);
+
+it(
+    'waits for all child outputs originating from an output of a step where addToResult() was called before calling ' .
+    'the store',
+    function () {
+        $step1 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step1 called');
+
+                yield '1-1';
+
+                yield '1-2';
+            }
+        };
+
+        $step2 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step2 called: ' . $input);
+
+                yield $input . ' 2-1';
+
+                yield $input . ' 2-2';
+            }
+        };
+
+        $step2->addToResult('foo');
+
+        $step3 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step3 called: ' . $input);
+
+                yield $input . ' 3-1';
+
+                yield $input . ' 3-2';
+            }
+        };
+
+        $step4 = new class () extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                $this->logger?->info('step4 called: ' . $input);
+
+                yield $input . ' 4-1';
+
+                yield $input . ' 4-2';
+            }
+        };
+
+        $store = new class () extends Store {
+            public function store(Result $result): void
+            {
+                $this->logger?->info('Stored a result: ' . $result->get('foo'));
+            }
+        };
+
+        $crawler = helper_getDummyCrawler()
+            ->input('input')
+            ->addStep($step1)
+            ->addStep($step2)
+            ->addStep($step3)
+            ->addStep($step4)
+            ->setStore($store);
+
+        $crawler->runAndTraverse();
+
+        $output = $this->getActualOutputForAssertion();
+
+        $outputLines = explode("\n", $output);
+
+        expect($outputLines[0])
+            ->toContain('step1 called')
+            ->and($outputLines[1])->toContain('step2 called: 1-1')
+            ->and($outputLines[2])->toContain('step3 called: 1-1 2-1')
+            ->and($outputLines[3])->toContain('step4 called: 1-1 2-1 3-1')
+            ->and($outputLines[4])->toContain('step4 called: 1-1 2-1 3-2')
+            ->and($outputLines[5])->toContain('Stored a result: 1-1 2-1')
+            ->and($outputLines[6])->toContain('step3 called: 1-1 2-2')
+            ->and($outputLines[7])->toContain('step4 called: 1-1 2-2 3-1')
+            ->and($outputLines[8])->toContain('step4 called: 1-1 2-2 3-2')
+            ->and($outputLines[9])->toContain('Stored a result: 1-1 2-2')
+            ->and($outputLines[10])->toContain('step2 called: 1-2')
+            ->and($outputLines[11])->toContain('step3 called: 1-2 2-1')
+            ->and($outputLines[12])->toContain('step4 called: 1-2 2-1 3-1')
+            ->and($outputLines[13])->toContain('step4 called: 1-2 2-1 3-2')
+            ->and($outputLines[14])->toContain('Stored a result: 1-2 2-1')
+            ->and($outputLines[15])->toContain('step3 called: 1-2 2-2')
+            ->and($outputLines[16])->toContain('step4 called: 1-2 2-2 3-1')
+            ->and($outputLines[17])->toContain('step4 called: 1-2 2-2 3-2')
+            ->and($outputLines[18])->toContain('Stored a result: 1-2 2-2');
+    }
+);
+
 it('logs memory usage if you want it to', function () {
     $step1 = helper_getValueReturningStep('foo');
 
