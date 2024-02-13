@@ -184,7 +184,11 @@ abstract class Crawler
 
         if ($this->firstStep()) {
             foreach ($inputs as $input) {
-                yield from $this->storeAndReturnResults($this->invokeStepsRecursive($input, $this->firstStep(), 0));
+                $results = $this->invokeStepsRecursive($input, $this->firstStep(), 0);
+
+                /** @var Generator<Result> $results */
+
+                yield from $results;
             }
         }
 
@@ -218,37 +222,50 @@ abstract class Crawler
     }
 
     /**
-     * @return Generator<Output>
+     * @return Generator<Output|Result>
      */
-    protected function invokeStepsRecursive(Input $input, StepInterface $step, int $stepIndex): Generator
-    {
+    protected function invokeStepsRecursive(
+        Input $input,
+        StepInterface $step,
+        int $stepIndex,
+    ): Generator {
         $outputs = $step->invokeStep($input);
 
         $nextStep = $this->nextStep($stepIndex);
 
-        if ($nextStep) {
-            foreach ($outputs as $output) {
-                if ($this->monitorMemoryUsage !== false) {
-                    $this->logMemoryUsage();
-                }
+        if (!$nextStep && $input->result === null) {
+            yield from $this->storeAndReturnResults($outputs, $step->createsResult() === true, true);
 
-                $this->outputHook?->call($this, $output, $stepIndex, $step);
+            return;
+        }
 
-                yield from $this->invokeStepsRecursive(
-                    new Input($output),
-                    $nextStep,
-                    $stepIndex + 1
-                );
+        foreach ($outputs as $output) {
+            if ($this->monitorMemoryUsage !== false) {
+                $this->logMemoryUsage();
             }
-        } else {
-            if ($this->outputHook) {
-                foreach ($outputs as $output) {
-                    $this->outputHook->call($this, $output, $stepIndex, $step);
 
-                    yield $output;
+            $this->outputHook?->call($this, $output, $stepIndex, $step);
+
+            if ($nextStep) {
+                if ($input->result === null && $step->createsResult()) {
+                    $childOutputs = $this->invokeStepsRecursive(
+                        new Input($output),
+                        $nextStep,
+                        $stepIndex + 1,
+                    );
+
+                    /** @var Generator<Output> $childOutputs */
+
+                    yield from $this->storeAndReturnResults($childOutputs, true);
+                } else {
+                    yield from $this->invokeStepsRecursive(
+                        new Input($output),
+                        $nextStep,
+                        $stepIndex + 1,
+                    );
                 }
             } else {
-                yield from $outputs;
+                yield $output;
             }
         }
     }
@@ -257,12 +274,15 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnResults(Generator $outputs): Generator
-    {
-        if ($this->anyResultKeysDefinedInSteps()) {
-            yield from $this->storeAndReturnDefinedResults($outputs);
+    protected function storeAndReturnResults(
+        Generator $outputs,
+        bool $manuallyDefinedResults = false,
+        bool $callOutputHook = false,
+    ): Generator {
+        if ($manuallyDefinedResults || $this->anyResultKeysDefinedInSteps()) {
+            yield from $this->storeAndReturnDefinedResults($outputs, $callOutputHook);
         } else {
-            yield from $this->storeAndReturnOutputsAsResults($outputs);
+            yield from $this->storeAndReturnOutputsAsResults($outputs, $callOutputHook);
         }
     }
 
@@ -270,11 +290,15 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnDefinedResults(Generator $outputs): Generator
+    protected function storeAndReturnDefinedResults(Generator $outputs, bool $callOutputHook = false): Generator
     {
         $results = [];
 
         foreach ($outputs as $output) {
+            if ($callOutputHook) {
+                $this->outputHook?->call($this, $output, count($this->steps) - 1, end($this->steps));
+            }
+
             if ($output->result !== null && !in_array($output->result, $results, true)) {
                 $results[] = $output->result;
             } elseif ($output->addLaterToResult !== null && !in_array($output->addLaterToResult, $results, true)) {
@@ -295,9 +319,13 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnOutputsAsResults(Generator $outputs): Generator
+    protected function storeAndReturnOutputsAsResults(Generator $outputs, bool $callOutputHook = false): Generator
     {
         foreach ($outputs as $output) {
+            if ($callOutputHook) {
+                $this->outputHook?->call($this, $output, count($this->steps) - 1, end($this->steps));
+            }
+
             $result = new Result();
 
             if ($output->isArrayWithStringKeys()) {

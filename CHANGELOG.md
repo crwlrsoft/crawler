@@ -6,11 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.0] - 2024-02-09
+## [1.6.0] - 2024-02-13
 ### Added
 * Enable dot notation in `Step::addToResult()`, so you can get data from nested output, like: `$step->addToResult(['url' => 'response.url', 'status' => 'response.status', 'foo' => 'bar'])`.
 * When a step adds output properties to the result, and the output contains objects, it tries to serialize those objects to arrays, by calling `__serialize()`. If you want an object to be serialized differently for that purpose, you can define a `toArrayForAddToResult()` method in that class. When that method exists, it's preferred to the `__serialize()` method.
 * Implemented above-mentioned `toArrayForAddToResult()` method in the `RespondedRequest` class, so on every step that somehow yields a `RespondedRequest` object, you can use the keys `url`, `uri`, `status`, `headers` and `body` with the `addToResult()` method. Previously this only worked for `Http` steps, because it defines output key aliases (`HttpBase::outputKeyAliases()`). Now, in combination with the ability to use dot notation when adding data to the result, if your custom step returns nested output like `['response' => RespondedRequest, 'foo' => 'bar']`, you can add response data to the result like this `$step->addToResult(['url' => 'response.url', 'body' => 'response.body'])`.
+
+### Fixed
+* Improvement regarding the timing when a store (`Store` class instance) is called by the crawler with a final crawling result. When a crawling step initiates a crawling result (so, `addToResult()` was called on the step instance), the crawler has to wait for all child outputs (resulting from one step-input) until it calls the store, because the child outputs can all add data to the same final result object. But previously this was not only the case for all child outputs starting from a step where `addToResult()` was called, but all children of one initial crawler input. So with this change, in a lot of cases, the store will earlier be called with finished `Result` objects and memory usage will be lowered.
 
 ## [1.5.3] - 2024-02-07
 ### Fixed

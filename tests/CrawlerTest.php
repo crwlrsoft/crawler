@@ -681,9 +681,9 @@ it(
 
         expect($outputLines[1])->toContain('step2 called');
 
-        expect($outputLines[2])->toContain('step2 called');
+        expect($outputLines[2])->toContain('Stored a result');
 
-        expect($outputLines[3])->toContain('Stored a result');
+        expect($outputLines[3])->toContain('step2 called');
 
         expect($outputLines[4])->toContain('Stored a result');
 
@@ -691,9 +691,9 @@ it(
 
         expect($outputLines[6])->toContain('step2 called');
 
-        expect($outputLines[7])->toContain('step2 called');
+        expect($outputLines[7])->toContain('Stored a result');
 
-        expect($outputLines[8])->toContain('Stored a result');
+        expect($outputLines[8])->toContain('step2 called');
 
         expect($outputLines[9])->toContain('Stored a result');
     }
