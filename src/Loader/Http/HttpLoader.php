@@ -326,6 +326,16 @@ class HttpLoader extends Loader
     }
 
     /**
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function addToCache(RespondedRequest $respondedRequest): void
+    {
+        if ($this->cache && $this->shouldResponseBeCached($respondedRequest)) {
+            $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
+        }
+    }
+
+    /**
      * @throws LoadingException|Throwable|\Psr\SimpleCache\InvalidArgumentException
      */
     protected function tryLoading(
@@ -556,16 +566,6 @@ class HttpLoader extends Loader
         }
 
         return null;
-    }
-
-    /**
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
-    protected function addToCache(RespondedRequest $respondedRequest): void
-    {
-        if ($this->cache && $this->shouldResponseBeCached($respondedRequest)) {
-            $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
-        }
     }
 
     protected function shouldResponseBeCached(RespondedRequest $respondedRequest): bool

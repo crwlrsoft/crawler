@@ -10,6 +10,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
+use Exception;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -18,6 +19,7 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
+use tests\_Stubs\RespondedRequestChild;
 use Throwable;
 
 use function tests\helper_cachedir;
@@ -641,6 +643,41 @@ test(
         expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
     }
 )->with(['load', 'loadOrFail']);
+
+it('updates an existing cached response', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient
+        ->shouldReceive('sendRequest')
+        ->once()
+        ->andReturn(new Response(body: 'hello'));
+
+    $cache = new FileCache(helper_cachedir());
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $response = $httpLoader->load('https://www.example.com/idontknow');
+
+    if (!$response) {
+        throw new Exception('failed to get response');
+    }
+
+    $extendedResponse = RespondedRequestChild::fromRespondedRequest($response);
+
+    $httpLoader->addToCache($extendedResponse);
+
+    $response = $httpLoader->load('https://www.example.com/idontknow');
+
+    /** @var RespondedRequestChild $response */
+
+    expect($response)
+        ->toBeInstanceOf(RespondedRequestChild::class)
+        ->toHaveMethods(['itseme'])
+        ->and($response->itseme())
+        ->toBe('mario');
+});
 
 test('By default it uses the cookie jar and passes on cookies', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
