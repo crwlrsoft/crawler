@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2024-02-16
+### Changed
+* Make method `HttpLoader::addToCache()` public, so steps can update a cached response with an extended version.
+
 ## [1.6.0] - 2024-02-13
 ### Added
 * Enable dot notation in `Step::addToResult()`, so you can get data from nested output, like: `$step->addToResult(['url' => 'response.url', 'status' => 'response.status', 'foo' => 'bar'])`.
