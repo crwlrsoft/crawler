@@ -572,12 +572,20 @@ class HttpLoader extends Loader
     {
         if (!empty($this->cacheUrlFilters)) {
             foreach ($this->cacheUrlFilters as $filter) {
+                $noUrlMatched = true;
+
                 foreach ($respondedRequest->allUris() as $url) {
-                    if (!$filter->evaluate($url)) {
-                        return false;
+                    if ($filter->evaluate($url)) {
+                        $noUrlMatched = false;
                     }
                 }
+
+                if ($noUrlMatched) {
+                    return false;
+                }
             }
+
+            return true;
         }
 
         return true;
