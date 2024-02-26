@@ -8,6 +8,10 @@ use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @method HttpLoader getLoader()
+ */
+
 abstract class HttpCrawler extends Crawler
 {
     /**
