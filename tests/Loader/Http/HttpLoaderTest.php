@@ -644,6 +644,57 @@ test(
     }
 )->with(['load', 'loadOrFail']);
 
+test(
+    'when a request was redirected, only one of the URLs has to match the filters defined via cacheOnlyWhereUrl()',
+    function (string $loadingMethod) {
+        $httpClient = Mockery::mock(ClientInterface::class);
+
+        $httpClient
+            ->shouldReceive('sendRequest')
+            ->andReturnUsing(function (Request $request) {
+                $url = (string) $request->getUri();
+
+                $redirectUrl = null;
+
+                if ($url === 'https://www.example.com/foo/something') {
+                    $redirectUrl = 'https://www.example.com/bar/something';
+                } elseif ($url === 'https://www.example.com/bar/something') {
+                    $redirectUrl = 'https://www.example.com/baz/something';
+                }
+
+                if ($redirectUrl) {
+                    return new Response(301, ['Location' => $redirectUrl]);
+                }
+
+                return new Response(200, body: $request->getUri() . ' response');
+            });
+
+        $cache = new FileCache(helper_cachedir());
+
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+        $httpLoader->setCache($cache);
+
+        $httpLoader->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'));
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/foo/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
+
+        $cache->clear();
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/bar/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
+
+        $cache->clear();
+
+        $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/baz/something');
+
+        expect($cache->get($respondedRequest->cacheKey()))->toBeNull();
+    }
+)->with(['load', 'loadOrFail']);
+
 it('updates an existing cached response', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 

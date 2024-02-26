@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.2] - 2024-02-26
+### Fixed
+* When using `HttpLoader::cacheOnlyWhereUrl()` and a request was redirected (maybe even multiple times), previously all URLs in the chain had to match the filter rule. As this isn't really practicable, now only one of the URLs has to match the rule.
+
 ## [1.6.1] - 2024-02-16
 ### Changed
 * Make method `HttpLoader::addToCache()` public, so steps can update a cached response with an extended version.
