@@ -2,14 +2,14 @@
 
 namespace tests;
 
+use tests\_Stubs\Crawlers\DummyOne;
+use tests\_Stubs\Crawlers\DummyTwo;
 use tests\_Stubs\LoaderCollectingStep;
 use tests\_Stubs\MultiLoaderCrawler;
 use tests\_Stubs\PhantasyLoader;
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
-use Crwlr\Crawler\Loader\LoaderInterface;
-use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
@@ -18,26 +18,13 @@ use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Stores\Store;
 use Crwlr\Crawler\Stores\StoreInterface;
-use Crwlr\Crawler\UserAgents\BotUserAgent;
-use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 function helper_getDummyCrawler(): Crawler
 {
-    return new class () extends Crawler {
-        public function userAgent(): UserAgentInterface
-        {
-            return new BotUserAgent('FooBot');
-        }
-
-        public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
-        {
-            return Mockery::mock(LoaderInterface::class);
-        }
-    };
+    return new DummyOne();
 }
 
 function helper_getDummyCrawlerWithInputReturningStep(): Crawler
@@ -57,72 +44,29 @@ test(
     'The methods to define UserAgent, Logger and Loader instances are called in construct and the getter methods ' .
     'always return the same instance.',
     function () {
-        $crawler = new class () extends Crawler {
-            public int $userAgentCalled = 0;
+        $crawler = new DummyTwo();
 
-            public int $loggerCalled = 0;
+        expect($crawler->getUserAgent()->testProperty)->toBe('foo')
+            ->and($crawler->getLogger()->testProperty)->toBe('foo')
+            ->and($crawler->getLoader()->testProperty)->toBe('foo')
+            ->and($crawler->userAgentCalled)->toBe(1)
+            ->and($crawler->loggerCalled)->toBe(1)
+            ->and($crawler->loaderCalled)->toBe(1);
 
-            public int $loaderCalled = 0;
+        $crawler->getUserAgent()->testProperty = 'bar';
 
-            protected function userAgent(): UserAgentInterface
-            {
-                $this->userAgentCalled += 1;
+        $crawler->getLogger()->testProperty = 'bar';
 
-                return new class ('FooBot') extends BotUserAgent {
-                    public string $testProperty = 'foo';
-                };
-            }
-
-            protected function logger(): LoggerInterface
-            {
-                $this->loggerCalled += 1;
-
-                return new class () extends CliLogger {
-                    public string $testProperty = 'foo';
-                };
-            }
-
-            protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
-            {
-                $this->loaderCalled += 1;
-
-                return new class ($userAgent, null, $logger) extends HttpLoader {
-                    public string $testProperty = 'foo';
-                };
-            }
-        };
-
-        expect($crawler->getUserAgent()->testProperty)->toBe('foo'); // @phpstan-ignore-line
-
-        expect($crawler->getLogger()->testProperty)->toBe('foo');  // @phpstan-ignore-line
-
-        expect($crawler->getLoader()->testProperty)->toBe('foo');  // @phpstan-ignore-line
-
-        expect($crawler->userAgentCalled)->toBe(1);
-
-        expect($crawler->loggerCalled)->toBe(1);
-
-        expect($crawler->loaderCalled)->toBe(1);
-
-        $crawler->getUserAgent()->testProperty = 'bar'; // @phpstan-ignore-line
-
-        $crawler->getLogger()->testProperty = 'bar'; // @phpstan-ignore-line
-
-        $crawler->getLoader()->testProperty = 'bar'; // @phpstan-ignore-line
+        $crawler->getLoader()->testProperty = 'bar';
 
         $crawler->addStep(Http::get()); // adding steps passes on logger and loader, should use the same instances
 
-        expect($crawler->getUserAgent()->testProperty)->toBe('bar');
-
-        expect($crawler->getLogger()->testProperty)->toBe('bar');
-
-        expect($crawler->getLoader()->testProperty)->toBe('bar');  // @phpstan-ignore-line
-
-        expect($crawler->userAgentCalled)->toBe(1);
-
-        expect($crawler->loggerCalled)->toBe(1);
-
-        expect($crawler->loaderCalled)->toBe(1);
+        expect($crawler->getUserAgent()->testProperty)->toBe('bar')
+            ->and($crawler->getLogger()->testProperty)->toBe('bar')
+            ->and($crawler->getLoader()->testProperty)->toBe('bar')
+            ->and($crawler->userAgentCalled)->toBe(1)
+            ->and($crawler->loggerCalled)->toBe(1)
+            ->and($crawler->loaderCalled)->toBe(1);
     }
 );
 
