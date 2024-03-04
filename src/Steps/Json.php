@@ -6,13 +6,20 @@ use Adbar\Dot;
 use Crwlr\Utils\Json as JsonUtil;
 use Crwlr\Utils\Exceptions\InvalidJsonException;
 use Generator;
+use Symfony\Component\DomCrawler\Crawler;
+use Throwable;
 
 class Json extends Step
 {
     /**
      * @param mixed[] $propertyMapping
      */
-    final public function __construct(protected array $propertyMapping = [], protected ?string $each = null) {}
+    final public function __construct(protected ?array $propertyMapping = [], protected ?string $each = null) {}
+
+    public static function all(): static
+    {
+        return new static(null);
+    }
 
     /**
      * @param mixed[] $propertyMapping
@@ -37,10 +44,14 @@ class Json extends Step
 
     protected function invoke(mixed $input): Generator
     {
-        try {
-            $array = JsonUtil::stringToArray($input);
-        } catch (InvalidJsonException) {
-            $this->logger?->warning('Failed to decode JSON string.');
+        $array = $this->inputStringToArray($input);
+
+        if ($array === null || $this->propertyMapping === null) {
+            if ($array === null) {
+                $this->logger?->warning('Failed to decode JSON string.');
+            } elseif ($this->propertyMapping === null) {
+                yield $array;
+            }
 
             return;
         }
@@ -63,11 +74,37 @@ class Json extends Step
     }
 
     /**
+     * @return mixed[]|null
+     */
+    protected function inputStringToArray(string $input): ?array
+    {
+        try {
+            return JsonUtil::stringToArray($input);
+        } catch (InvalidJsonException) {
+            // If headless browser is used in loader, the JSON in the response body is wrapped in an HTML document.
+            if (str_contains($input, '<html') || str_contains($input, '<HTML')) {
+                try {
+                    $bodyText = (new Crawler($input))->filter('body')->text();
+
+                    return JsonUtil::stringToArray($bodyText);
+                } catch (Throwable) {
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param Dot<int|string, mixed> $dot
      * @return mixed[]
      */
     protected function mapProperties(Dot $dot): array
     {
+        if ($this->propertyMapping === null || $this->propertyMapping === []) {
+            return [];
+        }
+
         $mapped = [];
 
         foreach ($this->propertyMapping as $propertyKey => $dotNotation) {
@@ -75,7 +112,11 @@ class Json extends Step
                 $propertyKey = $dotNotation;
             }
 
-            $mapped[$propertyKey] = $dot->get($dotNotation);
+            if ($dotNotation === '' || ($dotNotation === '*' && $dot->get('*') === null)) {
+                $mapped[$propertyKey] = $dot->all();
+            } else {
+                $mapped[$propertyKey] = $dot->get($dotNotation);
+            }
         }
 
         return $mapped;
