@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-03-04
+### Added
+* Allow getting the whole decoded JSON as array with the new `Json::all()` and also allow to get the whole decoded JSON, when using `Json::get()`, inside a mapping using either empty string or `*` as target. Example: `Json::get(['all' => '*'])`. `*` only works, when there is no key `*` in the decoded data.
+
+### Fixed
+* Make it work with responses loaded by a headless browser. If decoding the input string fails, it now checks if it could be HTML. If that's the case, it extracts the text content of the `<body>` and tries to decode this instead.
+
 ## [1.6.2] - 2024-02-26
 ### Fixed
 * When using `HttpLoader::cacheOnlyWhereUrl()` and a request was redirected (maybe even multiple times), previously all URLs in the chain had to match the filter rule. As this isn't really practicable, now only one of the URLs has to match the rule.
