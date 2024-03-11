@@ -146,32 +146,34 @@ class HttpCrawl extends Http
 
         $response = $this->loader->load($this->getRequestFromInputUri($input));
 
+        if (!$response) {
+            return;
+        }
+
         $initialResponseDocument = new Document($response);
 
         $this->setResponseCanonicalUrl($response, $initialResponseDocument);
 
         $this->addLoadedUrlsFromResponse($response);
 
-        if ($response !== null) {
-            if (!$this->inputIsSitemap && $this->matchesAllCriteria(Url::parse($input))) {
-                $this->yieldedResponseCount++;
+        if (!$this->inputIsSitemap && $this->matchesAllCriteria(Url::parse($input))) {
+            $this->yieldedResponseCount++;
 
-                yield $response;
-            }
+            yield $response;
+        }
 
-            $this->urls = $this->getUrlsFromInitialResponse($response, $initialResponseDocument);
+        $this->urls = $this->getUrlsFromInitialResponse($response, $initialResponseDocument);
 
-            $depth = 1;
+        $depth = 1;
 
-            while (
-                !$this->depthIsExceeded($depth) &&
-                !empty($this->urls) &&
-                (!$this->maxOutputs || $this->yieldedResponseCount < $this->maxOutputs)
-            ) {
-                yield from $this->loadUrls();
+        while (
+            !$this->depthIsExceeded($depth) &&
+            !empty($this->urls) &&
+            (!$this->maxOutputs || $this->yieldedResponseCount < $this->maxOutputs)
+        ) {
+            yield from $this->loadUrls();
 
-                $depth++;
-            }
+            $depth++;
         }
     }
 

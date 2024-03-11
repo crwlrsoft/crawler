@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2024-03-11
+### Fixed
+* A PHP error that happened when the loader returns `null` for the initial request in the `Http::crawl()` step.
+
 ## [1.7.0] - 2024-03-04
 ### Added
 * Allow getting the whole decoded JSON as array with the new `Json::all()` and also allow to get the whole decoded JSON, when using `Json::get()`, inside a mapping using either empty string or `*` as target. Example: `Json::get(['all' => '*'])`. `*` only works, when there is no key `*` in the decoded data.
