@@ -5,6 +5,9 @@ namespace tests\_Integration\Http;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\RetryErrorResponseHandler;
+use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
+use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
@@ -17,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 
 use function tests\helper_generatorToArray;
@@ -31,6 +35,41 @@ class TestLoader extends HttpLoader
      * @var string[]
      */
     public array $loadedUrls = [];
+
+    public function __construct(
+        UserAgentInterface $userAgent,
+        ?ClientInterface $httpClient = null,
+        ?LoggerInterface $logger = null,
+        ?Throttler $throttler = null,
+        RetryErrorResponseHandler $retryErrorResponseHandler = new RetryErrorResponseHandler(),
+        array $defaultGuzzleClientConfig = []
+    ) {
+        parent::__construct(
+            $userAgent,
+            $httpClient,
+            $logger,
+            $throttler,
+            $retryErrorResponseHandler,
+            $defaultGuzzleClientConfig,
+        );
+
+        $this->robotsTxtHandler = new class ($this, $this->logger) extends RobotsTxtHandler {
+            public function isAllowed(UriInterface|Url|string $url): bool
+            {
+                if (is_string($url)) {
+                    $url = Url::parse($url);
+                } elseif ($url instanceof UriInterface) {
+                    $url = Url::parse($url);
+                }
+
+                if ($url->path() === '/not-allowed') {
+                    return false;
+                }
+
+                return parent::isAllowed($url);
+            }
+        };
+    }
 
     public function load(mixed $subject): ?RespondedRequest
     {
@@ -455,4 +494,14 @@ it('does not yield the same page twice when a URL was redirected to an already l
         ->toContain('http://www.example.com/crawling/redirect')
         ->and($this->getActualOutputForAssertion())
         ->toContain('Was already loaded before. Do not process this page again.');
+});
+
+it('does not produce a fatal error when the initial request fails', function () {
+    $crawler = (new Crawler())
+        ->input('http://www.example.com/not-allowed')
+        ->addStep(Http::crawl()->addToResult(['url']));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(0);
 });

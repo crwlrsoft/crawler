@@ -3,6 +3,7 @@ vendor
 .php_cs.cache
 .php-cs-fixer.cache
 .phpunit.result.cache
+.phpunit.cache
 /cachedir
 /tests/_Temp/_cachedir/*
 !/tests/_Temp/_cachedir/.gitkeep
