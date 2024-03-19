@@ -44,24 +44,26 @@ final class Group extends BaseStep
         // but keep the original input, because we want to use it e.g. for the keepInputData() functionality.
         $inputForStepInvocation = $this->getInputKeyToUse($input);
 
-        foreach ($this->steps as $key => $step) {
-            foreach ($step->invokeStep($inputForStepInvocation) as $nthOutput => $output) {
-                if (method_exists($step, 'callUpdateInputUsingOutput')) {
-                    $inputForStepInvocation = $step->callUpdateInputUsingOutput($inputForStepInvocation, $output);
-                }
+        if ($inputForStepInvocation) {
+            foreach ($this->steps as $key => $step) {
+                foreach ($step->invokeStep($inputForStepInvocation) as $nthOutput => $output) {
+                    if (method_exists($step, 'callUpdateInputUsingOutput')) {
+                        $inputForStepInvocation = $step->callUpdateInputUsingOutput($inputForStepInvocation, $output);
+                    }
 
-                if ($this->includeOutput($step)) {
-                    $combinedOutput = $this->addOutputToCombinedOutputs(
-                        $output->get(),
-                        $combinedOutput,
-                        $key,
-                        $nthOutput,
-                    );
+                    if ($this->includeOutput($step)) {
+                        $combinedOutput = $this->addOutputToCombinedOutputs(
+                            $output->get(),
+                            $combinedOutput,
+                            $key,
+                            $nthOutput,
+                        );
+                    }
                 }
             }
-        }
 
-        yield from $this->prepareCombinedOutputs($combinedOutput, $input);
+            yield from $this->prepareCombinedOutputs($combinedOutput, $input);
+        }
     }
 
     public function addsToOrCreatesResult(): bool

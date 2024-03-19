@@ -42,10 +42,14 @@ abstract class Step extends BaseStep
             return;
         }
 
-        $validInputValue = $this->validateAndSanitizeInput($this->getInputKeyToUse($input)->get());
+        $inputForStepInvocation = $this->getInputKeyToUse($input);
 
-        if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
-            yield from $this->invokeAndYield($validInputValue, $input);
+        if ($inputForStepInvocation) {
+            $validInputValue = $this->validateAndSanitizeInput($inputForStepInvocation->get());
+
+            if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
+                yield from $this->invokeAndYield($validInputValue, $input);
+            }
         }
     }
 
