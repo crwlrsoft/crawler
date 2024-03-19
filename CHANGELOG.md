@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2024-03-19
+### Fixed
+* When the `useInputKey()` method is used on a step and the defined key does not exist in input, it logs a warning and does not invoke the step instead of throwing an `Exception`.
+
 ## [1.7.1] - 2024-03-11
 ### Fixed
 * A PHP error that happened when the loader returns `null` for the initial request in the `Http::crawl()` step.

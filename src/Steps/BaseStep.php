@@ -227,14 +227,22 @@ abstract class BaseStep implements StepInterface
         $this->uniqueOutputKeys = $this->uniqueInputKeys = [];
     }
 
-    /**
-     * @throws Exception
-     */
-    protected function getInputKeyToUse(Input $input): Input
+    protected function getInputKeyToUse(Input $input): ?Input
     {
         if ($this->useInputKey !== null) {
-            if (!array_key_exists($this->useInputKey, $input->get())) {
-                throw new Exception('Key ' . $this->useInputKey . ' does not exist in input');
+            $inputValue = $input->get();
+
+            if (!is_array($inputValue)) {
+                $this->logger?->warning(
+                    'Can\'t get key from input, because input is of type ' . gettype($inputValue) . ' instead of ' .
+                    'array.'
+                );
+
+                return null;
+            } elseif (!array_key_exists($this->useInputKey, $inputValue)) {
+                $this->logger?->warning('Can\'t get key from input, because it does not exist.');
+
+                return null;
             }
 
             $input = new Input($input->get()[$this->useInputKey], $input->result, $input->addLaterToResult);

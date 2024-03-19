@@ -17,6 +17,8 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use stdClass;
+
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
 use function tests\helper_getStepYieldingMultipleArraysWithNumber;
@@ -226,6 +228,39 @@ it('uses a key from array input when defined', function () {
 
     expect($output[0]->get())->toBe('barValue');
 });
+
+it('logs a warning message when the input key to use does not exist in input array', function () {
+    $step = helper_getInputReturningStep()->useInputKey('baz');
+
+    $step->addLogger(new CliLogger());
+
+    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
+
+    expect($output)->toHaveCount(0)
+        ->and($this->getActualOutputForAssertion())
+        ->toContain('Can\'t get key from input, because it does not exist.');
+});
+
+it(
+    'logs a warning message when useInputKey() was called but the input value is not an array',
+    function (mixed $inputValue) {
+        $step = helper_getInputReturningStep()->useInputKey('baz');
+
+        $step->addLogger(new CliLogger());
+
+        $output = helper_invokeStepWithInput($step, new Input($inputValue));
+
+        expect($output)->toHaveCount(0)
+            ->and($this->getActualOutputForAssertion())
+            ->toContain(
+                'Can\'t get key from input, because input is of type ' . gettype($inputValue) . ' instead of array.'
+            );
+    }
+)->with([
+    ['string'],
+    [0],
+    [new stdClass()],
+]);
 
 it('doesn\'t add the result object to the Input object only to the Output', function () {
     $step = helper_getValueReturningStep('Stand with Ukraine!')
