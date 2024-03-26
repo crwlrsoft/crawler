@@ -11,8 +11,10 @@ use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
+use Crwlr\Crawler\Utils\OutputTypeHelper;
 use Crwlr\Utils\Microseconds;
 use Generator;
 use GuzzleHttp\Psr7\Request;
@@ -47,6 +49,18 @@ uses()
     })
     ->in('_Integration');
 
+function helper_dump(mixed $var): void
+{
+    error_log(var_export($var, true));
+}
+
+function helper_dieDump(mixed $var): void
+{
+    error_log(var_export($var, true));
+
+    exit;
+}
+
 function helper_getValueReturningStep(mixed $value): Step
 {
     return new class ($value) extends Step {
@@ -55,6 +69,13 @@ function helper_getValueReturningStep(mixed $value): Step
         protected function invoke(mixed $input): Generator
         {
             yield $this->value;
+        }
+
+        public function outputType(): StepOutputType
+        {
+            return OutputTypeHelper::isAssociativeArrayOrObject($this->value) ?
+                StepOutputType::AssociativeArrayOrObject :
+                StepOutputType::Scalar;
         }
     };
 }

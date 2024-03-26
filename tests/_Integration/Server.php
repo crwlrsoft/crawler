@@ -132,6 +132,12 @@ if (str_starts_with($route, '/publisher')) {
         $author = getParamAfter($route, '/publisher/authors/');
 
         return include(__DIR__ . '/_Server/Publisher/AuthorDetailPage.php');
+    } elseif (str_starts_with($route, '/publisher/books/') && str_contains($route, '/edition/')) {
+        $bookNo = (int) getParamAfter($route, '/publisher/books/');
+
+        $edition = (int) getParamAfter($route, '/edition/');
+
+        return include(__DIR__ . '/_Server/Publisher/EditionDetailPage.php');
     } elseif (str_starts_with($route, '/publisher/books/')) {
         $bookNo = (int) getParamAfter($route, '/publisher/books/');
 

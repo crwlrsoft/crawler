@@ -20,5 +20,20 @@
         }
     ?>
 </h1>
+
+<div id="editions">
+<?php
+    if (in_array($bookNo, [1, 3, 4, 5])) {
+        // Some Novel
+        echo '<a href="/publisher/books/' . $bookNo . '/edition/1">First Edition</a> ' .
+            '<a href="/publisher/books/' . $bookNo . '/edition/2">Second Edition</a>';
+    } elseif ($bookNo === 2) {
+        // Another Novel
+        echo '<a href="/publisher/books/' . $bookNo . '/edition/1">First Edition</a> ' .
+            '<a href="/publisher/books/' . $bookNo . '/edition/2">Second Edition</a> ' .
+            '<a href="/publisher/books/' . $bookNo . '/edition/3">Third Edition</a>';
+    }
+?>
+</div>
 </body>
 </html>
