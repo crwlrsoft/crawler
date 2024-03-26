@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Sitemap;
 
 use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Generator;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -30,6 +31,11 @@ class GetUrlsFromSitemap extends Step
         $this->withData = true;
 
         return $this;
+    }
+
+    public function outputType(): StepOutputType
+    {
+        return $this->withData ? StepOutputType::AssociativeArrayOrObject : StepOutputType::Scalar;
     }
 
     /**

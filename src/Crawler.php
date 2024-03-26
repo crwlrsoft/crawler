@@ -7,7 +7,10 @@ use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
 use Crwlr\Crawler\Loader\AddLoadersToStepAction;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Steps\BaseStep;
+use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
 use Crwlr\Crawler\Steps\Group;
+use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -30,7 +33,7 @@ abstract class Crawler
     protected mixed $inputs = [];
 
     /**
-     * @var array|StepInterface[]
+     * @var array<int, StepInterface>
      */
     protected array $steps = [];
 
@@ -47,6 +50,17 @@ abstract class Crawler
         $this->logger = $this->logger();
 
         $this->loader = $this->loader($this->userAgent, $this->logger);
+    }
+
+    public function __clone(): void
+    {
+        $this->inputs = [];
+
+        $this->steps = [];
+
+        $this->store = null;
+
+        $this->outputHook = null;
     }
 
     abstract protected function userAgent(): UserAgentInterface;
@@ -73,9 +87,23 @@ abstract class Crawler
         return ini_get('memory_limit');
     }
 
+    public function getSubCrawler(): Crawler
+    {
+        return clone $this;
+    }
+
     public function getUserAgent(): UserAgentInterface
     {
         return $this->userAgent;
+    }
+
+    public function setUserAgent(UserAgentInterface $userAgent): static
+    {
+        $this->userAgent = $userAgent;
+
+        $this->loader = $this->loader($userAgent, $this->logger);
+
+        return $this;
     }
 
     public function getLogger(): LoggerInterface
@@ -137,6 +165,10 @@ abstract class Crawler
 
         (new AddLoadersToStepAction($this->loader, $step))->invoke();
 
+        if ($step instanceof BaseStep) {
+            $step->setParentCrawler($this);
+        }
+
         $this->steps[] = $step;
 
         return $this;
@@ -176,10 +208,14 @@ abstract class Crawler
      * happens. Alternatively you can use runAndTraverse().
      *
      * @return Generator<Result>
-     * @throws Exception
+     * @throws Exception|PreRunValidationException
      */
     public function run(): Generator
     {
+        if (!$this->validateSteps()) {
+            return;
+        }
+
         $inputs = $this->prepareInput();
 
         if ($this->firstStep()) {
@@ -325,18 +361,52 @@ abstract class Crawler
 
             $result = new Result();
 
-            if ($output->isArrayWithStringKeys()) {
-                foreach ($output->get() as $key => $value) {
-                    $result->set($key, $value);
+            foreach ($output->keep as $key => $value) {
+                $result->set($key, $value);
+            }
+
+            if (!$this->lastStep()?->keepsAnything()) {
+                if ($output->isArrayWithStringKeys()) {
+                    foreach ($output->get() as $key => $value) {
+                        $result->set($key, $value);
+                    }
+                } else {
+                    $result->set('unnamed', $output->get());
                 }
-            } else {
-                $result->set('unnamed', $output->get());
             }
 
             $this->store?->store($result);
 
             yield $result;
         }
+    }
+
+    /**
+     * @throws PreRunValidationException
+     */
+    protected function validateSteps(): bool
+    {
+        $previousStep = null;
+
+        foreach ($this->steps as $index => $step) {
+            if ($index > 0) {
+                $previousStep = $this->steps[$index - 1];
+            }
+
+            if (method_exists($step, 'validateBeforeRun')) {
+                try {
+                    $step->validateBeforeRun($previousStep ?? $this->inputs);
+                } catch (PreRunValidationException $exception) {
+                    $this->logger->error(
+                        'Pre-Run validation error in step number ' . ($index + 1) . ': ' . $exception->getMessage()
+                    );
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -373,6 +443,17 @@ abstract class Crawler
     protected function firstStep(): ?StepInterface
     {
         return $this->steps[0] ?? null;
+    }
+
+    protected function lastStep(): ?Step
+    {
+        $lastStep = end($this->steps);
+
+        if (!$lastStep instanceof Step) {
+            return null;
+        }
+
+        return $lastStep;
     }
 
     protected function nextStep(int $afterIndex): ?StepInterface

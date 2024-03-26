@@ -5,9 +5,16 @@ namespace tests;
 use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Result;
 
-function helper_getIoInstance(mixed $value, ?Result $result = null, ?Result $addLaterToResult = null): Io
-{
-    return new class ($value, $result, $addLaterToResult) extends Io {};
+/**
+ * @param mixed[] $keep
+ */
+function helper_getIoInstance(
+    mixed $value,
+    ?Result $result = null,
+    ?Result $addLaterToResult = null,
+    array $keep = [],
+): Io {
+    return new class ($value, $result, $addLaterToResult, $keep) extends Io {};
 }
 
 it('can be created with only a value.', function () {
@@ -30,6 +37,14 @@ test('you can add a secondary Result object that should be added to the main Res
     $io = helper_getIoInstance('test', addLaterToResult: $addLaterToResult);
 
     expect($io->addLaterToResult)->toBe($addLaterToResult);
+});
+
+test('you can add an array with data that should be kept (see Step::keep() functionality)', function () {
+    $keep = ['foo' => 'bar', 'baz' => 'quz'];
+
+    $io = helper_getIoInstance('test', keep: $keep);
+
+    expect($io->keep)->toBe($keep);
 });
 
 test('you can create it from another Io instance and it keeps the value of the original instance.', function () {
@@ -58,6 +73,76 @@ test('when created from another Io instance it passes on the secondary Result ob
     $io2 = helper_getIoInstance($io1);
 
     expect($io2->addLaterToResult)->toBe($addLaterToResult);
+});
+
+test('when created from another Io instance it passes on the data to keep', function () {
+    $io1 = helper_getIoInstance('test', keep: ['co' => 'derotsch']);
+
+    $io2 = helper_getIoInstance($io1);
+
+    expect($io2->keep)->toBe(['co' => 'derotsch']);
+});
+
+test('the withValue() method creates a new instance with that value bot keeps the result and keep data', function () {
+    $result = new Result();
+
+    $result->set('foo', 'one');
+
+    $addLaterResult = new Result();
+
+    $result->set('bar', 'two');
+
+    $io1 = helper_getIoInstance('hey', $result, $addLaterResult, ['baz' => 'three']);
+
+    $io2 = $io1->withValue('ho');
+
+    expect($io2->get())->toBe('ho')
+        ->and($io2->result)->toBe($result)
+        ->and($io2->addLaterToResult)->toBe($addLaterResult)
+        ->and($io2->keep)->toBe(['baz' => 'three']);
+});
+
+test(
+    'the withPropertyValue() method creates a new instance and replaces a certain property in its array value',
+    function () {
+        $result = new Result();
+
+        $result->set('foo', 'one');
+
+        $addLaterResult = new Result();
+
+        $result->set('bar', 'two');
+
+        $io1 = helper_getIoInstance(['a' => '1', 'b' => '2', 'c' => '3'], $result, $addLaterResult, ['baz' => 'three']);
+
+        $io2 = $io1->withPropertyValue('c', '4');
+
+        expect($io2->get())->toBe(['a' => '1', 'b' => '2', 'c' => '4'])
+            ->and($io2->result)->toBe($result)
+            ->and($io2->addLaterToResult)->toBe($addLaterResult)
+            ->and($io2->keep)->toBe(['baz' => 'three']);
+    }
+);
+
+test('if the property does not exist, it is added, when withPropertyValue() is used', function () {
+    $io1 = helper_getIoInstance(['a' => '1', 'b' => '2']);
+
+    $io2 = $io1->withPropertyValue('c', '3');
+
+    expect($io2->get())->toBe(['a' => '1', 'b' => '2', 'c' => '3']);
+});
+
+it('gets a particular property by key from array output', function () {
+    $io = helper_getIoInstance(['foo' => 'so', 'bar' => 'lala', 'baz' => 'bla']);
+
+    expect($io->getProperty('bar'))->toBe('lala');
+});
+
+it('when the property does not exist, getProperty() returns the defined fallback value (default null)', function () {
+    $io = helper_getIoInstance(['foo' => 'so', 'bar' => 'lala', 'baz' => 'bla']);
+
+    expect($io->getProperty('quz'))->toBeNull()
+        ->and($io->getProperty('quz', 123))->toBe(123);
 });
 
 it('sets a simple value key', function ($value, $key) {
@@ -151,3 +236,11 @@ test('isArrayWithStringKeys returns false when the value is not an array with st
     ['foo', 'bar'],
     helper_getStdClassWithData(['foo' => 'bar']),
 ]);
+
+it('adds data to keep when calling keep() and makes already existing keys an array', function () {
+    $io = helper_getIoInstance('value', keep: ['foo' => 'one', 'bar' => 'two']);
+
+    $io->keep(['bar' => 'three', 'baz' => 'four']);
+
+    expect($io->keep)->toBe(['foo' => 'one', 'bar' => ['two', 'three'], 'baz' => 'four']);
+});

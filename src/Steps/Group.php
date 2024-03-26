@@ -163,6 +163,11 @@ final class Group extends BaseStep
         return $this;
     }
 
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
+    }
+
     protected function includeOutput(StepInterface $step): bool
     {
         if (
@@ -185,9 +190,9 @@ final class Group extends BaseStep
     private function addResultToInputIfAnyResultKeysDefined(Input $input): Input
     {
         if ($this->createsResult() && !$input->result) {
-            $input = new Input($input->get(), new Result(), $input->addLaterToResult);
+            $input = new Input($input->get(), new Result(), $input->addLaterToResult, $input->keep);
         } elseif ($this->addsToOrCreatesResult() && !$input->addLaterToResult) {
-            $input = new Input($input->get(), $input->result, new Result());
+            $input = new Input($input->get(), $input->result, new Result(), $input->keep);
         }
 
         return $input;

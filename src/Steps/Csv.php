@@ -73,6 +73,11 @@ class Csv extends Step
         return $this;
     }
 
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
+    }
+
     protected function validateAndSanitizeInput(mixed $input): string
     {
         if ($this->method === 'string') {

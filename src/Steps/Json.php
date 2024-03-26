@@ -37,6 +37,11 @@ class Json extends Step
         return new static($propertyMapping, $each);
     }
 
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
+    }
+
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
         return $this->validateAndSanitizeStringOrHttpResponse($input);

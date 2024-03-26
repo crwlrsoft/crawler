@@ -8,8 +8,10 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Filters\Filter;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
@@ -779,6 +781,30 @@ it(
     }
 );
 
+test('keeping a scalar output value with keep() also works when outputKey() was used', function () {
+    $step = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'hey';
+        }
+
+        public function outputType(): StepOutputType
+        {
+            return StepOutputType::Scalar;
+        }
+    };
+
+    $step
+        ->outputKey('greeting')
+        ->keep();
+
+    $step->validateBeforeRun(Http::get());
+
+    $outputs = helper_invokeStepWithInput($step, 'guten tag');
+
+    expect($outputs[0]->get())->toBe(['greeting' => 'hey']);
+});
+
 it('keeps the original input data when useInputKey() is used', function () {
     $step = helper_getValueReturningStep(['baz' => 'three'])
         ->keepInputData()
@@ -889,6 +915,16 @@ it(
         expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two']);
     }
 );
+
+it('useInputKey() can be used to get data that was kept from a previous step with keep() or keepAs()', function () {
+    $step = helper_getInputReturningStep();
+
+    $step->useInputKey('bar');
+
+    $outputs = helper_invokeStepWithInput($step, new Input('value', keep: ['bar' => 'baz']));
+
+    expect($outputs[0]->get())->toBe('baz');
+});
 
 test('you can define aliases for output keys for addToResult()', function () {
     $step = new class () extends Step {
