@@ -6,6 +6,7 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\Url\Url;
 use DOMNode;
 use Exception;
@@ -50,6 +51,11 @@ class GetLink extends Step
         return str_starts_with($href, 'mailto:') ||
             str_starts_with($href, 'tel:') ||
             str_starts_with($href, 'javascript:');
+    }
+
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::Scalar;
     }
 
     protected function validateAndSanitizeInput(mixed $input): Crawler

@@ -13,31 +13,29 @@ class AnonymousHttpCrawlerBuilder
 
     public function withBotUserAgent(string $productToken): HttpCrawler
     {
-        return new class ($productToken) extends HttpCrawler {
-            public function __construct(private readonly string $_botUserAgentProductToken)
-            {
-                parent::__construct();
-            }
-
+        $instance = new class () extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
-                return new BotUserAgent($this->_botUserAgentProductToken);
+                return new UserAgent('temp');
             }
         };
+
+        $instance->setUserAgent(new BotUserAgent($productToken));
+
+        return $instance;
     }
 
     public function withUserAgent(string $userAgent): HttpCrawler
     {
-        return new class ($userAgent) extends HttpCrawler {
-            public function __construct(private readonly string $_userAgentString)
-            {
-                parent::__construct();
-            }
-
+        $instance = new class () extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
-                return new UserAgent($this->_userAgentString);
+                return new UserAgent('temp');
             }
         };
+
+        $instance->setUserAgent(new UserAgent($userAgent));
+
+        return $instance;
     }
 }

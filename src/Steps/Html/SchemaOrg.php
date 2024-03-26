@@ -4,12 +4,14 @@ namespace Crwlr\Crawler\Steps\Html;
 
 use Adbar\Dot;
 use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Generator;
 use Spatie\SchemaOrg\BaseType;
 
 class SchemaOrg extends Step
 {
     protected bool $toArray = false;
+
     protected ?string $onlyType = null;
 
     /**
@@ -39,6 +41,11 @@ class SchemaOrg extends Step
         $this->mapping = $mapping;
 
         return $this;
+    }
+
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
     }
 
     protected function invoke(mixed $input): Generator

@@ -2,14 +2,20 @@
 
 namespace Crwlr\Crawler;
 
+use Crwlr\Crawler\Utils\OutputTypeHelper;
+
 class Io
 {
     protected string|int|float|bool|null $key = null;
 
-    public function __construct(
+    /**
+     * @param mixed[] $keep
+     */
+    final public function __construct(
         protected mixed $value,
         public ?Result $result = null,
         public ?Result $addLaterToResult = null,
+        public array $keep = [],
     ) {
         if ($value instanceof self) {
             $this->value = $value->value;
@@ -17,12 +23,45 @@ class Io
             $this->result ??= $value->result;
 
             $this->addLaterToResult ??= $value->addLaterToResult;
+
+            $this->keep = $value->keep;
         }
+    }
+
+    public function withValue(mixed $value): static
+    {
+        return new static($value, $this->result, $this->addLaterToResult, $this->keep);
+    }
+
+    public function withPropertyValue(string $key, mixed $value): static
+    {
+        if (!$this->isArrayWithStringKeys()) {
+            return new static($this);
+        }
+
+        $newValue = $this->value;
+
+        $newValue[$key] = $value;
+
+        return $this->withValue($newValue);
     }
 
     public function get(): mixed
     {
         return $this->value;
+    }
+
+    public function getProperty(string $key, mixed $fallbackValue = null): mixed
+    {
+        if (is_array($this->value)) {
+            return $this->value[$key] ?? $fallbackValue;
+        } elseif (is_object($this->value)) {
+            $array = OutputTypeHelper::objectToArray($this->value);
+
+            return $array[$key] ?? $fallbackValue;
+        }
+
+        return $fallbackValue;
     }
 
     /**
@@ -52,6 +91,16 @@ class Io
         }
 
         return $this->key;
+    }
+
+    /**
+     * @param mixed[] $data
+     */
+    public function keep(array $data): static
+    {
+        $this->keep = array_merge_recursive($this->keep, $data);
+
+        return $this;
     }
 
     public function isArrayWithStringKeys(): bool

@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Exception;
 use Generator;
@@ -10,6 +11,11 @@ use Psr\Http\Message\UriInterface;
 
 class GetSitemapsFromRobotsTxt extends LoadingStep
 {
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::Scalar;
+    }
+
     /**
      * @throws InvalidRobotsTxtFileException|Exception
      */

@@ -4,12 +4,15 @@ namespace Crwlr\Crawler\Steps;
 
 use Adbar\Dot;
 use Closure;
+use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
 use Crwlr\Crawler\Steps\Refiners\RefinerInterface;
+use Crwlr\Crawler\Utils\OutputTypeHelper;
 use Exception;
 use Generator;
 use InvalidArgumentException;
@@ -21,6 +24,33 @@ use Psr\Log\LoggerInterface;
 
 abstract class BaseStep implements StepInterface
 {
+    /**
+     * true means: keep the whole output array/object
+     * string: keep that one key from the (array/object) output
+     * array: keep those keys from the (array/object) output
+     *
+     * @var bool|string|string[]
+     */
+    protected bool|string|array $keep = false;
+
+    /**
+     * Same as $keep, but for input data.
+     *
+     * @var bool|string|string[]
+     */
+    protected bool|string|array $keepFromInput = false;
+
+    protected ?string $keepAs = null;
+
+    protected ?string $keepInputAs = null;
+
+    protected ?Crawler $parentCrawler = null;
+
+    /**
+     * @var array<string, Closure>
+     */
+    protected array $subCrawlers = [];
+
     /**
      * True means add all elements of the output array.
      * String means use that key for a non array output value.
@@ -85,6 +115,74 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    public function setParentCrawler(Crawler $crawler): static
+    {
+        $this->parentCrawler = $crawler;
+
+        return $this;
+    }
+
+    /**
+     * @param string|string[]|null $keys
+     */
+    public function keep(string|array|null $keys = null): static
+    {
+        if ($keys === null) {
+            $this->keep = true;
+        } else {
+            $this->keep = $keys;
+        }
+
+        return $this;
+    }
+
+    public function keepAs(string $key): static
+    {
+        $this->keepAs = $key;
+
+        return $this;
+    }
+
+    /**
+     * @param string|string[]|null $keys
+     */
+    public function keepFromInput(string|array|null $keys = null): static
+    {
+        if ($keys === null) {
+            $this->keepFromInput = true;
+        } else {
+            $this->keepFromInput = $keys;
+        }
+
+        return $this;
+    }
+
+    public function keepInputAs(string $key): static
+    {
+        $this->keepInputAs = $key;
+
+        return $this;
+    }
+
+    public function keepsAnything(): bool
+    {
+        return $this->keepsAnythingFromOutputData() || $this->keepsAnythingFromInputData();
+    }
+
+    public function keepsAnythingFromInputData(): bool
+    {
+        return $this->keepFromInput !== false || $this->keepInputAs !== null;
+    }
+
+    public function keepsAnythingFromOutputData(): bool
+    {
+        return $this->keep !== false || $this->keepAs !== null;
+    }
+
+    /**
+     * @deprecated This method will be removed in v2 of the library. Please use the new keep() and keepAs()
+     *             methods instead.
+     */
     public function addToResult(array|string|null $keys = null): static
     {
         if (is_string($keys) || is_array($keys)) {
@@ -96,6 +194,10 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    /**
+     * @deprecated This method will be removed in v2 of the library. Please use the new keep() and keepAs()
+     *             methods instead.
+     */
     public function addLaterToResult(array|string|null $keys = null): static
     {
         if (is_string($keys) || is_array($keys)) {
@@ -107,11 +209,17 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    /**
+     * @deprecated Along with addToResult() and addLaterToResult() this method is also deprecated.
+     */
     public function addsToOrCreatesResult(): bool
     {
         return $this->createsResult() || $this->addLaterToResult !== false;
     }
 
+    /**
+     * @deprecated Along with addToResult() this method is also deprecated.
+     */
     public function createsResult(): bool
     {
         return $this->addToResult !== false;
@@ -210,8 +318,8 @@ abstract class BaseStep implements StepInterface
     }
 
     /**
-     * @param string|null $inputKey
-     * @return $this
+     * @deprecated This method will be removed in v2 of the library. Please use the new keepFromInput() or
+     *             keepInputAs() methods instead.
      */
     public function keepInputData(?string $inputKey = null): static
     {
@@ -227,25 +335,198 @@ abstract class BaseStep implements StepInterface
         $this->uniqueOutputKeys = $this->uniqueInputKeys = [];
     }
 
+    /**
+     * Define what type of outputs the step will yield
+     *
+     * Defining this in any step, helps to identify potential errors upfront when a crawler run is started.
+     * If the step will only yield associative array (or object) outputs,
+     * return StepOutputType::AssociativeArrayOrObject.
+     * If it will only yield scalar (string, int, float, bool) outputs, return StepOutputType::Scalar.
+     *
+     * If it can potentially yield both types, but you can determin what it will yield, based on the state of the
+     * class, please implement this. Only if it can't be defined upfront, because it depends on the input, return
+     * StepOutputType::Mixed.
+     *
+     * @return StepOutputType
+     */
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::Mixed;
+    }
+
+    /**
+     * @param BaseStep|mixed[] $previousStepOrInitialInputs
+     * @throws PreRunValidationException
+     */
+    public function validateBeforeRun(BaseStep|array $previousStepOrInitialInputs): void
+    {
+        if (!$previousStepOrInitialInputs instanceof BaseStep) {
+            $this->validateFirstStepBeforeRun($previousStepOrInitialInputs);
+        }
+
+        if ($this->keep !== false && $this->keepAs === null && $this->outputKey === null) {
+            $outputType = $this->outputType();
+
+            if ($outputType === StepOutputType::Scalar) {
+                throw new PreRunValidationException(
+                    'Keeping data from a step that yields scalar value outputs (= single string/int/bool/float with ' .
+                    'no key like in an associative array or object) requires to define a key, by using keepAs() ' .
+                    'instead of keep()'
+                );
+            } elseif ($outputType === StepOutputType::Mixed) {
+                $stepClassName = get_class($this);
+
+                $this->logger?->warning(
+                    'The ' . $stepClassName . ' step potentially yields scalar value outputs (= single ' .
+                    'string/int/bool/float with no key like in an associative array or object). If it does (yield a ' .
+                    'scalar value output), it can not keep that output value, because it needs a key for that. ' .
+                    'To avoid this, define a key for scalar outputs by using the keepAs() method.'
+                );
+            }
+        }
+
+        if (
+            $this->keepFromInput !== false &&
+            $previousStepOrInitialInputs instanceof BaseStep &&
+            $this->keepInputAs === null
+        ) {
+            $previousStepOutputType = $previousStepOrInitialInputs->outputType();
+
+            if ($previousStepOutputType === StepOutputType::Scalar) {
+                throw new PreRunValidationException(
+                    'You are trying to keep data from a step\'s input with keepFromInput(), but the step before it ' .
+                    'returns scalar value outputs (= single string/int/bool/float with no key like in an associative ' .
+                    'array or object). Please define a key for the input data to keep, by using keepAs() instead.'
+                );
+            } elseif ($previousStepOutputType === StepOutputType::Mixed) {
+                $stepClassName = get_class($this);
+
+                $this->logger?->warning(
+                    'The step before the ' . $stepClassName . ' step, potentially yields scalar value outputs ' .
+                    '(= single string/int/bool/float with no key like in an associative array or object). If it does ' .
+                    '(yield a scalar value output) the next step can not keep it by using keepFromInput(). To avoid ' .
+                    'this, define a key for scalar inputs by using the keepInputAs() method.'
+                );
+            }
+        }
+    }
+
+    public function subCrawlerFor(string $for, Closure $crawlerBuilder): static
+    {
+        $this->subCrawlers[$for] = $crawlerBuilder;
+
+        return $this;
+    }
+
+    protected function runSubCrawlersFor(Output $output): Output
+    {
+        if (empty($this->subCrawlers)) {
+            return $output;
+        }
+
+        if (!$output->isArrayWithStringKeys()) {
+            $this->logger?->error(
+                'The sub crawler feature works only with outputs that are associative arrays (arrays with ' .
+                'string keys). The feature was called with an output of type ' . gettype($output->get()) . '.'
+            );
+
+            return $output;
+        }
+
+        if (!$this->parentCrawler) {
+            $this->logger?->error('Can\'t make sub crawler, because the step has no reference to the parent crawler.');
+        } else {
+            foreach ($this->subCrawlers as $forKey => $crawlerBuilder) {
+                $outputValue = $output->getProperty($forKey);
+
+                if ($outputValue !== null) {
+                    $crawler = $crawlerBuilder($this->parentCrawler->getSubCrawler());
+
+                    is_array($outputValue) ? $crawler->inputs($outputValue) : $crawler->input($outputValue);
+
+                    $results = [];
+
+                    foreach ($crawler->run() as $result) {
+                        $results[] = $result;
+                    }
+
+                    $resultCount = count($results);
+
+                    if ($resultCount === 0) {
+                        $output = $output->withPropertyValue($forKey, null);
+                    } elseif ($resultCount === 1) {
+                        $output = $output->withPropertyValue($forKey, $results[0]->toArray());
+                    } else {
+                        $output = $output->withPropertyValue(
+                            $forKey,
+                            array_map(function (Result $result) {
+                                return $result->toArray();
+                            }, $results),
+                        );
+                    }
+                }
+            }
+        }
+
+        return $output;
+    }
+
+    /**
+     * @param mixed[] $initialInputs
+     * @throws PreRunValidationException
+     */
+    protected function validateFirstStepBeforeRun(array $initialInputs): void
+    {
+        if ($initialInputs === []) {
+            $this->logger?->error('You did not provide any initial inputs for your crawler.');
+
+            return;
+        }
+
+        if ($this->keepFromInput !== false) {
+            foreach ($initialInputs as $input) {
+                if (!OutputTypeHelper::isAssociativeArrayOrObject($input)) {
+                    throw new PreRunValidationException(
+                        'The initial inputs contain scalar values (without keys) and you are calling keepFromInput() ' .
+                        'on the first step (if not the first step in your whole crawler, check sub crawlers). Please ' .
+                        'use keepInputAs() instead with a key, that the input value should have in the kept data.'
+                    );
+                }
+            }
+        }
+    }
+
     protected function getInputKeyToUse(Input $input): ?Input
     {
         if ($this->useInputKey !== null) {
             $inputValue = $input->get();
 
-            if (!is_array($inputValue)) {
-                $this->logger?->warning(
-                    'Can\'t get key from input, because input is of type ' . gettype($inputValue) . ' instead of ' .
-                    'array.'
-                );
+            if (!is_array($inputValue) || !array_key_exists($this->useInputKey, $inputValue)) {
+                if (!array_key_exists($this->useInputKey, $input->keep)) {
+                    $warningMessage = '';
 
-                return null;
-            } elseif (!array_key_exists($this->useInputKey, $inputValue)) {
-                $this->logger?->warning('Can\'t get key from input, because it does not exist.');
+                    if (!is_array($inputValue)) {
+                        $warningMessage = 'Can\'t get key from input, because input is of type ' .
+                            gettype($inputValue) . ' instead of array.';
+                    } elseif (!array_key_exists($this->useInputKey, $inputValue)) {
+                        $warningMessage = 'Can\'t get key from input, because it does not exist.';
+                    }
 
-                return null;
+                    if (!empty($input->keep)) {
+                        $warningMessage .= ' Key also is not present in data kept from previous steps.';
+                    }
+
+                    $this->logger?->warning($warningMessage);
+
+                    return null;
+                }
+
+                $valueToUse = $input->keep[$this->useInputKey];
+            } else {
+                $valueToUse = $inputValue[$this->useInputKey];
             }
 
-            $input = new Input($input->get()[$this->useInputKey], $input->result, $input->addLaterToResult);
+            $input = $input->withValue($valueToUse);
         }
 
         return $input;
@@ -329,6 +610,7 @@ abstract class BaseStep implements StepInterface
     /**
      * @return array<string, mixed>
      * @throws Exception
+     * @deprecated because the keepInputData() feature is deprecated.
      */
     protected function addInputDataToOutputData(mixed $inputValue, mixed $outputValue): array
     {
@@ -358,11 +640,137 @@ abstract class BaseStep implements StepInterface
 
     protected function makeOutput(mixed $outputData, Input $input): Output
     {
-        return new Output(
+        $output = new Output(
             $outputData,
             $this->addOutputDataToResult($outputData, $input),
             $this->addOutputDataToAddLaterResult($outputData, $input),
+            $input->keep
         );
+
+        $output = $this->runSubCrawlersFor($output);
+
+        $this->keepData($output, $input);
+
+        return $output;
+    }
+
+    protected function keepData(Output $output, Input $input): void
+    {
+        if (!$this->keepsAnything()) {
+            return;
+        }
+
+        if ($this->keepsAnythingFromInputData()) {
+            $inputDataToKeep = $this->getInputDataToKeep($input, $output->keep);
+
+            if (!empty($inputDataToKeep)) {
+                $output->keep($inputDataToKeep);
+            }
+        }
+
+        if ($this->keepsAnythingFromOutputData()) {
+            $outputDataToKeep = $this->getOutputDataToKeep($output, $output->keep);
+
+            if (!empty($outputDataToKeep)) {
+                $output->keep($outputDataToKeep);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $alreadyKept
+     * @return mixed[]|null
+     */
+    protected function getOutputDataToKeep(Output $output, array $alreadyKept): ?array
+    {
+        return $this->getInputOrOutputDataToKeep($output, $alreadyKept);
+    }
+
+    /**
+     * @param array<string, mixed> $alreadyKept
+     * @return mixed[]|null
+     */
+    protected function getInputDataToKeep(Input $input, array $alreadyKept): ?array
+    {
+        return $this->getInputOrOutputDataToKeep($input, $alreadyKept);
+    }
+
+    /**
+     * @param array<string, mixed> $alreadyKept
+     * @return mixed[]|null
+     */
+    protected function getInputOrOutputDataToKeep(Io $io, array $alreadyKept): ?array
+    {
+        $keepProperty = $io instanceof Output ? $this->keep : $this->keepFromInput;
+
+        $keepAsProperty = $io instanceof Output ? $this->keepAs : $this->keepInputAs;
+
+        $data = $io->get();
+
+        $isScalarValue = OutputTypeHelper::isScalar($data);
+
+        if ($keepAsProperty !== null && ($isScalarValue || $keepProperty === false)) {
+            return [$keepAsProperty => $data];
+        } elseif ($keepProperty !== false) {
+            if ($isScalarValue) {
+                $variableMessagePart = $io instanceof Output ? 'yielded an output' : 'received an input';
+
+                $this->logger?->error(
+                    'A ' . get_class($this) . ' step ' . $variableMessagePart . ' that is neither an associative ' .
+                    'array, nor an object, so there is no key for the value to keep. Please define a key for the ' .
+                    'output by using keepAs() instead of keep(). The value is now kept with an \'unnamed\' key.'
+                );
+
+                return [$this->nextUnnamedKey($alreadyKept) => $data];
+            }
+
+            $data = !is_array($data) ? OutputTypeHelper::objectToArray($data) : $data;
+
+            if ($keepProperty === true) {
+                return $data;
+            } elseif (is_string($keepProperty)) {
+                return [$keepProperty => $data[$keepProperty] ?? null];
+            }
+
+            return $this->mapKeepProperties($data, $keepProperty);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return string
+     */
+    protected function nextUnnamedKey(array $data): string
+    {
+        $i = 1;
+
+        while (isset($data['unnamed' . $i])) {
+            $i++;
+        }
+
+        return 'unnamed' . $i;
+    }
+
+    /**
+     * @param mixed[] $data
+     * @param array<int|string, string> $keep
+     * @return mixed[]
+     */
+    protected function mapKeepProperties(array $data, array $keep): array
+    {
+        $keepData = [];
+
+        foreach ($keep as $key => $value) {
+            if (is_int($key)) {
+                $keepData[$value] = $data[$value] ?? null;
+            } elseif (is_string($key)) {
+                $keepData[$key] = $data[$value] ?? null;
+            }
+        }
+
+        return $keepData;
     }
 
     protected function addOutputDataToResult(

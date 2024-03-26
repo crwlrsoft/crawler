@@ -8,6 +8,7 @@ use Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator;
 use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
 use Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface;
+use Crwlr\Crawler\Steps\StepOutputType;
 use Exception;
 use Generator;
 use Psr\Http\Message\MessageInterface;
@@ -111,6 +112,11 @@ class Http extends HttpBase
         }
 
         return new Paginate($paginator, $this->method, $this->headers, $this->body, $this->httpVersion);
+    }
+
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
     }
 
     /**

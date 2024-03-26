@@ -2,6 +2,7 @@
 
 namespace tests;
 
+use Crwlr\Crawler\Steps\StepOutputType;
 use tests\_Stubs\Crawlers\DummyOne;
 use tests\_Stubs\Crawlers\DummyTwo;
 use tests\_Stubs\LoaderCollectingStep;
@@ -505,6 +506,91 @@ test('When final steps return an array you get all values in the defined Result 
     $results->next();
 
     expect($results->current())->toBeNull();
+});
+
+/* ----------------------------- keep() and keepAs() ----------------------------- */
+
+test('when you call keep() or keepAs() on a step, it keeps its output data until the end', function () {
+    $crawler = helper_getDummyCrawler();
+
+    $crawler
+        ->input('test')
+        ->addStep(
+            helper_getValueReturningStep(['father' => 'Karl', 'mother' => 'Ludmilla'])->keep()
+        )
+        ->addStep(
+            helper_getValueReturningStep([
+                'daughter1' => 'Elisabeth',
+                'son1' => 'Leon',
+                'son2' => 'Franz',
+                'daughter2' => 'Julia',
+                'daughter3' => 'Franziska',
+            ])->keep(['daughter' => 'daughter2', 'son' => 'son2'])
+        )
+        ->addStep(helper_getValueReturningStep('Lea')->keepAs('cousin'))
+        ->addStep(
+            helper_getValueReturningStep([
+                'grandson1' => 'Jonah',
+                'granddaughter1' => 'Paula',
+                'granddaughter2' => 'Sophie',
+            ])
+        );
+
+    $results = iterator_to_array($crawler->run());
+
+    expect($results[0]->toArray())->toBe([
+        'father' => 'Karl',
+        'mother' => 'Ludmilla',
+        'daughter' => 'Julia',
+        'son' => 'Franz',
+        'cousin' => 'Lea',
+        'grandson1' => 'Jonah',
+        'granddaughter1' => 'Paula',
+        'granddaughter2' => 'Sophie',
+    ]);
+});
+
+it('immediately stops when keepAs() is not used with a scalar value output step', function () {
+    $crawler = helper_getDummyCrawler();
+
+    $step1 = new class () extends Step {
+        public bool $wasCalled = false;
+
+        protected function invoke(mixed $input): Generator
+        {
+            $this->wasCalled = true;
+
+            yield ['father' => 'Karl', 'mother' => 'Ludmilla'];
+        }
+
+        public function outputType(): StepOutputType
+        {
+            return StepOutputType::AssociativeArrayOrObject;
+        }
+    };
+
+    $step2 = new class () extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'foo';
+        }
+
+        public function outputType(): StepOutputType
+        {
+            return StepOutputType::Scalar;
+        }
+    };
+
+    $crawler
+        ->input('test')
+        ->addStep($step1->keep())
+        ->addStep($step2->keep());
+
+    $results = iterator_to_array($crawler->run());
+
+    expect($results)->toBeEmpty()
+        ->and($step1->wasCalled)->toBeFalse()
+        ->and($this->getActualOutputForAssertion())->toContain('Pre-Run validation error in step number 2');
 });
 
 it('sends all results to the Store when there is one and still yields the results', function () {

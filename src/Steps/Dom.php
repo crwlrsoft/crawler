@@ -120,6 +120,13 @@ abstract class Dom extends Step
         return new Crawler($this->validateAndSanitizeStringOrHttpResponse($input));
     }
 
+    public function outputType(): StepOutputType
+    {
+        return empty($this->mapping) && $this->singleSelector ?
+            StepOutputType::Scalar :
+            StepOutputType::AssociativeArrayOrObject;
+    }
+
     /**
      * @param Crawler $input
      * @throws Exception

@@ -91,10 +91,8 @@ abstract class Step extends BaseStep
     public function callUpdateInputUsingOutput(Input $input, Output $output): Input
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
-            return new Input(
-                $this->updateInputUsingOutput->call($this, $input->get(), $output->get()),
-                $input->result,
-                $input->addLaterToResult,
+            return $input->withValue(
+                $this->updateInputUsingOutput->call($this, $input->get(), $output->get())
             );
         }
 
@@ -215,7 +213,9 @@ abstract class Step extends BaseStep
         foreach ($this->invoke($validInputValue) as $outputData) {
             $outputData = $this->applyRefiners($outputData, $input->get());
 
-            if ($this->maxOutputsExceeded() || !$this->passesAllFilters($outputData)) {
+            if ($this->maxOutputsExceeded()) {
+                break;
+            } elseif (!$this->passesAllFilters($outputData)) {
                 continue;
             }
 

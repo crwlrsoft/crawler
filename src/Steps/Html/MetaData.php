@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Crwlr\Crawler\Steps\Step;
+use Crwlr\Crawler\Steps\StepOutputType;
 use DOMElement;
 use Generator;
 use Symfony\Component\DomCrawler\Crawler;
@@ -22,6 +23,11 @@ class MetaData extends Step
         $this->onlyKeys = $keys;
 
         return $this;
+    }
+
+    public function outputType(): StepOutputType
+    {
+        return StepOutputType::AssociativeArrayOrObject;
     }
 
     /**
