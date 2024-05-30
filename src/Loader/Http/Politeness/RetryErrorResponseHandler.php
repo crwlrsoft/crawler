@@ -119,7 +119,7 @@ class RetryErrorResponseHandler
         $statusCodeAndReasonPhrase = $this->getResponseCodeAndReasonPhrase($respondedRequest);
 
         $this->logger?->warning(
-            'Request to ' . $respondedRequest->requestedUri() . ' returned ' . $statusCodeAndReasonPhrase
+            'Request to ' . $respondedRequest->requestedUri() . ' returned ' . $statusCodeAndReasonPhrase,
         );
     }
 

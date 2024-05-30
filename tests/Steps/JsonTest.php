@@ -260,7 +260,7 @@ it('can also map the whole decoded data array to a output property', function ()
                 'foo' => 'one',
                 'bar' => 'two',
                 'array' => ['one', 'two', 'three'],
-            ]
+            ],
         ]);
 });
 

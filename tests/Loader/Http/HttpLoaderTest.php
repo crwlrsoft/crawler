@@ -92,7 +92,7 @@ it(
         expect($beforeLoadWasCalled)->toBeTrue();
 
         expect($afterLoadWasCalled)->toBeTrue();
-    }
+    },
 )->with([
     [100],
     [200],
@@ -163,7 +163,7 @@ it('calls the onCacheHit hook when a response for the request was found in the c
             'https://www.example.com/foo',
             ['Host' => ['www.example.com'], 'User-Agent' => [(string) $userAgent]],
         ),
-        new Response(body: 'Hello World!')
+        new Response(body: 'Hello World!'),
     );
 
     $cache->set($respondedRequest->cacheKey(), $respondedRequest);
@@ -251,7 +251,7 @@ test(
         } catch (LoadingException $exception) {
             expect($exception)->toBeInstanceOf(LoadingException::class);
         }
-    }
+    },
 );
 
 it('automatically handles redirects', function (string $loadingMethod) {
@@ -261,7 +261,7 @@ it('automatically handles redirects', function (string $loadingMethod) {
         ->twice()
         ->andReturn(
             new Response(301, ['Location' => 'https://www.redirect.com']),
-            new Response(200, [], 'YES')
+            new Response(200, [], 'YES'),
         );
 
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
@@ -347,7 +347,7 @@ it(
         expect($output)->toContain('Track request end https://www.example.com/foo');
 
         expect(count(explode('Track request end', $output)))->toBe(2);
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 it('automatically logs loading success message', function ($loadingMethod) {
@@ -548,7 +548,7 @@ test(
             $httpLoader->{$loadingMethod}('https://www.example.com/articles/123');
         } catch (Throwable $exception) {
         }
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 it(
@@ -575,7 +575,7 @@ it(
             $httpLoader->{$loadingMethod}('https://www.example.com/articles/123');
         } catch (Throwable $exception) {
         }
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 test(
@@ -605,7 +605,7 @@ test(
         $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/bar/something');
 
         expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 test(
@@ -641,7 +641,7 @@ test(
         $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/bar/something');
 
         expect($cache->get($respondedRequest->cacheKey()))->toBeInstanceOf(RespondedRequest::class);
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 test(
@@ -692,7 +692,7 @@ test(
         $respondedRequest = $httpLoader->{$loadingMethod}('https://www.example.com/baz/something');
 
         expect($cache->get($respondedRequest->cacheKey()))->toBeNull();
-    }
+    },
 )->with(['load', 'loadOrFail']);
 
 it('updates an existing cached response', function () {

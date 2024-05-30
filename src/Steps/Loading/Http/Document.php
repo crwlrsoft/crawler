@@ -59,7 +59,7 @@ final class Document
                         $this->canonicalUrl = $this->baseUrl->resolve($canonicalHref);
                     } catch (Exception $exception) {
                         $this->logger?->warning(
-                            'Failed to resolve canonical link href value against the document base URL.'
+                            'Failed to resolve canonical link href value against the document base URL.',
                         );
                     }
                 }

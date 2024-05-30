@@ -68,7 +68,7 @@ test(
         expect($output[0]->get())->toBe('returnValue');
 
         expect($output[0]->result)->toBeNull();
-    }
+    },
 );
 
 test(
@@ -82,7 +82,7 @@ test(
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
         expect($output[0]->result?->toArray())->toBe(['property' => 'returnValue']);
-    }
+    },
 );
 
 it('creates a Result object with the data from yielded array when addToResult() is used', function () {
@@ -159,7 +159,7 @@ test(
         $step = helper_getValueReturningStep('lol');
 
         expect($step->addsToOrCreatesResult())->toBeFalse();
-    }
+    },
 );
 
 test('The addsToOrCreatesResult() method returns true when addToResult() was called with a string key', function () {
@@ -186,7 +186,7 @@ test(
         $step = helper_getValueReturningStep(['test' => 'yo'])->addLaterToResult();
 
         expect($step->addsToOrCreatesResult())->toBeTrue();
-    }
+    },
 );
 
 test('The createsResult() method returns false when addToResult() has not been called', function () {
@@ -223,7 +223,7 @@ it('uses a key from array input when defined', function () {
     $step = helper_getInputReturningStep()->useInputKey('bar');
 
     $output = helper_invokeStepWithInput($step, new Input(
-        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue']
+        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue'],
     ));
 
     expect($output)->toHaveCount(1);
@@ -255,9 +255,9 @@ it(
         expect($output)->toHaveCount(0)
             ->and($this->getActualOutputForAssertion())
             ->toContain(
-                'Can\'t get key from input, because input is of type ' . gettype($inputValue) . ' instead of array.'
+                'Can\'t get key from input, because input is of type ' . gettype($inputValue) . ' instead of array.',
             );
-    }
+    },
 )->with([
     ['string'],
     [0],
@@ -312,7 +312,7 @@ it(
         expect($outputs[0]->addLaterToResult?->toArray())->toBe([
             'property' => 'returnValue',
         ]);
-    }
+    },
 );
 
 test('addLaterToResult() works with array output and no argument', function () {
@@ -371,7 +371,7 @@ it(
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
         expect($output[0]->result?->toArray())->toBe(['prevProperty' => 'foobar']);
-    }
+    },
 );
 
 it('doesn\'t invoke twice with duplicate inputs when uniqueInput was called', function () {
@@ -422,7 +422,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, ['foo' => 'bar', 'number' => 2]);
 
         expect($outputs)->toHaveCount(0);
-    }
+    },
 );
 
 it(
@@ -451,7 +451,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, helper_getStdClassWithData(['foo' => 'bar', 'number' => 2]));
 
         expect($outputs)->toHaveCount(0);
-    }
+    },
 );
 
 it('makes outputs unique when uniqueOutput was called', function () {
@@ -559,7 +559,7 @@ test(
         $output = helper_invokeStepWithInput($step, ['inputValue']);
 
         expect($output[0]->get())->toBe('inputValue');
-    }
+    },
 );
 
 test(
@@ -579,7 +579,7 @@ test(
         };
 
         helper_invokeStepWithInput($step, ['inputValue', 'foo' => 'bar']);
-    }
+    },
 )->throws(InvalidArgumentException::class);
 
 it('is possible that a step does not produce any output at all', function () {
@@ -628,7 +628,7 @@ it('does not lose previously added result to add later, when updateInputUsingOut
 
     $updatedInput = $step->callUpdateInputUsingOutput(
         new Input('Some', addLaterToResult: $addLaterToResult),
-        new Output('thing')
+        new Output('thing'),
     );
 
     expect($updatedInput->addLaterToResult)->toBe($addLaterToResult);
@@ -676,7 +676,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, new Input('c'));
 
         expect($outputs)->toHaveCount(1);
-    }
+    },
 );
 
 test('When a step has max outputs defined, it won\'t call the invoke method after the limit was reached', function () {
@@ -765,7 +765,7 @@ it(
             ->keepInputData();
 
         helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
-    }
+    },
 )->throws(Exception::class);
 
 it(
@@ -778,7 +778,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
 
         expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
-    }
+    },
 );
 
 test('keeping a scalar output value with keep() also works when outputKey() was used', function () {
@@ -913,7 +913,7 @@ it(
         );
 
         expect($outputs[0]->get())->toBe(['foo' => 'one', 'bar' => 'two']);
-    }
+    },
 );
 
 it('useInputKey() can be used to get data that was kept from a previous step with keep() or keepAs()', function () {

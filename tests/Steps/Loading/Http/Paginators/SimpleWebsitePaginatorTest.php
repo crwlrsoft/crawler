@@ -302,7 +302,7 @@ it(
         $nextRequest = $paginator->getNextRequest();
 
         expect($nextRequest?->getHeader('foo'))->toBe(['bar']);
-    }
+    },
 );
 
 it('cleans up the stored parent requests always when getting the next request to load', function () {

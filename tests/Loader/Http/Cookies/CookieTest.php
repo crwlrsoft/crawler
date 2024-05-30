@@ -52,7 +52,7 @@ test('It automatically sets the domain based on the received from url when no at
 test('It parses an expires attribute when included', function () {
     $cookie = new Cookie(
         'https://www.otsch.codes/blog',
-        'otschcodes_session=cook13; Expires=Wed, 23-Feb-2022 10:13:41 GMT'
+        'otschcodes_session=cook13; Expires=Wed, 23-Feb-2022 10:13:41 GMT',
     );
     expect($cookie->expires())->toBeInstanceOf(Date::class);
     expect($cookie->expires()->dateTime()->format('Y-m-d H:i'))->toBe('2022-02-23 10:13'); // @phpstan-ignore-line
@@ -96,7 +96,7 @@ test(
     'It throws an exception when secure attribute is sent but url where it was received from is not on https',
     function () {
         new Cookie('http://www.example.io/foobar', 'eggs=ample; Secure');
-    }
+    },
 )->throws(InvalidCookieException::class);
 
 test('It parses a SameSite attribute when included', function ($value) {
@@ -116,7 +116,7 @@ test('It parses an HttpOnly attribute when included', function () {
 test('It\'s possible to set multiple attributes', function () {
     $cookie = new Cookie(
         'https://www.crwl.io',
-        '__Secure-cook13N4m3=c00k1eV4lu3; Expires=Wed, 23-Feb-2022 10:13:41 GMT; Secure; Path=/foo'
+        '__Secure-cook13N4m3=c00k1eV4lu3; Expires=Wed, 23-Feb-2022 10:13:41 GMT; Secure; Path=/foo',
     );
     expect($cookie->secure())->toBeTrue();
     expect($cookie->expires()?->dateTime()->format('d.m.Y H:i'))->toBe('23.02.2022 10:13');
@@ -127,14 +127,14 @@ test(
     'It throws an Exception when cookie name is prefixed with __Secure- or __Host- and not sent via https',
     function ($prefix) {
         new Cookie('http://example.com', $prefix . 'Abc=defg123; Secure');
-    }
+    },
 )->with(['__Secure-', '__Host-'])->throws(InvalidCookieException::class);
 
 test(
     'It throws an Exception when cookie name is prefixed with __Secure- or __Host- and Secure flag is not included',
     function ($prefix) {
         new Cookie('https://example.com', $prefix . 'Abc=defg123;');
-    }
+    },
 )->with(['__Secure-', '__Host-'])->throws(InvalidCookieException::class);
 
 test('Using __Secure- prefix works when received via https and Secure flag is included', function () {
@@ -164,7 +164,7 @@ test(
     function ($receivedFrom, $domainAttribute, $shouldBeSentTo) {
         $cookie = new Cookie($receivedFrom, 'cookie=value' . ($domainAttribute ? '; Domain=' . $domainAttribute : ''));
         expect($cookie->shouldBeSentTo($shouldBeSentTo))->toBeFalse();
-    }
+    },
 )->with([
     ['https://www.crwlr.software', null, 'https://www.otsch.codes'],
     ['https://www.crwlr.software', 'www.crwlr.software', 'https://jobs.crwlr.software'],
@@ -189,7 +189,7 @@ test(
     function ($receivedFrom, $shouldBeSentTo) {
         $cookie = new Cookie($receivedFrom, '__Host-cookie=value; Secure; Path=/');
         expect($cookie->shouldBeSentTo($shouldBeSentTo))->toBeFalse();
-    }
+    },
 )->with([
     ['https://www.crwlr.software', 'https://jobs.crwlr.software'],
     ['https://sub.domain.crwlr.software', 'https://domain.crwlr.software'],
@@ -216,7 +216,7 @@ test(
     function ($path, $shouldBeSentTo) {
         $cookie = new Cookie('https://www.crwlr.software', 'cookie=value; Path=' . $path);
         expect($cookie->shouldBeSentTo('https://www.crwlr.software' . $shouldBeSentTo))->toBeFalse();
-    }
+    },
 )->with([
     ['/foo', '/bar'],
     ['/foo', '/foobar'],
@@ -229,7 +229,7 @@ test(
     function ($path, $shouldBeSentTo) {
         $cookie = new Cookie('https://www.crwlr.software', 'cookie=value; Path=' . $path);
         expect($cookie->shouldBeSentTo('https://www.crwlr.software' . $shouldBeSentTo))->toBeTrue();
-    }
+    },
 )->with([
     ['/', '/anything'],
     ['/foo', '/foo'],
@@ -242,7 +242,7 @@ test('It should not be sent when already expired', function () {
     $now = $now->sub(new DateInterval('PT1S'));
     $cookie = new Cookie(
         'https://www.crwlr.software',
-        'cookie=value; Expires=' . $now->format(DateTimeInterface::COOKIE)
+        'cookie=value; Expires=' . $now->format(DateTimeInterface::COOKIE),
     );
     expect($cookie->shouldBeSentTo('https://www.crwlr.software'))->toBeFalse();
 });
@@ -252,7 +252,7 @@ test('It should be sent when date of expires attribute is not reached', function
     $now = $now->add(new DateInterval('PT5S'));
     $cookie = new Cookie(
         'https://www.crwlr.software',
-        'cookie=value; Expires=' . $now->format(DateTimeInterface::COOKIE)
+        'cookie=value; Expires=' . $now->format(DateTimeInterface::COOKIE),
     );
     expect($cookie->shouldBeSentTo('https://www.crwlr.software'))->toBeTrue();
 });

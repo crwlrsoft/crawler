@@ -219,7 +219,7 @@ class FileCache implements CacheInterface
     {
         if (!function_exists('gzencode')) {
             throw new MissingZlibExtensionException(
-                "Can't compress response cache data. Compression needs PHP ext-zlib installed."
+                "Can't compress response cache data. Compression needs PHP ext-zlib installed.",
             );
         }
 

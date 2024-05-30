@@ -34,7 +34,7 @@ abstract class DomQuery implements DomQueryInterface
     protected ?Html2Text $html2TextConverter = null;
 
     public function __construct(
-        public readonly string $query
+        public readonly string $query,
     ) {}
 
     /**
@@ -293,7 +293,7 @@ abstract class DomQuery implements DomQueryInterface
             $target = trim(
                 $this->attributeName ?
                     $filtered->attr($this->attributeName) :
-                    $filtered->{strtolower($this->target->name)}()
+                    $filtered->{strtolower($this->target->name)}(),
             );
         }
 

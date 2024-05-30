@@ -94,7 +94,7 @@ it(
         $outputs = helper_invokeStepWithInput(Sitemap::getUrlsFromSitemap(), $xml);
 
         expect($outputs)->toHaveCount(3);
-    }
+    },
 );
 
 it(
@@ -108,5 +108,5 @@ it(
         $outputs = helper_invokeStepWithInput(Sitemap::getUrlsFromSitemap(), $xml);
 
         expect($outputs)->toHaveCount(3);
-    }
+    },
 );

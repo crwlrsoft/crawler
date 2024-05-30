@@ -37,9 +37,9 @@ it('gets all the links from a listing and gets data from the detail pages', func
                 ->extract([
                     'title' => 'h1',
                     'date' => '.date',
-                    'author' => '.articleAuthor'
+                    'author' => '.articleAuthor',
                 ])
-                ->addToResult()
+                ->addToResult(),
         );
 
     $results = helper_generatorToArray($crawler->run());

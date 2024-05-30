@@ -24,7 +24,7 @@ class Incrementor extends AbstractQueryParamManipulator
         if ($this->useDotNotation) {
             $dot = (new Dot($query->toArray()))->set(
                 $this->queryParamName,
-                (string) ($this->getCurrentValueAsIntUsingDotNotation($query) + $this->increment)
+                (string) ($this->getCurrentValueAsIntUsingDotNotation($query) + $this->increment),
             );
 
             return new Query($dot->all());

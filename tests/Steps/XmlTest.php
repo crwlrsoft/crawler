@@ -28,13 +28,13 @@ it('returns single strings when extract is called with a selector only', functio
 it('extracts data from an XML document with XPath queries per default', function () {
     $output = helper_invokeStepWithInput(
         Xml::each('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getStepFilesContent('Xml/bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(4);
 
     expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005']
+        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
     );
 
     expect($output[1]->get())->toBe(['title' => 'Harry Potter', 'author' => 'J K. Rowling', 'year' => '2005']);
@@ -43,8 +43,8 @@ it('extracts data from an XML document with XPath queries per default', function
         [
             'title' => 'XQuery Kick Start',
             'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003'
-        ]
+            'year' => '2003',
+        ],
     );
 
     expect($output[3]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
@@ -57,7 +57,7 @@ it('can also extract data using CSS selectors', function () {
             'author' => Dom::cssSelector('author'),
             'year' => Dom::cssSelector('year'),
         ]),
-        helper_getStepFilesContent('Xml/bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(4);
@@ -66,15 +66,15 @@ it('can also extract data using CSS selectors', function () {
         [
             'title' => 'XQuery Kick Start',
             'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003'
-        ]
+            'year' => '2003',
+        ],
     );
 });
 
 it('returns only one (compound) output when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::root()->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getStepFilesContent('Xml/bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(1);
@@ -85,20 +85,20 @@ it('returns only one (compound) output when the root method is used', function (
 it('extracts the data of the first matching element when the first method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::first('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getStepFilesContent('Xml/bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(1);
 
     expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005']
+        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
     );
 });
 
 it('extracts the data of the last matching element when the last method is used', function () {
     $output = helper_invokeStepWithInput(
         Xml::last('bookstore/book')->extract(['title' => '//title', 'author' => '//author', 'year' => '//year']),
-        helper_getStepFilesContent('Xml/bookstore.xml')
+        helper_getStepFilesContent('Xml/bookstore.xml'),
     );
 
     expect($output)->toHaveCount(1);
@@ -112,7 +112,7 @@ test(
     function () {
         $response = new RespondedRequest(
             new Request('GET', 'https://www.example.com/events.xml'),
-            new Response(body: helper_getStepFilesContent('Xml/events.xml'))
+            new Response(body: helper_getStepFilesContent('Xml/events.xml')),
         );
 
         $outputs = helper_invokeStepWithInput(
@@ -123,7 +123,7 @@ test(
                 'talks' => Xml::each('//talks/talk')->extract([
                     'title' => '//title',
                     'speaker' => '//speaker',
-                ])
+                ]),
             ]),
             $response,
         );
@@ -143,7 +143,7 @@ test(
                     'title' => 'Fun talk',
                     'speaker' => 'Princess Peach',
                 ],
-            ]
+            ],
         ]);
 
         expect($outputs[1]->get())->toBe([
@@ -159,15 +159,15 @@ test(
                     'title' => 'Let\'s go',
                     'speaker' => 'Yoshi',
                 ],
-            ]
+            ],
         ]);
-    }
+    },
 );
 
 it('works when the response string starts with an UTF-8 byte order mark character', function () {
     $response = new RespondedRequest(
         new Request('GET', 'https://www.example.com/rss'),
-        new Response(body: helper_getStepFilesContent('Xml/rss-with-bom.xml'))
+        new Response(body: helper_getStepFilesContent('Xml/rss-with-bom.xml')),
     );
 
     $outputs = helper_invokeStepWithInput(

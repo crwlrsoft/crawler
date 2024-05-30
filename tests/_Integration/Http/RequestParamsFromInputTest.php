@@ -37,7 +37,7 @@ test('Http steps can receive url, body and headers from an input array', functio
                 ->useInputKeyAsBody('body')
                 ->useInputKeyAsHeaders('headers')
                 ->useInputKeyAsHeader('header-y', 'header-y')
-                ->useInputKeyAsHeader('header-z', 'header-z')
+                ->useInputKeyAsHeader('header-z', 'header-z'),
         )
         ->addStep(Json::all());
 

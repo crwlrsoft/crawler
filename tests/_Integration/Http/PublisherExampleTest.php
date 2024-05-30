@@ -43,13 +43,13 @@ test('Http steps can also deal with multiple URLs as one array input', function 
                     'bornIn' => '#author-data .born-in',
                     'bookUrls' => Dom::cssSelector('#author-data .books a.book')->attribute('href')->toAbsoluteUrl(),
                 ])
-                ->addToResult(['name', 'age', 'bornIn'])
+                ->addToResult(['name', 'age', 'bornIn']),
         )
         ->addStep(Http::get()->useInputKey('bookUrls'))
         ->addStep(
             Html::root()
                 ->extract(['books' => 'h1'])
-                ->addToResult()
+                ->addToResult(),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -97,7 +97,7 @@ it('turns an array of URLs to nested extracted data from those child pages using
                     return $crawler
                         ->addStep(Http::get())
                         ->addStep(
-                            $this->extractBookData()
+                            $this->extractBookData(),
                         );
                 });
         }
@@ -133,7 +133,7 @@ it('turns an array of URLs to nested extracted data from those child pages using
                     'editions' => [
                         ['year' => '1996', 'publisher' => 'Foo'],
                         ['year' => '2005', 'publisher' => 'Foo'],
-                    ]
+                    ],
                 ],
                 [
                     'title' => 'Another novel',
@@ -141,7 +141,7 @@ it('turns an array of URLs to nested extracted data from those child pages using
                         ['year' => '2001', 'publisher' => 'Foo'],
                         ['year' => '2009', 'publisher' => 'Bar'],
                         ['year' => '2017', 'publisher' => 'Bar'],
-                    ]
+                    ],
                 ],
             ],
         ])
@@ -155,21 +155,21 @@ it('turns an array of URLs to nested extracted data from those child pages using
                     'editions' => [
                         ['year' => '2008', 'publisher' => 'Poems'],
                         ['year' => '2009', 'publisher' => 'Poems'],
-                    ]
+                    ],
                 ],
                 [
                     'title' => 'Poems #2',
                     'editions' => [
                         ['year' => '2011', 'publisher' => 'Poems'],
                         ['year' => '2014', 'publisher' => 'New Poems'],
-                    ]
+                    ],
                 ],
                 [
                     'title' => 'Poems #3',
                     'editions' => [
                         ['year' => '2013', 'publisher' => 'Poems'],
                         ['year' => '2017', 'publisher' => 'New Poems'],
-                    ]
+                    ],
                 ],
             ],
         ]);
@@ -245,7 +245,7 @@ test('it can also keep the URLs, provided to the sub crawler', function () {
                             'year' => '2005',
                             'publisher' => 'Foo',
                         ],
-                    ]
+                    ],
                 ],
                 [
                     'url' => 'http://localhost:8000/publisher/books/2',
@@ -266,7 +266,7 @@ test('it can also keep the URLs, provided to the sub crawler', function () {
                             'year' => '2017',
                             'publisher' => 'Bar',
                         ],
-                    ]
+                    ],
                 ],
             ],
         ])
@@ -289,7 +289,7 @@ test('it can also keep the URLs, provided to the sub crawler', function () {
                             'year' => '2009',
                             'publisher' => 'Poems',
                         ],
-                    ]
+                    ],
                 ],
                 [
                     'url' => 'http://localhost:8000/publisher/books/4',
@@ -305,7 +305,7 @@ test('it can also keep the URLs, provided to the sub crawler', function () {
                             'year' => '2014',
                             'publisher' => 'New Poems',
                         ],
-                    ]
+                    ],
                 ],
                 [
                     'url' => 'http://localhost:8000/publisher/books/5',
@@ -321,7 +321,7 @@ test('it can also keep the URLs, provided to the sub crawler', function () {
                             'year' => '2017',
                             'publisher' => 'New Poems',
                         ],
-                    ]
+                    ],
                 ],
             ],
         ]);

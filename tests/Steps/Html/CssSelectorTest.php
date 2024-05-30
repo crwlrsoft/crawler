@@ -182,7 +182,7 @@ it(
         $selector->toAbsoluteUrl();
 
         expect($selector->apply($domCrawler))->toBe('https://www.example.com/c/e');
-    }
+    },
 );
 
 it('gets an absolute link from the href attribute of a link element, when the link() method is called', function () {

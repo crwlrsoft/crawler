@@ -68,7 +68,7 @@ class HeadlessBrowserLoaderHelper
                 $statusCode = $params['response']['status'];
 
                 $responseHeaders = $this->sanitizeResponseHeaders($params['response']['headers']);
-            }
+            },
         );
 
         $throttler->trackRequestStartFor($request->getUri());
@@ -83,7 +83,7 @@ class HeadlessBrowserLoaderHelper
 
         return new RespondedRequest(
             $request,
-            new Response($statusCode, $responseHeaders, $html)
+            new Response($statusCode, $responseHeaders, $html),
         );
     }
 

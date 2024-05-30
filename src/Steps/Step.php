@@ -92,7 +92,7 @@ abstract class Step extends BaseStep
     {
         if ($this->updateInputUsingOutput instanceof Closure) {
             return $input->withValue(
-                $this->updateInputUsingOutput->call($this, $input->get(), $output->get())
+                $this->updateInputUsingOutput->call($this, $input->get(), $output->get()),
             );
         }
 
@@ -126,7 +126,7 @@ abstract class Step extends BaseStep
      */
     protected function validateAndSanitizeStringOrStringable(
         mixed $inputValue,
-        string $exceptionMessage = 'Input must be string or stringable'
+        string $exceptionMessage = 'Input must be string or stringable',
     ): string {
         $inputValue = $this->getSingleElementFromArray($inputValue);
 
@@ -147,7 +147,7 @@ abstract class Step extends BaseStep
     protected function validateAndSanitizeStringOrHttpResponse(
         mixed $inputValue,
         string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
-        bool $allowOnlyRespondedRequest = false
+        bool $allowOnlyRespondedRequest = false,
     ): string {
         if (is_array($inputValue) && count($inputValue) > 1 && array_key_exists('response', $inputValue)) {
             $inputValue = $inputValue['response'];

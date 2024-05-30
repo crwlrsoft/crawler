@@ -219,7 +219,7 @@ test(
         $expectedOutputAndResultArray = ['foo' => 'ich', 'bar' => 'bin', 'baz' => 'ein berliner'];
 
         expect($output[0]->get())->toBe($expectedOutputAndResultArray);
-    }
+    },
 );
 
 it('merges array outputs with string keys to one array', function () {
@@ -301,7 +301,7 @@ it(
         $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'bttfc' => 'doc']);
 
         expect($outputs)->toHaveCount(0);
-    }
+    },
 );
 
 it(
@@ -334,7 +334,7 @@ it(
         $outputs = helper_invokeStepWithInput($group, helper_getStdClassWithData(['foo' => 'bar', 'bttfc' => 'doc']));
 
         expect($outputs)->toHaveCount(0);
-    }
+    },
 );
 
 it('returns only unique outputs when uniqueOutput was called', function () {
@@ -397,7 +397,7 @@ it(
         $outputs = helper_invokeStepWithInput($group, ['foo' => 'bar', 'something' => 'else']);
 
         expect($outputs)->toHaveCount(0);
-    }
+    },
 );
 
 it('returns only unique outputs when outputs are objects and uniqueOutput was called', function () {
@@ -453,7 +453,7 @@ it(
         helper_addUpdateInputUsingOutputCallbackToSteps($incrementNumberCallback, $step1, $step2);
 
         expect(helper_invokeStepWithInput($group, new Input(1)))->toHaveCount(1);
-    }
+    },
 );
 
 it(
@@ -472,7 +472,7 @@ it(
         expect($outputs)->toHaveCount(1);
 
         expect($outputs[0]->get())->toBe(['foo' => 'one', 'baz' => 'three']);
-    }
+    },
 );
 
 test('You can update the input for further steps with the output of a step that is before those steps', function () {
@@ -543,7 +543,7 @@ it(
         expect($outputs[0]->get())->toBe(['Tick', 'Trick', 'duck' => 'Track']);
 
         expect($outputs[0]->result?->toArray())->toBe(['duck' => 'Track']);
-    }
+    },
 );
 
 test(
@@ -561,7 +561,7 @@ test(
             ->addStep($step3);
 
         expect($group->addsToOrCreatesResult())->toBe(true);
-    }
+    },
 );
 
 test(
@@ -580,7 +580,7 @@ test(
             ->addToResult(['duck']);
 
         expect($group->createsResult())->toBe(true);
-    }
+    },
 );
 
 test(
@@ -598,7 +598,7 @@ test(
             ->addStep($step3);
 
         expect($group->createsResult())->toBeFalse();
-    }
+    },
 );
 
 it('uses a key from array input when defined', function () {
@@ -609,7 +609,7 @@ it('uses a key from array input when defined', function () {
         ->useInputKey('bar');
 
     $outputs = helper_invokeStepWithInput($group, new Input(
-        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue']
+        ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue'],
     ));
 
     expect($outputs)->toHaveCount(1);
@@ -636,7 +636,7 @@ it(
         expect($output[0]->result)->toBeInstanceOf(Result::class);
 
         expect($output[0]->result?->toArray())->toBe(['test' => ['key1' => 'foo', 'key2' => 'bar']]);
-    }
+    },
 );
 
 it(
@@ -663,7 +663,7 @@ it(
             'baz' => 'bazValue',
             'yo' => 'lo',
         ]);
-    }
+    },
 );
 
 it(
@@ -689,7 +689,7 @@ it(
             'baz' => 'bazValue',
             'yo' => 'lo',
         ]);
-    }
+    },
 );
 
 it(
@@ -711,7 +711,7 @@ it(
         expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
 
         expect($outputs[0]->addLaterToResult?->toArray())->toBe(['foo' => 'one', 'baz' => 'three']);
-    }
+    },
 );
 
 it(
@@ -733,7 +733,7 @@ it(
         expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
 
         expect($outputs[0]->addLaterToResult?->toArray())->toBe(['foo' => 'one', 'bar' => 'two']);
-    }
+    },
 );
 
 test(
@@ -769,7 +769,7 @@ test(
         expect($output[0]->get())->toBe(['one' => 'foo', 'three' => 'baz']);
 
         expect($output[1]->get())->toBe(['two' => 'bar', 'four' => 'quz']);
-    }
+    },
 );
 
 it('ignores the key set via outputKey because group step output is always an array', function () {
@@ -826,7 +826,7 @@ it(
         expect($output)->toHaveCount(1);
 
         expect($output[0]->get())->toBe(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
-    }
+    },
 );
 
 it('keeps non array input data in array output with key', function () {
@@ -1095,5 +1095,5 @@ it(
         $outputs = helper_invokeStepWithInput($group, ['yo' => 'lo']);
 
         expect($outputs[0]->get())->toBe(['yo' => 'lo']);
-    }
+    },
 );

@@ -41,7 +41,7 @@ it('should stop, when the selector target is empty in the response', function ()
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/'),
         new Response(
-            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item>  </item></channel></rss>'
+            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item>  </item></channel></rss>',
         ),
     );
 
@@ -54,7 +54,7 @@ it('should not stop, when the selector target is not empty in the response', fun
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/'),
         new Response(
-            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item>a</item></channel></rss>'
+            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item>a</item></channel></rss>',
         ),
     );
 
@@ -64,7 +64,7 @@ it('should not stop, when the selector target is not empty in the response', fun
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/'),
         new Response(
-            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item><foo></foo></item></channel></rss>'
+            body: '<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0"><channel><item><foo></foo></item></channel></rss>',
         ),
     );
 

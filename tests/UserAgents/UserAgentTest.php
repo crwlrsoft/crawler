@@ -9,7 +9,7 @@ test(
     function ($string) {
         $userAgent = new UserAgent($string);
         expect($userAgent->__toString())->toBe($string);
-    }
+    },
 )->with([
     '',
     'Foo',

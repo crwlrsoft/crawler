@@ -153,7 +153,7 @@ class Throttler
 
     protected function calcWaitUntil(
         Microseconds $latestResponseDuration,
-        Microseconds $latestResponseTime
+        Microseconds $latestResponseTime,
     ): Microseconds {
         $from = $this->from instanceof MultipleOf ? $this->from->calc($latestResponseDuration) : $this->from;
 

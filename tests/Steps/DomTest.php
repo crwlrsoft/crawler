@@ -48,7 +48,7 @@ test('ResponseInterface is a valid input', function () {
 test('RespondedRequest is a valid input', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root(),
-        new RespondedRequest(new Request('GET', '/'), new Response())
+        new RespondedRequest(new Request('GET', '/'), new Response()),
     );
 
     expect($output)->toHaveCount(0);
@@ -65,7 +65,7 @@ test('For other inputs an InvalidArgumentException is thrown', function (mixed $
 it('outputs a single string when argument for extract is a selector string matching only one element', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract('.list .item:first-child .match'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(1);
@@ -76,7 +76,7 @@ it('outputs a single string when argument for extract is a selector string match
 it('outputs multiple strings when argument for extract is a selector string matching multiple elements', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract('.match'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(3);
@@ -89,7 +89,7 @@ it('outputs multiple strings when argument for extract is a selector string matc
 it('also takes a DomQuery instance as argument for extract', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(Dom::cssSelector('.list .item:first-child .match')),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(1);
@@ -100,7 +100,7 @@ it('also takes a DomQuery instance as argument for extract', function () {
 test('Extracting with single selector also works with each', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::each('.list .item')->extract('.match'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(2);
@@ -113,7 +113,7 @@ test('Extracting with single selector also works with each', function () {
 test('Extracting with single selector also works with first', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::first('.list .item')->extract('.match'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(1);
@@ -124,7 +124,7 @@ test('Extracting with single selector also works with first', function () {
 test('Extracting with single selector also works with last', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .item')->extract('.match'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(1);
@@ -135,7 +135,7 @@ test('Extracting with single selector also works with last', function () {
 test('Extracting with single selector that doesn\'t match anything doesn\'t yield any output', function () {
     $outputs = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .item')->extract('.mätch'),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($outputs)->toHaveCount(0);
@@ -144,7 +144,7 @@ test('Extracting with single selector that doesn\'t match anything doesn\'t yiel
 it('extracts one result from the root node when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(['matches' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -155,7 +155,7 @@ it('extracts one result from the root node when the root method is used', functi
 it('extracts each matching result when the each method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::each('.list .item')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(2);
@@ -168,7 +168,7 @@ it('extracts each matching result when the each method is used', function () {
 it('extracts the first matching result when the first method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::first('.list .item')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -179,7 +179,7 @@ it('extracts the first matching result when the first method is used', function 
 it('extracts the last matching result when the last method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .item')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -190,7 +190,7 @@ it('extracts the last matching result when the last method is used', function ()
 it('doesn\'t yield any output when the each selector doesn\'t match anything', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::each('.list .ytem')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(0);
@@ -199,7 +199,7 @@ it('doesn\'t yield any output when the each selector doesn\'t match anything', f
 it('doesn\'t yield any output when the first selector doesn\'t match anything', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::first('.list .ytem')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(0);
@@ -208,7 +208,7 @@ it('doesn\'t yield any output when the first selector doesn\'t match anything', 
 it('doesn\'t yield any output when the last selector doesn\'t match anything', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .otem')->extract(['match' => '.match']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(0);
@@ -217,7 +217,7 @@ it('doesn\'t yield any output when the last selector doesn\'t match anything', f
 it('returns an array with null values when selectors in an extract array mapping don\'t match anything', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .item')->extract(['match' => '.match', 'noMatch' => '.doesntMatch']),
-        helper_getStepFilesContent('Html/basic.html')
+        helper_getStepFilesContent('Html/basic.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -248,7 +248,7 @@ test('The static xPath method returns an instance of XPathQuery using the provid
 it('uses the keys of the provided mapping as keys in the returned output', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(['foo' => '.foo', 'notBar' => '.bar', '.baz']),
-        '<p class="foo">foo content</p><p class="bar">bar content</p><p class="baz">baz content</p>'
+        '<p class="foo">foo content</p><p class="bar">bar content</p><p class="baz">baz content</p>',
     );
 
     expect($output)->toHaveCount(1);
@@ -259,7 +259,7 @@ it('uses the keys of the provided mapping as keys in the returned output', funct
 it('trims the extracted data', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::root()->extract(['foo' => '.foo']),
-        "<p class=\"foo\">  \n   foo content   \n   \n</p>"
+        "<p class=\"foo\">  \n   foo content   \n   \n</p>",
     );
 
     expect($output)->toHaveCount(1);
@@ -275,7 +275,7 @@ it('automatically passes on the base url to dom query instances when the input i
         ]),
         new RespondedRequest(
             new Request('GET', 'https://www.example.com/home'),
-            new Response(body: '<p><a id="one" href="/foo/bar">foo bar</a> <a id="two" href="yo/lo">yolo</a></p>')
+            new Response(body: '<p><a id="one" href="/foo/bar">foo bar</a> <a id="two" href="yo/lo">yolo</a></p>'),
         ),
     );
 
@@ -306,7 +306,7 @@ it('removes the fragment part from URLs when the withoutFragment method is calle
         ]),
         new RespondedRequest(
             new Request('GET', 'https://www.example.com/home'),
-            new Response(body: $body)
+            new Response(body: $body),
         ),
     );
 

@@ -42,7 +42,7 @@ class TestLoader extends HttpLoader
         ?LoggerInterface $logger = null,
         ?Throttler $throttler = null,
         RetryErrorResponseHandler $retryErrorResponseHandler = new RetryErrorResponseHandler(),
-        array $defaultGuzzleClientConfig = []
+        array $defaultGuzzleClientConfig = [],
     ) {
         parent::__construct(
             $userAgent,
@@ -162,7 +162,7 @@ it('stays on the same host when method sameHost() is called', function () {
         ->addStep(
             Http::crawl()
                 ->sameDomain()
-                ->sameHost()
+                ->sameHost(),
         );
 
     $crawler->runAndTraverse();
@@ -240,7 +240,7 @@ it(
         $crawler->runAndTraverse();
 
         expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
-    }
+    },
 );
 
 it('loads only pages where the path starts with a certain string when method pathStartsWith() is called', function () {
@@ -249,7 +249,7 @@ it('loads only pages where the path starts with a certain string when method pat
         ->addStep(
             Http::crawl()
                 ->inputIsSitemap()
-                ->pathStartsWith('/crawling/sub1')
+                ->pathStartsWith('/crawling/sub1'),
         );
 
     $crawler->runAndTraverse();
@@ -269,7 +269,7 @@ it('loads only URLs where the path matches a regex when method pathMatches() is 
         ->addStep(
             Http::crawl()
                 ->inputIsSitemap()
-                ->pathMatches('/^\/crawling\/sub[12]$/')
+                ->pathMatches('/^\/crawling\/sub[12]$/'),
         );
 
     $crawler->runAndTraverse();
@@ -287,9 +287,9 @@ it('loads only URLs where the Closure passed to method customFilter() returns tr
                     return in_array($url->path(), [
                         '/crawling/main',
                         '/crawling/sub1/sub1',
-                        '/crawling/sub2/sub1/sub1'
+                        '/crawling/sub2/sub1/sub1',
                     ], true);
-                })
+                }),
         );
 
     $crawler->runAndTraverse();
@@ -313,7 +313,7 @@ it(
                 Http::crawl()
                     ->customFilter(function (Url $url, ?\Symfony\Component\DomCrawler\Crawler $linkElement) {
                         return $linkElement && str_contains($linkElement->text(), 'Subpage 2');
-                    })
+                    }),
             );
 
         $crawler->runAndTraverse();
@@ -327,7 +327,7 @@ it(
         expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1');
 
         expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
-    }
+    },
 );
 
 it(
@@ -340,7 +340,7 @@ it(
                 Http::crawl()
                     ->inputIsSitemap()
                     ->pathStartsWith('/crawling/sub2')
-                    ->loadAllButYieldOnlyMatching()
+                    ->loadAllButYieldOnlyMatching(),
             );
 
         $results = helper_generatorToArray($crawler->run());
@@ -348,7 +348,7 @@ it(
         expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
 
         expect($results)->toHaveCount(3);
-    }
+    },
 );
 
 it(
@@ -361,7 +361,7 @@ it(
                 Http::crawl()
                     ->inputIsSitemap()
                     ->pathMatches('/^\/crawling\/sub[12]$/')
-                    ->loadAllButYieldOnlyMatching()
+                    ->loadAllButYieldOnlyMatching(),
             );
 
         $results = helper_generatorToArray($crawler->run());
@@ -369,7 +369,7 @@ it(
         expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
 
         expect($results)->toHaveCount(2);
-    }
+    },
 );
 
 it(
@@ -385,10 +385,10 @@ it(
                         return in_array($url->path(), [
                             '/crawling/main',
                             '/crawling/sub1/sub1',
-                            '/crawling/sub2/sub1/sub1'
+                            '/crawling/sub2/sub1/sub1',
                         ], true);
                     })
-                    ->loadAllButYieldOnlyMatching()
+                    ->loadAllButYieldOnlyMatching(),
             );
 
         $results = helper_generatorToArray($crawler->run());
@@ -396,7 +396,7 @@ it(
         expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
 
         expect($results)->toHaveCount(3);
-    }
+    },
 );
 
 it(
@@ -425,7 +425,7 @@ it(
         expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment1');
 
         expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment2');
-    }
+    },
 );
 
 it('stops crawling when maxOutputs is reached', function () {
@@ -434,7 +434,7 @@ it('stops crawling when maxOutputs is reached', function () {
         ->addStep(
             Http::crawl()
                 ->keepUrlFragment()
-                ->maxOutputs(4)
+                ->maxOutputs(4),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -450,7 +450,7 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
         ->addStep(
             Http::crawl()
                 ->useCanonicalLinks()
-                ->addToResult(['url'])
+                ->addToResult(['url']),
         );
 
     $results = helper_generatorToArray($crawler->run());

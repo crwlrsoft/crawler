@@ -34,7 +34,7 @@ uses()
     ->beforeEach(function () {
         if (!isset(TestServerProcess::$process)) {
             TestServerProcess::$process = Process::fromShellCommandline(
-                'php -S localhost:8000 ' . __DIR__ . '/_Integration/Server.php'
+                'php -S localhost:8000 ' . __DIR__ . '/_Integration/Server.php',
             );
 
             TestServerProcess::$process->start();
@@ -144,7 +144,7 @@ function helper_getStepYieldingObjectWithNumber(int $number): Step
         protected function invoke(mixed $input): Generator
         {
             yield helper_getStdClassWithData(
-                ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')]
+                ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')],
             );
         }
     };
@@ -157,7 +157,7 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
                 yield helper_getStdClassWithData(
-                    ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')]
+                    ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')],
                 );
             }
         }
@@ -170,7 +170,7 @@ function helper_getDummyRobotsTxtResponse(?string $forDomain = null): Response
         200,
         [],
         "User-agent: FooBot\n" .
-        "Disallow: " . ($forDomain ? '/' . $forDomain . '/secret' : 'secret')
+        "Disallow: " . ($forDomain ? '/' . $forDomain . '/secret' : 'secret'),
     );
 }
 

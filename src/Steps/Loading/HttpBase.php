@@ -203,7 +203,7 @@ abstract class HttpBase extends LoadingStep
                 return [$input[$this->useAsUrl]];
             } else {
                 $this->logger?->warning(
-                    'Input key ' . $this->useAsUrl . ' that should be used as request URL isn\'t present in input.'
+                    'Input key ' . $this->useAsUrl . ' that should be used as request URL isn\'t present in input.',
                 );
             }
         } elseif (is_array($input) && array_key_exists('url', $input)) {
@@ -224,7 +224,7 @@ abstract class HttpBase extends LoadingStep
                 $this->inputBody = $input[$this->useAsBody];
             } else {
                 $this->logger?->warning(
-                    'Input key ' . $this->useAsBody . ' that should be used as request body isn\'t present in input.'
+                    'Input key ' . $this->useAsBody . ' that should be used as request body isn\'t present in input.',
                 );
             }
         }
@@ -240,7 +240,7 @@ abstract class HttpBase extends LoadingStep
             } else {
                 $this->logger?->warning(
                     'Input key ' . $this->useAsHeaders . ' that should be used as request headers isn\'t present in ' .
-                    'input.'
+                    'input.',
                 );
             }
         }
@@ -264,7 +264,7 @@ abstract class HttpBase extends LoadingStep
 
         if (!array_key_exists($inputKey, $input)) {
             $this->logger?->warning(
-                'Input key ' . $inputKey . ' that should be used as a request header, isn\'t present in input.'
+                'Input key ' . $inputKey . ' that should be used as a request header, isn\'t present in input.',
             );
 
             return;

@@ -22,7 +22,7 @@ test(
             'POST',
             'https://www.example.com/foo',
             ['foo' => 'lorem ipsum'],
-            'Helloooo'
+            'Helloooo',
         );
 
         $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
@@ -39,7 +39,7 @@ test(
             ->toBe(['lorem ipsum'])
             ->and($nextRequest?->getBody()->getContents())
             ->toBe('Helloooo');
-    }
+    },
 );
 
 it('registers loaded requests from PSR-7 RequestInterface instances', function () {

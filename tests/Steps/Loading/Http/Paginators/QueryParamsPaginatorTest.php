@@ -69,6 +69,6 @@ it('increases and decreases non first level (of query array) parameters using do
 
     expect($nextRequest?->getBody()->getContents())
         ->toBe(
-            'pagination%5Bpage%5D=2&pagination%5Bsize%5D=30&pagination2%5Bpage%5D=0&pagination2%5Bsize%5D=20&foo=bar'
+            'pagination%5Bpage%5D=2&pagination%5Bsize%5D=30&pagination2%5Bpage%5D=0&pagination2%5Bsize%5D=20&foo=bar',
         );
 });

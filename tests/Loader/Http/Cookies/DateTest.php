@@ -17,7 +17,7 @@ test('It gets the timezone right', function () {
     $date = new Date('Tue, 22-Feb-2022 20:04:29 GMT');
 
     expect(
-        $date->dateTime()->setTimezone(new DateTimeZone('Europe/Vienna'))->format('d.m.Y H:i:s')
+        $date->dateTime()->setTimezone(new DateTimeZone('Europe/Vienna'))->format('d.m.Y H:i:s'),
     )->toBe('22.02.2022 21:04:29');
 });
 
@@ -25,6 +25,6 @@ test('It also works without the dashes between d-M-Y in the format', function ()
     $date = new Date('Wed, 05 Jul 2023 15:19:55 GMT');
 
     expect(
-        $date->dateTime()->setTimezone(new DateTimeZone('Europe/Vienna'))->format('d.m.Y H:i:s')
+        $date->dateTime()->setTimezone(new DateTimeZone('Europe/Vienna'))->format('d.m.Y H:i:s'),
     )->toBe('05.07.2023 17:19:55');
 });

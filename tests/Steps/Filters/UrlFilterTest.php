@@ -27,11 +27,11 @@ it('evaluates a string from an object using a key', function () {
     $urlFilter = (new UrlFilter(UrlFilterRule::PathStartsWith, '/foo'))->useKey('bar');
 
     expect($urlFilter->evaluate(
-        helper_getStdClassWithData(['foo' => 'yo', 'bar' => 'https://www.example.com/foo/bar/baz'])
+        helper_getStdClassWithData(['foo' => 'yo', 'bar' => 'https://www.example.com/foo/bar/baz']),
     ))->toBeTrue();
 
     expect($urlFilter->evaluate(
-        helper_getStdClassWithData(['foo' => 'yo', 'bar' => 'https://www.example.com/articles/1'])
+        helper_getStdClassWithData(['foo' => 'yo', 'bar' => 'https://www.example.com/articles/1']),
     ))->toBeFalse();
 });
 
