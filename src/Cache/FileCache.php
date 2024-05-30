@@ -8,6 +8,7 @@ use DateInterval;
 use Exception;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
+use Throwable;
 
 class FileCache implements CacheInterface
 {
@@ -67,27 +68,6 @@ class FileCache implements CacheInterface
         }
 
         return $default;
-    }
-
-    /**
-     * @throws MissingZlibExtensionException
-     * @throws ReadingCacheFailedException
-     */
-    protected function getCacheItem(string $key): CacheItem
-    {
-        $fileContent = $this->getFileContents($key);
-
-        if ($this->useCompression) {
-            $fileContent = $this->decode($fileContent);
-        }
-
-        $unserialized = unserialize($fileContent);
-
-        if (!$unserialized instanceof CacheItem) {
-            $unserialized = new CacheItem($unserialized, $key);
-        }
-
-        return $unserialized;
     }
 
     /**
@@ -172,6 +152,50 @@ class FileCache implements CacheInterface
         }
 
         return true;
+    }
+
+    /**
+     * @throws MissingZlibExtensionException
+     * @throws ReadingCacheFailedException
+     */
+    protected function getCacheItem(string $key): CacheItem
+    {
+        $fileContent = $this->getFileContents($key);
+
+        if ($this->useCompression) {
+            $fileContent = $this->decode($fileContent);
+        }
+
+        $unserialized = $this->unserialize($fileContent);
+
+        if (!$unserialized instanceof CacheItem) {
+            $unserialized = new CacheItem($unserialized, $key);
+        }
+
+        return $unserialized;
+    }
+
+    protected function unserialize(string $content): mixed
+    {
+        // Temporarily set a new error handler, so unserializing a compressed string does not result in a PHP warning.
+        $previousHandler = set_error_handler(function ($errno, $errstr) {
+            return $errno === E_WARNING && str_starts_with($errstr, 'unserialize(): Error at offset 0 of ');
+        });
+
+        $unserialized = unserialize($content);
+
+        if ($unserialized === false) { // if unserializing fails, try if the string is compressed.
+            try {
+                $content = $this->decode($content);
+
+                $unserialized = unserialize($content);
+            } catch (Throwable) {
+            }
+        }
+
+        set_error_handler($previousHandler);
+
+        return $unserialized;
     }
 
     /**

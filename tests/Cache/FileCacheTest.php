@@ -324,6 +324,25 @@ it('is also able to decode uncompressed cache files when useCompression() is use
         ->toBe('Yo');
 });
 
+it('can also read compressed cache files, when useCompression() is not used', function () {
+    $cache = new FileCache(helper_cachedir());
+
+    $cache->useCompression();
+
+    $respondedRequest = new RespondedRequest(new Request('GET', '/no'), new Response(body: Utils::streamFor('No')));
+
+    $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+    $cache = new FileCache(helper_cachedir());
+
+    $retrievedCacheItem = $cache->get($respondedRequest->cacheKey());
+
+    expect($retrievedCacheItem)
+        ->toBeInstanceOf(RespondedRequest::class)
+        ->and(Http::getBodyString($retrievedCacheItem))
+        ->toBe('No');
+});
+
 test('you can change the default ttl', function () {
     $cache = new FileCache(helper_cachedir());
 
