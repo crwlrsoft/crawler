@@ -34,7 +34,7 @@ it('saves Results to a JSON file', function () {
 
     expect(file_get_contents($store->filePath()))->toBe(
         '[{"user":"otsch","firstname":"Christian","surname":"Olear"},' .
-        '{"user":"hader","firstname":"Josef","surname":"Hader"}]'
+        '{"user":"hader","firstname":"Josef","surname":"Hader"}]',
     );
 
     $result3 = helper_getResultWithJsonData(['user' => 'evamm', 'firstname' => 'Eva Maria', 'surname' => 'Maier']);
@@ -44,7 +44,7 @@ it('saves Results to a JSON file', function () {
     expect(file_get_contents($store->filePath()))->toBe(
         '[{"user":"otsch","firstname":"Christian","surname":"Olear"},' .
         '{"user":"hader","firstname":"Josef","surname":"Hader"},' .
-        '{"user":"evamm","firstname":"Eva Maria","surname":"Maier"}]'
+        '{"user":"evamm","firstname":"Eva Maria","surname":"Maier"}]',
     );
 });
 

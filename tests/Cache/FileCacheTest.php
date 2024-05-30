@@ -238,7 +238,7 @@ it('can still use legacy (pre CacheItem object) cache files', function () {
     expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class);
 
     expect($respondedRequest->requestedUri())->toBe(
-        'https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php'
+        'https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php',
     );
 });
 
@@ -288,7 +288,7 @@ it('gets compressed cache items', function () {
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', '/compression'),
-        new Response(body: Utils::streamFor('Hello World'))
+        new Response(body: Utils::streamFor('Hello World')),
     );
 
     $cache->set($respondedRequest->cacheKey(), $respondedRequest);
@@ -350,7 +350,7 @@ test('you can change the default ttl', function () {
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', '/foo'),
-        new Response(body: Utils::streamFor('bar'))
+        new Response(body: Utils::streamFor('bar')),
     );
 
     $cache->set($respondedRequest->cacheKey(), $respondedRequest);

@@ -81,7 +81,7 @@ it(
         $results = helper_generatorToArray($crawler->run());
 
         expect($results)->toHaveCount(1);
-    }
+    },
 )->with(['get', 'post', 'put', 'patch', 'delete']);
 
 it(
@@ -95,7 +95,7 @@ it(
         $results = helper_generatorToArray($crawler->run());
 
         expect($results)->toHaveCount(1);
-    }
+    },
 )->with(['get', 'post', 'put', 'patch', 'delete']);
 
 it(
@@ -106,11 +106,11 @@ it(
         $crawler->inputs(['http://localhost:8000/client-error-response', 'http://localhost:8000/simple-listing'])
             ->addStep(
                 Http::{$method}()
-                    ->stopOnErrorResponse()
+                    ->stopOnErrorResponse(),
             );
 
         $crawler->runAndTraverse();
-    }
+    },
 )->with(['get', 'post', 'put', 'patch', 'delete'])->throws(LoadingException::class);
 
 it(
@@ -121,9 +121,9 @@ it(
         $crawler->inputs(['http://localhost:8000/client-error-response', 'http://localhost:8000/simple-listing'])
             ->addStep(
                 Http::{$method}()
-                    ->stopOnErrorResponse()
+                    ->stopOnErrorResponse(),
             );
 
         $crawler->runAndTraverse();
-    }
+    },
 )->with(['get', 'post', 'put', 'patch', 'delete'])->throws(LoadingException::class);

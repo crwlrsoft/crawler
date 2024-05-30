@@ -68,7 +68,7 @@ test(
             ->and($crawler->userAgentCalled)->toBe(1)
             ->and($crawler->loggerCalled)->toBe(1)
             ->and($crawler->loaderCalled)->toBe(1);
-    }
+    },
 );
 
 it('gives you the current memory limit', function () {
@@ -206,7 +206,7 @@ it('passes on all the loaders to a group step which by default passes all of the
         ->addStep(
             Crawler::group()
                 ->addStep(Http::get())
-                ->addStep($step)
+                ->addStep($step),
         );
 
     expect($step->loaders)->toHaveCount(3);
@@ -237,7 +237,7 @@ it('passes only a certain loader when user choses one by calling useLoader() on 
         ->addStep(
             Crawler::group()
                 ->addStep(Http::get())
-                ->addStep($step->useLoader('http'))
+                ->addStep($step->useLoader('http')),
         );
 
     expect($step->loaders)->toHaveCount(1);
@@ -252,7 +252,7 @@ it(
         $step = new LoaderCollectingStep();
 
         (new MultiLoaderCrawler())->addStep($step->useLoader('https'));
-    }
+    },
 )->throws(UnknownLoaderKeyException::class);
 
 test('You can add steps and they are invoked when the Crawler is run', function () {
@@ -325,7 +325,7 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
         Crawler::group()
             ->addStep($step1)
             ->addStep($step2)
-            ->addStep($step3)
+            ->addStep($step3),
     );
 
     expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
@@ -397,7 +397,7 @@ test(
             'some' => 'thing',
             'number' => ['one', 'two', 'three'],
         ]);
-    }
+    },
 );
 
 test(
@@ -445,7 +445,7 @@ test(
             'some' => 'thing',
             'number' => 'three',
         ]);
-    }
+    },
 );
 
 test(
@@ -480,7 +480,7 @@ test(
         expect($results[1]->toArray())->toBe(['some' => 'thing']);
 
         expect($results[2]->toArray())->toBe(['some' => 'thing']);
-    }
+    },
 );
 
 test('When final steps return an array you get all values in the defined Result resource', function () {
@@ -516,7 +516,7 @@ test('when you call keep() or keepAs() on a step, it keeps its output data until
     $crawler
         ->input('test')
         ->addStep(
-            helper_getValueReturningStep(['father' => 'Karl', 'mother' => 'Ludmilla'])->keep()
+            helper_getValueReturningStep(['father' => 'Karl', 'mother' => 'Ludmilla'])->keep(),
         )
         ->addStep(
             helper_getValueReturningStep([
@@ -525,7 +525,7 @@ test('when you call keep() or keepAs() on a step, it keeps its output data until
                 'son2' => 'Franz',
                 'daughter2' => 'Julia',
                 'daughter3' => 'Franziska',
-            ])->keep(['daughter' => 'daughter2', 'son' => 'son2'])
+            ])->keep(['daughter' => 'daughter2', 'son' => 'son2']),
         )
         ->addStep(helper_getValueReturningStep('Lea')->keepAs('cousin'))
         ->addStep(
@@ -533,7 +533,7 @@ test('when you call keep() or keepAs() on a step, it keeps its output data until
                 'grandson1' => 'Jonah',
                 'granddaughter1' => 'Paula',
                 'granddaughter2' => 'Sophie',
-            ])
+            ]),
         );
 
     $results = iterator_to_array($crawler->run());
@@ -650,7 +650,7 @@ it(
             ->input('test');
 
         $crawler->runAndTraverse();
-    }
+    },
 );
 
 it('yields only unique outputs from a step when uniqueOutput was called', function () {
@@ -726,7 +726,7 @@ it(
         expect($outputLines[8])->toContain('step2 called');
 
         expect($outputLines[9])->toContain('Stored a result');
-    }
+    },
 );
 
 it(
@@ -829,7 +829,7 @@ it(
             ->and($outputLines[28])->toContain('step4 called: 1-2 2-2 3-2')
             ->and($outputLines[29])->toContain('Stored a result: 1-2 2-2 3-2 4-1')
             ->and($outputLines[30])->toContain('Stored a result: 1-2 2-2 3-2 4-2');
-    }
+    },
 );
 
 it(
@@ -923,7 +923,7 @@ it(
             ->and($outputLines[16])->toContain('step4 called: 1-2 2-2 3-1')
             ->and($outputLines[17])->toContain('step4 called: 1-2 2-2 3-2')
             ->and($outputLines[18])->toContain('Stored a result: 1-2 2-2');
-    }
+    },
 );
 
 it('logs memory usage if you want it to', function () {
@@ -979,7 +979,7 @@ test(
         $results = helper_generatorToArray($crawler->run());
 
         expect($results[0]->toArray())->toBe(['foo' => 'bar', 'baz' => 'quz']);
-    }
+    },
 );
 
 it('just runs the crawler and dumps all results as array when runAndDump() is called', function () {

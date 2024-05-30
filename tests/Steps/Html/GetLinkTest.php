@@ -17,7 +17,7 @@ it('works with a RespondedRequest as input', function () {
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/foo/bar'),
-        new Response(200, [], '<a href="/blog">link</a>')
+        new Response(200, [], '<a href="/blog">link</a>'),
     ));
 
     expect($link)->toHaveCount(1);
@@ -39,8 +39,8 @@ test('When called without selector it just returns the first link', function () 
         new Response(
             200,
             [],
-            '<div><a href="v0.1">v0.1</a><a href="v1.0">v1.0</a><a href="v1.1">v1.1</a></div>'
-        )
+            '<div><a href="v0.1">v0.1</a><a href="v1.0">v1.0</a><a href="v1.1">v1.1</a></div>',
+        ),
     ));
 
     expect($link[0]->get())->toBe('https://www.crwlr.software/packages/url/v0.1');
@@ -59,7 +59,7 @@ test('When passing a CSS selector it selects the first matching link', function 
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.foo.bar/company/about'),
-        new Response(200, [], $responseHtml)
+        new Response(200, [], $responseHtml),
     ));
 
     expect($link[0]->get())->toBe('https://www.foo.bar/company/jobs');
@@ -70,7 +70,7 @@ test('When selector matches on a non-link element it\'s ignored', function () {
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], '<span class="link">not a link</span><a class="link" href="foo">link</a>')
+        new Response(200, [], '<span class="link">not a link</span><a class="link" href="foo">link</a>'),
     ));
 
     expect($link)->toHaveCount(1);
@@ -88,7 +88,7 @@ it('finds only links on the same domain when onSameDomain() was called', functio
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($link)->toHaveCount(1);
@@ -106,7 +106,7 @@ it('doesn\'t find a link on the same domain when notOnSameDomain() was called', 
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($link)->toHaveCount(1);
@@ -126,7 +126,7 @@ it('finds only links from domains the onDomain() method was called with', functi
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -144,7 +144,7 @@ test('onDomain() also takes an array of domains', function () {
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -158,7 +158,7 @@ test('onDomain() also takes an array of domains', function () {
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -175,7 +175,7 @@ test('onDomain() can be called multiple times and merges all domains it was call
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(0);
@@ -189,7 +189,7 @@ test('onDomain() can be called multiple times and merges all domains it was call
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -203,7 +203,7 @@ test('onDomain() can be called multiple times and merges all domains it was call
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -222,7 +222,7 @@ it('finds only links on the same host when onSameHost() was called', function ()
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($link)->toHaveCount(1);
@@ -240,7 +240,7 @@ it('doesn\'t find a link on the same host when notOnSameHost() was called', func
 
     $link = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($link)->toHaveCount(1);
@@ -260,7 +260,7 @@ it('finds only links from hosts the onHost() method was called with', function (
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -278,7 +278,7 @@ test('onHost() also takes an array of hosts', function () {
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -293,7 +293,7 @@ test('onHost() also takes an array of hosts', function () {
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -310,7 +310,7 @@ test('onHost() can be called multiple times and merges all hosts it was called w
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(0);
@@ -323,7 +323,7 @@ test('onHost() can be called multiple times and merges all hosts it was called w
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -337,7 +337,7 @@ test('onHost() can be called multiple times and merges all hosts it was called w
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.otsch.codes'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links)->toHaveCount(1);
@@ -360,7 +360,7 @@ it('works correctly when HTML contains a base tag', function () {
 
     $links = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.example.com/a/b'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     ));
 
     expect($links[0]->get())->toBe('https://www.example.com/c/e');
@@ -379,7 +379,7 @@ it('throws away the URL fragment part when withoutFragment() was called', functi
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/foo/baz'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     );
 
     $links = helper_invokeStepWithInput($step, $respondedRequest);
@@ -411,7 +411,7 @@ it('ignores special non HTTP links', function () {
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/home'),
-        new Response(200, [], $html)
+        new Response(200, [], $html),
     );
 
     $links = helper_invokeStepWithInput($step, $respondedRequest);

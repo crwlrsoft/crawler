@@ -105,7 +105,7 @@ class Http extends HttpBase
      */
     public function paginate(
         PaginatorInterface|AbstractPaginator|string $paginator,
-        int $defaultPaginatorMaxPages = Paginator::MAX_PAGES_DEFAULT
+        int $defaultPaginatorMaxPages = Paginator::MAX_PAGES_DEFAULT,
     ): Paginate {
         if (is_string($paginator)) {
             $paginator = Paginator::simpleWebsite($paginator, $defaultPaginatorMaxPages);

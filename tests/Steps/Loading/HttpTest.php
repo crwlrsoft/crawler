@@ -71,7 +71,7 @@ test('You can set request headers via constructor', function () {
             'image/webp',
             'image/apng',
             '*/*;q=0.8',
-            'application/signed-exchange;v=b3;q=0.9'
+            'application/signed-exchange;v=b3;q=0.9',
         ],
         'Accept-Encoding' => ['gzip', 'deflate', 'br'],
         'Accept-Language' => ['de-DE', 'de;q=0.9', 'en-US;q=0.8', 'en;q=0.7'],
@@ -144,7 +144,7 @@ it(
             ->stopOnErrorResponse();
 
         helper_traverseIterable($step->invokeStep(new Input('https://example.com/otsch')));
-    }
+    },
 )->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
 test(
@@ -155,8 +155,8 @@ test(
         $loader->shouldReceive('load')->once()->andReturn(
             new RespondedRequest(
                 new Request('GET', 'https://www.example.com/testresponse'),
-                new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody'))
-            )
+                new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody')),
+            ),
         );
 
         $step = Http::get()
@@ -175,7 +175,7 @@ test(
             'headers' => ['foo' => ['bar']],
             'body' => 'testbody',
         ]);
-    }
+    },
 );
 
 test(
@@ -185,7 +185,7 @@ test(
 
         $respondedRequest = new RespondedRequest(
             new Request('GET', 'https://www.example.com/testresponse'),
-            new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody'))
+            new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody')),
         );
 
         $respondedRequest->addRedirectUri('https://www.example.com/testresponseredirect');
@@ -203,7 +203,7 @@ test(
         expect($outputs[0]->result)->toBeInstanceOf(Result::class);
 
         expect($outputs[0]->result?->toArray())->toBe([$outputKey => 'https://www.example.com/testresponseredirect']);
-    }
+    },
 )->with(['url', 'uri']);
 
 it('gets the URL for the request from an input array when useInputKeyAsUrl() was called', function () {
@@ -243,7 +243,7 @@ it(
             ->addLoader($loader);
 
         helper_invokeStepWithInput($step, $inputArray);
-    }
+    },
 )->with(['url', 'uri']);
 
 it('gets the body for the request from an input array when useInputKeyAsBody() was called', function () {
@@ -380,7 +380,7 @@ it('gets multiple headers from an input array using useInputKeyAsHeaders()', fun
         'customHeaders' => [
             'header-name-x' => 'foo',
             'header-name-y' => ['bar', 'baz'],
-        ]
+        ],
     ];
 
     $loader = Mockery::mock(HttpLoader::class);

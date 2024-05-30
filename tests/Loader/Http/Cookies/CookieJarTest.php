@@ -9,7 +9,7 @@ use GuzzleHttp\Psr7\Response;
 test('addFrom works with a string url', function () {
     $jar = new CookieJar();
     $jar->addFrom('https://www.crwl.io', new Response(200, [
-        'Set-Cookie' => ['cook13=v4lu3; Secure']
+        'Set-Cookie' => ['cook13=v4lu3; Secure'],
     ]));
     $allCookiesForDomain = $jar->allByDomain('crwl.io');
     expect($allCookiesForDomain)->toHaveCount(1);
@@ -18,7 +18,7 @@ test('addFrom works with a string url', function () {
 test('addFrom works with an instance of UriInterface', function () {
     $jar = new CookieJar();
     $jar->addFrom(Url::parsePsr7('https://www.crwl.io'), new Response(200, [
-        'Set-Cookie' => ['cook13=v4lu3; Secure']
+        'Set-Cookie' => ['cook13=v4lu3; Secure'],
     ]));
     $allCookiesForDomain = $jar->allByDomain('crwl.io');
     expect($allCookiesForDomain)->toHaveCount(1);
@@ -27,7 +27,7 @@ test('addFrom works with an instance of UriInterface', function () {
 test('addFrom works with an instance of Url', function () {
     $jar = new CookieJar();
     $jar->addFrom(Url::parse('https://www.crwl.io'), new Response(200, [
-        'Set-Cookie' => ['cook13=v4lu3; Secure']
+        'Set-Cookie' => ['cook13=v4lu3; Secure'],
     ]));
     $allCookiesForDomain = $jar->allByDomain('crwl.io');
     expect($allCookiesForDomain)->toHaveCount(1);
@@ -36,7 +36,7 @@ test('addFrom works with an instance of Url', function () {
 test('It adds all cookies from a response', function () {
     $jar = new CookieJar();
     $jar->addFrom(Url::parse('https://www.otsch.codes'), new Response(200, [
-        'Set-Cookie' => ['cook13=v4lu3; Secure', 'anotherCookie=andItsValue', 'oneMoreCookie=dough']
+        'Set-Cookie' => ['cook13=v4lu3; Secure', 'anotherCookie=andItsValue', 'oneMoreCookie=dough'],
     ]));
     $allCookiesForDomain = $jar->allByDomain('otsch.codes');
     expect($allCookiesForDomain)->toHaveCount(3);
@@ -48,8 +48,8 @@ test('It returns all cookies that should be sent to a url', function () {
         'Set-Cookie' => [
             'cook13=v4lu3; Secure',
             '__Host-anotherCookie=andItsValue; Secure; Path=/',
-            'oneMoreCookie=dough'
-        ]
+            'oneMoreCookie=dough',
+        ],
     ]));
     expect($jar->getFor('https://www.otsch.codes/contact'))->toHaveCount(3);
     expect($jar->getFor('https://jobs.otsch.codes/index'))->toHaveCount(2);

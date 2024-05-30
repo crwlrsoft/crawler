@@ -36,7 +36,7 @@ it('paginates through pagination', function () {
         ->addStep(
             Html::first('article')
                 ->extract(['title' => 'h1', 'number' => '.someNumber'])
-                ->addToResult()
+                ->addToResult(),
         );
 
     $results = helper_generatorToArray($crawler->run());

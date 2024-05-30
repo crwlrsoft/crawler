@@ -42,7 +42,7 @@ it('adds an array of values to a certain header in a headers array', function ()
     $headers = ['Accept-Language' => ['de']];
 
     expect(
-        HttpHeaders::addTo($headers, 'Accept-Language', ['en-US', 'en'])
+        HttpHeaders::addTo($headers, 'Accept-Language', ['en-US', 'en']),
     )->toBe(['Accept-Language' => ['de', 'en-US', 'en']]);
 });
 
@@ -50,7 +50,7 @@ it('adds the header when calling addTo() with a header name that the array does 
     $headers = ['Accept-Encoding' => ['gzip', 'deflate', 'br']];
 
     expect(
-        HttpHeaders::addTo($headers, 'Accept-Language', ['de', 'en'])
+        HttpHeaders::addTo($headers, 'Accept-Language', ['de', 'en']),
     )->toBe([
         'Accept-Encoding' => ['gzip', 'deflate', 'br'],
         'Accept-Language' => ['de', 'en'],

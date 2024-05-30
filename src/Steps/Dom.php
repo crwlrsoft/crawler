@@ -35,7 +35,7 @@ abstract class Dom extends Step
      * @param string|DomQueryInterface|array<int|string, string|DomQueryInterface> $selectorOrMapping
      */
     final public function __construct(
-        string|DomQueryInterface|array $selectorOrMapping = []
+        string|DomQueryInterface|array $selectorOrMapping = [],
     ) {
         $this->extract($selectorOrMapping);
     }

@@ -121,7 +121,7 @@ test(
             ->and($io2->result)->toBe($result)
             ->and($io2->addLaterToResult)->toBe($addLaterResult)
             ->and($io2->keep)->toBe(['baz' => 'three']);
-    }
+    },
 );
 
 test('if the property does not exist, it is added, when withPropertyValue() is used', function () {

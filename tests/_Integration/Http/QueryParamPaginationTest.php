@@ -42,8 +42,8 @@ it('paginates using query params sent in the request body', function () {
                     Paginator::queryParams(5)
                         ->inBody()
                         ->increase('page')
-                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items'))
-                )->addToResult(['body'])
+                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
+                )->addToResult(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -62,8 +62,8 @@ it('paginates using URL query params', function () {
                     Paginator::queryParams(5)
                         ->inUrl()
                         ->increase('page')
-                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items'))
-                )->addToResult(['body'])
+                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
+                )->addToResult(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -81,8 +81,8 @@ it('paginates only until the max pages limit', function () {
                 ->paginate(
                     QueryParamsPaginator::paramsInUrl(2)
                         ->increase('page')
-                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items'))
-                )->addToResult(['body'])
+                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
+                )->addToResult(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -103,8 +103,8 @@ it('resets the finished paginating state after each processed (/paginated) input
                 ->paginate(
                     QueryParamsPaginator::paramsInUrl(2)
                         ->increase('page')
-                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items'))
-                )->addToResult(['body'])
+                        ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
+                )->addToResult(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());

@@ -398,7 +398,7 @@ abstract class Crawler
                     $step->validateBeforeRun($previousStep ?? $this->inputs);
                 } catch (PreRunValidationException $exception) {
                     $this->logger->error(
-                        'Pre-Run validation error in step number ' . ($index + 1) . ': ' . $exception->getMessage()
+                        'Pre-Run validation error in step number ' . ($index + 1) . ': ' . $exception->getMessage(),
                     );
 
                     return false;

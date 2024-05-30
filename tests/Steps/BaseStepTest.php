@@ -100,7 +100,7 @@ test(
         helper_invokeStepWithInput($step, new Input('funky town'));
 
         expect($step->passesAllFilters)->toBeFalse();
-    }
+    },
 );
 
 it('uses a key from an array when providing a key to the filter() method', function () {
@@ -123,13 +123,13 @@ it('uses a key from an object when providing a key to the filter() method', func
     $step->where('vendor', Filter::equal('crwlr'));
 
     helper_invokeStepWithInput($step, new Input(
-        helper_getStdClassWithData(['vendor' => 'crwlr', 'package' => 'url'])
+        helper_getStdClassWithData(['vendor' => 'crwlr', 'package' => 'url']),
     ));
 
     expect($step->passesAllFilters)->toBeTrue();
 
     helper_invokeStepWithInput($step, new Input(
-        helper_getStdClassWithData(['vendor' => 'illuminate', 'package' => 'support'])
+        helper_getStdClassWithData(['vendor' => 'illuminate', 'package' => 'support']),
     ));
 
     expect($step->passesAllFilters)->toBeFalse();
@@ -174,7 +174,7 @@ it('removes an UTF-8 byte order mark from the beginning of a string', function (
 
     $response = new RespondedRequest(
         new Request('GET', 'https://www.example.com/rss'),
-        new Response(body: $stringWithBom)
+        new Response(body: $stringWithBom),
     );
 
     $outputs = helper_invokeStepWithInput($step, $response);
@@ -213,7 +213,7 @@ it(
         };
 
         $step->keep()->validateBeforeRun(Http::get());
-    }
+    },
 )->throws(PreRunValidationException::class);
 
 it(
@@ -233,7 +233,7 @@ it(
 
         expect($this->getActualOutputForAssertion())
             ->toContain('The tests\Steps\SomeDemoStep step potentially yields scalar value outputs');
-    }
+    },
 );
 
 it('does not throw an exception or log a warning when output type is scalar and keepAs() was called', function () {
@@ -445,7 +445,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
 
         expect($outputs[0]->keep)->toBe(['bar' => 'two']);
-    }
+    },
 );
 
 it(
@@ -456,7 +456,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
 
         expect($outputs[0]->keep)->toBe(['foo' => 'one', 'baz' => 'three']);
-    }
+    },
 );
 
 it(
@@ -467,7 +467,7 @@ it(
         $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two', 'baz' => 'three']);
 
         expect($outputs[0]->keep)->toBe(['foo' => 'one', 'mappedKey' => 'three']);
-    }
+    },
 );
 
 it('logs an error when input is scalar value and keep was used, and adds the value with an unnamed key', function () {
@@ -561,7 +561,7 @@ test(
         }
 
         expect($step->keepsAnything())->toBe($expected);
-    }
+    },
 )->with([
     [false, false, false, false, false],
     [true, false, false, false, true],
@@ -592,7 +592,7 @@ test(
         }
 
         expect($step->keepsAnythingFromInputData())->toBe($expected);
-    }
+    },
 )->with([
     [false, false, false, false, false],
     [true, false, false, false, false],
@@ -623,7 +623,7 @@ test(
         }
 
         expect($step->keepsAnythingFromOutputData())->toBe($expected);
-    }
+    },
 )->with([
     [false, false, false, false, false],
     [true, false, false, false, true],
@@ -644,7 +644,7 @@ it('logs an error message when a sub crawler is defined and step has no referenc
     helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => ['https://www.example.com']]);
 
     expect($this->getActualOutputForAssertion())->toContain(
-        'Can\'t make sub crawler, because the step has no reference to the parent crawler.'
+        'Can\'t make sub crawler, because the step has no reference to the parent crawler.',
     );
 });
 

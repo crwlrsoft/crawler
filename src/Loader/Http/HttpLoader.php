@@ -493,7 +493,7 @@ class HttpLoader extends Loader
         if (!$this->usesHeadlessBrowser() && !$this->httpClient instanceof Client) {
             throw new Exception(
                 'The included proxy feature can only be used when using a guzzle HTTP client or headless chrome ' .
-                'browser for loading.'
+                'browser for loading.',
             );
         }
     }

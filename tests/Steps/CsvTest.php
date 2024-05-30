@@ -39,7 +39,7 @@ it('maps a CSV string', function () {
     expect($outputs[2]->get())->toBe(['id' => '345', 'domain' => 'otsch.codes', 'url' => 'https://www.otsch.codes']);
 
     expect($outputs[3]->get())->toBe(
-        ['id' => '456', 'domain' => 'crwlr.software', 'url' => 'https://www.crwlr.software']
+        ['id' => '456', 'domain' => 'crwlr.software', 'url' => 'https://www.crwlr.software'],
     );
 });
 
@@ -95,11 +95,11 @@ it('works with an object having a __toString method', function () {
 it('throws an InvalidArgumentException for other inputs', function (string $method, mixed $input) {
     if ($method === 'string') {
         helper_traverseIterable(
-            Csv::parseString(['column'])->invokeStep(new Input($input))
+            Csv::parseString(['column'])->invokeStep(new Input($input)),
         );
     } elseif ($method === 'file') {
         helper_traverseIterable(
-            Csv::parseFile(['column'])->invokeStep(new Input($input))
+            Csv::parseFile(['column'])->invokeStep(new Input($input)),
         );
     }
 })->throws(InvalidArgumentException::class)->with([
@@ -126,7 +126,7 @@ it('can map columns using numerical array keys for the columns', function () {
     expect($outputs)->toHaveCount(2);
 
     expect($outputs[0]->get())->toBe([
-        'domain' => 'crwlr.software', 'description' => 'PHP Web Crawling and Scraping Library'
+        'domain' => 'crwlr.software', 'description' => 'PHP Web Crawling and Scraping Library',
     ]);
 
     expect($outputs[1]->get())->toBe(['domain' => 'otsch.codes', 'description' => 'I am Otsch, I code']);
@@ -135,7 +135,7 @@ it('can map columns using numerical array keys for the columns', function () {
 it('can map columns using numerical array keys for the columns when parsing file', function () {
     $outputs = helper_invokeStepWithInput(
         Csv::parseFile([1 => 'name', 2 => 'homepage']),
-        helper_csvFilePath('basic.csv')
+        helper_csvFilePath('basic.csv'),
     );
 
     expect($outputs)->toHaveCount(3);
@@ -195,7 +195,7 @@ it('uses the values from the first line as output keys when no column mapping de
 it('uses the values from the first line as output keys when no column mapping defined when parsing file', function () {
     $outputs = helper_invokeStepWithInput(
         Csv::parseFile()->skipFirstLine(),
-        helper_csvFilePath('with-column-headlines.csv')
+        helper_csvFilePath('with-column-headlines.csv'),
     );
 
     expect($outputs)->toHaveCount(3);
@@ -259,7 +259,7 @@ it('skips the first line when defined via constructor param', function () {
 it('skips the first line when parsing file when defined via constructor param', function () {
     $outputs = helper_invokeStepWithInput(
         Csv::parseFile([1 => 'fach-erste', 3 => 'fach-dritte'], true),
-        helper_csvFilePath('with-column-headlines.csv')
+        helper_csvFilePath('with-column-headlines.csv'),
     );
 
     expect($outputs)->toHaveCount(3);

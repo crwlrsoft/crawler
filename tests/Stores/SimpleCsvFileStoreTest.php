@@ -33,7 +33,7 @@ it('saves Results to a csv file', function () {
     $store->store($result2);
 
     expect(file_get_contents($store->filePath()))->toBe(
-        "user,firstname,surname\notsch,Christian,Olear\nhader,Josef,Hader\n"
+        "user,firstname,surname\notsch,Christian,Olear\nhader,Josef,Hader\n",
     );
 
     $result3 = helper_getResultWithData(['user' => 'evamm', 'firstname' => 'Eva Maria', 'surname' => 'Maier']);
@@ -41,7 +41,7 @@ it('saves Results to a csv file', function () {
     $store->store($result3);
 
     expect(file_get_contents($store->filePath()))->toBe(
-        "user,firstname,surname\notsch,Christian,Olear\nhader,Josef,Hader\nevamm,\"Eva Maria\",Maier\n"
+        "user,firstname,surname\notsch,Christian,Olear\nhader,Josef,Hader\nevamm,\"Eva Maria\",Maier\n",
     );
 });
 
@@ -59,7 +59,7 @@ test('if the value of a result property is an array, it concatenates the values 
     $store->store($result2);
 
     expect(file_get_contents($store->filePath()))->toBe(
-        "col1,col2\nfoo,\"bar | baz | quz\"\nDonald,\"Tick | Trick | Track\"\n"
+        "col1,col2\nfoo,\"bar | baz | quz\"\nDonald,\"Tick | Trick | Track\"\n",
     );
 });
 

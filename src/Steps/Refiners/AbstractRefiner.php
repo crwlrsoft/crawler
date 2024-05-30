@@ -18,7 +18,7 @@ abstract class AbstractRefiner implements RefinerInterface
     protected function logTypeWarning(string $staticRefinerMethod, mixed $value): void
     {
         $this->logger?->warning(
-            'Refiner ' . $staticRefinerMethod . ' can\'t be applied to value of type ' . gettype($value)
+            'Refiner ' . $staticRefinerMethod . ' can\'t be applied to value of type ' . gettype($value),
         );
     }
 }

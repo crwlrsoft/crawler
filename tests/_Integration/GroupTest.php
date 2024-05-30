@@ -37,7 +37,7 @@ it(
                 Crawler::group()
                     ->addStep(
                         Html::first('#content article.blog-post')
-                            ->extract(['title' => 'h1', 'date' => '.date'])
+                            ->extract(['title' => 'h1', 'date' => '.date']),
                     )
                     ->addStep(
                         Html::schemaOrg()
@@ -45,9 +45,9 @@ it(
                             ->extract([
                                 'author' => 'author.name',
                                 'keywords',
-                            ])
+                            ]),
                     )
-                    ->addToResult()
+                    ->addToResult(),
             );
 
         $result = helper_generatorToArray($crawler->run());
@@ -58,5 +58,5 @@ it(
             'author' => 'Christian Olear',
             'keywords' => 'homograph, attack, security, idn, internationalized domain names, prevention, url, uri',
         ]);
-    }
+    },
 );

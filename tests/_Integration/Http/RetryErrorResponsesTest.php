@@ -69,7 +69,7 @@ it(
         expect($diff)->toBeGreaterThan(4.0);
 
         expect($diff)->toBeLessThan(4.5);
-    }
+    },
 )->with(['/too-many-requests', '/service-unavailable']);
 
 it('goes on crawling when a retry receives a successful response', function (string $path) {

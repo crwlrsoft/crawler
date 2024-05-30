@@ -226,13 +226,13 @@ class Cookie
         if ($this->hasSecurePrefix() || $this->hasHostPrefix()) {
             if (!$this->isReceivedSecure()) {
                 throw new InvalidCookieException(
-                    'Cookie is prefixed with __Secure- or __Host- but was not sent via https'
+                    'Cookie is prefixed with __Secure- or __Host- but was not sent via https',
                 );
             }
 
             if (!$this->secure()) {
                 throw new InvalidCookieException(
-                    'Cookie is prefixed with __Secure- or __Host- but Secure flag was not sent'
+                    'Cookie is prefixed with __Secure- or __Host- but Secure flag was not sent',
                 );
             }
         }
@@ -272,7 +272,7 @@ class Cookie
 
         if (!str_contains($this->receivedFromHost, $value)) {
             throw new InvalidCookieException(
-                'Setting cookie for ' . $value . ' from ' . $this->receivedFromUrl->host() . ' is not allowed.'
+                'Setting cookie for ' . $value . ' from ' . $this->receivedFromUrl->host() . ' is not allowed.',
             );
         }
 
@@ -296,7 +296,7 @@ class Cookie
     {
         if (!$this->isReceivedSecure()) {
             throw new InvalidCookieException(
-                'Secure flag can\'t be set when cookie was sent from non-https document url.'
+                'Secure flag can\'t be set when cookie was sent from non-https document url.',
             );
         }
 

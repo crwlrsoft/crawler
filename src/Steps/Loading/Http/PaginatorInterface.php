@@ -21,7 +21,7 @@ interface PaginatorInterface
 
     public function prepareRequest(
         RequestInterface $request,
-        ?RespondedRequest $previousResponse = null
+        ?RespondedRequest $previousResponse = null,
     ): RequestInterface;
 
     public function processLoaded(

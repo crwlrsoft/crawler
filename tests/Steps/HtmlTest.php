@@ -27,7 +27,7 @@ function helper_getHtmlContent(string $fileName): string
 it('returns single strings when extract is called with a selector only', function () {
     $output = helper_invokeStepWithInput(
         Html::each('#bookstore .book')->extract('.title'),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(4);
@@ -40,13 +40,13 @@ it('returns single strings when extract is called with a selector only', functio
 it('extracts data from an HTML document with CSS selectors by default', function () {
     $output = helper_invokeStepWithInput(
         Html::each('#bookstore .book')->extract(['title' => '.title', 'author' => '.author', 'year' => '.year']),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(4);
 
     expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005']
+        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
     );
 
     expect($output[1]->get())->toBe(['title' => 'Harry Potter', 'author' => 'J K. Rowling', 'year' => '2005']);
@@ -55,8 +55,8 @@ it('extracts data from an HTML document with CSS selectors by default', function
         [
             'title' => 'XQuery Kick Start',
             'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003'
-        ]
+            'year' => '2003',
+        ],
     );
 
     expect($output[3]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
@@ -69,7 +69,7 @@ it('can also extract data using XPath queries', function () {
             'author' => Dom::xPath('//*[@class=\'author\']'),
             'year' => Dom::xPath('//span[@class=\'year\']'),
         ]),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(4);
@@ -78,15 +78,15 @@ it('can also extract data using XPath queries', function () {
         [
             'title' => 'XQuery Kick Start',
             'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003'
-        ]
+            'year' => '2003',
+        ],
     );
 });
 
 it('returns only one (compound) output when the root method is used', function () {
     $output = helper_invokeStepWithInput(
         Html::root()->extract(['title' => '.title', 'author' => '.author', 'year' => '.year',]),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -97,20 +97,20 @@ it('returns only one (compound) output when the root method is used', function (
 it('extracts the data of the first matching element when the first method is used', function () {
     $output = helper_invokeStepWithInput(
         Html::first('#bookstore .book')->extract(['title' => '.title', 'author' => '.author', 'year' => '.year']),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(1);
 
     expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005']
+        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
     );
 });
 
 it('extracts the data of the last matching element when the last method is used', function () {
     $output = helper_invokeStepWithInput(
         Html::last('#bookstore .book')->extract(['title' => '.title', 'author' => '.author', 'year' => '.year']),
-        helper_getHtmlContent('bookstore.html')
+        helper_getHtmlContent('bookstore.html'),
     );
 
     expect($output)->toHaveCount(1);
@@ -124,7 +124,7 @@ test(
     function () {
         $response = new RespondedRequest(
             new Request('GET', 'https://www.example.com/meetups/some-meetup/'),
-            new Response(body: helper_getHtmlContent('event.html'))
+            new Response(body: helper_getHtmlContent('event.html')),
         );
 
         $output = helper_invokeStepWithInput(
@@ -136,7 +136,7 @@ test(
                     'title' => '.title',
                     'speaker' => '.speaker',
                     'slides' => Dom::cssSelector('.slidesLink')->attribute('href')->toAbsoluteUrl(),
-                ])
+                ]),
             ]),
             $response,
         );
@@ -163,9 +163,9 @@ test(
                     'speaker' => 'Princess Peach',
                     'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk3.pdf',
                 ],
-            ]
+            ],
         ]);
-    }
+    },
 );
 
 test('the static getLink method works without argument', function () {

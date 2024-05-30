@@ -24,7 +24,7 @@ class Decrementor extends AbstractQueryParamManipulator
         if ($this->useDotNotation) {
             $dot = (new Dot($query->toArray()))->set(
                 $this->queryParamName,
-                (string) ($this->getCurrentValueAsIntUsingDotNotation($query) - $this->decrement)
+                (string) ($this->getCurrentValueAsIntUsingDotNotation($query) - $this->decrement),
             );
 
             return new Query($dot->all());

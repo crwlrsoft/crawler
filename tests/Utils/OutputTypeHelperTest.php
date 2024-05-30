@@ -94,7 +94,7 @@ it(
     'checks if a value is an associative array or object (a.k.a. non-scalar)',
     function (mixed $value, bool $expectedResult) {
         expect(OutputTypeHelper::isAssociativeArrayOrObject($value))->toBe($expectedResult);
-    }
+    },
 )->with([
     ['foo', false],
     [['foo', 'bar'], false],

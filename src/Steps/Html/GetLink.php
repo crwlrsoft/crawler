@@ -193,7 +193,7 @@ class GetLink extends Step
         }
 
         $linkUrl = $this->handleUrlFragment(
-            $this->baseUri->resolve($link->attr('href') ?? '')
+            $this->baseUri->resolve($link->attr('href') ?? ''),
         );
 
         if ($this->matchesAdditionalCriteria($linkUrl)) {

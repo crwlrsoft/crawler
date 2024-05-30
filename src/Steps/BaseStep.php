@@ -289,7 +289,7 @@ abstract class BaseStep implements StepInterface
 
     public function refineOutput(
         string|Closure|RefinerInterface $keyOrRefiner,
-        null|Closure|RefinerInterface $refiner = null
+        null|Closure|RefinerInterface $refiner = null,
     ): static {
         if ($refiner instanceof RefinerInterface && $this->logger) {
             $refiner->addLogger($this->logger);
@@ -299,7 +299,7 @@ abstract class BaseStep implements StepInterface
 
         if (is_string($keyOrRefiner) && $refiner === null) {
             throw new InvalidArgumentException(
-                'You have to provide a Refiner (Closure or instance of RefinerInterface)'
+                'You have to provide a Refiner (Closure or instance of RefinerInterface)',
             );
         } elseif (is_string($keyOrRefiner)) {
             $this->refiners[] = ['key' => $keyOrRefiner, 'refiner' => $refiner];
@@ -371,7 +371,7 @@ abstract class BaseStep implements StepInterface
                 throw new PreRunValidationException(
                     'Keeping data from a step that yields scalar value outputs (= single string/int/bool/float with ' .
                     'no key like in an associative array or object) requires to define a key, by using keepAs() ' .
-                    'instead of keep()'
+                    'instead of keep()',
                 );
             } elseif ($outputType === StepOutputType::Mixed) {
                 $stepClassName = get_class($this);
@@ -380,7 +380,7 @@ abstract class BaseStep implements StepInterface
                     'The ' . $stepClassName . ' step potentially yields scalar value outputs (= single ' .
                     'string/int/bool/float with no key like in an associative array or object). If it does (yield a ' .
                     'scalar value output), it can not keep that output value, because it needs a key for that. ' .
-                    'To avoid this, define a key for scalar outputs by using the keepAs() method.'
+                    'To avoid this, define a key for scalar outputs by using the keepAs() method.',
                 );
             }
         }
@@ -396,7 +396,7 @@ abstract class BaseStep implements StepInterface
                 throw new PreRunValidationException(
                     'You are trying to keep data from a step\'s input with keepFromInput(), but the step before it ' .
                     'returns scalar value outputs (= single string/int/bool/float with no key like in an associative ' .
-                    'array or object). Please define a key for the input data to keep, by using keepAs() instead.'
+                    'array or object). Please define a key for the input data to keep, by using keepAs() instead.',
                 );
             } elseif ($previousStepOutputType === StepOutputType::Mixed) {
                 $stepClassName = get_class($this);
@@ -405,7 +405,7 @@ abstract class BaseStep implements StepInterface
                     'The step before the ' . $stepClassName . ' step, potentially yields scalar value outputs ' .
                     '(= single string/int/bool/float with no key like in an associative array or object). If it does ' .
                     '(yield a scalar value output) the next step can not keep it by using keepFromInput(). To avoid ' .
-                    'this, define a key for scalar inputs by using the keepInputAs() method.'
+                    'this, define a key for scalar inputs by using the keepInputAs() method.',
                 );
             }
         }
@@ -427,7 +427,7 @@ abstract class BaseStep implements StepInterface
         if (!$output->isArrayWithStringKeys()) {
             $this->logger?->error(
                 'The sub crawler feature works only with outputs that are associative arrays (arrays with ' .
-                'string keys). The feature was called with an output of type ' . gettype($output->get()) . '.'
+                'string keys). The feature was called with an output of type ' . gettype($output->get()) . '.',
             );
 
             return $output;
@@ -489,7 +489,7 @@ abstract class BaseStep implements StepInterface
                     throw new PreRunValidationException(
                         'The initial inputs contain scalar values (without keys) and you are calling keepFromInput() ' .
                         'on the first step (if not the first step in your whole crawler, check sub crawlers). Please ' .
-                        'use keepInputAs() instead with a key, that the input value should have in the kept data.'
+                        'use keepInputAs() instead with a key, that the input value should have in the kept data.',
                     );
                 }
             }
@@ -617,7 +617,7 @@ abstract class BaseStep implements StepInterface
         if (!is_array($outputValue)) {
             throw new Exception(
                 'Can\'t add input data to non array output data! You can use the outputKey() method ' .
-                'to make the step\'s output an array.'
+                'to make the step\'s output an array.',
             );
         }
 
@@ -644,7 +644,7 @@ abstract class BaseStep implements StepInterface
             $outputData,
             $this->addOutputDataToResult($outputData, $input),
             $this->addOutputDataToAddLaterResult($outputData, $input),
-            $input->keep
+            $input->keep,
         );
 
         $output = $this->runSubCrawlersFor($output);
@@ -718,7 +718,7 @@ abstract class BaseStep implements StepInterface
                 $this->logger?->error(
                     'A ' . get_class($this) . ' step ' . $variableMessagePart . ' that is neither an associative ' .
                     'array, nor an object, so there is no key for the value to keep. Please define a key for the ' .
-                    'output by using keepAs() instead of keep(). The value is now kept with an \'unnamed\' key.'
+                    'output by using keepAs() instead of keep(). The value is now kept with an \'unnamed\' key.',
                 );
 
                 return [$this->nextUnnamedKey($alreadyKept) => $data];

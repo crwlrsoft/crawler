@@ -23,7 +23,7 @@ beforeEach(function () {
     foreach (ProxyServerProcesses::PORTS as $port) {
         if (!ProxyServerProcesses::$processes[$port]) {
             ProxyServerProcesses::$processes[$port] = Process::fromShellCommandline(
-                'php -S localhost:' . $port . ' ' . __DIR__ . '/../ProxyServer.php'
+                'php -S localhost:' . $port . ' ' . __DIR__ . '/../ProxyServer.php',
             );
 
             ProxyServerProcesses::$processes[$port]->start();
@@ -79,7 +79,7 @@ it('uses correct method, headers and HTTP version in the proxied request', funct
         ->input('http://www.crwlr.software/packages')
         ->addStep(
             Http::put(['Accept-Encoding' => 'gzip, deflate, br'], 'Hello World', '1.0')
-                ->addToResult(['body'])
+                ->addToResult(['body']),
         );
 
     $results = iterator_to_array($crawler->run());
@@ -151,7 +151,7 @@ it('can also use a proxy when using the headless browser', function () {
         ->input('http://www.crwlr.software/blog')
         ->addStep(
             Http::get(['Accept-Language' => 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7'])
-                ->addToResult(['body'])
+                ->addToResult(['body']),
         );
 
     $results = iterator_to_array($crawler->run());

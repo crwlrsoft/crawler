@@ -104,7 +104,7 @@ it('renders javascript', function () {
         ->addStep(Http::get())
         ->addStep(
             Html::root()
-                ->extract(['content' => '#content p'])
+                ->extract(['content' => '#content p']),
         );
 
     $results = helper_generatorToArray($crawler->run());

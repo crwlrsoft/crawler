@@ -73,7 +73,7 @@ test(
         $robotsTxt = new RobotsTxtHandler($loader);
 
         expect($robotsTxt->isAllowed('https://www.example.com/foo/bar'))->toBeTrue();
-    }
+    },
 );
 
 test(
@@ -91,7 +91,7 @@ test(
         $robotsTxt->ignoreWildcardRules();
 
         expect($robotsTxt->isAllowed('https://www.example.com/foo/bar'))->toBeTrue();
-    }
+    },
 );
 
 it('gets all the sitemap URLs from robots.txt', function () {

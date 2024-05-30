@@ -137,7 +137,7 @@ test('the allUris() method returns all unique URIs', function () {
 it('can be serialized', function () {
     $respondedRequest = new RespondedRequest(
         new Request('POST', '/home', ['key' => 'val'], 'bod'),
-        new Response(201, ['k' => 'v'], 'res')
+        new Response(201, ['k' => 'v'], 'res'),
     );
 
     $respondedRequest->addRedirectUri('/index');
@@ -148,7 +148,7 @@ it('can be serialized', function () {
         'O:51:"Crwlr\Crawler\Loader\Http\Messages\RespondedRequest":8:{s:13:"requestMethod";s:4:"POST";s:10:' .
         '"requestUri";s:5:"/home";s:14:"requestHeaders";a:1:{s:3:"key";a:1:{i:0;s:3:"val";}}s:11:"requestBody";' .
         's:3:"bod";s:12:"effectiveUri";s:6:"/index";s:18:"responseStatusCode";i:201;s:15:"responseHeaders";a:1:{' .
-        's:1:"k";a:1:{i:0;s:1:"v";}}s:12:"responseBody";s:3:"res";}'
+        's:1:"k";a:1:{i:0;s:1:"v";}}s:12:"responseBody";s:3:"res";}',
     );
 });
 
@@ -198,7 +198,7 @@ it('can be created from a serialized array', function () {
 it('has a serializeForAddToResult() method', function () {
     $respondedRequest = new RespondedRequest(
         new Request('POST', '/home', ['key' => 'val'], 'bod'),
-        new Response(201, ['k' => 'v'], 'res')
+        new Response(201, ['k' => 'v'], 'res'),
     );
 
     expect($respondedRequest->toArrayForAddToResult())->toBe([

@@ -133,7 +133,7 @@ it('gets only schema.org objects of a certain type if you use the onlyType metho
 
     $outputs = helper_invokeStepWithInput(
         Html::schemaOrg()->onlyType('Article'),
-        $html
+        $html,
     );
 
     expect($outputs)->toHaveCount(1);
@@ -146,7 +146,7 @@ it('also finds schema.org objects of a certain type in children of another schem
 
     $outputs = helper_invokeStepWithInput(
         Html::schemaOrg()->onlyType('Organization'),
-        $html
+        $html,
     );
 
     expect($outputs)->toHaveCount(2);
@@ -161,7 +161,7 @@ it('extracts certain data from schema.org objects when using the extract() metho
 
     $outputs = helper_invokeStepWithInput(
         Html::schemaOrg()->onlyType('Article')->extract(['url', 'headline', 'publisher' => 'publisher.name']),
-        $html
+        $html,
     );
 
     expect($outputs)->toHaveCount(1);
@@ -178,7 +178,7 @@ test('If an object doesn\'t contain a property from the extract mapping, it\'s j
 
     $outputs = helper_invokeStepWithInput(
         Html::schemaOrg()->onlyType('Article')->extract(['url', 'headline', 'alternativeHeadline']),
-        $html
+        $html,
     );
 
     expect($outputs)->toHaveCount(1);
