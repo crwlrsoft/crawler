@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.8.0] - 2024-03-26
+## [1.8.0] - 2024-05-30
 ### Added
 * New methods `Step::keep()` and `Step::keepAs()`, as well as `Step::keepFromInput()` and `Step::keepInputAs()`, as alternatives to `Step::addToResult()` (or `Step::addLaterToResult()`). The `keep()` method can be called without any argument, to keep all from the output data. It can be called with a string, to keep a certain key or with an array to keep a list of keys. If the step yields scalar value outputs (not an associative array or object with keys) you need to use the `keepAs()` method with the key you want the output value to have in the kept data. The methods `keepFromInput()` and `keepInputAs()` work the same, but uses the input (not the output) that the step receives. Most likely only needed with a first step, to keep data from initial inputs (or in a sub crawler, see below). Kept properties can also be accessed with the `Step::useInputKey()` method, so you can easily reuse properties from multiple steps ago as input.
 * New method `Step::outputKey()` with default implementation returning `StepOutputType::Mixed`. Please consider implementing this method yourself in all your custom steps, because it is going to be required in v2 of the library. It allows detecting (potential) problems in crawling procedures immediately when starting a run instead of failing after already running a while.
@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 * The `Step::addToResult()`, `Step::addLaterToResult()` and `Step::keepInputData()` methods. Instead, please use the new keep methods. This can cause some migration work for v2, because especially the add to result methods are a pretty central functionality, but the new "keep" methodology (plus the new sub crawler feature) will make a lot of things easier, less complex and the library will most likely work more efficiently in v2.
+
+### Fixed
+* When a cache file was generated with compression, and you're trying to read it with a `FileCache` instance without compression enabled, it also works. When unserializing the file content fails it tries decoding the string first before unserializing it.
 
 ## [1.7.2] - 2024-03-19
 ### Fixed
