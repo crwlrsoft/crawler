@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.8.0] - 2024-05-30
+## [1.8.0] - 2024-06-05
 ### Added
 * New methods `Step::keep()` and `Step::keepAs()`, as well as `Step::keepFromInput()` and `Step::keepInputAs()`, as alternatives to `Step::addToResult()` (or `Step::addLaterToResult()`). The `keep()` method can be called without any argument, to keep all from the output data. It can be called with a string, to keep a certain key or with an array to keep a list of keys. If the step yields scalar value outputs (not an associative array or object with keys) you need to use the `keepAs()` method with the key you want the output value to have in the kept data. The methods `keepFromInput()` and `keepInputAs()` work the same, but uses the input (not the output) that the step receives. Most likely only needed with a first step, to keep data from initial inputs (or in a sub crawler, see below). Kept properties can also be accessed with the `Step::useInputKey()` method, so you can easily reuse properties from multiple steps ago as input.
 * New method `Step::outputType()` with default implementation returning `StepOutputType::Mixed`. Please consider implementing this method yourself in all your custom steps, because it is going to be required in v2 of the library. It allows detecting (potential) problems in crawling procedures immediately when starting a run instead of failing after already running a while.
