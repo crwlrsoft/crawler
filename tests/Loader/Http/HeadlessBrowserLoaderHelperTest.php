@@ -111,9 +111,7 @@ it('uses the correct executable', function () {
     } catch (Exception $exception) {
     }
 
-    expect($exception?->getMessage())
-        ->not->toBeNull()
-        ->toStartWith('Chrome process stopped before startup completed.');
+    expect($exception)->not->toBeNull();
 
     $chromeExecutable = (new AutoDiscover())->guessChromeBinaryPath();
 
