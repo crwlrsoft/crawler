@@ -158,6 +158,11 @@ class HeadlessBrowserLoaderHelper
         return $this;
     }
 
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
     public function setTimeout(int $timeout): static
     {
         $this->timeout = $timeout;
