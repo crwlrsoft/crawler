@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2024-06-17
+### Added
+* New methods `HeadlessBrowserLoaderHelper::setTimeout()` and `HeadlessBrowserLoaderHelper::waitForNavigationEvent()` to allow defining the timeout for the headless chrome in milliseconds (default 30000 = 30 seconds) and the navigation event (`load` (default), `DOMContentLoaded`, `firstMeaningfulPaint`, `networkIdle`, etc.) to wait for when loading a URL.
+
 ## [1.8.0] - 2024-06-05
 ### Added
 * New methods `Step::keep()` and `Step::keepAs()`, as well as `Step::keepFromInput()` and `Step::keepInputAs()`, as alternatives to `Step::addToResult()` (or `Step::addLaterToResult()`). The `keep()` method can be called without any argument, to keep all from the output data. It can be called with a string, to keep a certain key or with an array to keep a list of keys. If the step yields scalar value outputs (not an associative array or object with keys) you need to use the `keepAs()` method with the key you want the output value to have in the kept data. The methods `keepFromInput()` and `keepInputAs()` work the same, but uses the input (not the output) that the step receives. Most likely only needed with a first step, to keep data from initial inputs (or in a sub crawler, see below). Kept properties can also be accessed with the `Step::useInputKey()` method, so you can easily reuse properties from multiple steps ago as input.
