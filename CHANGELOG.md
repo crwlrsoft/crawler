@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.1] - 2024-06-17
+### Added
+* Also add `HeadlessBrowserLoaderHelper::getTimeout()` to get the currently configured timeout value.
+
 ## [1.9.0] - 2024-06-17
 ### Added
 * New methods `HeadlessBrowserLoaderHelper::setTimeout()` and `HeadlessBrowserLoaderHelper::waitForNavigationEvent()` to allow defining the timeout for the headless chrome in milliseconds (default 30000 = 30 seconds) and the navigation event (`load` (default), `DOMContentLoaded`, `firstMeaningfulPaint`, `networkIdle`, etc.) to wait for when loading a URL.

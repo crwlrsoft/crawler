@@ -66,6 +66,16 @@ it('uses the configured timeout', function () {
     expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
 });
 
+it('returns the configured timeout', function () {
+    $helper = new HeadlessBrowserLoaderHelper();
+
+    expect($helper->getTimeout())->toBe(30_000);
+
+    $helper->setTimeout(75_000);
+
+    expect($helper->getTimeout())->toBe(75_000);
+});
+
 it('waits for the configured browser navigation event', function () {
     $browserFactoryMock = helper_setUpHeadlessChromeMocks(function (string $event, int $timeout) {
         return $event === Page::FIRST_MEANINGFUL_PAINT && $timeout === 57_000;
