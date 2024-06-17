@@ -6,6 +6,7 @@ use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
@@ -280,6 +281,11 @@ function helper_getFastCrawler(): HttpCrawler
             return helper_getFastLoader($userAgent, $logger);
         }
     };
+}
+
+function helper_getMinThrottler(): Throttler
+{
+    return new Throttler(new MultipleOf(0.0001), new MultipleOf(0.0002), Microseconds::fromSeconds(0.0001));
 }
 
 /**

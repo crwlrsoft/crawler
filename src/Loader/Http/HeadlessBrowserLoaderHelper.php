@@ -38,6 +38,17 @@ class HeadlessBrowserLoaderHelper
 
     protected ?string $proxy = null;
 
+    protected ?string $waitForEvent = null;
+
+    protected int $timeout = 30_000;
+
+    private BrowserFactory $browserFactory;
+
+    public function __construct(?BrowserFactory $browserFactory = null)
+    {
+        $this->browserFactory = $browserFactory ?? new BrowserFactory($this->executable);
+    }
+
     /**
      * @throws OperationTimedOut
      * @throws CommunicationException
@@ -73,13 +84,11 @@ class HeadlessBrowserLoaderHelper
 
         $throttler->trackRequestStartFor($request->getUri());
 
-        $this->page
-            ->navigate($request->getUri()->__toString())
-            ->waitForNavigation();
+        $this->navigate($request->getUri()->__toString());
 
         $throttler->trackRequestEndFor($request->getUri());
 
-        $html = $this->page->getHtml();
+        $html = $this->page?->getHtml();
 
         return new RespondedRequest(
             $request,
@@ -142,6 +151,20 @@ class HeadlessBrowserLoaderHelper
         return $this;
     }
 
+    public function waitForNavigationEvent(string $eventName): static
+    {
+        $this->waitForEvent = $eventName;
+
+        return $this;
+    }
+
+    public function setTimeout(int $timeout): static
+    {
+        $this->timeout = $timeout;
+
+        return $this;
+    }
+
     /**
      * @param string[] $headers
      * @return string[]
@@ -156,6 +179,24 @@ class HeadlessBrowserLoaderHelper
     }
 
     /**
+     * @throws OperationTimedOut
+     * @throws CommunicationException
+     * @throws NavigationExpired
+     * @throws NoResponseAvailable
+     * @throws InvalidResponse
+     * @throws CannotReadResponse
+     * @throws ResponseHasError
+     */
+    protected function navigate(string $url): void
+    {
+        if ($this->waitForEvent) {
+            $this->page?->navigate($url)->waitForNavigation($this->waitForEvent, $this->timeout);
+        } else {
+            $this->page?->navigate($url)->waitForNavigation(timeout: $this->timeout);
+        }
+    }
+
+    /**
      * @throws Exception
      */
     protected function getBrowser(
@@ -167,7 +208,7 @@ class HeadlessBrowserLoaderHelper
 
             $options = $this->optionsFromRequest($request, $proxy);
 
-            $this->browser = (new BrowserFactory($this->executable))->createBrowser($options);
+            $this->browser = $this->browserFactory->createBrowser($options);
 
             $this->optionsDirty = false;
         }
