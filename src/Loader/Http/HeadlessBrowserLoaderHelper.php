@@ -42,12 +42,7 @@ class HeadlessBrowserLoaderHelper
 
     protected int $timeout = 30_000;
 
-    private BrowserFactory $browserFactory;
-
-    public function __construct(?BrowserFactory $browserFactory = null)
-    {
-        $this->browserFactory = $browserFactory ?? new BrowserFactory($this->executable);
-    }
+    public function __construct(private ?BrowserFactory $browserFactory = null) {}
 
     /**
      * @throws OperationTimedOut
@@ -212,6 +207,10 @@ class HeadlessBrowserLoaderHelper
             $this->closeBrowser();
 
             $options = $this->optionsFromRequest($request, $proxy);
+
+            if (!$this->browserFactory) {
+                $this->browserFactory = new BrowserFactory($this->executable);
+            }
 
             $this->browser = $this->browserFactory->createBrowser($options);
 

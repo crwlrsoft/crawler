@@ -5,7 +5,9 @@ namespace tests\Loader\Http;
 use Closure;
 use Crwlr\Crawler\Loader\Http\HeadlessBrowserLoaderHelper;
 use Crwlr\Crawler\Steps\Loading\Http;
+use Exception;
 use GuzzleHttp\Psr7\Request;
+use HeadlessChromium\AutoDiscover;
 use HeadlessChromium\Browser\ProcessAwareBrowser;
 use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Communication\Session;
@@ -93,4 +95,43 @@ it('waits for the configured browser navigation event', function () {
     );
 
     expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
+});
+
+it('uses the correct executable', function () {
+    $helper = new HeadlessBrowserLoaderHelper();
+
+    $helper->setExecutable('somethingthatdefinitelyisntachromeexecutable');
+
+    $invadedHelper = invade($helper);
+
+    $exception = null;
+
+    try {
+        $invadedHelper->getBrowser(new Request('GET', 'https://www.example.com/foo'));
+    } catch (Exception $exception) {
+    }
+
+    expect($exception?->getMessage())
+        ->not->toBeNull()
+        ->toStartWith('Chrome process stopped before startup completed.');
+
+    $chromeExecutable = (new AutoDiscover())->guessChromeBinaryPath();
+
+    $helper = new HeadlessBrowserLoaderHelper();
+
+    $helper->setExecutable($chromeExecutable);
+
+    $invadedHelper = invade($helper);
+
+    $invadedHelper->getBrowser(new Request('GET', 'https://www.example.com/foo'));
+
+    $browserFactory = $invadedHelper->browserFactory;
+
+    expect($browserFactory)->toBeInstanceOf(BrowserFactory::class);
+
+    /** @var BrowserFactory $browserFactory */
+
+    $invadedBrowserFactory = invade($browserFactory);
+
+    expect($invadedBrowserFactory->chromeBinary)->toBe($chromeExecutable);
 });

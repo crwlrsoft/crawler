@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2024-06-18
+### Fixed
+* Issue with setting the headless chrome executable, introduced in 1.9.0. 
+
 ## [1.9.1] - 2024-06-17
 ### Added
 * Also add `HeadlessBrowserLoaderHelper::getTimeout()` to get the currently configured timeout value.
