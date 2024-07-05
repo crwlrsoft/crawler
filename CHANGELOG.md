@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.3] - 2024-07-05
+### Fixed
+* Add `HttpLoader::browser()` as a replacement for `HttpLoader::browserHelper()` and deprecate the `browserHelper()` method. It's an alias and just because it will read a little better: `$loader->browser()->xyz()` vs. `$loader->browserHelper()->xyz()`. `HttpLoader::browserHelper()` will be removed in v2.0.
+* Also deprecate `HttpLoader::setHeadlessBrowserOptions()`, `HttpLoader::addHeadlessBrowserOptions()` and `HttpLoader::setChromeExecutable()`. Use `$loader->browser()->setOptions()`, `$loader->browser()->addOptions()` and `$loader->browser()->setExecutable()` instead.
+
 ## [1.9.2] - 2024-06-18
 ### Fixed
 * Issue with setting the headless chrome executable, introduced in 1.9.0. 
