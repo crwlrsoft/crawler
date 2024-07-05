@@ -216,7 +216,7 @@ class HttpLoader extends Loader
     {
         $this->useHeadlessBrowser = false;
 
-        $this->browserHelper()->closeBrowser();
+        $this->browser()->closeBrowser();
 
         return $this;
     }
@@ -228,27 +228,32 @@ class HttpLoader extends Loader
 
     /**
      * @param array<string, mixed> $options
+     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setOptions()` instead.
      */
     public function setHeadlessBrowserOptions(array $options): static
     {
-        $this->browserHelper()->setOptions($options);
+        $this->browser()->setOptions($options);
 
         return $this;
     }
 
     /**
      * @param array<string, mixed> $options
+     * @deprecated Will be removed in v2.0. Use `$loader->browser()->addOptions()` instead.
      */
     public function addHeadlessBrowserOptions(array $options): static
     {
-        $this->browserHelper()->addOptions($options);
+        $this->browser()->addOptions($options);
 
         return $this;
     }
 
+    /**
+     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setExecutable()` instead.
+     */
     public function setChromeExecutable(string $executable): static
     {
-        $this->browserHelper()->setExecutable($executable);
+        $this->browser()->setExecutable($executable);
 
         return $this;
     }
@@ -316,7 +321,15 @@ class HttpLoader extends Loader
         $this->proxies = new ProxyManager($proxyUrls);
     }
 
+    /**
+     * @deprecated Will be removed in v2.0. Use browser() instead, it's an alias.
+     */
     public function browserHelper(): HeadlessBrowserLoaderHelper
+    {
+        return $this->browser();
+    }
+
+    public function browser(): HeadlessBrowserLoaderHelper
     {
         if (!$this->browserHelper) {
             $this->browserHelper = new HeadlessBrowserLoaderHelper();
@@ -413,7 +426,7 @@ class HttpLoader extends Loader
         if ($this->useHeadlessBrowser) {
             $proxy = $this->proxies?->getProxy() ?? null;
 
-            return $this->browserHelper()->navigateToPageAndGetRespondedRequest($request, $this->throttler, $proxy);
+            return $this->browser()->navigateToPageAndGetRespondedRequest($request, $this->throttler, $proxy);
         }
 
         return $this->handleRedirects($request);
