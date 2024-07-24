@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.5] - 2024-07-25
+### Fixed
+* Prevent PHP warnings when an HTTP response includes a `Content-Type: application/x-gzip` header, but the content is not actually compressed. This issue also occurred with cached responses, because compressed content is decoded during caching. Upon retrieval from the cache, the header indicated compression, but the content was already decoded.
+
 ## [1.9.4] - 2024-07-24
 ### Fixed
 * When using `HttpLoader::cacheOnlyWhereUrl()` to restrict caching, the filter rule is not only applied when adding newly loaded responses to the cache, but also for using cached responses. Example: a response for `https://www.example.com/foo` is already available in the cache, but `$loader->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'))` was called, the cached response is not used.
