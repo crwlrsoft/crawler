@@ -359,7 +359,7 @@ class HttpLoader extends Loader
 
         $this->callHook('beforeLoad', $request);
 
-        $respondedRequest = $this->getFromCache($request);
+        $respondedRequest = $this->shouldRequestBeServedFromCache($request) ? $this->getFromCache($request) : null;
 
         $isFromCache = $respondedRequest !== null;
 
@@ -454,6 +454,7 @@ class HttpLoader extends Loader
         if ($this->proxies && $this->httpClient instanceof Client) {
             $response = $this->sendProxiedRequestUsingGuzzle($request, $this->httpClient);
         } else {
+            error_log('send request: ' . $request->getUri());
             $response = $this->httpClient->sendRequest($request);
         }
 
@@ -597,9 +598,26 @@ class HttpLoader extends Loader
                     return false;
                 }
             }
-
-            return true;
         }
+
+        return true;
+    }
+
+    protected function shouldRequestBeServedFromCache(RequestInterface $request): bool
+    {
+        if (!empty($this->cacheUrlFilters)) {
+            foreach ($this->cacheUrlFilters as $filter) {
+                error_log('evaluate: ' . (string) $request->getUri());
+                if (!$filter->evaluate((string) $request->getUri())) {
+                    error_log((string) $request->getUri() . ' does not match filter');
+                    return false;
+                } else {
+                    error_log((string) $request->getUri() . ' matches filter');
+                }
+            }
+        }
+
+        error_log('Request should be served from cache.');
 
         return true;
     }

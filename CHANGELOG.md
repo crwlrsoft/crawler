@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.4] - 2024-07-24
+### Fixed
+* When using `HttpLoader::cacheOnlyWhereUrl()` to restrict caching, the filter rule is not only applied when adding newly loaded responses to the cache, but also for using cached responses. Example: a response for `https://www.example.com/foo` is already available in the cache, but `$loader->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'))` was called, the cached response is not used.
+
 ## [1.9.3] - 2024-07-05
 ### Fixed
 * Add `HttpLoader::browser()` as a replacement for `HttpLoader::browserHelper()` and deprecate the `browserHelper()` method. It's an alias and just because it will read a little better: `$loader->browser()->xyz()` vs. `$loader->browserHelper()->xyz()`. `HttpLoader::browserHelper()` will be removed in v2.0.
