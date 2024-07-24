@@ -695,6 +695,45 @@ test(
     },
 )->with(['load', 'loadOrFail']);
 
+it('uses the cache only for requests that meet the filter criteria', function (string $loadingMethod) {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient
+        ->shouldReceive('sendRequest')
+        ->once()
+        ->andReturnUsing(function (Request $request) {
+            return new Response(200, body: $request->getUri() . ' response');
+        });
+
+    $userAgent = helper_nonBotUserAgent();
+
+    $cache = new FileCache(helper_cachedir());
+
+    $cachedResponse = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/foo/test', headers: ['User-Agent' => $userAgent->__toString()]),
+        new Response(),
+    );
+
+    $cache->set($cachedResponse->cacheKey(), $cachedResponse);
+
+    $cachedResponse = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/bar/test', headers: ['User-Agent' => $userAgent->__toString()]),
+        new Response(),
+    );
+
+    $cache->set($cachedResponse->cacheKey(), $cachedResponse);
+
+    $httpLoader = new HttpLoader($userAgent, $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $httpLoader->cacheOnlyWhereUrl(Filter::urlPathStartsWith('/bar/'));
+
+    $httpLoader->{$loadingMethod}('https://www.example.com/foo/test');
+
+    $httpLoader->{$loadingMethod}('https://www.example.com/bar/test');
+})->with(['load', 'loadOrFail']);
+
 it('updates an existing cached response', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
