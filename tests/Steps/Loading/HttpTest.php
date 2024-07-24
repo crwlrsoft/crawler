@@ -16,6 +16,7 @@ use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 
+use function tests\helper_getRespondedRequest;
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
@@ -405,3 +406,32 @@ it('gets multiple headers from an input array using useInputKeyAsHeaders()', fun
 
     helper_invokeStepWithInput($step, $inputArray);
 });
+
+test(
+    'the getBodyString() method does not generate a warning, when the response contains a ' .
+    'Content-Type: application/x-gzip header, but the content actually isn\'t compressed',
+    function () {
+        $warnings = [];
+
+        $previousHandler = set_error_handler(function ($errno, $errstr) use (&$warnings) {
+            if ($errno === E_WARNING) {
+                $warnings[] = $errstr;
+            }
+
+            return false;
+        });
+
+        $response = helper_getRespondedRequest(
+            url: 'https://example.com/yolo',
+            responseHeaders: ['Content-Type' => 'application/x-gzip'],
+            responseBody: 'Servas!',
+        );
+
+        $string = Http::getBodyString($response);
+
+        set_error_handler($previousHandler);
+
+        expect($warnings)->toBeEmpty()
+            ->and($string)->toBe('Servas!');
+    },
+);
