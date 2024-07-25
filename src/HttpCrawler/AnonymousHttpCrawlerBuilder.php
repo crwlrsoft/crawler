@@ -25,7 +25,7 @@ class AnonymousHttpCrawlerBuilder
         return $instance;
     }
 
-    public function withUserAgent(string $userAgent): HttpCrawler
+    public function withUserAgent(string|UserAgentInterface $userAgent): HttpCrawler
     {
         $instance = new class () extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
@@ -34,8 +34,15 @@ class AnonymousHttpCrawlerBuilder
             }
         };
 
-        $instance->setUserAgent(new UserAgent($userAgent));
+        $userAgent = $userAgent instanceof UserAgentInterface ? $userAgent : new UserAgent($userAgent);
+
+        $instance->setUserAgent($userAgent);
 
         return $instance;
+    }
+
+    public function withMozilla5CompatibleUserAgent(): HttpCrawler
+    {
+        return $this->withUserAgent(UserAgent::mozilla5CompatibleBrowser());
     }
 }

@@ -10,4 +10,9 @@ class UserAgent implements UserAgentInterface
     {
         return $this->userAgent;
     }
+
+    public static function mozilla5CompatibleBrowser(): self
+    {
+        return new self('Mozilla/5.0 (compatible)');
+    }
 }

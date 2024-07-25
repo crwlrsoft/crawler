@@ -39,3 +39,11 @@ it('creates an HttpCrawler instance with a non bot user agent', function () {
 
     expect($userAgent->__toString())->toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ...');
 });
+
+it('creates an HttpCrawler instance with a mozilla 5.0 compatible user agent', function () {
+    $crawler = HttpCrawler::make()->withMozilla5CompatibleUserAgent();
+
+    $userAgent = $crawler->getLoader()->userAgent();
+
+    expect($userAgent->__toString())->toBe('Mozilla/5.0 (compatible)');
+});
