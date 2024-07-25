@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Cache;
 
 use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Cache\Exceptions\ReadingCacheFailedException;
+use Crwlr\Crawler\Utils\Gzip;
 use DateInterval;
 use Exception;
 use Psr\SimpleCache\CacheInterface;
@@ -217,15 +218,13 @@ class FileCache implements CacheInterface
      */
     protected function encode(string $content): string
     {
-        if (!function_exists('gzencode')) {
+        try {
+            return Gzip::encode($content, true);
+        } catch (MissingZlibExtensionException) {
             throw new MissingZlibExtensionException(
-                "Can't compress response cache data. Compression needs PHP ext-zlib installed.",
+                'Can\'t compress response cache data. Compression needs PHP ext-zlib installed.',
             );
         }
-
-        $encoded = gzencode($content);
-
-        return $encoded === false ? $content : $encoded;
     }
 
     /**
@@ -233,18 +232,10 @@ class FileCache implements CacheInterface
      */
     protected function decode(string $content): string
     {
-        $isEncoded = 0 === mb_strpos($content, "\x1f" . "\x8b" . "\x08", 0, "US-ASCII");
-
-        if (!$isEncoded) {
-            return $content;
-        }
-
-        if (!function_exists('gzdecode')) {
+        try {
+            return Gzip::decode($content, true);
+        } catch (MissingZlibExtensionException) {
             throw new MissingZlibExtensionException('FileCache compression needs PHP ext-zlib installed.');
         }
-
-        $decoded = gzdecode($content);
-
-        return $decoded === false ? $content : $decoded;
     }
 }

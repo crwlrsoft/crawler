@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator;
@@ -9,6 +10,7 @@ use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
 use Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface;
 use Crwlr\Crawler\Steps\StepOutputType;
+use Crwlr\Crawler\Utils\Gzip;
 use Exception;
 use Generator;
 use Psr\Http\Message\MessageInterface;
@@ -80,6 +82,8 @@ class Http extends HttpBase
     /**
      * When using the contents of an HTTP Message Stream multiple times, it's important to not forget to rewind() it,
      * otherwise you'll just get an empty string. So better just always use this helper.
+     *
+     * @throws MissingZlibExtensionException
      */
     public static function getBodyString(MessageInterface|RespondedRequest $message): string
     {
@@ -91,22 +95,8 @@ class Http extends HttpBase
 
         $message->getBody()->rewind();
 
-        $isEncoded = 0 === mb_strpos($contents, "\x1f" . "\x8b" . "\x08", 0, 'US-ASCII');
-
-        if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true) && $isEncoded && function_exists('gzdecode')) {
-            // Temporarily set a new error handler, so decoding a string that actually isn't compressed, doesn't
-            // generate a warning.
-            $previousHandler = set_error_handler(function ($errno, $errstr) {
-                return $errno === E_WARNING && str_contains($errstr, 'gzdecode(): data error');
-            });
-
-            $decoded = gzdecode($contents);
-
-            set_error_handler($previousHandler);
-
-            if ($decoded !== false) {
-                return $decoded;
-            }
+        if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true)) {
+            return Gzip::decode($contents);
         }
 
         return $contents;
