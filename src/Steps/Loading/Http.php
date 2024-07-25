@@ -88,18 +88,10 @@ class Http extends HttpBase
         $message->getBody()->rewind();
 
         $contents = $message->getBody()->getContents();
+        $isEncoded = 0 === mb_strpos($contents, "\x1f" . "\x8b" . "\x08", 0, 'US-ASCII');
 
-        if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true) && function_exists('gzdecode')) {
-            // Temporarily set a new error handler, so decoding a string that actually isn't compressed, doesn't
-            // generate a warning.
-            $previousHandler = set_error_handler(function ($errno, $errstr) {
-                return $errno === E_WARNING && str_contains($errstr, 'gzdecode(): data error');
-            });
-
+        if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true) && $isEncoded && function_exists('gzdecode')) {
             $decoded = gzdecode($contents);
-
-            set_error_handler($previousHandler);
-
             $contents = $decoded === false ? $contents : $decoded;
         }
 
