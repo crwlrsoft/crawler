@@ -88,6 +88,9 @@ class Http extends HttpBase
         $message->getBody()->rewind();
 
         $contents = $message->getBody()->getContents();
+
+        $message->getBody()->rewind();
+
         $isEncoded = 0 === mb_strpos($contents, "\x1f" . "\x8b" . "\x08", 0, 'US-ASCII');
 
         if (in_array('application/x-gzip', $message->getHeader('Content-Type'), true) && $isEncoded && function_exists('gzdecode')) {
@@ -102,11 +105,9 @@ class Http extends HttpBase
             set_error_handler($previousHandler);
 
             if ($decoded !== false) {
-                $contents = $decoded;
+                return $decoded;
             }
         }
-
-        $message->getBody()->rewind();
 
         return $contents;
     }
