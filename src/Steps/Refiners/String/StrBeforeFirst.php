@@ -11,7 +11,7 @@ class StrBeforeFirst extends AbstractRefiner
     public function refine(mixed $value): mixed
     {
         if (!is_string($value)) {
-            $this->logTypeWarning('Str::beforeFirst()', $value);
+            $this->logTypeWarning('StringRefiner::beforeFirst()', $value);
 
             return $value;
         }

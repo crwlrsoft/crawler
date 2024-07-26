@@ -15,7 +15,7 @@ it('logs a warning and returns the unchanged value when $value is not of type st
 
     $logOutput = $this->getActualOutputForAssertion();
 
-    expect($logOutput)->toContain('Refiner Str::betweenFirst() can\'t be applied to value of type ' . gettype($value));
+    expect($logOutput)->toContain('Refiner StringRefiner::betweenFirst() can\'t be applied to value of type ' . gettype($value));
 
     expect($refinedValue)->toBe($value);
 })->with([

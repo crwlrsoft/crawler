@@ -11,7 +11,7 @@ class StrBeforeLast extends AbstractRefiner
     public function refine(mixed $value): mixed
     {
         if (!is_string($value)) {
-            $this->logTypeWarning('Str::beforeLast()', $value);
+            $this->logTypeWarning('StringRefiner::beforeLast()', $value);
 
             return $value;
         }

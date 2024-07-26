@@ -18,7 +18,7 @@ class StrReplace extends AbstractRefiner
     public function refine(mixed $value): mixed
     {
         if (!is_string($value)) {
-            $this->logTypeWarning('Str::replace()', $value);
+            $this->logTypeWarning('StringRefiner::replace()', $value);
 
             return $value;
         }
