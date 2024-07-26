@@ -11,7 +11,7 @@ class StrBetweenFirst extends AbstractRefiner
     public function refine(mixed $value): mixed
     {
         if (!is_string($value)) {
-            $this->logTypeWarning('Str::betweenFirst()', $value);
+            $this->logTypeWarning('StringRefiner::betweenFirst()', $value);
 
             return $value;
         }

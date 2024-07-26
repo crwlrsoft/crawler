@@ -11,7 +11,7 @@ class StrBetweenLast extends AbstractRefiner
     public function refine(mixed $value): mixed
     {
         if (!is_string($value)) {
-            $this->logTypeWarning('Str::betweenLast()', $value);
+            $this->logTypeWarning('StringRefiner::betweenLast()', $value);
 
             return $value;
         }
