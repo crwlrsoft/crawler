@@ -343,7 +343,7 @@ abstract class BaseStep implements StepInterface
      * return StepOutputType::AssociativeArrayOrObject.
      * If it will only yield scalar (string, int, float, bool) outputs, return StepOutputType::Scalar.
      *
-     * If it can potentially yield both types, but you can determin what it will yield, based on the state of the
+     * If it can potentially yield both types, but you can determine what it will yield, based on the state of the
      * class, please implement this. Only if it can't be defined upfront, because it depends on the input, return
      * StepOutputType::Mixed.
      *
