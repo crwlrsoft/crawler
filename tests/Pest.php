@@ -21,6 +21,7 @@ use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\Process\Process;
@@ -257,9 +258,12 @@ function helper_getSimpleListHtml(): string
         HTML;
 }
 
-function helper_getFastLoader(UserAgentInterface $userAgent, ?LoggerInterface $logger = null): HttpLoader
-{
-    $loader = new HttpLoader($userAgent, logger: $logger);
+function helper_getFastLoader(
+    ?UserAgentInterface $userAgent = null,
+    ?LoggerInterface $logger = null,
+    ?ClientInterface $httpClient = null,
+): HttpLoader {
+    $loader = new HttpLoader($userAgent ?? UserAgent::mozilla5CompatibleBrowser(), $httpClient, $logger);
 
     $loader->throttle()
         ->waitBetween(new MultipleOf(0.0001), new MultipleOf(0.0002))
