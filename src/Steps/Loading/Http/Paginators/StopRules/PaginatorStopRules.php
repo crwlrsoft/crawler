@@ -25,4 +25,14 @@ class PaginatorStopRules
     {
         return new IsEmptyInXml($selector);
     }
+
+    public static function contains(string $string): Contains
+    {
+        return new Contains($string);
+    }
+
+    public static function notContains(string $string): NotContains
+    {
+        return new NotContains($string);
+    }
 }
