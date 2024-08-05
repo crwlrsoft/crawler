@@ -5,10 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.10.0] - 2024-08-05
 ### Added
-* Static method `UserAgent::mozilla5CompatibleBrowser()` to get a `UserAgent` instance with the user agent string `Mozilla/5.0 (compatible)` and also the new method `withMozilla5CompatibleUserAgent` in the `AnonymousHttpCrawlerBuilder` that you can use like this: `HttpCrawler::make()->withMozilla5CompatibleUserAgent()`.
 * URL refiners: `UrlRefiner::withScheme()`, `UrlRefiner::withHost()`, `UrlRefiner::withPort()`, `UrlRefiner::withoutPort()`, `UrlRefiner::withPath()`, `UrlRefiner::withQuery()`, `UrlRefiner::withoutQuery()`, `UrlRefiner::withFragment()` and `UrlRefiner::withoutFragment()`.
 * New paginator stop rules `PaginatorStopRules::contains()` and `PaginatorStopRules::notContains()`.
+* Static method `UserAgent::mozilla5CompatibleBrowser()` to get a `UserAgent` instance with the user agent string `Mozilla/5.0 (compatible)` and also the new method `withMozilla5CompatibleUserAgent` in the `AnonymousHttpCrawlerBuilder` that you can use like this: `HttpCrawler::make()->withMozilla5CompatibleUserAgent()`.
 
 ## [1.9.5] - 2024-07-25
 ### Fixed
