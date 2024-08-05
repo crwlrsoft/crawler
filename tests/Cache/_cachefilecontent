@@ -204,7 +204,7 @@ $query = Query::fromString('foo=1&amp;bar=2&amp;baz=3&amp;quz=4')
         <p class="mb-3 text-center">
             <a class="text-white hover:text-creen-100 cursor-pointer font-semibold mr-10"
    href="https://twitter.com/crwlrsoft" target="_blank" rel="noopener"><svg class="inline-block align-middle h-10 w-10 mr-3"><use href="#twitter" /></svg> <span class="align-middle">Twitter</span></a>            <a class="text-white hover:text-creen-100 cursor-pointer font-semibold"
-   href="https://github.com/crwlrsoft" target="_blank" rel="noopener"><svg class="inline-block align-middle h-6 w-6 mr-3"><use href="#github" /></svg> <span class="align-middle">Github</span></a>        </p>
+   href="https://github.com/crwlrsoft" target="_blank" rel="noopener"><svg class="inline-block align-middle h-6 w-6 mr-3"><use href="#github" /></svg> <span class="align-middle">GitHub</span></a>        </p>
 
         <p class="text-center">
             <a class="text-white hover:text-creen-100 cursor-pointer font-semibold mr-3"

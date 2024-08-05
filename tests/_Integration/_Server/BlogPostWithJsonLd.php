@@ -71,7 +71,7 @@ var_dump($seemsLegitUrl-&gt;__toString());     // string(28) "https://www.xn--pp
         <div class="tiles">
             <div class="tile-hidden">
                 <p class="no-margin-top">Follow crwlr.software on</p>
-                <a href="https://github.com/crwlrsoft" target="_blank" rel="noopener"title="crwlr.software on Github">Github</a>
+                <a href="https://github.com/crwlrsoft" target="_blank" rel="noopener"title="crwlr.software on GitHub">GitHub</a>
                 <a href="https://twitter.com/crwlrsoft" target="_blank" rel="noopener"title="Follow crwlr.software on Twitter!">Twitter</a>
             </div>
             <div class="tile-hidden">

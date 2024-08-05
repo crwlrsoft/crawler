@@ -218,7 +218,7 @@ it('passes on all the loaders to a group step which by default passes all of the
     expect($step->loaders[2])->toBeInstanceOf(PhantasyLoader::class);
 });
 
-it('passes only a certain loader when user choses one by calling useLoader() on a step', function () {
+it('passes only a certain loader when user chooses one by calling useLoader() on a step', function () {
     $step = new LoaderCollectingStep();
 
     (new MultiLoaderCrawler())->addStep($step->useLoader('http'));
@@ -228,7 +228,7 @@ it('passes only a certain loader when user choses one by calling useLoader() on 
     expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
 });
 
-it('passes only a certain loader when user choses one by calling useLoader() on a step inside a group', function () {
+it('passes only a certain loader when user chooses one by calling useLoader() on a step inside a group', function () {
     $crawler = new MultiLoaderCrawler();
 
     $step = new LoaderCollectingStep();
