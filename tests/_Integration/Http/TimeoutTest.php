@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 /** @var TestCase $this */
 
 it('Fails when timeout is exceeded', function () {
-    $crawler = new class () extends HttpCrawler {
+    $crawler = new class extends HttpCrawler {
         protected function userAgent(): UserAgentInterface
         {
             return new UserAgent('SomeUserAgent');

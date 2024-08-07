@@ -41,7 +41,7 @@ function helper_addUpdateInputUsingOutputCallbackToSteps(Closure $callback, Step
 
 function helper_getStepThatRemembersIfItWasCalled(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         public bool $called = false;
 
         protected function invoke(mixed $input): Generator
@@ -533,7 +533,7 @@ test(
     'when steps yield multiple outputs it combines the first output from first step with first output from second ' .
         'step and so on.',
     function () {
-        $step1 = new class () extends Step {
+        $step1 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield ['one' => 'foo'];
@@ -542,7 +542,7 @@ test(
             }
         };
 
-        $step2 = new class () extends Step {
+        $step2 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield ['three' => 'baz'];

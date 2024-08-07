@@ -15,7 +15,7 @@ use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
 
 it('paginates through pagination', function () {
-    $crawler = new class () extends HttpCrawler {
+    $crawler = new class extends HttpCrawler {
         protected function userAgent(): UserAgentInterface
         {
             return new BotUserAgent('MyBot');

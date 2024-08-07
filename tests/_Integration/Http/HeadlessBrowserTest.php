@@ -77,7 +77,7 @@ it('uses cookies', function () {
     $crawler
         ->input('http://localhost:8000/set-cookie')
         ->addStep(Http::get())
-        ->addStep(new class () extends Step {
+        ->addStep(new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield 'http://localhost:8000/print-cookie';
@@ -117,7 +117,7 @@ it('also gets cookies that are set via javascript', function () {
     $crawler
         ->input('http://localhost:8000/set-js-cookie')
         ->addStep(Http::get())
-        ->addStep(new class () extends Step {
+        ->addStep(new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield 'http://localhost:8000/print-cookie';

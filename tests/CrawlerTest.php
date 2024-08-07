@@ -280,7 +280,7 @@ test('when you call keep() or keepAs() on a step, it keeps its output data until
 it('immediately stops when keepAs() is not used with a scalar value output step', function () {
     $crawler = helper_getDummyCrawler();
 
-    $step1 = new class () extends Step {
+    $step1 = new class extends Step {
         public bool $wasCalled = false;
 
         protected function invoke(mixed $input): Generator
@@ -296,7 +296,7 @@ it('immediately stops when keepAs() is not used with a scalar value output step'
         }
     };
 
-    $step2 = new class () extends Step {
+    $step2 = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield 'foo';
@@ -333,7 +333,7 @@ it('sends all results to the Store when there is one and still yields the result
 
     $crawler->setStore($store);
 
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield 'one';
@@ -398,7 +398,7 @@ it('yields only unique outputs from a step when uniqueOutput was called', functi
 it(
     'cascades step outputs immediately and doesn\'t wait for the current step being called with all the inputs',
     function () {
-        $step1 = new class () extends Step {
+        $step1 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step1 called');
@@ -409,7 +409,7 @@ it(
             }
         };
 
-        $step2 = new class () extends Step {
+        $step2 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step2 called');
@@ -418,7 +418,7 @@ it(
             }
         };
 
-        $store = new class () extends Store {
+        $store = new class extends Store {
             public function store(Result $result): void
             {
                 $this->logger?->info('Stored a result');
@@ -453,7 +453,7 @@ it(
 it(
     'immediately calls the store for each final output',
     function () {
-        $step1 = new class () extends Step {
+        $step1 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step1 called');
@@ -464,7 +464,7 @@ it(
             }
         };
 
-        $step2 = new class () extends Step {
+        $step2 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step2 called: ' . $input);
@@ -475,7 +475,7 @@ it(
             }
         };
 
-        $step3 = new class () extends Step {
+        $step3 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step3 called: ' . $input);
@@ -486,7 +486,7 @@ it(
             }
         };
 
-        $step4 = new class () extends Step {
+        $step4 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step4 called: ' . $input);
@@ -497,7 +497,7 @@ it(
             }
         };
 
-        $store = new class () extends Store {
+        $store = new class extends Store {
             public function store(Result $result): void
             {
                 $this->logger?->info('Stored a result: ' . $result->get('unnamed'));
@@ -557,7 +557,7 @@ it(
     'does not wait for all child outputs originating from an output of a step where keepAs() was called before ' .
     'calling the store',
     function () {
-        $step1 = new class () extends Step {
+        $step1 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step1 called');
@@ -568,7 +568,7 @@ it(
             }
         };
 
-        $step2 = new class () extends Step {
+        $step2 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step2 called: ' . $input);
@@ -581,7 +581,7 @@ it(
 
         $step2->keepAs('foo');
 
-        $step3 = new class () extends Step {
+        $step3 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step3 called: ' . $input);
@@ -592,7 +592,7 @@ it(
             }
         };
 
-        $step4 = new class () extends Step {
+        $step4 = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 $this->logger?->info('step4 called: ' . $input);
@@ -605,7 +605,7 @@ it(
 
         $step4->keepAs('bar');
 
-        $store = new class () extends Store {
+        $store = new class extends Store {
             public function store(Result $result): void
             {
                 $this->logger?->info('Stored a result: ' . $result->get('bar'));

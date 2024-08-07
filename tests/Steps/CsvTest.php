@@ -73,7 +73,7 @@ it('works with a RespondedRequest as input', function () {
 });
 
 it('works with an object having a __toString method', function () {
-    $object = new class () {
+    $object = new class {
         public function __toString(): string
         {
             return <<<CSV

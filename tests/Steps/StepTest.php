@@ -31,7 +31,7 @@ use function tests\helper_traverseIterable;
 /** @var TestCase $this */
 
 test('You can add a logger and it is available within the invoke method', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         /**
          * @return Generator<string>
          */
@@ -310,7 +310,7 @@ it('makes object outputs unique when providing no key name to uniqueOutput', fun
 });
 
 it('calls the validateAndSanitizeInput method', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function validateAndSanitizeInput(mixed $input): string
         {
             return $input . ' validated and sanitized';
@@ -331,7 +331,7 @@ test(
     'when calling validateAndSanitizeStringOrStringable() and the input is array with a single element it tries to ' .
     'use that element as input value',
     function () {
-        $step = new class () extends Step {
+        $step = new class extends Step {
             protected function validateAndSanitizeInput(mixed $input): string
             {
                 return $this->validateAndSanitizeStringOrStringable($input);
@@ -353,7 +353,7 @@ test(
     'when calling validateAndSanitizeStringOrStringable() and the input is array with multiple elements it throws ' .
     'an InvalidArgumentException',
     function () {
-        $step = new class () extends Step {
+        $step = new class extends Step {
             protected function validateAndSanitizeInput(mixed $input): string
             {
                 return $this->validateAndSanitizeStringOrStringable($input);
@@ -370,7 +370,7 @@ test(
 )->throws(InvalidArgumentException::class);
 
 it('is possible that a step does not produce any output at all', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             if ($input === 'foo') {
@@ -435,7 +435,7 @@ it(
     'does not yield more outputs than defined via maxOutputs() when step yields multiple outputs per input and the ' .
     'limit is reached in the middle of the outputs resulting from one input',
     function () {
-        $step = new class () extends Step {
+        $step = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield 'one';
@@ -463,7 +463,7 @@ it(
 );
 
 test('When a step has max outputs defined, it won\'t call the invoke method after the limit was reached', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         public int $_invokeCallCount = 0;
 
         protected function invoke(mixed $input): Generator
@@ -508,7 +508,7 @@ it('converts non array output to array with a certain key using the outputKey() 
 });
 
 test('keeping a scalar output value with keep() also works when outputKey() was used', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield 'hey';
@@ -654,7 +654,7 @@ it('useInputKey() can be used to get data that was kept from a previous step wit
 });
 
 test('you can define aliases for output keys and they are considered when using keep()', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield [
@@ -686,7 +686,7 @@ test('you can define aliases for output keys and they are considered when using 
 });
 
 test('you can filter outputs using an output key alias', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield [
@@ -711,10 +711,10 @@ test('you can filter outputs using an output key alias', function () {
 });
 
 it('can filter by a key that only exists in the serialized version of an output object', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
-            yield new class () {
+            yield new class {
                 public string $foo = 'one';
 
                 public string $bar = 'two';
