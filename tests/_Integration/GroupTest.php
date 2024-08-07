@@ -18,7 +18,7 @@ use function tests\helper_getFastLoader;
 it(
     'gets both, data from html and the enclosed json-ld using two steps in a group and combines the results',
     function () {
-        $crawler = new class () extends HttpCrawler {
+        $crawler = new class extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
                 return new BotUserAgent('MyBot');

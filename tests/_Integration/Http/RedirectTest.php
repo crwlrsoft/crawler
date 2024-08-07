@@ -71,7 +71,7 @@ it('stops at 10 redirects by default', function () {
 });
 
 test('you can set your own max redirects limit', function () {
-    $crawler = new class () extends HttpCrawler {
+    $crawler = new class extends HttpCrawler {
         protected function userAgent(): UserAgentInterface
         {
             return new UserAgent('RedirectBot');

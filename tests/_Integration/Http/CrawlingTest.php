@@ -92,7 +92,7 @@ class Crawler extends HttpCrawler
 {
     public function loader(UserAgentInterface $userAgent, LoggerInterface $logger): TestLoader
     {
-        $client = new class () implements ClientInterface {
+        $client = new class implements ClientInterface {
             private Client $guzzleClient;
 
             public function __construct()

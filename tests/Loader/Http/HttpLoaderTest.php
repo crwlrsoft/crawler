@@ -282,7 +282,7 @@ it('calls request start and end tracking methods', function (string $loadingMeth
 
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
 
-    $throttler = new class () extends Throttler {
+    $throttler = new class extends Throttler {
         public function trackRequestStartFor(UriInterface $url): void
         {
             echo 'Track request start ' . $url . PHP_EOL;
@@ -330,7 +330,7 @@ it(
             })
             ->andReturn(new Response(200));
 
-        $throttler = new class () extends Throttler {
+        $throttler = new class extends Throttler {
             public function trackRequestEndFor(UriInterface $url): void
             {
                 echo 'Track request end ' . $url . PHP_EOL;

@@ -76,7 +76,7 @@ test('Http steps can also deal with multiple URLs as one array input', function 
 });
 
 it('turns an array of URLs to nested extracted data from those child pages using sub crawlers', function () {
-    $crawlerBuilder = new class () {
+    $crawlerBuilder = new class {
         public function build(): \Crwlr\Crawler\Crawler
         {
             $crawler = new PublisherExampleCrawler();
@@ -181,7 +181,7 @@ it('turns an array of URLs to nested extracted data from those child pages using
 });
 
 test('it can also keep the URLs, provided to the sub crawler', function () {
-    $crawlerBuilder = new class () {
+    $crawlerBuilder = new class {
         public function build(): \Crwlr\Crawler\Crawler
         {
             $crawler = new PublisherExampleCrawler();

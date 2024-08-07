@@ -85,7 +85,7 @@ function helper_getValueReturningStep(mixed $value): Step
 
 function helper_getInputReturningStep(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield $input;
@@ -95,7 +95,7 @@ function helper_getInputReturningStep(): Step
 
 function helper_getNumberIncrementingStep(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield $input + 1;
@@ -105,7 +105,7 @@ function helper_getNumberIncrementingStep(): Step
 
 function helper_getStepYieldingMultipleNumbers(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $number) {
@@ -117,7 +117,7 @@ function helper_getStepYieldingMultipleNumbers(): Step
 
 function helper_getStepYieldingMultipleArraysWithNumber(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
@@ -143,7 +143,7 @@ function helper_getStepYieldingObjectWithNumber(int $number): Step
 
 function helper_getStepYieldingMultipleObjectsWithNumber(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
@@ -157,7 +157,7 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
 
 function helper_getLoadingStep(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         use LoadingStep;
 
         protected function invoke(mixed $input): Generator
@@ -275,7 +275,7 @@ function helper_getFastLoader(
 
 function helper_getFastCrawler(): HttpCrawler
 {
-    return new class () extends HttpCrawler {
+    return new class extends HttpCrawler {
         protected function userAgent(): UserAgentInterface
         {
             return new UserAgent('TestBot');

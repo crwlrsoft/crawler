@@ -14,7 +14,7 @@ use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test('you can add a loader', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         use LoadingStep;
 
         protected function invoke(mixed $input): Generator
@@ -46,7 +46,7 @@ test(
 
         $loaderTwo->shouldReceive('load')->once()->andReturn('Hi');
 
-        $step = new class () extends Step {
+        $step = new class extends Step {
             use LoadingStep;
 
             protected function invoke(mixed $input): Generator
