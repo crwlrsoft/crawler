@@ -30,7 +30,7 @@ it('does not yield client error responses by default', function (string $method)
     $crawler = new ErrorCrawler();
 
     $crawler->inputs(['http://localhost:8000/client-error-response'])
-        ->addStep('response', Http::{$method}());
+        ->addStep(Http::{$method}()->keepAs('response'));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -41,7 +41,7 @@ it('does not yield server error responses by default', function (string $method)
     $crawler = new ErrorCrawler();
 
     $crawler->inputs(['http://localhost:8000/server-error-response'])
-        ->addStep('response', Http::{$method}());
+        ->addStep(Http::{$method}()->keepAs('response'));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -52,7 +52,7 @@ it('yields client error responses when yieldErrorResponses() was called', functi
     $crawler = new ErrorCrawler();
 
     $crawler->inputs(['http://localhost:8000/client-error-response'])
-        ->addStep('response', Http::{$method}()->yieldErrorResponses());
+        ->addStep(Http::{$method}()->yieldErrorResponses()->keepAs('response'));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -63,7 +63,7 @@ it('yields server error responses when yieldErrorResponses() was called', functi
     $crawler = new ErrorCrawler();
 
     $crawler->inputs(['http://localhost:8000/server-error-response'])
-        ->addStep('response', Http::{$method}()->yieldErrorResponses());
+        ->addStep(Http::{$method}()->yieldErrorResponses()->keepAs('response'));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -76,7 +76,7 @@ it(
         $crawler = new ErrorCrawler();
 
         $crawler->inputs(['http://localhost:8000/client-error-response', 'http://localhost:8000/simple-listing'])
-            ->addStep('response', Http::{$method}());
+            ->addStep(Http::{$method}()->keepAs('response'));
 
         $results = helper_generatorToArray($crawler->run());
 
@@ -90,7 +90,7 @@ it(
         $crawler = new ErrorCrawler();
 
         $crawler->inputs(['http://localhost:8000/server-error-response', 'http://localhost:8000/simple-listing'])
-            ->addStep('response', Http::{$method}());
+            ->addStep(Http::{$method}()->keepAs('response'));
 
         $results = helper_generatorToArray($crawler->run());
 
@@ -104,10 +104,7 @@ it(
         $crawler = new ErrorCrawler();
 
         $crawler->inputs(['http://localhost:8000/client-error-response', 'http://localhost:8000/simple-listing'])
-            ->addStep(
-                Http::{$method}()
-                    ->stopOnErrorResponse(),
-            );
+            ->addStep(Http::{$method}()->stopOnErrorResponse());
 
         $crawler->runAndTraverse();
     },

@@ -32,7 +32,8 @@ it(
 
         $crawler->input('http://localhost:8000/blog-post-with-json-ld');
 
-        $crawler->addStep(Http::get())
+        $crawler
+            ->addStep(Http::get())
             ->addStep(
                 Crawler::group()
                     ->addStep(
@@ -47,7 +48,7 @@ it(
                                 'keywords',
                             ]),
                     )
-                    ->addToResult(),
+                    ->keep(),
             );
 
         $result = helper_generatorToArray($crawler->run());

@@ -68,8 +68,8 @@
         }
     },
     "scripts": {
-        "test": "pest --exclude-group integration --display-warnings",
-        "test-integration": "pest --group integration --display-warnings",
+        "test": "pest --exclude-group integration --display-warnings --bail",
+        "test-integration": "pest --group integration --display-warnings --bail",
         "stan": "@php -d memory_limit=4G vendor/bin/phpstan analyse",
         "cs": "php-cs-fixer fix -v --dry-run",
         "cs-fix": "php-cs-fixer fix -v",

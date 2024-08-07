@@ -13,16 +13,10 @@ class Io
      */
     final public function __construct(
         protected mixed $value,
-        public ?Result $result = null,
-        public ?Result $addLaterToResult = null,
         public array $keep = [],
     ) {
         if ($value instanceof self) {
             $this->value = $value->value;
-
-            $this->result ??= $value->result;
-
-            $this->addLaterToResult ??= $value->addLaterToResult;
 
             $this->keep = $value->keep;
         }
@@ -30,7 +24,7 @@ class Io
 
     public function withValue(mixed $value): static
     {
-        return new static($value, $this->result, $this->addLaterToResult, $this->keep);
+        return new static($value, $this->keep);
     }
 
     public function withPropertyValue(string $key, mixed $value): static
