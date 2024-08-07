@@ -13,7 +13,7 @@ class AnonymousHttpCrawlerBuilder
 
     public function withBotUserAgent(string $productToken): HttpCrawler
     {
-        $instance = new class () extends HttpCrawler {
+        $instance = new class extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
                 return new UserAgent('temp');
@@ -27,7 +27,7 @@ class AnonymousHttpCrawlerBuilder
 
     public function withUserAgent(string|UserAgentInterface $userAgent): HttpCrawler
     {
-        $instance = new class () extends HttpCrawler {
+        $instance = new class extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
                 return new UserAgent('temp');
