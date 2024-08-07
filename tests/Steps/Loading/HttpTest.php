@@ -5,7 +5,6 @@ namespace tests\Steps\Loading;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
@@ -25,7 +24,7 @@ it('can be invoked with a string as input', function () {
 
     $loader->shouldReceive('load')->once();
 
-    $step = (new Http('GET'))->addLoader($loader);
+    $step = (new Http('GET'))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
 });
@@ -35,7 +34,7 @@ it('can be invoked with a PSR-7 Uri object as input', function () {
 
     $loader->shouldReceive('load')->once();
 
-    $step = (new Http('GET'))->addLoader($loader);
+    $step = (new Http('GET'))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/'))));
 });
@@ -43,7 +42,7 @@ it('can be invoked with a PSR-7 Uri object as input', function () {
 it('throws an InvalidArgumentException when invoked with something else as input', function () {
     $loader = Mockery::mock(HttpLoader::class);
 
-    $step = (new Http('GET'))->addLoader($loader);
+    $step = (new Http('GET'))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
 })->throws(InvalidArgumentException::class);
@@ -55,7 +54,7 @@ test('You can set the request method via constructor', function (string $httpMet
         return $request->getMethod() === $httpMethod;
     })->once();
 
-    $step = (new Http($httpMethod))->addLoader($loader);
+    $step = (new Http($httpMethod))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
 })->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
@@ -88,7 +87,7 @@ test('You can set request headers via constructor', function () {
         return true;
     })->once();
 
-    $step = (new Http('GET', $headers))->addLoader($loader);
+    $step = (new Http('GET', $headers))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://www.crwlr.software/packages/url')));
 });
@@ -102,7 +101,7 @@ test('You can set request body via constructor', function () {
         return $request->getBody()->getContents() === $body;
     })->once();
 
-    $step = (new Http('PATCH', [], $body))->addLoader($loader);
+    $step = (new Http('PATCH', [], $body))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://github.com/')));
 });
@@ -114,7 +113,7 @@ test('You can set the http version for the request via constructor', function (s
         return $request->getProtocolVersion() === $httpVersion;
     })->once();
 
-    $step = (new Http('PATCH', [], 'body', $httpVersion))->addLoader($loader);
+    $step = (new Http('PATCH', [], 'body', $httpVersion))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://packagist.org/packages/crwlr/url')));
 })->with(['1.0', '1.1', '2.0']);
@@ -126,7 +125,7 @@ it('has static methods to create instances with all the different http methods',
         return $request->getMethod() === $httpMethod;
     })->once();
 
-    $step = (Http::{strtolower($httpMethod)}())->addLoader($loader);
+    $step = (Http::{strtolower($httpMethod)}())->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://dev.to/otsch')));
 })->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
@@ -141,43 +140,38 @@ it(
         })->once()->andReturn(new RespondedRequest(new Request('GET', '/foo'), new Response(200)));
 
         $step = (Http::{strtolower($httpMethod)}())
-            ->addLoader($loader)
+            ->setLoader($loader)
             ->stopOnErrorResponse();
 
         helper_traverseIterable($step->invokeStep(new Input('https://example.com/otsch')));
     },
 )->with(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
-test(
-    'you can add response properties to the result with their aliases',
-    function () {
-        $loader = Mockery::mock(HttpLoader::class);
+test('you can keep response properties with their aliases', function () {
+    $loader = Mockery::mock(HttpLoader::class);
 
-        $loader->shouldReceive('load')->once()->andReturn(
-            new RespondedRequest(
-                new Request('GET', 'https://www.example.com/testresponse'),
-                new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody')),
-            ),
-        );
+    $loader->shouldReceive('load')->once()->andReturn(
+        new RespondedRequest(
+            new Request('GET', 'https://www.example.com/testresponse'),
+            new Response(202, ['foo' => 'bar'], Utils::streamFor('testbody')),
+        ),
+    );
 
-        $step = Http::get()
-            ->addLoader($loader)
-            ->addToResult(['url', 'status', 'headers', 'body']);
+    $step = Http::get()
+        ->setLoader($loader)
+        ->keep(['url', 'status', 'headers', 'body']);
 
-        $outputs = helper_invokeStepWithInput($step);
+    $outputs = helper_invokeStepWithInput($step);
 
-        expect($outputs)->toHaveCount(1);
-
-        expect($outputs[0]->result)->toBeInstanceOf(Result::class);
-
-        expect($outputs[0]->result?->toArray())->toBe([
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->keep)->toBe([
             'url' => 'https://www.example.com/testresponse',
             'status' => 202,
             'headers' => ['foo' => ['bar']],
             'body' => 'testbody',
         ]);
-    },
-);
+
+});
 
 test(
     'the value behind url and uri is the effectiveUri',
@@ -194,16 +188,13 @@ test(
         $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
 
         $step = Http::get()
-            ->addLoader($loader)
-            ->addToResult([$outputKey]);
+            ->setLoader($loader)
+            ->keep([$outputKey]);
 
         $outputs = helper_invokeStepWithInput($step);
 
-        expect($outputs)->toHaveCount(1);
-
-        expect($outputs[0]->result)->toBeInstanceOf(Result::class);
-
-        expect($outputs[0]->result?->toArray())->toBe([$outputKey => 'https://www.example.com/testresponseredirect']);
+        expect($outputs)->toHaveCount(1)
+            ->and($outputs[0]->keep)->toBe([$outputKey => 'https://www.example.com/testresponseredirect']);
     },
 )->with(['url', 'uri']);
 
@@ -220,7 +211,7 @@ it('gets the URL for the request from an input array when useInputKeyAsUrl() was
     })->once()->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get()
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl');
 
     helper_invokeStepWithInput($step, $inputArray);
@@ -241,7 +232,7 @@ it(
         })->once()->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
         $step = Http::get()
-            ->addLoader($loader);
+            ->setLoader($loader);
 
         helper_invokeStepWithInput($step, $inputArray);
     },
@@ -265,7 +256,7 @@ it('gets the body for the request from an input array when useInputKeyAsBody() w
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get()
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl')
         ->useInputKeyAsBody('someBodyThatIUsedToKnow');
 
@@ -290,7 +281,7 @@ it('gets as single header for the request from an input array when useInputKeyAs
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get()
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl')
         ->useInputKeyAsHeader('someHeader', 'header-name-x');
 
@@ -315,7 +306,7 @@ it('uses the input key as header name if no header name defined as argument', fu
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get()
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsHeader('header-name');
 
     helper_invokeStepWithInput($step, $inputArray);
@@ -339,7 +330,7 @@ it('merges header values if you provide a static header value and use an input v
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get(['header-name-x' => 'foo'])
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl')
         ->useInputKeyAsHeader('someHeader', 'header-name-x');
 
@@ -366,7 +357,7 @@ test('you can use useInputKeyAsHeader() multiple times', function () {
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get()
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl')
         ->useInputKeyAsHeader('someHeader', 'header-name-x')
         ->useInputKeyAsHeader('anotherHeader', 'header-name-y');
@@ -400,7 +391,7 @@ it('gets multiple headers from an input array using useInputKeyAsHeaders()', fun
         ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/baz'), new Response(200)));
 
     $step = Http::get(['header-name-y' => 'quz'])
-        ->addLoader($loader)
+        ->setLoader($loader)
         ->useInputKeyAsUrl('someUrl')
         ->useInputKeyAsHeaders('customHeaders');
 

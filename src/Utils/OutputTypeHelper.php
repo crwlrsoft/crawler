@@ -13,8 +13,6 @@ class OutputTypeHelper
             return $output->toArrayForResult();
         } elseif (method_exists($output, 'toArray')) {
             return $output->toArray();
-        } elseif (method_exists($output, 'toArrayForAddToResult')) { // legacy, please consider one of the other options
-            return $output->toArrayForAddToResult();
         } elseif (method_exists($output, '__serialize')) {
             return $output->__serialize();
         }

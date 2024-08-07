@@ -33,20 +33,6 @@ it('converts an object with a toArray() method to an array', function () {
     expect(OutputTypeHelper::objectToArray($object))->toBe(['foo' => 'bar']);
 });
 
-it('converts an object with a toArrayForAddToResult() method to an array', function () {
-    $object = new class () {
-        /**
-         * @return string[]
-         */
-        public function toArrayForAddToResult(): array
-        {
-            return ['yo' => 'lo'];
-        }
-    };
-
-    expect(OutputTypeHelper::objectToArray($object))->toBe(['yo' => 'lo']);
-});
-
 it('converts an object with a __serialize() method to an array', function () {
     $object = new class () {
         public function __serialize(): array

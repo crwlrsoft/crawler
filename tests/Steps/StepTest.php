@@ -6,13 +6,11 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Output;
-use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
-use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -54,60 +52,17 @@ test('You can add a logger and it is available within the invoke method', functi
     expect($output)->toContain('logging works');
 });
 
-test(
-    'The invokeStep method wraps the values returned by invoke in Output objects by default without Result objects',
-    function () {
-        $step = helper_getValueReturningStep('returnValue');
-
-        $output = helper_invokeStepWithInput($step);
-
-        expect($output)->toHaveCount(1);
-
-        expect($output[0])->toBeInstanceOf(Output::class);
-
-        expect($output[0]->get())->toBe('returnValue');
-
-        expect($output[0]->result)->toBeNull();
-    },
-);
-
-test(
-    'The invokeStep method creates a Result object that is added to the Output when you set a property name',
-    function () {
-        $step = helper_getValueReturningStep('returnValue')
-            ->addToResult('property');
-
-        $output = helper_invokeStepWithInput($step);
-
-        expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-        expect($output[0]->result?->toArray())->toBe(['property' => 'returnValue']);
-    },
-);
-
-it('creates a Result object with the data from yielded array when addToResult() is used', function () {
-    $step = helper_getValueReturningStep(['foo' => 'bar', 'baz' => 'yo'])
-        ->addToResult();
+test('The invokeStep method wraps the values returned by invoke in Output objects', function () {
+    $step = helper_getValueReturningStep('returnValue');
 
     $output = helper_invokeStepWithInput($step);
 
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe(['foo' => 'bar', 'baz' => 'yo']);
+    expect($output)->toHaveCount(1)
+        ->and($output[0])->toBeInstanceOf(Output::class)
+        ->and($output[0]->get())->toBe('returnValue');
 });
 
-it('picks keys from the output array when you pass an array of keys to addToResult()', function () {
-    $step = helper_getValueReturningStep(['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'])
-        ->addToResult(['firstname', 'surname']);
-
-    $output = helper_invokeStepWithInput($step);
-
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe(['firstname' => 'Christian', 'surname' => 'Olear']);
-});
-
-it('is able to pick keys from nested (array) output using dot notation', function () {
+test('keep() can pick keys from nested (array) output using dot notation', function () {
     $step = helper_getValueReturningStep([
         'users' => [
             ['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'],
@@ -116,16 +71,14 @@ it('is able to pick keys from nested (array) output using dot notation', functio
         ],
         'foo' => 'bar',
     ])
-        ->addToResult(['nickname' => 'users.0.user', 'foo']);
+        ->keep(['nickname' => 'users.0.user', 'foo']);
 
     $output = helper_invokeStepWithInput($step);
 
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe(['foo' => 'bar', 'nickname' => 'otsch']);
+    expect($output[0]->keep)->toBe(['nickname' => 'otsch', 'foo' => 'bar']);
 });
 
-it('picks keys from nested output including a RespondedRequest object', function () {
+test('keep() picks keys from nested output including a RespondedRequest object', function () {
     $step = helper_getValueReturningStep([
         'response' => new RespondedRequest(
             new Request('GET', 'https://www.example.com/something'),
@@ -133,90 +86,20 @@ it('picks keys from nested output including a RespondedRequest object', function
         ),
         'foo' => 'bar',
     ])
-        ->addToResult(['content' => 'response.body']);
+        ->keep(['content' => 'response.body']);
 
     $output = helper_invokeStepWithInput($step);
 
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe(['content' => 'Hi :)']);
+    expect($output[0]->keep)->toBe(['content' => 'Hi :)']);
 });
 
-it('maps output keys to different result keys when defined in the array passed to addToResult()', function () {
+it('maps output keys to different keys when defined in the array passed to keep()', function () {
     $step = helper_getValueReturningStep(['user' => 'otsch', 'firstname' => 'Christian', 'surname' => 'Olear'])
-        ->addToResult(['foo' => 'firstname', 'bar' => 'surname']);
+        ->keep(['foo' => 'firstname', 'bar' => 'surname']);
 
     $output = helper_invokeStepWithInput($step);
 
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe(['foo' => 'Christian', 'bar' => 'Olear']);
-});
-
-test(
-    'The addsToOrCreatesResult() method returns false when addToResult() and addLaterToResult() have not been called',
-    function () {
-        $step = helper_getValueReturningStep('lol');
-
-        expect($step->addsToOrCreatesResult())->toBeFalse();
-    },
-);
-
-test('The addsToOrCreatesResult() method returns true when addToResult() was called with a string key', function () {
-    $step = helper_getValueReturningStep('test')->addToResult('test');
-
-    expect($step->addsToOrCreatesResult())->toBeTrue();
-});
-
-test('The addsToOrCreatesResult() method returns true when addLaterToResult() was called with a string key', function () {
-    $step = helper_getValueReturningStep('test')->addLaterToResult('test');
-
-    expect($step->addsToOrCreatesResult())->toBeTrue();
-});
-
-test('The addsToOrCreatesResult() method returns true when addToResult() was called without an argument', function () {
-    $step = helper_getValueReturningStep(['test' => 'yo'])->addToResult();
-
-    expect($step->addsToOrCreatesResult())->toBeTrue();
-});
-
-test(
-    'The addsToOrCreatesResult() method returns true when addLaterToResult() was called without an argument',
-    function () {
-        $step = helper_getValueReturningStep(['test' => 'yo'])->addLaterToResult();
-
-        expect($step->addsToOrCreatesResult())->toBeTrue();
-    },
-);
-
-test('The createsResult() method returns false when addToResult() has not been called', function () {
-    $step = helper_getValueReturningStep('lol');
-
-    expect($step->createsResult())->toBeFalse();
-});
-
-test('The createsResult() method returns true when addToResult() was called with a string key', function () {
-    $step = helper_getValueReturningStep('test')->addToResult('test');
-
-    expect($step->createsResult())->toBeTrue();
-});
-
-test('The createsResult() method returns false when addLaterToResult() was called with a string key', function () {
-    $step = helper_getValueReturningStep('test')->addLaterToResult('test');
-
-    expect($step->createsResult())->toBeFalse();
-});
-
-test('The createsResult() method returns true when addToResult() was called without an argument', function () {
-    $step = helper_getValueReturningStep(['test' => 'yo'])->addToResult();
-
-    expect($step->createsResult())->toBeTrue();
-});
-
-test('The createsResult() method returns false when addLaterToResult() was called without an argument', function () {
-    $step = helper_getValueReturningStep(['test' => 'yo'])->addLaterToResult();
-
-    expect($step->createsResult())->toBeFalse();
+    expect($output[0]->keep)->toBe(['foo' => 'Christian', 'bar' => 'Olear']);
 });
 
 it('uses a key from array input when defined', function () {
@@ -226,9 +109,8 @@ it('uses a key from array input when defined', function () {
         ['foo' => 'fooValue', 'bar' => 'barValue', 'baz' => 'bazValue'],
     ));
 
-    expect($output)->toHaveCount(1);
-
-    expect($output[0]->get())->toBe('barValue');
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->get())->toBe('barValue');
 });
 
 it('logs a warning message when the input key to use does not exist in input array', function () {
@@ -264,113 +146,23 @@ it(
     [new stdClass()],
 ]);
 
-it('doesn\'t add the result object to the Input object only to the Output', function () {
-    $step = helper_getValueReturningStep('Stand with Ukraine!')
-        ->addToResult('property');
+it('does not lose previously kept data, when it uses the useInputKey() method', function () {
+    $step = helper_getValueReturningStep(['test' => 'test'])->useInputKey('foo');
 
-    $input = new Input('inputValue');
+    $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'test'], ['some' => 'thing']));
 
-    $output = helper_invokeStepWithInput($step);
-
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($input->result)->toBe(null);
-});
-
-it('appends properties to a result object that was already included with the Input object', function () {
-    $step = helper_getValueReturningStep('returnValue')
-        ->addToResult('property');
-
-    $prevResult = new Result();
-
-    $prevResult->set('prevProperty', 'foobar');
-
-    $input = new Input('inputValue', $prevResult);
-
-    $output = helper_invokeStepWithInput($step, $input);
-
-    expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($output[0]->result?->toArray())->toBe([
-        'prevProperty' => 'foobar',
-        'property' => 'returnValue',
-    ]);
+    expect($outputs[0]->keep)->toBe(['some' => 'thing']);
 });
 
 it(
-    'adds a secondary Result object with data to add later to main Result objects when addLaterToResult() is called',
-    function () {
-        $step = helper_getValueReturningStep('returnValue')
-            ->addLaterToResult('property');
-
-        $outputs = helper_invokeStepWithInput($step);
-
-        expect($outputs[0]->result)->toBeNull();
-
-        expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
-
-        expect($outputs[0]->addLaterToResult?->toArray())->toBe([
-            'property' => 'returnValue',
-        ]);
-    },
-);
-
-test('addLaterToResult() works with array output and no argument', function () {
-    $step = helper_getValueReturningStep(['foo' => 'bar'])
-        ->addLaterToResult();
-
-    $outputs = helper_invokeStepWithInput($step);
-
-    expect($outputs[0]->result)->toBeNull();
-
-    expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
-
-    expect($outputs[0]->addLaterToResult?->toArray())->toBe([
-        'foo' => 'bar',
-    ]);
-});
-
-test('with addLaterToResult() you can also pick some keys from array output', function () {
-    $step = helper_getValueReturningStep(['foo' => 'one', 'bar' => 'two', 'baz' => 'three', 'quz' => 'four'])
-        ->addLaterToResult(['foo', 'baz', 'yolo']);
-
-    $outputs = helper_invokeStepWithInput($step);
-
-    expect($outputs[0]->result)->toBeNull();
-
-    expect($outputs[0]->addLaterToResult)->toBeInstanceOf(Result::class);
-
-    expect($outputs[0]->addLaterToResult?->toArray())->toBe([
-        'foo' => 'one',
-        'baz' => 'three',
-    ]);
-});
-
-it('does not lose previously added result to add later, when it uses the useInputKey() method', function () {
-    $step = helper_getValueReturningStep(['test' => 'test'])
-        ->useInputKey('foo');
-
-    $addLaterToResult = new Result();
-
-    $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'test'], addLaterToResult: $addLaterToResult));
-
-    expect($outputs[0]->addLaterToResult)->toBe($addLaterToResult);
-});
-
-it(
-    'also passes on Result objects through further steps when they don\'t define further result resource properties',
+    'also passes on kept data through further steps when they don\'t define any further data to keep',
     function () {
         $step = helper_getValueReturningStep('returnValue');
 
-        $prevResult = new Result();
+        $output = helper_invokeStepWithInput($step, new Input('inputValue', ['prevProperty' => 'foobar']));
 
-        $prevResult->set('prevProperty', 'foobar');
-
-        $output = helper_invokeStepWithInput($step, new Input('inputValue', $prevResult));
-
-        expect($output[0]->result)->toBeInstanceOf(Result::class);
-
-        expect($output[0]->result?->toArray())->toBe(['prevProperty' => 'foobar']);
+        expect($output)->toHaveCount(1)
+            ->and($output[0]->keep)->toBe(['prevProperty' => 'foobar']);
     },
 );
 
@@ -461,17 +253,12 @@ it('makes outputs unique when uniqueOutput was called', function () {
 
     $output = helper_invokeStepWithInput($step, new Input('anything'));
 
-    expect($output)->toHaveCount(5);
-
-    expect($output[0]->get())->toBe('one');
-
-    expect($output[1]->get())->toBe('two');
-
-    expect($output[2]->get())->toBe('three');
-
-    expect($output[3]->get())->toBe('four');
-
-    expect($output[4]->get())->toBe('five');
+    expect($output)->toHaveCount(5)
+        ->and($output[0]->get())->toBe('one')
+        ->and($output[1]->get())->toBe('two')
+        ->and($output[2]->get())->toBe('three')
+        ->and($output[3]->get())->toBe('four')
+        ->and($output[4]->get())->toBe('five');
 });
 
 it('makes outputs unique when providing a key name to uniqueOutput to use from array output', function () {
@@ -598,9 +385,8 @@ it('is possible that a step does not produce any output at all', function () {
 
     $output = helper_invokeStepWithInput($step, 'foo');
 
-    expect($output)->toHaveCount(1);
-
-    expect($output[0]->get())->toBe('bar');
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->get())->toBe('bar');
 });
 
 test('You can add and call an updateInputUsingOutput callback', function () {
@@ -612,26 +398,23 @@ test('You can add and call an updateInputUsingOutput callback', function () {
 
     $updatedInput = $step->callUpdateInputUsingOutput(new Input('Boo'), new Output('Yah!'));
 
-    expect($updatedInput)->toBeInstanceOf(Input::class);
-
-    expect($updatedInput->get())->toBe('Boo Yah!');
+    expect($updatedInput)->toBeInstanceOf(Input::class)
+        ->and($updatedInput->get())->toBe('Boo Yah!');
 });
 
-it('does not lose previously added result to add later, when updateInputUsingOutput() is called', function () {
+it('does not lose previously kept data, when updateInputUsingOutput() is called', function () {
     $step = helper_getValueReturningStep('something');
 
     $step->updateInputUsingOutput(function (mixed $input, mixed $output) {
         return $input . ' ' . $output;
     });
 
-    $addLaterToResult = new Result();
-
     $updatedInput = $step->callUpdateInputUsingOutput(
-        new Input('Some', addLaterToResult: $addLaterToResult),
+        new Input('Some', ['foo' => 'bar']),
         new Output('thing'),
     );
 
-    expect($updatedInput->addLaterToResult)->toBe($addLaterToResult);
+    expect($updatedInput->keep)->toBe(['foo' => 'bar']);
 });
 
 it('does not yield more outputs than defined via maxOutputs() method', function () {
@@ -724,63 +507,6 @@ it('converts non array output to array with a certain key using the outputKey() 
     expect($outputs[0]->get())->toBe(['foo' => 'bar']);
 });
 
-it('keeps input data in output when keepInputData() was called', function () {
-    $step = helper_getValueReturningStep(['bar' => 'baz'])
-        ->keepInputData();
-
-    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'quz']));
-
-    expect($output[0]->get())->toBe(['bar' => 'baz', 'foo' => 'quz']);
-});
-
-it('keeps non array input data in array output with key', function () {
-    $step = helper_getValueReturningStep(['bar' => 'baz'])
-        ->keepInputData('foo');
-
-    $output = helper_invokeStepWithInput($step, new Input('quz'));
-
-    expect($output[0]->get())->toBe(['bar' => 'baz', 'foo' => 'quz']);
-});
-
-it('throws an error when non array input should be kept but no key is defined', function () {
-    $step = helper_getValueReturningStep(['bar' => 'baz'])
-        ->keepInputData();
-
-    helper_invokeStepWithInput($step, new Input('quz'));
-})->throws(Exception::class);
-
-it('does not replace output data when a key from input to keep is also defined in output', function () {
-    $step = helper_getValueReturningStep(['foo' => 'four', 'bar' => 'five'])
-        ->keepInputData('foo');
-
-    $output = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two', 'baz' => 'three']));
-
-    expect($output[0]->get())->toBe(['foo' => 'four', 'bar' => 'five', 'baz' => 'three']);
-});
-
-it(
-    'throws an exception when input should be kept, output is non array value and no output key is defined',
-    function () {
-        $step = helper_getValueReturningStep('three')
-            ->keepInputData();
-
-        helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
-    },
-)->throws(Exception::class);
-
-it(
-    'works when output is non array value but it\'s converted to an array using the outputKey() method',
-    function () {
-        $step = helper_getValueReturningStep('three')
-            ->keepInputData()
-            ->outputKey('baz');
-
-        $outputs = helper_invokeStepWithInput($step, new Input(['foo' => 'one', 'bar' => 'two']));
-
-        expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
-    },
-);
-
 test('keeping a scalar output value with keep() also works when outputKey() was used', function () {
     $step = new class () extends Step {
         protected function invoke(mixed $input): Generator
@@ -807,12 +533,13 @@ test('keeping a scalar output value with keep() also works when outputKey() was 
 
 it('keeps the original input data when useInputKey() is used', function () {
     $step = helper_getValueReturningStep(['baz' => 'three'])
-        ->keepInputData()
+        ->keepFromInput()
         ->useInputKey('bar');
 
     $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
 
-    expect($outputs[0]->get())->toBe(['baz' => 'three', 'foo' => 'one', 'bar' => 'two']);
+    expect($outputs[0]->get())->toBe(['baz' => 'three'])
+        ->and($outputs[0]->keep)->toBe(['foo' => 'one', 'bar' => 'two']);
 });
 
 it('applies a Closure refiner to the steps output', function () {
@@ -926,7 +653,7 @@ it('useInputKey() can be used to get data that was kept from a previous step wit
     expect($outputs[0]->get())->toBe('baz');
 });
 
-test('you can define aliases for output keys for addToResult()', function () {
+test('you can define aliases for output keys and they are considered when using keep()', function () {
     $step = new class () extends Step {
         protected function invoke(mixed $input): Generator
         {
@@ -947,13 +674,11 @@ test('you can define aliases for output keys for addToResult()', function () {
         }
     };
 
-    $step->addToResult(['woo', 'far' => 'war', 'waz']);
+    $step->keep(['woo', 'far' => 'war', 'waz']);
 
     $outputs = helper_invokeStepWithInput($step);
 
-    expect($outputs[0]->result)->toBeInstanceOf(Result::class);
-
-    expect($outputs[0]->result?->toArray())->toBe([
+    expect($outputs[0]->keep)->toBe([
         'woo' => 'one',
         'far' => 'two',
         'waz' => 'three',

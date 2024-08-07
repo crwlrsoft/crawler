@@ -15,9 +15,9 @@ use Psr\Log\LoggerInterface;
 abstract class HttpCrawler extends Crawler
 {
     /**
-     * @return LoaderInterface|array<string, LoaderInterface>
+     * @return LoaderInterface
      */
-    protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
+    protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
     {
         return new HttpLoader($userAgent, logger: $logger);
     }

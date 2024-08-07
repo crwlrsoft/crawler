@@ -36,7 +36,7 @@ it('gets all the sitemaps listed in the robots.txt file on a host, based on some
 
     $loader = new HttpLoader(new UserAgent('SomeUserAgent'), $httpClient);
 
-    $step = Sitemap::getSitemapsFromRobotsTxt()->addLoader($loader);
+    $step = Sitemap::getSitemapsFromRobotsTxt()->setLoader($loader);
 
     $outputs = helper_invokeStepWithInput($step, new Input('https://www.crwlr.software/packages'));
 

@@ -408,7 +408,7 @@ it(
         // discovered URLs by default.
         $crawler = (new Crawler())
             ->input('http://www.example.com/crawling/main')
-            ->addStep(Http::crawl()->keepUrlFragment()->addToResult(['url']));
+            ->addStep(Http::crawl()->keepUrlFragment()->keep(['url']));
 
         $results = helper_generatorToArray($crawler->run());
 
@@ -420,11 +420,9 @@ it(
             $urls[] = $result->get('url');
         }
 
-        expect($urls)->toContain('http://www.example.com/crawling/sub2');
-
-        expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment1');
-
-        expect($urls)->toContain('http://www.example.com/crawling/sub2#fragment2');
+        expect($urls)->toContain('http://www.example.com/crawling/sub2')
+            ->and($urls)->toContain('http://www.example.com/crawling/sub2#fragment1')
+            ->and($urls)->toContain('http://www.example.com/crawling/sub2#fragment2');
     },
 );
 
@@ -439,9 +437,8 @@ it('stops crawling when maxOutputs is reached', function () {
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(4);
-
-    expect($crawler->getLoader()->loadedUrls)->toHaveCount(4);
+    expect($results)->toHaveCount(4)
+        ->and($crawler->getLoader()->loadedUrls)->toHaveCount(4);
 });
 
 it('uses canonical links when useCanonicalLinks() is called', function () {
@@ -450,7 +447,7 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
         ->addStep(
             Http::crawl()
                 ->useCanonicalLinks()
-                ->addToResult(['url']),
+                ->keep(['url']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -479,7 +476,7 @@ it('uses canonical links when useCanonicalLinks() is called', function () {
 it('does not yield the same page twice when a URL was redirected to an already loaded page', function () {
     $crawler = (new Crawler())
         ->input('http://www.example.com/crawling/redirect')
-        ->addStep(Http::crawl()->addToResult(['url']));
+        ->addStep(Http::crawl()->keep(['url']));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -499,7 +496,7 @@ it('does not yield the same page twice when a URL was redirected to an already l
 it('does not produce a fatal error when the initial request fails', function () {
     $crawler = (new Crawler())
         ->input('http://www.example.com/not-allowed')
-        ->addStep(Http::crawl()->addToResult(['url']));
+        ->addStep(Http::crawl()->keep(['url']));
 
     $results = helper_generatorToArray($crawler->run());
 

@@ -10,6 +10,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Loading\LoadingStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Steps\StepOutputType;
@@ -114,18 +115,6 @@ function helper_getStepYieldingMultipleNumbers(): Step
     };
 }
 
-function helper_getStepYieldingArrayWithNumber(int $number): Step
-{
-    return new class ($number) extends Step {
-        public function __construct(private int $number) {}
-
-        protected function invoke(mixed $input): Generator
-        {
-            yield ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')];
-        }
-    };
-}
-
 function helper_getStepYieldingMultipleArraysWithNumber(): Step
 {
     return new class () extends Step {
@@ -162,6 +151,18 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
                     ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')],
                 );
             }
+        }
+    };
+}
+
+function helper_getLoadingStep(): Step
+{
+    return new class () extends Step {
+        use LoadingStep;
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'yo';
         }
     };
 }
@@ -280,7 +281,7 @@ function helper_getFastCrawler(): HttpCrawler
             return new UserAgent('TestBot');
         }
 
-        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
+        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
         {
             return helper_getFastLoader($userAgent, $logger);
         }

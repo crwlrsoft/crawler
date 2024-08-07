@@ -39,28 +39,25 @@ it('gets all the links from a listing and gets data from the detail pages', func
                     'date' => '.date',
                     'author' => '.articleAuthor',
                 ])
-                ->addToResult(),
+                ->keep(),
         );
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(3);
-
-    expect($results[0]->toArray())->toBe([
-        'title' => 'Some Article 1',
-        'date' => '2022-04-13',
-        'author' => 'Christian Olear',
-    ]);
-
-    expect($results[1]->toArray())->toBe([
-        'title' => 'Some Article 2',
-        'date' => '2022-04-14',
-        'author' => 'Christian Olear',
-    ]);
-
-    expect($results[2]->toArray())->toBe([
-        'title' => 'Some Article 3',
-        'date' => '2022-04-15',
-        'author' => 'Christian Olear',
-    ]);
+    expect($results)->toHaveCount(3)
+        ->and($results[0]->toArray())->toBe([
+            'title' => 'Some Article 1',
+            'date' => '2022-04-13',
+            'author' => 'Christian Olear',
+        ])
+        ->and($results[1]->toArray())->toBe([
+            'title' => 'Some Article 2',
+            'date' => '2022-04-14',
+            'author' => 'Christian Olear',
+        ])
+        ->and($results[2]->toArray())->toBe([
+            'title' => 'Some Article 3',
+            'date' => '2022-04-15',
+            'author' => 'Christian Olear',
+        ]);
 });
