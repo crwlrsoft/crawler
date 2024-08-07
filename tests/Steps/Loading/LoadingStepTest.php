@@ -4,17 +4,22 @@ namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\Steps\Loading\LoadingStep;
+use Crwlr\Crawler\Steps\Step;
 use Generator;
 use Mockery;
 
+use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
 
 test('you can add a loader', function () {
-    $step = new class () extends LoadingStep {
+    $step = new class () extends Step {
+        use LoadingStep;
+
         protected function invoke(mixed $input): Generator
         {
-            $this->loader->load($input);
+            $this->getLoader()->load($input);
 
             yield [];
         }
@@ -24,22 +29,39 @@ test('you can add a loader', function () {
 
     $loader->shouldReceive('load')->once();
 
-    $step->addLoader($loader);
+    $step->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://www.digitalocean.com/blog')));
 });
 
-test('you can set the key of the loader that it should use', function () {
-    $step = new class () extends LoadingStep {
-        protected function invoke(mixed $input): Generator
-        {
-            yield 'yo';
-        }
-    };
+test(
+    'you can provide a custom loader to a step via the withLoader() method, and it will be preferred to the loader ' .
+    'provided via setLoader()',
+    function () {
+        $loaderOne = Mockery::mock(Loader::class);
 
-    expect($step->usesLoader())->toBeNull();
+        $loaderOne->shouldNotReceive('load');
 
-    $step->useLoader('ftp');
+        $loaderTwo = Mockery::mock(Loader::class);
 
-    expect($step->usesLoader())->toBe('ftp');
-});
+        $loaderTwo->shouldReceive('load')->once()->andReturn('Hi');
+
+        $step = new class () extends Step {
+            use LoadingStep;
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $this->getLoader()->load($input);
+            }
+        };
+
+        $step->withLoader($loaderTwo);
+
+        // The crawler will call the setLoader() method of the step after the step was added to the crawler.
+        // So, the call to withLoader() will happen before that.
+        // Nevertheless, the loader passed to withLoader() should be preferred.
+        $step->setLoader($loaderOne);
+
+        helper_invokeStepWithInput($step);
+    },
+);

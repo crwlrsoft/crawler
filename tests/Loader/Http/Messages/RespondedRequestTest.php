@@ -162,23 +162,15 @@ test('a serialized instance can be unserialized', function () {
 
     /** @var RespondedRequest $respondedRequest */
 
-    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class);
-
-    expect($respondedRequest->request->getMethod())->toBe('POST');
-
-    expect($respondedRequest->request->getUri()->__toString())->toBe('/home');
-
-    expect($respondedRequest->request->getHeaders())->toBe(['key' => ['val']]);
-
-    expect($respondedRequest->request->getBody()->getContents())->toBe('bod');
-
-    expect($respondedRequest->effectiveUri())->toBe('/index');
-
-    expect($respondedRequest->response->getStatusCode())->toBe(201);
-
-    expect($respondedRequest->response->getHeaders())->toBe(['k' => ['v']]);
-
-    expect($respondedRequest->response->getBody()->getContents())->toBe('res');
+    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class)
+        ->and($respondedRequest->request->getMethod())->toBe('POST')
+        ->and($respondedRequest->request->getUri()->__toString())->toBe('/home')
+        ->and($respondedRequest->request->getHeaders())->toBe(['key' => ['val']])
+        ->and($respondedRequest->request->getBody()->getContents())->toBe('bod')
+        ->and($respondedRequest->effectiveUri())->toBe('/index')
+        ->and($respondedRequest->response->getStatusCode())->toBe(201)
+        ->and($respondedRequest->response->getHeaders())->toBe(['k' => ['v']])
+        ->and($respondedRequest->response->getBody()->getContents())->toBe('res');
 });
 
 it('can be created from a serialized array', function () {
@@ -188,20 +180,18 @@ it('can be created from a serialized array', function () {
 
     $respondedRequest = RespondedRequest::fromArray(unserialize($serialized));
 
-    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class);
-
-    expect($respondedRequest->request->getUri()->__toString())->toBe('/foo');
-
-    expect($respondedRequest->effectiveUri())->toBe('/bar');
+    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class)
+        ->and($respondedRequest->request->getUri()->__toString())->toBe('/foo')
+        ->and($respondedRequest->effectiveUri())->toBe('/bar');
 });
 
-it('has a serializeForAddToResult() method', function () {
+it('has a toArrayForResult() method', function () {
     $respondedRequest = new RespondedRequest(
         new Request('POST', '/home', ['key' => 'val'], 'bod'),
         new Response(201, ['k' => 'v'], 'res'),
     );
 
-    expect($respondedRequest->toArrayForAddToResult())->toBe([
+    expect($respondedRequest->toArrayForResult())->toBe([
         'requestMethod' => 'POST',
         'requestUri' => '/home',
         'requestHeaders' => ['key' => ['val']],

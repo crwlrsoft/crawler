@@ -5,16 +5,10 @@ namespace tests;
 use Crwlr\Crawler\Steps\StepOutputType;
 use tests\_Stubs\Crawlers\DummyOne;
 use tests\_Stubs\Crawlers\DummyTwo;
-use tests\_Stubs\LoaderCollectingStep;
-use tests\_Stubs\MultiLoaderCrawler;
-use tests\_Stubs\PhantasyLoader;
 use Crwlr\Crawler\Crawler;
-use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
-use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
-use Crwlr\Crawler\Steps\Loading\LoadingStepInterface;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Stores\Store;
@@ -154,111 +148,25 @@ test('You can add steps and the Crawler class passes on its Logger and also its 
 
     $crawler->addStep($step);
 
-    $step = Mockery::mock(LoadingStepInterface::class);
+    $step = helper_getLoadingStep();
+
+    $step = Mockery::mock($step)->makePartial();
 
     $step->shouldReceive('addLogger')->once();
 
-    $step->shouldReceive('addLoader')->once();
+    $step->shouldReceive('setLoader')->once();
+
+    $step->shouldReceive('setParentCrawler')->once()->andReturnSelf();
+
+    /** @var Step $step */
 
     $crawler->addStep($step);
 });
 
-test('you can define multiple loaders', function () {
-    $crawler = new MultiLoaderCrawler();
-
-    expect($crawler->getLoader())->toBeArray();
-
-    expect($crawler->getLoader())->toHaveCount(3);
-
-    expect($crawler->getLoader())->toHaveKey('http');
-
-    expect($crawler->getLoader()['http'])->toBeInstanceOf(HttpLoader::class); // @phpstan-ignore-line
-
-    expect($crawler->getLoader())->toHaveKey('phantasy');
-
-    expect($crawler->getLoader()['phantasy'])->toBeInstanceOf(PhantasyLoader::class); // @phpstan-ignore-line
-
-    expect($crawler->getLoader())->toHaveKey('phantasy2');
-
-    expect($crawler->getLoader()['phantasy2'])->toBeInstanceOf(PhantasyLoader::class); // @phpstan-ignore-line
-});
-
-it('passes each of its loaders one by one to its steps', function () {
-    $step = new LoaderCollectingStep();
-
-    (new MultiLoaderCrawler())->addStep($step);
-
-    expect($step->loaders)->toHaveCount(3);
-
-    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
-
-    expect($step->loaders[1])->toBeInstanceOf(PhantasyLoader::class);
-
-    expect($step->loaders[2])->toBeInstanceOf(PhantasyLoader::class);
-});
-
-it('passes on all the loaders to a group step which by default passes all of them to child loading steps', function () {
-    $crawler = new MultiLoaderCrawler();
-
-    $step = new LoaderCollectingStep();
-
-    $crawler
-        ->addStep(
-            Crawler::group()
-                ->addStep(Http::get())
-                ->addStep($step),
-        );
-
-    expect($step->loaders)->toHaveCount(3);
-
-    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
-
-    expect($step->loaders[1])->toBeInstanceOf(PhantasyLoader::class);
-
-    expect($step->loaders[2])->toBeInstanceOf(PhantasyLoader::class);
-});
-
-it('passes only a certain loader when user chooses one by calling useLoader() on a step', function () {
-    $step = new LoaderCollectingStep();
-
-    (new MultiLoaderCrawler())->addStep($step->useLoader('http'));
-
-    expect($step->loaders)->toHaveCount(1);
-
-    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
-});
-
-it('passes only a certain loader when user chooses one by calling useLoader() on a step inside a group', function () {
-    $crawler = new MultiLoaderCrawler();
-
-    $step = new LoaderCollectingStep();
-
-    $crawler
-        ->addStep(
-            Crawler::group()
-                ->addStep(Http::get())
-                ->addStep($step->useLoader('http')),
-        );
-
-    expect($step->loaders)->toHaveCount(1);
-
-    expect($step->loaders[0])->toBeInstanceOf(HttpLoader::class);
-});
-
-it(
-    'throws an UnknownLoaderKeyException when user wants to chose a loader that was not defined in the crawlers ' .
-    'loader() method',
-    function () {
-        $step = new LoaderCollectingStep();
-
-        (new MultiLoaderCrawler())->addStep($step->useLoader('https'));
-    },
-)->throws(UnknownLoaderKeyException::class);
-
 test('You can add steps and they are invoked when the Crawler is run', function () {
-    $step1 = helper_getValueReturningStep('step1 output')->addToResult('step1');
+    $step1 = helper_getValueReturningStep('step1 output')->keepAs('step1');
 
-    $step2 = helper_getValueReturningStep('step2 output')->addToResult('step2');
+    $step2 = helper_getValueReturningStep('step2 output')->keepAs('step2');
 
     $crawler = helper_getDummyCrawler()
         ->addStep($step1)
@@ -268,36 +176,32 @@ test('You can add steps and they are invoked when the Crawler is run', function 
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->toArray())->toBe(['step1' => 'step1 output', 'step2' => 'step2 output']);
 
-    expect($results[0]->toArray())->toBe(['step1' => 'step1 output', 'step2' => 'step2 output']);
 });
 
 it('resets the initial inputs and calls the resetAfterRun method of all its steps', function () {
-    $step = helper_getInputReturningStep()
-        ->uniqueOutputs();
+    $step = helper_getInputReturningStep()->uniqueOutputs();
 
     $crawler = helper_getDummyCrawler()
-        ->addStep('foo', $step)
-        ->inputs(['input1', 'input1', 'input2']);
+        ->inputs(['input1', 'input1', 'input2'])
+        ->addStep($step->keepAs('foo'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(2);
-
-    expect($results[0]->toArray())->toBe(['foo' => 'input1']);
-
-    expect($results[1]->toArray())->toBe(['foo' => 'input2']);
+    expect($results)->toHaveCount(2)
+        ->and($results[0]->toArray())->toBe(['foo' => 'input1'])
+        ->and($results[1]->toArray())->toBe(['foo' => 'input2']);
 
     $crawler->inputs(['input1', 'input3']);
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(2);
+    expect($results)->toHaveCount(2)
+        ->and($results[0]->toArray())->toBe(['foo' => 'input1'])
+        ->and($results[1]->toArray())->toBe(['foo' => 'input3']);
 
-    expect($results[0]->toArray())->toBe(['foo' => 'input1']);
-
-    expect($results[1]->toArray())->toBe(['foo' => 'input3']);
 });
 
 test('You can add a step group as a step and all it\'s steps are invoked when the Crawler is run', function () {
@@ -329,183 +233,6 @@ test('You can add a step group as a step and all it\'s steps are invoked when th
     );
 
     expect(true)->toBeTrue(); // So pest doesn't complain that there is no assertion.
-});
-
-test('Result objects are created when addToResult() is called and passed on through all the steps', function () {
-    $crawler = helper_getDummyCrawler();
-
-    $step = helper_getValueReturningStep('yo');
-
-    $crawler->addStep($step->addToResult('prop1'));
-
-    $step2 = helper_getValueReturningStep('lo');
-
-    $crawler->addStep($step2->addToResult('prop2'));
-
-    $step3 = helper_getValueReturningStep('foo');
-
-    $crawler->addStep($step3);
-
-    $step4 = helper_getValueReturningStep('bar');
-
-    $crawler->addStep($step4);
-
-    $crawler->input('randomInput');
-
-    $results = helper_generatorToArray($crawler->run());
-
-    expect($results[0])->toBeInstanceOf(Result::class);
-
-    expect($results[0]->toArray())->toBe([
-        'prop1' => 'yo',
-        'prop2' => 'lo',
-    ]);
-});
-
-test(
-    'when calling addToResult() it creates a Result object. When the next step also adds to the result and it yields ' .
-    'multiple outputs for one input, the data is added as array to the previously created Result object.',
-    function () {
-        $crawler = helper_getDummyCrawler();
-
-        $step = helper_getValueReturningStep(['some' => 'thing'])->addToResult();
-
-        $crawler->addStep($step);
-
-        $step2 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                foreach (['one', 'two', 'three'] as $number) {
-                    yield $number;
-                }
-            }
-        };
-
-        $step2->addToResult('number');
-
-        $crawler->addStep($step2);
-
-        $crawler->input('some input');
-
-        $results = helper_generatorToArray($crawler->run());
-
-        expect($results)->toHaveCount(1);
-
-        expect($results[0])->toBeInstanceOf(Result::class);
-
-        expect($results[0]->toArray())->toBe([
-            'some' => 'thing',
-            'number' => ['one', 'two', 'three'],
-        ]);
-    },
-);
-
-test(
-    'calling addLaterToResult() doesn\'t immediately create a Result object, but adds the data to the output and ' .
-    'later adds it to each Result object that is created from that output object.',
-    function () {
-        $crawler = helper_getDummyCrawler();
-
-        $step = helper_getValueReturningStep(['some' => 'thing'])->addLaterToResult();
-
-        $crawler->addStep($step);
-
-        $step2 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                foreach (['one', 'two', 'three'] as $number) {
-                    yield $number;
-                }
-            }
-        };
-
-        $step2->addToResult('number');
-
-        $crawler->addStep($step2);
-
-        $crawler->input('test input');
-
-        $results = helper_generatorToArray($crawler->run());
-
-        expect($results)->toHaveCount(3);
-
-        expect($results[0])->toBeInstanceOf(Result::class);
-
-        expect($results[0]->toArray())->toBe([
-            'some' => 'thing',
-            'number' => 'one',
-        ]);
-
-        expect($results[1]->toArray())->toBe([
-            'some' => 'thing',
-            'number' => 'two',
-        ]);
-
-        expect($results[2]->toArray())->toBe([
-            'some' => 'thing',
-            'number' => 'three',
-        ]);
-    },
-);
-
-test(
-    'when addLaterToResult() is called, but addToResult() is not, you get the results from the step that ' .
-    'addLaterToResult() was called on in the quantity of the last steps outputs.',
-    function () {
-        $crawler = helper_getDummyCrawler();
-
-        $step = helper_getValueReturningStep(['some' => 'thing'])->addLaterToResult();
-
-        $crawler->addStep($step);
-
-        $step2 = new class () extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                foreach (['one', 'two', 'three'] as $number) {
-                    yield $number;
-                }
-            }
-        };
-
-        $crawler->addStep($step2);
-
-        $crawler->input('test input');
-
-        $results = helper_generatorToArray($crawler->run());
-
-        expect($results)->toHaveCount(3);
-
-        expect($results[0]->toArray())->toBe(['some' => 'thing']);
-
-        expect($results[1]->toArray())->toBe(['some' => 'thing']);
-
-        expect($results[2]->toArray())->toBe(['some' => 'thing']);
-    },
-);
-
-test('When final steps return an array you get all values in the defined Result resource', function () {
-    $crawler = helper_getDummyCrawler();
-
-    $step1 = helper_getValueReturningStep('Donald');
-
-    $crawler->addStep($step1->addToResult('parent'));
-
-    $step2 = helper_getValueReturningStep(['Tick', 'Trick', 'Track']);
-
-    $crawler->addStep($step2->addToResult('children'));
-
-    $crawler->input('randomInput');
-
-    $results = $crawler->run();
-
-    expect($results->current()->toArray())->toBe([
-        'parent' => 'Donald',
-        'children' => ['Tick', 'Trick', 'Track'],
-    ]);
-
-    $results->next();
-
-    expect($results->current())->toBeNull();
 });
 
 /* ----------------------------- keep() and keepAs() ----------------------------- */
@@ -615,11 +342,14 @@ it('sends all results to the Store when there is one and still yields the result
         }
     };
 
-    $crawler->addStep('number', $step);
+    $crawler->addStep($step->keepAs('number'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(3);
+    expect($results)->toHaveCount(3)
+        ->and($results[0]->toArray())->toBe(['number' => 'one'])
+        ->and($results[1]->toArray())->toBe(['number' => 'two'])
+        ->and($results[2]->toArray())->toBe(['number' => 'three']);
 });
 
 it(
@@ -697,8 +427,8 @@ it(
 
         $crawler = helper_getDummyCrawler()
             ->inputs(['input1', 'input2'])
-            ->addStep('foo', $step1)
-            ->addStep('bar', $step2)
+            ->addStep($step1->keepAs('foo'))
+            ->addStep($step2->keepAs('bar'))
             ->setStore($store);
 
         $crawler->runAndTraverse();
@@ -707,30 +437,21 @@ it(
 
         $outputLines = explode("\n", $output);
 
-        expect($outputLines[0])->toContain('step1 called');
-
-        expect($outputLines[1])->toContain('step2 called');
-
-        expect($outputLines[2])->toContain('Stored a result');
-
-        expect($outputLines[3])->toContain('step2 called');
-
-        expect($outputLines[4])->toContain('Stored a result');
-
-        expect($outputLines[5])->toContain('step1 called');
-
-        expect($outputLines[6])->toContain('step2 called');
-
-        expect($outputLines[7])->toContain('Stored a result');
-
-        expect($outputLines[8])->toContain('step2 called');
-
-        expect($outputLines[9])->toContain('Stored a result');
+        expect($outputLines[0])->toContain('step1 called')
+            ->and($outputLines[1])->toContain('step2 called')
+            ->and($outputLines[2])->toContain('Stored a result')
+            ->and($outputLines[3])->toContain('step2 called')
+            ->and($outputLines[4])->toContain('Stored a result')
+            ->and($outputLines[5])->toContain('step1 called')
+            ->and($outputLines[6])->toContain('step2 called')
+            ->and($outputLines[7])->toContain('Stored a result')
+            ->and($outputLines[8])->toContain('step2 called')
+            ->and($outputLines[9])->toContain('Stored a result');
     },
 );
 
 it(
-    'immediately calls the store for each final output when addToResult() was not called',
+    'immediately calls the store for each final output',
     function () {
         $step1 = new class () extends Step {
             protected function invoke(mixed $input): Generator
@@ -833,8 +554,8 @@ it(
 );
 
 it(
-    'waits for all child outputs originating from an output of a step where addToResult() was called before calling ' .
-    'the store',
+    'does not wait for all child outputs originating from an output of a step where keepAs() was called before ' .
+    'calling the store',
     function () {
         $step1 = new class () extends Step {
             protected function invoke(mixed $input): Generator
@@ -858,7 +579,7 @@ it(
             }
         };
 
-        $step2->addToResult('foo');
+        $step2->keepAs('foo');
 
         $step3 = new class () extends Step {
             protected function invoke(mixed $input): Generator
@@ -882,10 +603,12 @@ it(
             }
         };
 
+        $step4->keepAs('bar');
+
         $store = new class () extends Store {
             public function store(Result $result): void
             {
-                $this->logger?->info('Stored a result: ' . $result->get('foo'));
+                $this->logger?->info('Stored a result: ' . $result->get('bar'));
             }
         };
 
@@ -903,26 +626,37 @@ it(
 
         $outputLines = explode("\n", $output);
 
-        expect($outputLines[0])
-            ->toContain('step1 called')
+        expect($outputLines[0])->toContain('step1 called')
             ->and($outputLines[1])->toContain('step2 called: 1-1')
             ->and($outputLines[2])->toContain('step3 called: 1-1 2-1')
             ->and($outputLines[3])->toContain('step4 called: 1-1 2-1 3-1')
-            ->and($outputLines[4])->toContain('step4 called: 1-1 2-1 3-2')
-            ->and($outputLines[5])->toContain('Stored a result: 1-1 2-1')
-            ->and($outputLines[6])->toContain('step3 called: 1-1 2-2')
-            ->and($outputLines[7])->toContain('step4 called: 1-1 2-2 3-1')
-            ->and($outputLines[8])->toContain('step4 called: 1-1 2-2 3-2')
-            ->and($outputLines[9])->toContain('Stored a result: 1-1 2-2')
-            ->and($outputLines[10])->toContain('step2 called: 1-2')
-            ->and($outputLines[11])->toContain('step3 called: 1-2 2-1')
-            ->and($outputLines[12])->toContain('step4 called: 1-2 2-1 3-1')
-            ->and($outputLines[13])->toContain('step4 called: 1-2 2-1 3-2')
-            ->and($outputLines[14])->toContain('Stored a result: 1-2 2-1')
-            ->and($outputLines[15])->toContain('step3 called: 1-2 2-2')
-            ->and($outputLines[16])->toContain('step4 called: 1-2 2-2 3-1')
-            ->and($outputLines[17])->toContain('step4 called: 1-2 2-2 3-2')
-            ->and($outputLines[18])->toContain('Stored a result: 1-2 2-2');
+            ->and($outputLines[4])->toContain('Stored a result: 1-1 2-1 3-1 4-1')
+            ->and($outputLines[5])->toContain('Stored a result: 1-1 2-1 3-1 4-2')
+            ->and($outputLines[6])->toContain('step4 called: 1-1 2-1 3-2')
+            ->and($outputLines[7])->toContain('Stored a result: 1-1 2-1 3-2 4-1')
+            ->and($outputLines[8])->toContain('Stored a result: 1-1 2-1 3-2 4-2')
+            ->and($outputLines[9])->toContain('step3 called: 1-1 2-2')
+            ->and($outputLines[10])->toContain('step4 called: 1-1 2-2 3-1')
+            ->and($outputLines[11])->toContain('Stored a result: 1-1 2-2 3-1 4-1')
+            ->and($outputLines[12])->toContain('Stored a result: 1-1 2-2 3-1 4-2')
+            ->and($outputLines[13])->toContain('step4 called: 1-1 2-2 3-2')
+            ->and($outputLines[14])->toContain('Stored a result: 1-1 2-2 3-2 4-1')
+            ->and($outputLines[15])->toContain('Stored a result: 1-1 2-2 3-2 4-2')
+            ->and($outputLines[16])->toContain('step2 called: 1-2')
+            ->and($outputLines[17])->toContain('step3 called: 1-2 2-1')
+            ->and($outputLines[18])->toContain('step4 called: 1-2 2-1 3-1')
+            ->and($outputLines[19])->toContain('Stored a result: 1-2 2-1 3-1 4-1')
+            ->and($outputLines[20])->toContain('Stored a result: 1-2 2-1 3-1 4-2')
+            ->and($outputLines[21])->toContain('step4 called: 1-2 2-1 3-2')
+            ->and($outputLines[22])->toContain('Stored a result: 1-2 2-1 3-2 4-1')
+            ->and($outputLines[23])->toContain('Stored a result: 1-2 2-1 3-2 4-2')
+            ->and($outputLines[24])->toContain('step3 called: 1-2 2-2')
+            ->and($outputLines[25])->toContain('step4 called: 1-2 2-2 3-1')
+            ->and($outputLines[26])->toContain('Stored a result: 1-2 2-2 3-1 4-1')
+            ->and($outputLines[27])->toContain('Stored a result: 1-2 2-2 3-1 4-2')
+            ->and($outputLines[28])->toContain('step4 called: 1-2 2-2 3-2')
+            ->and($outputLines[29])->toContain('Stored a result: 1-2 2-2 3-2 4-1')
+            ->and($outputLines[30])->toContain('Stored a result: 1-2 2-2 3-2 4-2');
     },
 );
 
@@ -957,15 +691,11 @@ it('sends all outputs to the outputHook when defined', function () {
 
     $crawler->runAndTraverse();
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0])->toHaveCount(1);
-
-    expect($outputs[0][0])->toBe(2);
-
-    expect($outputs[1])->toHaveCount(1);
-
-    expect($outputs[1][0])->toBe(3);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0])->toHaveCount(1)
+        ->and($outputs[0][0])->toBe(2)
+        ->and($outputs[1])->toHaveCount(1)
+        ->and($outputs[1][0])->toBe(3);
 });
 
 test(
@@ -992,21 +722,13 @@ it('just runs the crawler and dumps all results as array when runAndDump() is ca
 
     $actualOutput = $this->getActualOutputForAssertion();
 
-    expect(explode('array(2)', $actualOutput))->toHaveCount(3);
-
-    expect($actualOutput)->toContain('["foo"]=>');
-
-    expect($actualOutput)->toContain('string(3) "one"');
-
-    expect($actualOutput)->toContain('["bar"]=>');
-
-    expect($actualOutput)->toContain('string(3) "two"');
-
-    expect($actualOutput)->toContain('["baz"]=>');
-
-    expect($actualOutput)->toContain('string(5) "three"');
-
-    expect($actualOutput)->toContain('["quz"]=>');
-
-    expect($actualOutput)->toContain('string(4) "four"');
+    expect(explode('array(2)', $actualOutput))->toHaveCount(3)
+        ->and($actualOutput)->toContain('["foo"]=>')
+        ->and($actualOutput)->toContain('string(3) "one"')
+        ->and($actualOutput)->toContain('["bar"]=>')
+        ->and($actualOutput)->toContain('string(3) "two"')
+        ->and($actualOutput)->toContain('["baz"]=>')
+        ->and($actualOutput)->toContain('string(5) "three"')
+        ->and($actualOutput)->toContain('["quz"]=>')
+        ->and($actualOutput)->toContain('string(4) "four"');
 });

@@ -8,7 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2024-x-x
 ### Changed
+* __BREAKING__: Removed methods `BaseStep::addToResult()`, `BaseStep::addLaterToResult()`, `BaseStep::addsToOrCreatesResult()`, `BaseStep::createsResult()` and `BaseStep::keepInputData()`. They have already been deprecated in v1.8.0 and shall be replaced with `Step::keep()` and `Step::keepAs()`, `Step::keepFromInput()` and `Step::keepInputAs()`.
+* __BREAKING__: As the `addToResult()` method was removed, the library does not use `toArrayForAddToResult()` methods on output objects any longer. Instead, please use `toArrayForResult()`. Therefore, also the `RespondedRequest::toArrayForAddToResult()` is renamed to `RespondedRequest::toArrayForResult()`. 
+* __BREAKING__: Removed the `result` and `addLaterToResult` properties from `Io` objects (so `Input` and `Output`). They were part of the whole `addToResult` feature and are therefore removed. Instead, there is the `keep` property where kept data is added.
+* __BREAKING__: The return type of the `Crawler::loader()` method was changed to no longer allow `array`. This means it's no longer possible to provide multiple loaders from the crawler. Instead, use the functionality described below, to directly provide a custom loader to a step.
+* __BREAKING__: Refactored the abstract `LoadingStep` class to a trait and removed the `LoadingStepInterface`. Loading steps should now just extend the `Step` class and use the trait. As it is no longer possible to have multiple loaders, the `addLoader` method was renamed to `setLoader`. For the same reason, the methods `useLoader()` and `usesLoader()`, to choose one of multiple loaders from the crawler by key, are removed. Instead, you can now directly provide a different loader to a single step (instead to the crawler), using the trait's new `withLoader()` method (e.g. `Http::get()->withLoader($loader)`).
 * __BREAKING__: The `HttpLoader::retryCachedErrorResponses()` method now returns an instance of the new `Crwlr\Crawler\Loader\Http\Cache\RetryManager` class, providing the methods `only()` and `except()` that can be used to restrict retries to certain HTTP response status codes. Previously the method returned the `HttpLoader` itself (`$this`), so if you're using it in a chain and call other loader methods after it, you need to refactor this.
+* __BREAKING__: Removed the `Microseconds` class from this package. It was moved to the `crwlr/utils` package that you can use instead.
 
 ## [1.10.0] - 2024-08-05
 ### Added

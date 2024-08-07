@@ -20,20 +20,6 @@ interface StepInterface
 
     public function useInputKey(string $key): static;
 
-    /**
-     * @param string|string[]|null $keys
-     */
-    public function addToResult(null|string|array $keys = null): static;
-
-    /**
-     * @param string|string[]|null $keys
-     */
-    public function addLaterToResult(null|string|array $keys = null): static;
-
-    public function addsToOrCreatesResult(): bool;
-
-    public function createsResult(): bool;
-
     public function uniqueInputs(?string $key = null): static;
 
     public function uniqueOutputs(?string $key = null): static;
@@ -43,8 +29,6 @@ interface StepInterface
     public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static;
 
     public function outputKey(string $key): static;
-
-    public function keepInputData(?string $inputKey = null): static;
 
     public function resetAfterRun(): void;
 }

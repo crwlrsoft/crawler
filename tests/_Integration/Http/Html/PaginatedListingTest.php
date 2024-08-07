@@ -31,27 +31,25 @@ it('paginates through pagination', function () {
 
     $crawler
         ->addStep(Http::get()->paginate('#nextPage'))
-        ->addStep('url', Html::getLinks('#listing .item a'))
+        ->addStep(Html::getLinks('#listing .item a')->keepAs('url'))
         ->addStep(Http::get())
         ->addStep(
             Html::first('article')
                 ->extract(['title' => 'h1', 'number' => '.someNumber'])
-                ->addToResult(),
+                ->keep(),
         );
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(10);
-
-    expect($results[0]->toArray())->toBe([
-        'url' => 'http://localhost:8000/paginated-listing/items/1',
-        'title' => 'Some Item 1',
-        'number' => '10',
-    ]);
-
-    expect($results[9]->toArray())->toBe([
-        'url' => 'http://localhost:8000/paginated-listing/items/10',
-        'title' => 'Some Item 10',
-        'number' => '100',
-    ]);
+    expect($results)->toHaveCount(10)
+        ->and($results[0]->toArray())->toBe([
+            'url' => 'http://localhost:8000/paginated-listing/items/1',
+            'title' => 'Some Item 1',
+            'number' => '10',
+        ])
+        ->and($results[9]->toArray())->toBe([
+            'url' => 'http://localhost:8000/paginated-listing/items/10',
+            'title' => 'Some Item 10',
+            'number' => '100',
+        ]);
 });

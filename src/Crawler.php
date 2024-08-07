@@ -3,14 +3,11 @@
 namespace Crwlr\Crawler;
 
 use Closure;
-use Crwlr\Crawler\Exceptions\UnknownLoaderKeyException;
-use Crwlr\Crawler\Loader\AddLoadersToStepAction;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\BaseStep;
 use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
 use Crwlr\Crawler\Steps\Group;
-use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Stores\StoreInterface;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -24,9 +21,9 @@ abstract class Crawler
     protected UserAgentInterface $userAgent;
 
     /**
-     * @var LoaderInterface|array<string, LoaderInterface>
+     * @var LoaderInterface
      */
-    protected LoaderInterface|array $loader;
+    protected LoaderInterface $loader;
 
     protected LoggerInterface $logger;
 
@@ -68,9 +65,9 @@ abstract class Crawler
     /**
      * @param UserAgentInterface $userAgent
      * @param LoggerInterface $logger
-     * @return LoaderInterface|array<string, LoaderInterface>
+     * @return LoaderInterface
      */
-    abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array;
+    abstract protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface;
 
     public static function group(): Group
     {
@@ -146,24 +143,17 @@ abstract class Crawler
     }
 
     /**
-     * @param string|StepInterface $stepOrResultKey
-     * @param StepInterface|null $step
+     * @param StepInterface $step
      * @return $this
-     * @throws InvalidArgumentException|UnknownLoaderKeyException
+     * @throws InvalidArgumentException
      */
-    public function addStep(string|StepInterface $stepOrResultKey, ?StepInterface $step = null): static
+    public function addStep(StepInterface $step): static
     {
-        if (is_string($stepOrResultKey) && $step === null) {
-            throw new InvalidArgumentException('No StepInterface object provided');
-        } elseif (is_string($stepOrResultKey)) {
-            $step->addToResult($stepOrResultKey);
-        } else {
-            $step = $stepOrResultKey;
-        }
-
         $step->addLogger($this->logger);
 
-        (new AddLoadersToStepAction($this->loader, $step))->invoke();
+        if (method_exists($step, 'setLoader')) {
+            $step->setLoader($this->loader);
+        }
 
         if ($step instanceof BaseStep) {
             $step->setParentCrawler($this);
@@ -266,8 +256,8 @@ abstract class Crawler
 
         $nextStep = $this->nextStep($stepIndex);
 
-        if (!$nextStep && $input->result === null) {
-            yield from $this->storeAndReturnResults($outputs, $step->createsResult() === true, true);
+        if (!$nextStep) {
+            yield from $this->storeAndReturnOutputsAsResults($outputs);
 
             return;
         }
@@ -279,27 +269,11 @@ abstract class Crawler
 
             $this->outputHook?->call($this, $output, $stepIndex, $step);
 
-            if ($nextStep) {
-                if ($input->result === null && $step->createsResult()) {
-                    $childOutputs = $this->invokeStepsRecursive(
-                        new Input($output),
-                        $nextStep,
-                        $stepIndex + 1,
-                    );
-
-                    /** @var Generator<Output> $childOutputs */
-
-                    yield from $this->storeAndReturnResults($childOutputs, true);
-                } else {
-                    yield from $this->invokeStepsRecursive(
-                        new Input($output),
-                        $nextStep,
-                        $stepIndex + 1,
-                    );
-                }
-            } else {
-                yield $output;
-            }
+            yield from $this->invokeStepsRecursive(
+                new Input($output),
+                $nextStep,
+                $stepIndex + 1,
+            );
         }
     }
 
@@ -307,57 +281,10 @@ abstract class Crawler
      * @param Generator<Output> $outputs
      * @return Generator<Result>
      */
-    protected function storeAndReturnResults(
-        Generator $outputs,
-        bool $manuallyDefinedResults = false,
-        bool $callOutputHook = false,
-    ): Generator {
-        if ($manuallyDefinedResults || $this->anyResultKeysDefinedInSteps()) {
-            yield from $this->storeAndReturnDefinedResults($outputs, $callOutputHook);
-        } else {
-            yield from $this->storeAndReturnOutputsAsResults($outputs, $callOutputHook);
-        }
-    }
-
-    /**
-     * @param Generator<Output> $outputs
-     * @return Generator<Result>
-     */
-    protected function storeAndReturnDefinedResults(Generator $outputs, bool $callOutputHook = false): Generator
-    {
-        $results = [];
-
-        foreach ($outputs as $output) {
-            if ($callOutputHook) {
-                $this->outputHook?->call($this, $output, count($this->steps) - 1, end($this->steps));
-            }
-
-            if ($output->result !== null && !in_array($output->result, $results, true)) {
-                $results[] = $output->result;
-            } elseif ($output->addLaterToResult !== null && !in_array($output->addLaterToResult, $results, true)) {
-                $results[] = new Result($output->addLaterToResult);
-            }
-        }
-
-        // yield results only after iterating over final outputs, because that could still add properties to result
-        // resources.
-        foreach ($results as $result) {
-            $this->store?->store($result);
-
-            yield $result;
-        }
-    }
-
-    /**
-     * @param Generator<Output> $outputs
-     * @return Generator<Result>
-     */
-    protected function storeAndReturnOutputsAsResults(Generator $outputs, bool $callOutputHook = false): Generator
+    protected function storeAndReturnOutputsAsResults(Generator $outputs): Generator
     {
         foreach ($outputs as $output) {
-            if ($callOutputHook) {
-                $this->outputHook?->call($this, $output, count($this->steps) - 1, end($this->steps));
-            }
+            $this->outputHook?->call($this, $output, count($this->steps) - 1, end($this->steps));
 
             $result = new Result();
 
@@ -420,17 +347,6 @@ abstract class Crawler
         }, $this->inputs);
     }
 
-    protected function anyResultKeysDefinedInSteps(): bool
-    {
-        foreach ($this->steps as $step) {
-            if ($step->addsToOrCreatesResult()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     protected function logMemoryUsage(): void
     {
         $memoryUsage = memory_get_usage();
@@ -445,11 +361,11 @@ abstract class Crawler
         return $this->steps[0] ?? null;
     }
 
-    protected function lastStep(): ?Step
+    protected function lastStep(): ?BaseStep
     {
         $lastStep = end($this->steps);
 
-        if (!$lastStep instanceof Step) {
+        if (!$lastStep instanceof BaseStep) {
             return null;
         }
 

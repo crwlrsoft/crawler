@@ -3,30 +3,29 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\LoaderInterface;
-use Crwlr\Crawler\Steps\Step;
 
-abstract class LoadingStep extends Step implements LoadingStepInterface
+trait LoadingStep
 {
-    protected LoaderInterface $loader;
+    private LoaderInterface $loader;
 
-    protected ?string $useLoaderKey = null;
+    private ?LoaderInterface $customLoader = null;
 
-    public function addLoader(LoaderInterface $loader): static
+    public function setLoader(LoaderInterface $loader): static
     {
         $this->loader = $loader;
 
         return $this;
     }
 
-    public function useLoader(string $key): static
+    public function withLoader(LoaderInterface $loader): static
     {
-        $this->useLoaderKey = $key;
+        $this->customLoader = $loader;
 
         return $this;
     }
 
-    public function usesLoader(): ?string
+    protected function getLoader(): LoaderInterface
     {
-        return $this->useLoaderKey;
+        return $this->customLoader ?? $this->loader;
     }
 }

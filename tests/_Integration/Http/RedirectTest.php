@@ -2,6 +2,7 @@
 
 namespace tests\_Integration\Http;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -28,6 +29,7 @@ class GetResponseBodyAsString extends Step
 {
     /**
      * @param RespondedRequest $input
+     * @throws MissingZlibExtensionException
      */
     protected function invoke(mixed $input): Generator
     {
@@ -43,13 +45,12 @@ it('follows redirects', function () {
     $crawler
         ->input('http://localhost:8000/redirect?stopAt=5')
         ->addStep(Http::get())
-        ->addStep('body', new GetResponseBodyAsString());
+        ->addStep((new GetResponseBodyAsString())->keepAs('body'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->get('body'))->toBe('success after 5 redirects');
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('body'))->toBe('success after 5 redirects');
 });
 
 it('stops at 10 redirects by default', function () {
@@ -58,7 +59,7 @@ it('stops at 10 redirects by default', function () {
     $crawler
         ->input('http://localhost:8000/redirect?stopAt=11')
         ->addStep(Http::get())
-        ->addStep('body', new GetResponseBodyAsString());
+        ->addStep((new GetResponseBodyAsString())->keepAs('body'));
 
     $results = helper_generatorToArray($crawler->run());
 
@@ -76,7 +77,7 @@ test('you can set your own max redirects limit', function () {
             return new UserAgent('RedirectBot');
         }
 
-        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
+        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
         {
             $loader = parent::loader($userAgent, $logger);
 
@@ -91,11 +92,10 @@ test('you can set your own max redirects limit', function () {
     $crawler
         ->input('http://localhost:8000/redirect?stopAt=11')
         ->addStep(Http::get())
-        ->addStep('body', new GetResponseBodyAsString());
+        ->addStep((new GetResponseBodyAsString())->keepAs('body'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->get('body'))->toBe('success after 11 redirects');
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('body'))->toBe('success after 11 redirects');
 });

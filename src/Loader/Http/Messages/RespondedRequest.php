@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http\Messages;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
@@ -57,6 +58,7 @@ class RespondedRequest
 
     /**
      * @return mixed[]
+     * @throws MissingZlibExtensionException
      */
     public function __serialize(): array
     {
@@ -74,8 +76,9 @@ class RespondedRequest
 
     /**
      * @return mixed[]
+     * @throws MissingZlibExtensionException
      */
-    public function toArrayForAddToResult(): array
+    public function toArrayForResult(): array
     {
         $serialized = $this->__serialize();
 
