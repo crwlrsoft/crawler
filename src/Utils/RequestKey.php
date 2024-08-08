@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Utils;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Psr\Http\Message\RequestInterface;
@@ -20,6 +21,7 @@ class RequestKey
      * @param RequestInterface|RespondedRequest $request
      * @param string[] $ignoreHeaders
      * @return string
+     * @throws MissingZlibExtensionException
      */
     public static function from(RequestInterface|RespondedRequest $request, array $ignoreHeaders = ['Cookie']): string
     {

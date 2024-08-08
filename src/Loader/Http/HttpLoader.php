@@ -227,38 +227,6 @@ class HttpLoader extends Loader
         return $this->useHeadlessBrowser;
     }
 
-    /**
-     * @param array<string, mixed> $options
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setOptions()` instead.
-     */
-    public function setHeadlessBrowserOptions(array $options): static
-    {
-        $this->browser()->setOptions($options);
-
-        return $this;
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->addOptions()` instead.
-     */
-    public function addHeadlessBrowserOptions(array $options): static
-    {
-        $this->browser()->addOptions($options);
-
-        return $this;
-    }
-
-    /**
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setExecutable()` instead.
-     */
-    public function setChromeExecutable(string $executable): static
-    {
-        $this->browser()->setExecutable($executable);
-
-        return $this;
-    }
-
     public function setMaxRedirects(int $maxRedirects): static
     {
         $this->maxRedirects = $maxRedirects;
@@ -320,14 +288,6 @@ class HttpLoader extends Loader
         $this->checkIfProxiesCanBeUsed();
 
         $this->proxies = new ProxyManager($proxyUrls);
-    }
-
-    /**
-     * @deprecated Will be removed in v2.0. Use browser() instead, it's an alias.
-     */
-    public function browserHelper(): HeadlessBrowserLoaderHelper
-    {
-        return $this->browser();
     }
 
     public function browser(): HeadlessBrowserLoaderHelper
