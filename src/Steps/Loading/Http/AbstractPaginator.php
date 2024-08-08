@@ -77,9 +77,6 @@ abstract class AbstractPaginator
         }
     }
 
-    /**
-     * For v2. See above.
-     */
     abstract public function getNextRequest(): ?RequestInterface;
 
     protected function registerLoadedRequest(RequestInterface|RespondedRequest $request): void
