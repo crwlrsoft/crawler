@@ -10,6 +10,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Loading\LoadingStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepInterface;
 use Crwlr\Crawler\Steps\StepOutputType;
@@ -21,6 +22,7 @@ use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\Process\Process;
@@ -83,7 +85,7 @@ function helper_getValueReturningStep(mixed $value): Step
 
 function helper_getInputReturningStep(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield $input;
@@ -93,7 +95,7 @@ function helper_getInputReturningStep(): Step
 
 function helper_getNumberIncrementingStep(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield $input + 1;
@@ -103,7 +105,7 @@ function helper_getNumberIncrementingStep(): Step
 
 function helper_getStepYieldingMultipleNumbers(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $number) {
@@ -113,21 +115,9 @@ function helper_getStepYieldingMultipleNumbers(): Step
     };
 }
 
-function helper_getStepYieldingArrayWithNumber(int $number): Step
-{
-    return new class ($number) extends Step {
-        public function __construct(private int $number) {}
-
-        protected function invoke(mixed $input): Generator
-        {
-            yield ['number' => $this->number, 'foo' => 'bar' . (is_int($input) ? ' ' . $input : '')];
-        }
-    };
-}
-
 function helper_getStepYieldingMultipleArraysWithNumber(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
@@ -153,7 +143,7 @@ function helper_getStepYieldingObjectWithNumber(int $number): Step
 
 function helper_getStepYieldingMultipleObjectsWithNumber(): Step
 {
-    return new class () extends Step {
+    return new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             foreach (['one', 'two', 'two', 'three', 'four', 'three', 'five', 'three'] as $key => $number) {
@@ -161,6 +151,18 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
                     ['number' => $number, 'foo' => 'bar' . ($input === true ? ' ' . $key : '')],
                 );
             }
+        }
+    };
+}
+
+function helper_getLoadingStep(): Step
+{
+    return new class extends Step {
+        use LoadingStep;
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield 'yo';
         }
     };
 }
@@ -257,9 +259,12 @@ function helper_getSimpleListHtml(): string
         HTML;
 }
 
-function helper_getFastLoader(UserAgentInterface $userAgent, ?LoggerInterface $logger = null): HttpLoader
-{
-    $loader = new HttpLoader($userAgent, logger: $logger);
+function helper_getFastLoader(
+    ?UserAgentInterface $userAgent = null,
+    ?LoggerInterface $logger = null,
+    ?ClientInterface $httpClient = null,
+): HttpLoader {
+    $loader = new HttpLoader($userAgent ?? UserAgent::mozilla5CompatibleBrowser(), $httpClient, $logger);
 
     $loader->throttle()
         ->waitBetween(new MultipleOf(0.0001), new MultipleOf(0.0002))
@@ -270,13 +275,13 @@ function helper_getFastLoader(UserAgentInterface $userAgent, ?LoggerInterface $l
 
 function helper_getFastCrawler(): HttpCrawler
 {
-    return new class () extends HttpCrawler {
+    return new class extends HttpCrawler {
         protected function userAgent(): UserAgentInterface
         {
             return new UserAgent('TestBot');
         }
 
-        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface|array
+        protected function loader(UserAgentInterface $userAgent, LoggerInterface $logger): LoaderInterface
         {
             return helper_getFastLoader($userAgent, $logger);
         }

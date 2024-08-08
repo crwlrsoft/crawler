@@ -5,7 +5,6 @@ namespace tests\Steps\Loading\Http\Paginators;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\SimpleWebsitePaginator;
-use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -45,11 +44,7 @@ it('says it has finished when a response is provided, but it has no pagination l
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing', '<div class="listing"></div>');
 
-    $paginator->processLoaded(
-        $respondedRequest->request->getUri(),
-        $respondedRequest->request,
-        $respondedRequest,
-    );
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeTrue();
 });
@@ -65,11 +60,7 @@ it('says it has not finished when an initial response with pagination links is p
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing', $responseBody);
 
-    $paginator->processLoaded(
-        Url::parsePsr7('https://www.example.com/listing'),
-        $respondedRequest->request,
-        $respondedRequest,
-    );
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeFalse();
 });
@@ -85,21 +76,13 @@ it('has finished when the loaded pages count exceeds the max pages limit', funct
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing', $responseBody);
 
-    $paginator->processLoaded(
-        Url::parsePsr7('https://www.example.com/listing'),
-        $respondedRequest->request,
-        $respondedRequest,
-    );
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeFalse();
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded(
-        Url::parsePsr7('https://www.example.com/listing?page=1'),
-        $respondedRequest->request,
-        $respondedRequest,
-    );
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeFalse();
 
@@ -111,11 +94,7 @@ it('has finished when the loaded pages count exceeds the max pages limit', funct
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=2', $responseBody);
 
-    $paginator->processLoaded(
-        Url::parsePsr7('https://www.example.com/listing?page=2'),
-        $respondedRequest->request,
-        $respondedRequest,
-    );
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeTrue();
 });
@@ -127,17 +106,17 @@ it('says it has finished when there are no more found pagination links, that hav
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeFalse();
 
-    $paginator->getNextUrl();
+    $paginator->getNextRequest();
 
     $responseBody = helper_createResponseBodyWithPaginationLinks(['/listing?page=2' => 'Page Two']);
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=2', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeTrue();
 });
@@ -149,9 +128,9 @@ it('finds pagination links when the selector matches the link itself', function 
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
-    expect($paginator->getNextUrl())->toBe('https://www.example.com/listing?page=2');
+    expect($paginator->getNextRequest()?->getUri()->__toString())->toBe('https://www.example.com/listing?page=2');
 });
 
 it('finds pagination links when the selected element is a wrapper for pagination links', function () {
@@ -161,9 +140,9 @@ it('finds pagination links when the selected element is a wrapper for pagination
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
-    expect($paginator->getNextUrl())->toBe('https://www.example.com/listing?page=2');
+    expect($paginator->getNextRequest()?->getUri()->__toString())->toBe('https://www.example.com/listing?page=2');
 });
 
 it('finds all pagination links, when multiple elements match the pagination links selector', function () {
@@ -176,11 +155,11 @@ it('finds all pagination links, when multiple elements match the pagination link
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
-    expect($paginator->getNextUrl())->toBe('https://www.example.com/listing?page=2');
+    expect($paginator->getNextRequest()?->getUri()->__toString())->toBe('https://www.example.com/listing?page=2')
+        ->and($paginator->getNextRequest()?->getUri()->__toString())->toBe('https://www.example.com/listing?page=12');
 
-    expect($paginator->getNextUrl())->toBe('https://www.example.com/listing?page=12');
 });
 
 it('logs that max pages limit was reached when it was reached', function () {
@@ -197,15 +176,15 @@ it('logs that max pages limit was reached when it was reached', function () {
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=2', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=3', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeTrue();
 
@@ -229,7 +208,7 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     $paginator->getNextRequest();
 
@@ -237,7 +216,7 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $paginator->logWhenFinished(new CliLogger());
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     $paginator->logWhenFinished(new CliLogger());
 
@@ -245,7 +224,7 @@ it('logs that all found pagination links have been loaded when max pages limit w
 
     $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=3', $responseBody);
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect($paginator->hasFinished())->toBeTrue();
 
@@ -280,7 +259,7 @@ it(
             responseBody: $responseBody,
         );
 
-        $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+        $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
         $responseBody = <<<HTML
             <div class="pagination">
@@ -297,7 +276,7 @@ it(
             responseBody: $responseBody,
         );
 
-        $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+        $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
         $nextRequest = $paginator->getNextRequest();
 
@@ -330,7 +309,7 @@ it('cleans up the stored parent requests always when getting the next request to
         responseBody: $responseBody,
     );
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect(count($paginator->parentRequests()))->toBe(1);
 
@@ -342,7 +321,7 @@ it('cleans up the stored parent requests always when getting the next request to
 
     $respondedRequest = new RespondedRequest($nextRequest, new Response());
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect(count($paginator->parentRequests()))->toBe(1);
 
@@ -354,7 +333,7 @@ it('cleans up the stored parent requests always when getting the next request to
 
     $respondedRequest = new RespondedRequest($nextRequest, new Response());
 
-    $paginator->processLoaded($respondedRequest->request->getUri(), $respondedRequest->request, $respondedRequest);
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect(count($paginator->parentRequests()))->toBe(0);
 });

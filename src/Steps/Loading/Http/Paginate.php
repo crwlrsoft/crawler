@@ -3,9 +3,7 @@
 namespace Crwlr\Crawler\Steps\Loading\Http;
 
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
-use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
-use Crwlr\Url\Url;
 use Exception;
 use Generator;
 use Psr\Http\Message\RequestInterface;
@@ -15,7 +13,7 @@ use Psr\Http\Message\UriInterface;
 class Paginate extends Http
 {
     public function __construct(
-        protected Http\PaginatorInterface|AbstractPaginator $paginator,
+        protected AbstractPaginator $paginator,
         string $method = 'GET',
         array $headers = [],
         string|StreamInterface|null $body = null,
@@ -39,17 +37,13 @@ class Paginate extends Http
         }
 
         try {
-            $this->paginator->processLoaded($input, $request, $response);
+            $this->paginator->processLoaded($request, $response);
         } catch (Exception $exception) {
             $this->logger?->error('Paginate Error: ' . $exception->getMessage());
         }
 
         while (!$this->paginator->hasFinished()) {
-            if (!method_exists($this->paginator, 'getNextRequest')) { // Remove in v2
-                $request = $this->getNextRequestLegacy($response);
-            } else {
-                $request = $this->paginator->getNextRequest();
-            }
+            $request = $this->paginator->getNextRequest();
 
             if (!$request) {
                 break;
@@ -62,7 +56,7 @@ class Paginate extends Http
             }
 
             try {
-                $this->paginator->processLoaded($request->getUri(), $request, $response);
+                $this->paginator->processLoaded($request, $response);
             } catch (Exception $exception) {
                 $this->logger?->error('Paginate Error: ' . $exception->getMessage());
             }
@@ -93,29 +87,5 @@ class Paginate extends Http
         }
 
         return $this->getRequestFromInputUri($input);
-    }
-
-    /**
-     * @deprecated Legacy method, remove in v2
-     */
-    protected function getNextRequestLegacy(?RespondedRequest $previousResponse): ?RequestInterface
-    {
-        if (!method_exists($this->paginator, 'getNextUrl')) {
-            return null;
-        }
-
-        $nextUrl = $this->paginator->getNextUrl();
-
-        if (!$nextUrl) {
-            return null;
-        }
-
-        $request = $this->getRequestFromInputUri(Url::parsePsr7($nextUrl));
-
-        if (method_exists($this->paginator, 'prepareRequest')) {
-            $request = $this->paginator->prepareRequest($request, $previousResponse);
-        }
-
-        return $request;
     }
 }

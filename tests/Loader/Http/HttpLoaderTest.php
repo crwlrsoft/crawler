@@ -23,6 +23,7 @@ use tests\_Stubs\RespondedRequestChild;
 use Throwable;
 
 use function tests\helper_cachedir;
+use function tests\helper_getFastLoader;
 use function tests\helper_resetCacheDir;
 
 function helper_nonBotUserAgent(): UserAgent
@@ -281,7 +282,7 @@ it('calls request start and end tracking methods', function (string $loadingMeth
 
     $httpClient->shouldReceive('sendRequest')->once()->andReturn(new Response(200));
 
-    $throttler = new class () extends Throttler {
+    $throttler = new class extends Throttler {
         public function trackRequestStartFor(UriInterface $url): void
         {
             echo 'Track request start ' . $url . PHP_EOL;
@@ -329,7 +330,7 @@ it(
             })
             ->andReturn(new Response(200));
 
-        $throttler = new class () extends Throttler {
+        $throttler = new class extends Throttler {
             public function trackRequestEndFor(UriInterface $url): void
             {
                 echo 'Track request end ' . $url . PHP_EOL;
@@ -527,13 +528,14 @@ test(
     function (string $loadingMethod) {
         $httpClient = Mockery::mock(ClientInterface::class);
 
-        $httpClient->shouldReceive('sendRequest')
+        $httpClient
+            ->shouldReceive('sendRequest')
             ->twice()
             ->andReturn(new Response(404), new Response(200));
 
         $cache = new FileCache(helper_cachedir());
 
-        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+        $httpLoader = helper_getFastLoader(httpClient: $httpClient);
 
         $httpLoader->setCache($cache);
 
@@ -550,6 +552,68 @@ test(
         }
     },
 )->with(['load', 'loadOrFail']);
+
+test('retrying cached error responses can be restricted to only certain response status codes', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient
+        ->shouldReceive('sendRequest')
+        ->twice()
+        ->andReturn(new Response(404), new Response(400));
+
+    $cache = new FileCache(helper_cachedir());
+
+    $httpLoader = helper_getFastLoader(httpClient: $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $httpLoader
+        ->retryCachedErrorResponses()
+        ->only([404, 503]);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(404);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(400);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(400);
+});
+
+test('certain error status codes can be excluded from being retried', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient
+        ->shouldReceive('sendRequest')
+        ->twice()
+        ->andReturn(new Response(404), new Response(500));
+
+    $cache = new FileCache(helper_cachedir());
+
+    $httpLoader = helper_getFastLoader(httpClient: $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $httpLoader
+        ->retryCachedErrorResponses()
+        ->except([410, 500]);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(404);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(500);
+
+    $respondedRequest = $httpLoader->load('https://www.example.com/foo');
+
+    expect($respondedRequest?->response->getStatusCode())->toBe(500);
+});
 
 it(
     'adds responses to the cache but doesn\'t try to get them from the cache, when writeOnlyCache() was called',

@@ -1,6 +1,5 @@
 <?php
 
-use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Symfony\Component\Process\Process;
@@ -48,15 +47,11 @@ afterAll(function () {
 it('uses a proxy when the useProxy() method of the loader was called', function () {
     $crawler = helper_getFastCrawler();
 
-    $loader = $crawler->getLoader();
-
-    /** @var HttpLoader $loader */
-
-    $loader->useProxy('http://localhost:8001');
+    $crawler->getLoader()->useProxy('http://localhost:8001');
 
     $crawler
         ->input('http://www.crwlr.software/packages')
-        ->addStep(Http::get()->addToResult(['body']));
+        ->addStep(Http::get()->keep(['body']));
 
     $results = iterator_to_array($crawler->run());
 
@@ -69,17 +64,13 @@ it('uses a proxy when the useProxy() method of the loader was called', function 
 it('uses correct method, headers and HTTP version in the proxied request', function () {
     $crawler = helper_getFastCrawler();
 
-    $loader = $crawler->getLoader();
-
-    /** @var HttpLoader $loader */
-
-    $loader->useProxy('http://localhost:8001');
+    $crawler->getLoader()->useProxy('http://localhost:8001');
 
     $crawler
         ->input('http://www.crwlr.software/packages')
         ->addStep(
             Http::put(['Accept-Encoding' => 'gzip, deflate, br'], 'Hello World', '1.0')
-                ->addToResult(['body']),
+                ->keep(['body']),
         );
 
     $results = iterator_to_array($crawler->run());
@@ -96,11 +87,7 @@ it('uses correct method, headers and HTTP version in the proxied request', funct
 it('uses rotating proxies when the useRotatingProxies() method of the loader was called', function () {
     $crawler = helper_getFastCrawler();
 
-    $loader = $crawler->getLoader();
-
-    /** @var HttpLoader $loader */
-
-    $loader->useRotatingProxies([
+    $crawler->getLoader()->useRotatingProxies([
         'http://localhost:8001',
         'http://localhost:8002',
         'http://localhost:8003',
@@ -113,7 +100,7 @@ it('uses rotating proxies when the useRotatingProxies() method of the loader was
             'http://www.crwlr.software/packages/query-string/v1.0/getting-started',
             'http://www.crwlr.software/packages/robots-txt/v1.1/getting-started',
         ])
-        ->addStep(Http::get()->addToResult(['body']));
+        ->addStep(Http::get()->keep(['body']));
 
     $results = iterator_to_array($crawler->run());
 
@@ -139,11 +126,8 @@ it('uses rotating proxies when the useRotatingProxies() method of the loader was
 it('can also use a proxy when using the headless browser', function () {
     $crawler = helper_getFastCrawler();
 
-    $loader = $crawler->getLoader();
-
-    /** @var HttpLoader $loader */
-
-    $loader
+    $crawler
+        ->getLoader()
         ->useHeadlessBrowser()
         ->useProxy('http://localhost:8001');
 
@@ -151,7 +135,7 @@ it('can also use a proxy when using the headless browser', function () {
         ->input('http://www.crwlr.software/blog')
         ->addStep(
             Http::get(['Accept-Language' => 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7'])
-                ->addToResult(['body']),
+                ->keep(['body']),
         );
 
     $results = iterator_to_array($crawler->run());
@@ -165,11 +149,8 @@ it('can also use a proxy when using the headless browser', function () {
 it('can also use rotating proxies when using the headless browser', function () {
     $crawler = helper_getFastCrawler();
 
-    $loader = $crawler->getLoader();
-
-    /** @var HttpLoader $loader */
-
-    $loader
+    $crawler
+        ->getLoader()
         ->useHeadlessBrowser()
         ->useRotatingProxies([
             'http://localhost:8001',
@@ -182,7 +163,7 @@ it('can also use rotating proxies when using the headless browser', function () 
             'http://www.crwlr.software/packages/url/v2.0',
             'http://www.crwlr.software/packages/query-string/v1.0',
         ])
-        ->addStep(Http::get()->addToResult(['body']));
+        ->addStep(Http::get()->keep(['body']));
 
     $results = iterator_to_array($crawler->run());
 

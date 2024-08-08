@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps;
 
 use Closure;
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
@@ -142,7 +143,7 @@ abstract class Step extends BaseStep
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|MissingZlibExtensionException
      */
     protected function validateAndSanitizeStringOrHttpResponse(
         mixed $inputValue,
@@ -189,6 +190,9 @@ abstract class Step extends BaseStep
         throw new InvalidArgumentException($exceptionMessage);
     }
 
+    /**
+     * @throws MissingZlibExtensionException
+     */
     protected function validateAndSanitizeToDomCrawlerInstance(
         mixed $inputValue,
         string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
@@ -221,10 +225,6 @@ abstract class Step extends BaseStep
 
             if (!is_array($outputData) && $this->outputKey) {
                 $outputData = [$this->outputKey => $outputData];
-            }
-
-            if ($this->keepInputData === true) {
-                $outputData = $this->addInputDataToOutputData($input->get(), $outputData);
             }
 
             $output = $this->makeOutput($outputData, $input);

@@ -6,7 +6,7 @@ use Crwlr\Crawler\Utils\OutputTypeHelper;
 use stdClass;
 
 it('converts an object with a toArrayForResult() method to an array', function () {
-    $object = new class () {
+    $object = new class {
         /**
          * @return string[]
          */
@@ -20,7 +20,7 @@ it('converts an object with a toArrayForResult() method to an array', function (
 });
 
 it('converts an object with a toArray() method to an array', function () {
-    $object = new class () {
+    $object = new class {
         /**
          * @return string[]
          */
@@ -33,22 +33,8 @@ it('converts an object with a toArray() method to an array', function () {
     expect(OutputTypeHelper::objectToArray($object))->toBe(['foo' => 'bar']);
 });
 
-it('converts an object with a toArrayForAddToResult() method to an array', function () {
-    $object = new class () {
-        /**
-         * @return string[]
-         */
-        public function toArrayForAddToResult(): array
-        {
-            return ['yo' => 'lo'];
-        }
-    };
-
-    expect(OutputTypeHelper::objectToArray($object))->toBe(['yo' => 'lo']);
-});
-
 it('converts an object with a __serialize() method to an array', function () {
-    $object = new class () {
+    $object = new class {
         public function __serialize(): array
         {
             return ['winnie' => 'the pooh'];
@@ -59,7 +45,7 @@ it('converts an object with a __serialize() method to an array', function () {
 });
 
 it('converts an object to an array by just casting it', function () {
-    $object = new class () {
+    $object = new class {
         public string $foo = 'one';
 
         public string $bar = 'two';

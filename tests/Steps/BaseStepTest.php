@@ -158,7 +158,7 @@ it('throws an exception when you provide a string as first argument to filter bu
 })->throws(InvalidArgumentException::class);
 
 it('removes an UTF-8 byte order mark from the beginning of a string', function () {
-    $step = new class () extends Step {
+    $step = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield $input;
@@ -200,7 +200,7 @@ it('removes an UTF-8 byte order mark from the beginning of a string', function (
 it(
     'throws an exception in validateBeforeRun() when output type is scalar and keep() was used but not keepAs()',
     function () {
-        $step = new class () extends Step {
+        $step = new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield $input;
@@ -292,7 +292,7 @@ it('does not throw an exception when keepInputAs() was called and previous step 
 })->throwsNoExceptions();
 
 it('logs a warning, when keepFromInput() was called and previous step yields mixed outputs', function () {
-    $stepWithMixedOutputType = new class () extends Step {
+    $stepWithMixedOutputType = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield 'yo';
@@ -327,7 +327,7 @@ it('adds all from array output to the keep array in the output object, when keep
 it('adds all from object output to the keep array in the output object, when keep() is called', function () {
     $step = helper_getInputReturningStep()->keep();
 
-    $outputObject = new class () {
+    $outputObject = new class {
         /**
          * @return array<string, string>
          */
@@ -422,7 +422,7 @@ it('adds all from array input to the keep array in the output object, when keepF
 it('adds all from object input to the keep array in the output object, when keepFromInput() is called', function () {
     $step = helper_getValueReturningStep('foo')->keepFromInput();
 
-    $inputObject = new class () {
+    $inputObject = new class {
         /**
          * @return array<string, string>
          */

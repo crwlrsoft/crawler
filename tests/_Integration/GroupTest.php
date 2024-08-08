@@ -18,7 +18,7 @@ use function tests\helper_getFastLoader;
 it(
     'gets both, data from html and the enclosed json-ld using two steps in a group and combines the results',
     function () {
-        $crawler = new class () extends HttpCrawler {
+        $crawler = new class extends HttpCrawler {
             protected function userAgent(): UserAgentInterface
             {
                 return new BotUserAgent('MyBot');
@@ -32,7 +32,8 @@ it(
 
         $crawler->input('http://localhost:8000/blog-post-with-json-ld');
 
-        $crawler->addStep(Http::get())
+        $crawler
+            ->addStep(Http::get())
             ->addStep(
                 Crawler::group()
                     ->addStep(
@@ -47,7 +48,7 @@ it(
                                 'keywords',
                             ]),
                     )
-                    ->addToResult(),
+                    ->keep(),
             );
 
         $result = helper_generatorToArray($crawler->run());

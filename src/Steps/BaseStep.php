@@ -51,23 +51,6 @@ abstract class BaseStep implements StepInterface
      */
     protected array $subCrawlers = [];
 
-    /**
-     * True means add all elements of the output array.
-     * String means use that key for a non array output value.
-     * Array of strings means, add just those keys.
-     *
-     * @var bool|string|string[]
-     */
-    protected bool|string|array $addToResult = false;
-
-    /**
-     * Same as $addToResult, but doesn't create a Result object now. Instead, it appends the data to the Output object,
-     * so it'll add the data to all the Result objects that are later created from the output.
-     *
-     * @var bool|string|string[]
-     */
-    protected bool|string|array $addLaterToResult = false;
-
     protected ?LoggerInterface $logger = null;
 
     protected ?string $useInputKey = null;
@@ -95,10 +78,6 @@ abstract class BaseStep implements StepInterface
      * @var array<Closure|RefinerInterface|array{ key: string, refiner: Closure|RefinerInterface}>
      */
     protected array $refiners = [];
-
-    protected bool $keepInputData = false;
-
-    protected ?string $keepInputDataKey = null;
 
     protected ?string $outputKey = null;
 
@@ -177,52 +156,6 @@ abstract class BaseStep implements StepInterface
     public function keepsAnythingFromOutputData(): bool
     {
         return $this->keep !== false || $this->keepAs !== null;
-    }
-
-    /**
-     * @deprecated This method will be removed in v2 of the library. Please use the new keep() and keepAs()
-     *             methods instead.
-     */
-    public function addToResult(array|string|null $keys = null): static
-    {
-        if (is_string($keys) || is_array($keys)) {
-            $this->addToResult = $keys;
-        } else {
-            $this->addToResult = true;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @deprecated This method will be removed in v2 of the library. Please use the new keep() and keepAs()
-     *             methods instead.
-     */
-    public function addLaterToResult(array|string|null $keys = null): static
-    {
-        if (is_string($keys) || is_array($keys)) {
-            $this->addLaterToResult = $keys;
-        } else {
-            $this->addLaterToResult = true;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @deprecated Along with addToResult() and addLaterToResult() this method is also deprecated.
-     */
-    public function addsToOrCreatesResult(): bool
-    {
-        return $this->createsResult() || $this->addLaterToResult !== false;
-    }
-
-    /**
-     * @deprecated Along with addToResult() this method is also deprecated.
-     */
-    public function createsResult(): bool
-    {
-        return $this->addToResult !== false;
     }
 
     public function useInputKey(string $key): static
@@ -313,19 +246,6 @@ abstract class BaseStep implements StepInterface
     public function outputKey(string $key): static
     {
         $this->outputKey = $key;
-
-        return $this;
-    }
-
-    /**
-     * @deprecated This method will be removed in v2 of the library. Please use the new keepFromInput() or
-     *             keepInputAs() methods instead.
-     */
-    public function keepInputData(?string $inputKey = null): static
-    {
-        $this->keepInputData = true;
-
-        $this->keepInputDataKey = $inputKey;
 
         return $this;
     }
@@ -472,6 +392,17 @@ abstract class BaseStep implements StepInterface
     }
 
     /**
+     * If you want to define aliases for certain output keys that can be used with keep(),
+     * define this method in the child class and return the mappings.
+     *
+     * @return array<string, string>  alias => output key
+     */
+    protected function outputKeyAliases(): array
+    {
+        return [];
+    }
+
+    /**
      * @param mixed[] $initialInputs
      * @throws PreRunValidationException
      */
@@ -607,43 +538,10 @@ abstract class BaseStep implements StepInterface
         return $outputValue;
     }
 
-    /**
-     * @return array<string, mixed>
-     * @throws Exception
-     * @deprecated because the keepInputData() feature is deprecated.
-     */
-    protected function addInputDataToOutputData(mixed $inputValue, mixed $outputValue): array
-    {
-        if (!is_array($outputValue)) {
-            throw new Exception(
-                'Can\'t add input data to non array output data! You can use the outputKey() method ' .
-                'to make the step\'s output an array.',
-            );
-        }
-
-        if (!is_array($inputValue)) {
-            if (!is_string($this->keepInputDataKey)) {
-                throw new Exception('No key defined for scalar input value.');
-            }
-
-            $inputValue = [$this->keepInputDataKey => $inputValue];
-        }
-
-        foreach ($inputValue as $key => $value) {
-            if (!isset($outputValue[$key])) {
-                $outputValue[$key] = $value;
-            }
-        }
-
-        return $outputValue;
-    }
-
     protected function makeOutput(mixed $outputData, Input $input): Output
     {
         $output = new Output(
             $outputData,
-            $this->addOutputDataToResult($outputData, $input),
-            $this->addOutputDataToAddLaterResult($outputData, $input),
             $input->keep,
         );
 
@@ -729,7 +627,7 @@ abstract class BaseStep implements StepInterface
             if ($keepProperty === true) {
                 return $data;
             } elseif (is_string($keepProperty)) {
-                return [$keepProperty => $data[$keepProperty] ?? null];
+                return [$keepProperty => $this->getOutputPropertyFromArray($keepProperty, $data)];
             }
 
             return $this->mapKeepProperties($data, $keepProperty);
@@ -764,178 +662,48 @@ abstract class BaseStep implements StepInterface
 
         foreach ($keep as $key => $value) {
             if (is_int($key)) {
-                $keepData[$value] = $data[$value] ?? null;
+                $keepData[$value] = $this->getOutputPropertyFromArray($value, $data);
             } elseif (is_string($key)) {
-                $keepData[$key] = $data[$value] ?? null;
+                $keepData[$key] = $this->getOutputPropertyFromArray($value, $data);
             }
         }
 
         return $keepData;
     }
 
-    protected function addOutputDataToResult(
-        mixed $output,
-        Input $input,
-    ): ?Result {
-        if ($this->addToResult !== false) {
-            $result = $input->result ?? new Result($input->addLaterToResult);
-
-            return $this->addOutputDataToResultObject($output, $result);
-        }
-
-        return $input->result;
-    }
-
-    protected function addOutputDataToAddLaterResult(mixed $output, Input $input): ?Result
+    /**
+     * @param mixed[] $data
+     */
+    protected function getOutputPropertyFromArray(string $key, array $data): mixed
     {
-        if ($this->addToResult !== false) {
-            return null;
+        if (array_key_exists($key, $data)) {
+            return $data[$key];
+        } elseif ($this->isOutputKeyAlias($key)) {
+            return $data[$this->getOutputKeyAliasRealKey($key)];
         }
 
-        if ($this->addLaterToResult !== false) {
-            $addLaterResult = $input->addLaterToResult ?? new Result();
+        $data = $this->recursiveChildObjectsToArray($data);
 
-            return $this->addOutputDataToResultObject($output, $addLaterResult);
-        }
+        $dot = new Dot($data);
 
-        return $input->addLaterToResult;
-    }
-
-    protected function addOutputDataToResultObject(mixed $output, Result $result): Result
-    {
-        $addToResultObject = $this->addToResult !== false ? $this->addToResult : $this->addLaterToResult;
-
-        if (is_string($addToResultObject)) {
-            $result->set($addToResultObject, $output);
-        }
-
-        if (
-            ($addToResultObject === true || is_array($addToResultObject)) &&
-            (is_array($output) || (is_object($output) && method_exists($output, '__serialize')))
-        ) {
-            if (!is_array($output)) {
-                $output = $output->__serialize();
-            }
-
-            $output = $this->serializeElementsOfOutputArray($output);
-
-            foreach ($output as $key => $value) {
-                if ($addToResultObject === true) {
-                    $result->set(is_string($key) ? $key : '', $value);
-                } elseif ($this->shouldBeAdded($key, $addToResultObject)) {
-                    $result->set($this->choseResultKey($key), $value);
-                }
-            }
-
-            if (is_array($addToResultObject)) {
-                $this->tryToAddMissingKeysUsingDotNotation($output, $addToResultObject, $result);
-            }
-        }
-
-        return $result;
+        return $dot->get($key);
     }
 
     /**
-     * @param mixed[] $output
+     * @param mixed[] $data
      * @return mixed[]
      */
-    protected function serializeElementsOfOutputArray(array $output): array
+    protected function recursiveChildObjectsToArray(array $data): array
     {
-        foreach ($output as $key => $value) {
+        foreach ($data as $key => $value) {
             if (is_object($value)) {
-                if (method_exists($value, 'toArrayForAddToResult')) {
-                    $output[$key] = $value->toArrayForAddToResult();
-                } elseif (method_exists($value, '__serialize')) {
-                    $output[$key] = $value->__serialize();
-                }
-            }
-
-            if (is_array($value)) {
-                $output[$key] = $this->serializeElementsOfOutputArray($value);
+                $data[$key] = $this->recursiveChildObjectsToArray(OutputTypeHelper::objectToArray($value));
+            } elseif (is_array($value)) {
+                $data[$key] = $this->recursiveChildObjectsToArray($value);
             }
         }
 
-        return $output;
-    }
-
-    /**
-     * When user defines an array of keys that shall be added to the result it can also contain a mapping.
-     * If it does, use the key that it should be mapped to, instead of the key it has in the output array.
-     */
-    protected function choseResultKey(int|string $keyInOutput): string
-    {
-        if (is_string($keyInOutput)) {
-            if (is_array($this->addToResult)) {
-                if (in_array($keyInOutput, $this->addToResult, true)) {
-                    $mapTo = array_search($keyInOutput, $this->addToResult, true);
-
-                    return is_string($mapTo) ? $mapTo : $keyInOutput;
-                }
-
-                foreach ($this->getAliasesForOutputKey($keyInOutput) as $alias) {
-                    if (in_array($alias, $this->addToResult, true)) {
-                        $mapTo = array_search($alias, $this->addToResult, true);
-
-                        return is_string($mapTo) ? $mapTo : $alias;
-                    }
-                }
-            } elseif (is_bool($this->addToResult)) {
-                return $keyInOutput;
-            }
-        } elseif (is_string($this->addToResult)) {
-            return $this->addToResult;
-        }
-
-        return '';
-    }
-
-    /**
-     * @param mixed[] $output
-     * @param array<int|string, string> $addToResult
-     */
-    protected function tryToAddMissingKeysUsingDotNotation(array $output, array $addToResult, Result $result): void
-    {
-        $outputDot = new Dot($output);
-
-        foreach ($addToResult as $resultKeyOrInt => $potentialDotNotationKey) {
-            $resultKey = is_int($resultKeyOrInt) ? $potentialDotNotationKey : $resultKeyOrInt;
-
-            if ($result->get($resultKey) === null) {
-                $valueUsingDotNotation = $outputDot->get($potentialDotNotationKey);
-
-                if ($valueUsingDotNotation !== null) {
-                    $result->set($resultKey, $valueUsingDotNotation);
-                }
-            }
-        }
-    }
-
-    /**
-     * If you want to define aliases for certain output keys that can be used with addToResult, define this method in
-     * the child class and return the mappings.
-     *
-     * @return array<string, string>  alias => output key
-     */
-    protected function outputKeyAliases(): array
-    {
-        return [];
-    }
-
-    /**
-     * @param string $key
-     * @return string[]
-     */
-    protected function getAliasesForOutputKey(string $key): array
-    {
-        $aliases = [];
-
-        foreach ($this->outputKeyAliases() as $alias => $outputKey) {
-            if ($outputKey === $key) {
-                $aliases[] = $alias;
-            }
-        }
-
-        return $aliases;
+        return $data;
     }
 
     protected function isOutputKeyAlias(string $key): bool
@@ -948,25 +716,5 @@ abstract class BaseStep implements StepInterface
         $mapping = $this->outputKeyAliases();
 
         return $mapping[$key];
-    }
-
-    /**
-     * @param string $key
-     * @param string[] $addToResultKeys
-     * @return bool
-     */
-    protected function shouldBeAdded(string $key, array $addToResultKeys): bool
-    {
-        if (in_array($key, $addToResultKeys, true)) {
-            return true;
-        }
-
-        foreach ($this->getAliasesForOutputKey($key) as $alias) {
-            if (in_array($alias, $addToResultKeys, true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

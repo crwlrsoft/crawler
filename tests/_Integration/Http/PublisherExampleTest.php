@@ -38,40 +38,45 @@ test('Http steps can also deal with multiple URLs as one array input', function 
         ->addStep(
             Html::root()
                 ->extract([
-                    'name' => 'h1',
-                    'age' => '#author-data .age',
-                    'bornIn' => '#author-data .born-in',
+                    'author' => 'h1',
                     'bookUrls' => Dom::cssSelector('#author-data .books a.book')->attribute('href')->toAbsoluteUrl(),
                 ])
-                ->addToResult(['name', 'age', 'bornIn']),
+                ->keep(['author']),
         )
         ->addStep(Http::get()->useInputKey('bookUrls'))
         ->addStep(
             Html::root()
-                ->extract(['books' => 'h1'])
-                ->addToResult(),
+                ->extract(['book' => 'h1'])
+                ->keep(),
         );
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(2)
+    expect($results)->toHaveCount(5)
         ->and($results[0]->toArray())->toBe([
-            'name' => 'John Example',
-            'age' => '51',
-            'bornIn' => 'Lisbon',
-            'books' => ['Some novel', 'Another novel'],
+            'author' => 'John Example',
+            'book' => 'Some novel',
         ])
         ->and($results[1]->toArray())->toBe([
-            'name' => 'Susan Example',
-            'age' => '49',
-            'bornIn' => 'Athens',
-            'books' => ['Poems #1', 'Poems #2', 'Poems #3'],
+            'author' => 'John Example',
+            'book' => 'Another novel',
+        ])
+        ->and($results[2]->toArray())->toBe([
+            'author' => 'Susan Example',
+            'book' => 'Poems #1',
+        ])
+        ->and($results[3]->toArray())->toBe([
+            'author' => 'Susan Example',
+            'book' => 'Poems #2',
+        ])
+        ->and($results[4]->toArray())->toBe([
+            'author' => 'Susan Example',
+            'book' => 'Poems #3',
         ]);
-
 });
 
 it('turns an array of URLs to nested extracted data from those child pages using sub crawlers', function () {
-    $crawlerBuilder = new class () {
+    $crawlerBuilder = new class {
         public function build(): \Crwlr\Crawler\Crawler
         {
             $crawler = new PublisherExampleCrawler();
@@ -176,7 +181,7 @@ it('turns an array of URLs to nested extracted data from those child pages using
 });
 
 test('it can also keep the URLs, provided to the sub crawler', function () {
-    $crawlerBuilder = new class () {
+    $crawlerBuilder = new class {
         public function build(): \Crwlr\Crawler\Crawler
         {
             $crawler = new PublisherExampleCrawler();

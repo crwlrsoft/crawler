@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Utils\HttpHeaders;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
@@ -11,8 +12,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
-abstract class HttpBase extends LoadingStep
+abstract class HttpBase extends Step
 {
+    use LoadingStep;
+
     protected bool $stopOnErrorResponse = false;
 
     protected bool $yieldErrorResponses = false;
@@ -179,9 +182,9 @@ abstract class HttpBase extends LoadingStep
     protected function getResponseFromRequest(RequestInterface $request): ?RespondedRequest
     {
         if ($this->stopOnErrorResponse) {
-            $response = $this->loader->loadOrFail($request);
+            $response = $this->getLoader()->loadOrFail($request);
         } else {
-            $response = $this->loader->load($request);
+            $response = $this->getLoader()->load($request);
         }
 
         if ($response !== null && ($response->response->getStatusCode() < 400 || $this->yieldErrorResponses)) {

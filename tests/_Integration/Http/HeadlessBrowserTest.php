@@ -61,40 +61,36 @@ it('automatically uses the Loader\'s user agent', function () {
 
     $crawler->input('http://localhost:8000/print-headers')
         ->addStep(Http::get())
-        ->addStep('responseBody', new GetJsonFromResponseHtmlBody());
+        ->addStep((new GetJsonFromResponseHtmlBody())->keepAs('responseBody'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->get('responseBody'))->toBeArray();
-
-    expect($results[0]->get('responseBody'))->toHaveKey('User-Agent');
-
-    expect($results[0]->get('responseBody')['User-Agent'])->toBe('HeadlessBrowserBot');
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('responseBody'))->toBeArray()
+        ->and($results[0]->get('responseBody'))->toHaveKey('User-Agent')
+        ->and($results[0]->get('responseBody')['User-Agent'])->toBe('HeadlessBrowserBot');
 });
 
 it('uses cookies', function () {
     $crawler = new HeadlessBrowserCrawler();
 
-    $crawler->input('http://localhost:8000/set-cookie')
+    $crawler
+        ->input('http://localhost:8000/set-cookie')
         ->addStep(Http::get())
-        ->addStep(new class () extends Step {
+        ->addStep(new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield 'http://localhost:8000/print-cookie';
             }
         })
         ->addStep(Http::get())
-        ->addStep('printed-cookie', new GetStringFromResponseHtmlBody());
+        ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookie'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->get('printed-cookie'))->toBeString();
-
-    expect($results[0]->get('printed-cookie'))->toBe('foo123');
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('printed-cookie'))->toBeString()
+        ->and($results[0]->get('printed-cookie'))->toBe('foo123');
 });
 
 it('renders javascript', function () {
@@ -109,32 +105,30 @@ it('renders javascript', function () {
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->toArray())->toBe([
-        'content' => 'This was added through javascript',
-    ]);
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->toArray())->toBe([
+            'content' => 'This was added through javascript',
+        ]);
 });
 
 it('also gets cookies that are set via javascript', function () {
     $crawler = new HeadlessBrowserCrawler();
 
-    $crawler->input('http://localhost:8000/set-js-cookie')
+    $crawler
+        ->input('http://localhost:8000/set-js-cookie')
         ->addStep(Http::get())
-        ->addStep(new class () extends Step {
+        ->addStep(new class extends Step {
             protected function invoke(mixed $input): Generator
             {
                 yield 'http://localhost:8000/print-cookie';
             }
         })
         ->addStep(Http::get())
-        ->addStep('printed-cookie', new GetStringFromResponseHtmlBody());
+        ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookie'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1);
-
-    expect($results[0]->get('printed-cookie'))->toBeString();
-
-    expect($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('printed-cookie'))->toBeString()
+        ->and($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
 });

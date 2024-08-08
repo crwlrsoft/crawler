@@ -31,13 +31,11 @@ it('uncompresses gzip compressed response body when content-type header is sent'
     $crawler = new GzipCrawler();
 
     $crawler->input('http://localhost:8000/gzip')
-        ->addStep('response', Http::get());
+        ->addStep(Http::get()->keepAs('response'));
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results[0])->toBeInstanceOf(Result::class);
-
-    expect($results[0]->get('response'))->toBeInstanceOf(RespondedRequest::class);
-
-    expect(Http::getBodyString($results[0]->get('response')))->toBe('This is a gzip compressed string');
+    expect($results[0])->toBeInstanceOf(Result::class)
+        ->and($results[0]->get('response'))->toBeInstanceOf(RespondedRequest::class)
+        ->and(Http::getBodyString($results[0]->get('response')))->toBe('This is a gzip compressed string');
 });

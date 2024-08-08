@@ -43,7 +43,7 @@ it('paginates using query params sent in the request body', function () {
                         ->inBody()
                         ->increase('page')
                         ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
-                )->addToResult(['body']),
+                )->keep(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -63,7 +63,7 @@ it('paginates using URL query params', function () {
                         ->inUrl()
                         ->increase('page')
                         ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
-                )->addToResult(['body']),
+                )->keep(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -82,7 +82,7 @@ it('paginates only until the max pages limit', function () {
                     QueryParamsPaginator::paramsInUrl(2)
                         ->increase('page')
                         ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
-                )->addToResult(['body']),
+                )->keep(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());
@@ -104,7 +104,7 @@ it('resets the finished paginating state after each processed (/paginated) input
                     QueryParamsPaginator::paramsInUrl(2)
                         ->increase('page')
                         ->stopWhen(PaginatorStopRules::isEmptyInJson('data.items')),
-                )->addToResult(['body']),
+                )->keep(['body']),
         );
 
     $results = helper_generatorToArray($crawler->run());

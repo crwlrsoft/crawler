@@ -11,7 +11,7 @@ use function tests\helper_generatorToArray;
 use function tests\helper_getFastCrawler;
 
 test('Http steps can receive url, body and headers from an input array', function () {
-    $paramsStep = new class () extends Step {
+    $paramsStep = new class extends Step {
         protected function invoke(mixed $input): Generator
         {
             yield [

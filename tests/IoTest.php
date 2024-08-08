@@ -3,40 +3,21 @@
 namespace tests;
 
 use Crwlr\Crawler\Io;
-use Crwlr\Crawler\Result;
 
 /**
  * @param mixed[] $keep
  */
 function helper_getIoInstance(
     mixed $value,
-    ?Result $result = null,
-    ?Result $addLaterToResult = null,
     array $keep = [],
 ): Io {
-    return new class ($value, $result, $addLaterToResult, $keep) extends Io {};
+    return new class ($value, $keep) extends Io {};
 }
 
 it('can be created with only a value.', function () {
     $io = helper_getIoInstance('test');
 
     expect($io)->toBeInstanceOf(Io::class);
-});
-
-test('you can add a Result object.', function () {
-    $result = new Result();
-
-    $io = helper_getIoInstance('test', $result);
-
-    expect($io->result)->toBe($result);
-});
-
-test('you can add a secondary Result object that should be added to the main Result object later.', function () {
-    $addLaterToResult = new Result();
-
-    $io = helper_getIoInstance('test', addLaterToResult: $addLaterToResult);
-
-    expect($io->addLaterToResult)->toBe($addLaterToResult);
 });
 
 test('you can add an array with data that should be kept (see Step::keep() functionality)', function () {
@@ -55,26 +36,6 @@ test('you can create it from another Io instance and it keeps the value of the o
     expect($io2->get())->toBe('test');
 });
 
-test('when created from another Io instance it passes on the Result object.', function () {
-    $result = new Result();
-
-    $io1 = helper_getIoInstance('test', $result);
-
-    $io2 = helper_getIoInstance($io1);
-
-    expect($io2->result)->toBe($result);
-});
-
-test('when created from another Io instance it passes on the secondary Result object.', function () {
-    $addLaterToResult = new Result();
-
-    $io1 = helper_getIoInstance('test', addLaterToResult: $addLaterToResult);
-
-    $io2 = helper_getIoInstance($io1);
-
-    expect($io2->addLaterToResult)->toBe($addLaterToResult);
-});
-
 test('when created from another Io instance it passes on the data to keep', function () {
     $io1 = helper_getIoInstance('test', keep: ['co' => 'derotsch']);
 
@@ -83,43 +44,23 @@ test('when created from another Io instance it passes on the data to keep', func
     expect($io2->keep)->toBe(['co' => 'derotsch']);
 });
 
-test('the withValue() method creates a new instance with that value bot keeps the result and keep data', function () {
-    $result = new Result();
-
-    $result->set('foo', 'one');
-
-    $addLaterResult = new Result();
-
-    $result->set('bar', 'two');
-
-    $io1 = helper_getIoInstance('hey', $result, $addLaterResult, ['baz' => 'three']);
+test('the withValue() method creates a new instance with that value but keeps the keep data', function () {
+    $io1 = helper_getIoInstance('hey', ['baz' => 'three']);
 
     $io2 = $io1->withValue('ho');
 
     expect($io2->get())->toBe('ho')
-        ->and($io2->result)->toBe($result)
-        ->and($io2->addLaterToResult)->toBe($addLaterResult)
         ->and($io2->keep)->toBe(['baz' => 'three']);
 });
 
 test(
     'the withPropertyValue() method creates a new instance and replaces a certain property in its array value',
     function () {
-        $result = new Result();
-
-        $result->set('foo', 'one');
-
-        $addLaterResult = new Result();
-
-        $result->set('bar', 'two');
-
-        $io1 = helper_getIoInstance(['a' => '1', 'b' => '2', 'c' => '3'], $result, $addLaterResult, ['baz' => 'three']);
+        $io1 = helper_getIoInstance(['a' => '1', 'b' => '2', 'c' => '3'], ['baz' => 'three']);
 
         $io2 = $io1->withPropertyValue('c', '4');
 
         expect($io2->get())->toBe(['a' => '1', 'b' => '2', 'c' => '4'])
-            ->and($io2->result)->toBe($result)
-            ->and($io2->addLaterToResult)->toBe($addLaterResult)
             ->and($io2->keep)->toBe(['baz' => 'three']);
     },
 );
@@ -148,9 +89,8 @@ it('when the property does not exist, getProperty() returns the defined fallback
 it('sets a simple value key', function ($value, $key) {
     $io = helper_getIoInstance($value);
 
-    expect($io->setKey())->toBe($key);
-
-    expect($io->getKey())->toBe($key);
+    expect($io->setKey())->toBe($key)
+        ->and($io->getKey())->toBe($key);
 })->with([
     ['foo', 'foo'],
     [123, '123'],
@@ -163,9 +103,8 @@ it('sets a simple value key', function ($value, $key) {
 it('sets a key from array output', function () {
     $io = helper_getIoInstance(['foo' => 'bar', 'yo' => 123.45]);
 
-    expect($io->setKey('yo'))->toBe('123.45');
-
-    expect($io->getKey())->toBe('123.45');
+    expect($io->setKey('yo'))->toBe('123.45')
+        ->and($io->getKey())->toBe('123.45');
 });
 
 it('sets a key from object output', function () {
@@ -173,17 +112,15 @@ it('sets a key from object output', function () {
 
     $io = helper_getIoInstance($value);
 
-    expect($io->setKey('yo'))->toBe('123.45');
-
-    expect($io->getKey())->toBe('123.45');
+    expect($io->setKey('yo'))->toBe('123.45')
+        ->and($io->getKey())->toBe('123.45');
 });
 
 it('creates a string key for array output when not providing a key name', function () {
     $io = helper_getIoInstance(['one', 'two', 'three']);
 
-    expect($io->setKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
-
-    expect($io->getKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
+    expect($io->setKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8')
+        ->and($io->getKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
 });
 
 it('creates a string key for object output when not providing a key name', function () {
@@ -191,17 +128,15 @@ it('creates a string key for object output when not providing a key name', funct
 
     $io = helper_getIoInstance($object);
 
-    expect($io->setKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9');
-
-    expect($io->getKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9');
+    expect($io->setKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9')
+        ->and($io->getKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9');
 });
 
 it('creates a string key for array output when provided key name doesn\'t exist in output array', function () {
     $io = helper_getIoInstance(['one', 'two', 'three']);
 
-    expect($io->setKey('four'))->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
-
-    expect($io->getKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
+    expect($io->setKey('four'))->toBe('6975f1fd65cae4b21e32f4f47bf153a8')
+        ->and($io->getKey())->toBe('6975f1fd65cae4b21e32f4f47bf153a8');
 });
 
 it('creates a string key for array output when provided key name doesn\'t exist in output object', function () {
@@ -209,9 +144,8 @@ it('creates a string key for array output when provided key name doesn\'t exist 
 
     $io = helper_getIoInstance($object);
 
-    expect($io->setKey('four'))->toBe('bb8dd69ea029ca1379df3994721f5fa9');
-
-    expect($io->getKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9');
+    expect($io->setKey('four'))->toBe('bb8dd69ea029ca1379df3994721f5fa9')
+        ->and($io->getKey())->toBe('bb8dd69ea029ca1379df3994721f5fa9');
 });
 
 test('getKey returns a key when setKey was not called yet', function () {

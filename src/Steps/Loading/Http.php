@@ -8,7 +8,6 @@ use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator;
 use Crwlr\Crawler\Steps\Loading\Http\Paginate;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
-use Crwlr\Crawler\Steps\Loading\Http\PaginatorInterface;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\Crawler\Utils\Gzip;
 use Exception;
@@ -106,7 +105,7 @@ class Http extends HttpBase
      * @throws InvalidDomQueryException
      */
     public function paginate(
-        PaginatorInterface|AbstractPaginator|string $paginator,
+        AbstractPaginator|string $paginator,
         int $defaultPaginatorMaxPages = Paginator::MAX_PAGES_DEFAULT,
     ): Paginate {
         if (is_string($paginator)) {

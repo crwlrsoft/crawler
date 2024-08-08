@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\RobotsTxt\Exceptions\InvalidRobotsTxtFileException;
 use Exception;
@@ -9,8 +11,10 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
-class GetSitemapsFromRobotsTxt extends LoadingStep
+class GetSitemapsFromRobotsTxt extends Step
 {
+    use LoadingStep;
+
     public function outputType(): StepOutputType
     {
         return StepOutputType::Scalar;
@@ -25,7 +29,13 @@ class GetSitemapsFromRobotsTxt extends LoadingStep
             throw new Exception('The Loader doesn\'t expose the RobotsTxtHandler.');
         }
 
-        $robotsTxtHandler = $this->loader->robotsTxt();
+        $loader = $this->getLoader();
+
+        if (!$loader instanceof HttpLoader) {
+            throw new Exception('The GetSitemapsFromRobotsTxt step needs an HttpLoader as loader instance.');
+        }
+
+        $robotsTxtHandler = $loader->robotsTxt();
 
         foreach ($robotsTxtHandler->getSitemaps($input) as $sitemapUrl) {
             yield $sitemapUrl;

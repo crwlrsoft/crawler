@@ -18,7 +18,7 @@ it('increases and decreases values in request url query params', function () {
 
     $respondedRequest = new RespondedRequest($request, new Response());
 
-    $paginator->processLoaded($request->getUri(), $request, $respondedRequest);
+    $paginator->processLoaded($request, $respondedRequest);
 
     $nextRequest = $paginator->getNextRequest();
 
@@ -36,7 +36,7 @@ it('increases and decreases values in query params in the body', function () {
 
     $respondedRequest = new RespondedRequest($request, new Response());
 
-    $paginator->processLoaded($request->getUri(), $request, $respondedRequest);
+    $paginator->processLoaded($request, $respondedRequest);
 
     $nextRequest = $paginator->getNextRequest();
 
@@ -63,7 +63,7 @@ it('increases and decreases non first level (of query array) parameters using do
 
     $respondedRequest = new RespondedRequest($request, new Response());
 
-    $paginator->processLoaded($request->getUri(), $request, $respondedRequest);
+    $paginator->processLoaded($request, $respondedRequest);
 
     $nextRequest = $paginator->getNextRequest();
 

@@ -35,9 +35,14 @@ final class Result
         return $this;
     }
 
+    public function has(string $key): bool
+    {
+        return array_key_exists($key, $this->data);
+    }
+
     public function get(string $key, mixed $default = null): mixed
     {
-        if (array_key_exists($key, $this->data)) {
+        if ($this->has($key)) {
             return $this->data[$key];
         }
 

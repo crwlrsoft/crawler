@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
+use Crwlr\Crawler\Loader\Http\Cache\RetryManager;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -62,7 +63,7 @@ class HttpLoader extends Loader
 
     protected int $maxRedirects = 10;
 
-    protected bool $retryCachedErrorResponses = false;
+    protected ?RetryManager $retryCachedErrorResponses = null;
 
     protected bool $writeOnlyCache = false;
 
@@ -173,7 +174,7 @@ class HttpLoader extends Loader
             $respondedRequest = $this->tryLoading($request, $isFromCache);
 
             if ($respondedRequest->response->getStatusCode() >= 400) {
-                throw new LoadingException('Failed to load ' . $request->getUri()->__toString());
+                throw LoadingException::make($request->getUri(), $respondedRequest->response->getStatusCode());
             }
 
             $this->callHook('onSuccess', $request, $respondedRequest->response);
@@ -226,38 +227,6 @@ class HttpLoader extends Loader
         return $this->useHeadlessBrowser;
     }
 
-    /**
-     * @param array<string, mixed> $options
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setOptions()` instead.
-     */
-    public function setHeadlessBrowserOptions(array $options): static
-    {
-        $this->browser()->setOptions($options);
-
-        return $this;
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->addOptions()` instead.
-     */
-    public function addHeadlessBrowserOptions(array $options): static
-    {
-        $this->browser()->addOptions($options);
-
-        return $this;
-    }
-
-    /**
-     * @deprecated Will be removed in v2.0. Use `$loader->browser()->setExecutable()` instead.
-     */
-    public function setChromeExecutable(string $executable): static
-    {
-        $this->browser()->setExecutable($executable);
-
-        return $this;
-    }
-
     public function setMaxRedirects(int $maxRedirects): static
     {
         $this->maxRedirects = $maxRedirects;
@@ -279,11 +248,11 @@ class HttpLoader extends Loader
         return $this->throttler;
     }
 
-    public function retryCachedErrorResponses(): static
+    public function retryCachedErrorResponses(): RetryManager
     {
-        $this->retryCachedErrorResponses = true;
+        $this->retryCachedErrorResponses = new RetryManager();
 
-        return $this;
+        return $this->retryCachedErrorResponses;
     }
 
     public function writeOnlyCache(): static
@@ -319,14 +288,6 @@ class HttpLoader extends Loader
         $this->checkIfProxiesCanBeUsed();
 
         $this->proxies = new ProxyManager($proxyUrls);
-    }
-
-    /**
-     * @deprecated Will be removed in v2.0. Use browser() instead, it's an alias.
-     */
-    public function browserHelper(): HeadlessBrowserLoaderHelper
-    {
-        return $this->browser();
     }
 
     public function browser(): HeadlessBrowserLoaderHelper
@@ -569,7 +530,7 @@ class HttpLoader extends Loader
                 $respondedRequest = RespondedRequest::fromArray($respondedRequest);
             }
 
-            if ($this->retryCachedErrorResponses && $respondedRequest->response->getStatusCode() >= 400) {
+            if ($this->retryCachedErrorResponses?->shallBeRetried($respondedRequest->response->getStatusCode())) {
                 $this->logger->info('Cached response was an error response, retry.');
 
                 return null;

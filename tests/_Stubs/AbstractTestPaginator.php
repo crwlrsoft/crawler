@@ -4,6 +4,7 @@ namespace tests\_Stubs;
 
 use Crwlr\Crawler\Steps\Loading\Http\AbstractPaginator;
 use Crwlr\Crawler\Steps\Loading\Http\Paginator;
+use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 
 class AbstractTestPaginator extends AbstractPaginator
@@ -15,9 +16,9 @@ class AbstractTestPaginator extends AbstractPaginator
         parent::__construct($maxPages);
     }
 
-    public function getNextUrl(): ?string
+    public function getNextRequest(): ?RequestInterface
     {
-        return $this->nextUrl;
+        return new Request('GET', $this->nextUrl);
     }
 
     /**
