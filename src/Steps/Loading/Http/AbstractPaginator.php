@@ -8,7 +8,6 @@ use Crwlr\Crawler\Steps\Loading\Http\Paginators\StopRules\StopRule;
 use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class AbstractPaginator
@@ -32,7 +31,6 @@ abstract class AbstractPaginator
     public function __construct(protected int $maxPages = Paginator::MAX_PAGES_DEFAULT) {}
 
     public function processLoaded(
-        UriInterface $url,
         RequestInterface $request,
         ?RespondedRequest $respondedRequest,
     ): void {
@@ -70,29 +68,6 @@ abstract class AbstractPaginator
         return $this;
     }
 
-    /**
-     * Default implementation of getNextRequest() that will be remove in v2.
-     * Initially it was required that an implementation has a getNextUrl() method.
-     * As paginating is not always only done via the URL, it's better to have a getNextRequest() method
-     * to be more flexible. Until v2 of this library this method makes the next request, using the
-     * getNextUrl() method. In v2 it will then be required, that Paginator implementations, implement
-     * their own getNextRequest() method and getNextUrl() won't be required anymore.
-     */
-    public function getNextRequest(): ?RequestInterface
-    {
-        if (!$this->latestRequest || !method_exists($this, 'getNextUrl')) {
-            return null;
-        }
-
-        $nextUrl = $this->getNextUrl();
-
-        if (!$nextUrl) {
-            return null;
-        }
-
-        return $this->latestRequest->withUri(Url::parsePsr7($nextUrl));
-    }
-
     public function logWhenFinished(LoggerInterface $logger): void
     {
         if ($this->maxPagesReached()) {
@@ -105,7 +80,7 @@ abstract class AbstractPaginator
     /**
      * For v2. See above.
      */
-    //abstract public function getNextRequest(): ?RequestInterface;
+    abstract public function getNextRequest(): ?RequestInterface;
 
     protected function registerLoadedRequest(RequestInterface|RespondedRequest $request): void
     {
