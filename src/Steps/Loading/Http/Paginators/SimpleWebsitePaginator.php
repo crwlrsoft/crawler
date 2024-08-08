@@ -12,7 +12,6 @@ use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
 use Exception;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -56,20 +55,6 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
         return $this->maxPagesReached() || empty($this->found) || $this->hasFinished;
     }
 
-    /**
-     * Remove in v2.
-     */
-    public function getNextUrl(): ?string
-    {
-        $found = array_shift($this->found);
-
-        if (is_array($found)) {
-            return $found['url'];
-        }
-
-        return null;
-    }
-
     public function getNextRequest(): ?RequestInterface
     {
         if (!$this->latestRequest) {
@@ -93,7 +78,6 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
      * @throws Exception
      */
     public function processLoaded(
-        UriInterface $url,
         RequestInterface $request,
         ?RespondedRequest $respondedRequest,
     ): void {
