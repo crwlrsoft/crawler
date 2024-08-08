@@ -49,14 +49,6 @@ class RespondedRequest
     }
 
     /**
-     * @deprecated You can use RequestKey::from() directly instead.
-     */
-    public static function cacheKeyFromRequest(RequestInterface $request): string
-    {
-        return RequestKey::from($request);
-    }
-
-    /**
      * @return mixed[]
      * @throws MissingZlibExtensionException
      */
