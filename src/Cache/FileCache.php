@@ -82,18 +82,23 @@ class FileCache implements CacheInterface
             $value = new CacheItem($value->value(), $key, $ttl ?? $value->ttl);
         }
 
-        $content = serialize($value);
-
-        if ($this->useCompression) {
-            $content = $this->encode($content);
-        }
-
-        return file_put_contents($this->basePath . '/' . $key, $content) !== false;
+        return $this->saveCacheItem($value);
     }
 
     public function delete(string $key): bool
     {
         return unlink($this->basePath . '/' . $key);
+    }
+
+    public function prolong(string $key, DateInterval|int $ttl): bool
+    {
+        try {
+            $item = $this->getCacheItem($key);
+
+            return $this->saveCacheItem($item->withTtl($ttl));
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -106,6 +111,21 @@ class FileCache implements CacheInterface
         if (is_array($allFiles)) {
             foreach ($allFiles as $file) {
                 if ($file !== '.' && $file !== '..' && $file !== '.gitkeep' && !$this->delete($file)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public function prolongAll(DateInterval|int $ttl): bool
+    {
+        $allFiles = scandir($this->basePath);
+
+        if (is_array($allFiles)) {
+            foreach ($allFiles as $file) {
+                if ($file !== '.' && $file !== '..' && $file !== '.gitkeep' && !$this->prolong($file, $ttl)) {
                     return false;
                 }
             }
@@ -174,6 +194,20 @@ class FileCache implements CacheInterface
         }
 
         return $unserialized;
+    }
+
+    /**
+     * @throws MissingZlibExtensionException
+     */
+    protected function saveCacheItem(CacheItem $item): bool
+    {
+        $content = serialize($item);
+
+        if ($this->useCompression) {
+            $content = $this->encode($content);
+        }
+
+        return file_put_contents($this->basePath . '/' . $item->key(), $content) !== false;
     }
 
     protected function unserialize(string $content): mixed

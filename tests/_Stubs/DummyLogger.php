@@ -54,6 +54,10 @@ class DummyLogger implements LoggerInterface
         $this->log('debug', $message, $context);
     }
 
+    /**
+     * @param string $level
+     * @param mixed[] $context
+     */
     public function log($level, string|Stringable $message, array $context = []): void
     {
         if (!is_string($level)) {

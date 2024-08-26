@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * __BREAKING__: The `HttpLoader::retryCachedErrorResponses()` method now returns an instance of the new `Crwlr\Crawler\Loader\Http\Cache\RetryManager` class. This class provides the methods `only()` and `except()` to restrict retries to specific HTTP response status codes. Previously, this method returned the `HttpLoader` itself (`$this`), so if you're using it in a chain and calling other loader methods after it, you will need to refactor your code.
 * __BREAKING__: Removed the `Microseconds` class from this package. It has been moved to the `crwlr/utils` package, which you can use instead.
 
+### Added
+* New methods `FileCache::prolong()` and `FileCache::prolongAll()` to allow prolonging the time to live for cached responses.
+
 ## [1.10.0] - 2024-08-05
 ### Added
 * URL refiners: `UrlRefiner::withScheme()`, `UrlRefiner::withHost()`, `UrlRefiner::withPort()`, `UrlRefiner::withoutPort()`, `UrlRefiner::withPath()`, `UrlRefiner::withQuery()`, `UrlRefiner::withoutQuery()`, `UrlRefiner::withFragment()` and `UrlRefiner::withoutFragment()`.
