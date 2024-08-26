@@ -48,6 +48,14 @@ class CacheItem
     }
 
     /**
+     * Get a new instance with same data but a different time to live.
+     */
+    public function withTtl(DateInterval|int $ttl): CacheItem
+    {
+        return new CacheItem($this->value, $this->key, $ttl, $this->createdAt);
+    }
+
+    /**
      * @return mixed[]
      */
     public function __serialize(): array

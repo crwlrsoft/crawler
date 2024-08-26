@@ -321,9 +321,15 @@ function helper_getRespondedRequest(
     return new RespondedRequest($request, $response);
 }
 
-function helper_cachedir(): string
+function helper_cachedir(?string $inDir = null): string
 {
-    return __DIR__ . '/_Temp/_cachedir';
+    $path = __DIR__ . '/_Temp/_cachedir';
+
+    if ($inDir !== null) {
+        return $path . (str_starts_with($inDir, '/') ? $inDir : '/' . $inDir);
+    }
+
+    return $path;
 }
 
 function helper_resetCacheDir(): void
