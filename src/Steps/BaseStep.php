@@ -81,6 +81,10 @@ abstract class BaseStep implements StepInterface
 
     protected ?string $outputKey = null;
 
+    protected ?int $maxOutputs = null;
+
+    protected int $currentOutputCount = 0;
+
     /**
      * @param Input $input
      * @return Generator<Output>
@@ -250,9 +254,18 @@ abstract class BaseStep implements StepInterface
         return $this;
     }
 
+    public function maxOutputs(int $maxOutputs): static
+    {
+        $this->maxOutputs = $maxOutputs;
+
+        return $this;
+    }
+
     public function resetAfterRun(): void
     {
         $this->uniqueOutputKeys = $this->uniqueInputKeys = [];
+
+        $this->currentOutputCount = 0;
     }
 
     /**
@@ -716,5 +729,17 @@ abstract class BaseStep implements StepInterface
         $mapping = $this->outputKeyAliases();
 
         return $mapping[$key];
+    }
+
+    protected function maxOutputsExceeded(): bool
+    {
+        return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
+    }
+
+    protected function trackYieldedOutput(): void
+    {
+        if ($this->maxOutputs !== null) {
+            $this->currentOutputCount += 1;
+        }
     }
 }
