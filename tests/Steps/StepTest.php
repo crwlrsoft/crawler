@@ -16,7 +16,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-
 use stdClass;
 
 use function tests\helper_getInputReturningStep;

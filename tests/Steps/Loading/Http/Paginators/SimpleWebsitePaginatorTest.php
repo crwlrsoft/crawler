@@ -7,7 +7,6 @@ use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\SimpleWebsitePaginator;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-
 use Psr\Http\Message\RequestInterface;
 
 use function tests\helper_getRespondedRequest;
