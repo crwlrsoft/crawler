@@ -7,7 +7,6 @@ use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Html\GetLinks;
-
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 

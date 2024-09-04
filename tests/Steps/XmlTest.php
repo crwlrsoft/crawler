@@ -5,7 +5,6 @@ namespace tests\Steps;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
 use Crwlr\Crawler\Steps\Xml;
-
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 
