@@ -166,7 +166,7 @@ it('combines the outputs of all it\'s steps into one output containing an array'
 });
 
 test(
-    'When defining keys for the steps as first param in addStep call, the combined output array has those keys',
+    'When defining keys for the steps via $step->outputKey(), the combined output array has those keys',
     function () {
         $step1 = helper_getValueReturningStep('ich');
 
@@ -787,5 +787,78 @@ it(
         $outputs = helper_invokeStepWithInput($group, ['yo' => 'lo']);
 
         expect($outputs[0]->get())->toBe(['yo' => 'lo']);
+    },
+);
+
+it('stops calling its steps and producing outputs when maxOutputs is reached', function () {
+    $step1 = new class extends Step {
+        public int $called = 0;
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['foo' => 'one'];
+
+            $this->called++;
+        }
+    };
+
+    $step2 = new class extends Step {
+        public int $called = 0;
+
+        protected function invoke(mixed $input): Generator
+        {
+            yield ['bar' => 'two'];
+
+            $this->called++;
+        }
+    };
+
+    $group = (new Group())
+        ->addStep($step1)
+        ->addStep($step2)
+        ->maxOutputs(2);
+
+    expect(helper_invokeStepWithInput($group, 'hey'))->toHaveCount(1)
+        ->and(helper_invokeStepWithInput($group, 'ho'))->toHaveCount(1)
+        ->and(helper_invokeStepWithInput($group, 'hey'))->toHaveCount(0)
+        ->and($step1->called)->toBe(2)
+        ->and($step2->called)->toBe(2);
+});
+
+it(
+    'also stops creating outputs when maxOutputs is reached, when maxOutputs() was called before addStep()',
+    function () {
+        $step1 = new class extends Step {
+            public int $called = 0;
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['foo' => 'one'];
+
+                $this->called++;
+            }
+        };
+
+        $step2 = new class extends Step {
+            public int $called = 0;
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield ['bar' => 'two'];
+
+                $this->called++;
+            }
+        };
+
+        $group = (new Group())
+            ->maxOutputs(2)
+            ->addStep($step1)
+            ->addStep($step2);
+
+        expect(helper_invokeStepWithInput($group, 'hey'))->toHaveCount(1)
+            ->and(helper_invokeStepWithInput($group, 'ho'))->toHaveCount(1)
+            ->and(helper_invokeStepWithInput($group, 'hey'))->toHaveCount(0)
+            ->and($step1->called)->toBe(2)
+            ->and($step2->called)->toBe(2);
     },
 );

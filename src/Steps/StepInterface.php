@@ -30,5 +30,7 @@ interface StepInterface
 
     public function outputKey(string $key): static;
 
+    public function maxOutputs(int $maxOutputs): static;
+
     public function resetAfterRun(): void;
 }

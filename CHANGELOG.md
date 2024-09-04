@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * New methods `FileCache::prolong()` and `FileCache::prolongAll()` to allow prolonging the time to live for cached responses.
 
+### Fixed
+* The `maxOutputs()` method is now also available and working on `Group` steps.
+
 ## [1.10.0] - 2024-08-05
 ### Added
 * URL refiners: `UrlRefiner::withScheme()`, `UrlRefiner::withHost()`, `UrlRefiner::withPort()`, `UrlRefiner::withoutPort()`, `UrlRefiner::withPath()`, `UrlRefiner::withQuery()`, `UrlRefiner::withoutQuery()`, `UrlRefiner::withFragment()` and `UrlRefiner::withoutFragment()`.

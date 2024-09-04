@@ -22,10 +22,6 @@ abstract class Step extends BaseStep
 
     protected bool $excludeFromGroupOutput = false;
 
-    protected ?int $maxOutputs = null;
-
-    protected int $currentOutputCount = 0;
-
     /**
      * @return Generator<mixed>
      */
@@ -79,13 +75,6 @@ abstract class Step extends BaseStep
         return $this->excludeFromGroupOutput;
     }
 
-    public function maxOutputs(int $maxOutputs): static
-    {
-        $this->maxOutputs = $maxOutputs;
-
-        return $this;
-    }
-
     /**
      * If the user set a callback to update the input (see above) => call it.
      */
@@ -98,13 +87,6 @@ abstract class Step extends BaseStep
         }
 
         return $input;
-    }
-
-    public function resetAfterRun(): void
-    {
-        parent::resetAfterRun();
-
-        $this->currentOutputCount = 0;
     }
 
     /**
@@ -235,15 +217,8 @@ abstract class Step extends BaseStep
 
             yield $output;
 
-            if ($this->maxOutputs !== null) {
-                $this->currentOutputCount += 1;
-            }
+            $this->trackYieldedOutput();
         }
-    }
-
-    private function maxOutputsExceeded(): bool
-    {
-        return $this->maxOutputs !== null && $this->currentOutputCount >= $this->maxOutputs;
     }
 
     /**
