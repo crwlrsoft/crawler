@@ -69,6 +69,10 @@ final class Group extends BaseStep
             $step->setLoader($this->loader);
         }
 
+        if ($this->maxOutputs) {
+            $step->maxOutputs($this->maxOutputs);
+        }
+
         $this->steps[] = $step;
 
         return $this;
@@ -93,6 +97,17 @@ final class Group extends BaseStep
             if (method_exists($step, 'setLoader')) {
                 $step->setLoader($loader);
             }
+        }
+
+        return $this;
+    }
+
+    public function maxOutputs(int $maxOutputs): static
+    {
+        parent::maxOutputs($maxOutputs);
+
+        foreach ($this->steps as $step) {
+            $step->maxOutputs($maxOutputs);
         }
 
         return $this;
@@ -144,6 +159,10 @@ final class Group extends BaseStep
     private function prepareCombinedOutputs(array $combinedOutputs, Input $input): Generator
     {
         foreach ($combinedOutputs as $combinedOutput) {
+            if ($this->maxOutputsExceeded()) {
+                break;
+            }
+
             $outputData = $this->normalizeCombinedOutputs($combinedOutput);
 
             $outputData = $this->applyRefiners($outputData, $input->get());
@@ -156,6 +175,8 @@ final class Group extends BaseStep
                 }
 
                 yield $output;
+
+                $this->trackYieldedOutput();
             }
         }
     }
