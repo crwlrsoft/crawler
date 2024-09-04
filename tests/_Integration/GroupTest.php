@@ -9,7 +9,6 @@ use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
-
 use Psr\Log\LoggerInterface;
 
 use function tests\helper_generatorToArray;

@@ -11,7 +11,6 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
-
 use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_generatorToArray;
