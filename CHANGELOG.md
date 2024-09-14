@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * The `maxOutputs()` method is now also available and working on `Group` steps.
+* Improved warning messages for step validations that are happening before running a crawler.
 
 ## [1.10.0] - 2024-08-05
 ### Added
