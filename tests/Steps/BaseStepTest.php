@@ -15,6 +15,7 @@ use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
+use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -235,6 +236,74 @@ it(
     },
 );
 
+test(
+    'the warning message, when output type is mixed and keep() was used but not keepAs() with an anonymous step ' .
+    'class, extending a step that isn\'t one of the abstract classes Step or BaseStep, contains the parent step ' .
+    'class',
+    function () {
+        class ParentStepClass extends Step
+        {
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        }
+
+        $step = new class extends ParentStepClass {};
+
+        $step->addLogger(new CliLogger())->keep()->validateBeforeRun(Http::get());
+
+        expect($this->getActualOutputForAssertion())
+            ->toContain(
+                'An anonymous class step, that is extending the tests\\Steps\\ParentStepClass step potentially ' .
+                'yields scalar value outputs',
+            );
+    },
+);
+
+test(
+    'the warning message, when output type is mixed and keep() was used but not keepAs() with an anonymous step ' .
+    'class, extending one of the abstract classes Step or BaseStep, only mentions that it is an anonymous step class',
+    function (string $extendClass) {
+        $step = null;
+
+        if ($extendClass === Step::class) {
+            $step = new class extends Step {
+                protected function invoke(mixed $input): Generator
+                {
+                    yield $input;
+                }
+            };
+        } elseif ($extendClass === BaseStep::class) {
+            $step = new class extends BaseStep {
+                protected function invoke(mixed $input): Generator
+                {
+                    yield $input;
+                }
+
+                public function invokeStep(Input $input): Generator
+                {
+                    yield from $this->invoke($input);
+                }
+            };
+        }
+
+        if ($step === null) {
+            throw new Exception('Invalid $extendClass parameter');
+        }
+
+        $step->addLogger(new CliLogger())->keep()->validateBeforeRun(Http::get());
+
+        expect($this->getActualOutputForAssertion())
+            ->toContain(
+                'An anonymous class step potentially yields scalar value outputs',
+            );
+    },
+)->with([
+    [Step::class],
+    [BaseStep::class],
+]);
+
 it('does not throw an exception or log a warning when output type is scalar and keepAs() was called', function () {
     helper_getInputReturningStep()->addLogger(new CliLogger())->keepAs('foo')->validateBeforeRun(Http::get());
 
@@ -312,6 +381,94 @@ it('logs a warning, when keepFromInput() was called and previous step yields mix
         ->toContain('potentially yields scalar value outputs ')
         ->toContain('the next step can not keep it by using keepFromInput()');
 });
+
+test(
+    'the warning message, when keepFromInput() was called and previous step yields mixed outputs with an anonymous ' .
+    'step class, extending a step that isn\'t one of the abstract classes Step or BaseStep, contains the parent step ' .
+    'class',
+    function () {
+        class ParentStepClassTwo extends Step
+        {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'yo';
+            }
+
+            public function outputType(): StepOutputType
+            {
+                return StepOutputType::Mixed;
+            }
+        }
+
+        $stepWithMixedOutputType = new class extends ParentStepClassTwo {};
+
+        Http::get()
+            ->keepFromInput()
+            ->addLogger(new CliLogger())
+            ->validateBeforeRun($stepWithMixedOutputType);
+
+        expect($this->getActualOutputForAssertion())
+            ->toContain(
+                'An anonymous class step, that is extending the tests\\Steps\\ParentStepClassTwo step potentially ' .
+                'yields scalar value outputs',
+            );
+    },
+);
+
+test(
+    'the warning message, when keepFromInput() was called and previous step yields mixed outputs with an anonymous ' .
+    'step class, extending one of the abstract classes Step or BaseStep, only mentions that it is an anonymous step ' .
+    'class',
+    function (string $extendClass) {
+        $stepWithMixedOutputType = null;
+
+        if ($extendClass === Step::class) {
+            $stepWithMixedOutputType = new class extends Step {
+                protected function invoke(mixed $input): Generator
+                {
+                    yield 'yo';
+                }
+
+                public function outputType(): StepOutputType
+                {
+                    return StepOutputType::Mixed;
+                }
+            };
+        } elseif ($extendClass === BaseStep::class) {
+            $stepWithMixedOutputType = new class extends BaseStep {
+                protected function invoke(mixed $input): Generator
+                {
+                    yield 'yo';
+                }
+
+                public function outputType(): StepOutputType
+                {
+                    return StepOutputType::Mixed;
+                }
+
+                public function invokeStep(Input $input): Generator
+                {
+                    yield from $this->invoke($input);
+                }
+            };
+        }
+
+        if ($stepWithMixedOutputType === null) {
+            throw new Exception('Invalid $extendClass parameter');
+        }
+
+        Http::get()
+            ->keepFromInput()
+            ->addLogger(new CliLogger())
+            ->validateBeforeRun($stepWithMixedOutputType);
+
+        expect($this->getActualOutputForAssertion())
+            ->toContain('An anonymous class step potentially yields scalar value outputs');
+    },
+)->with([
+    [Step::class],
+    [BaseStep::class],
+]);
 
 /* ----------------------------- keep() ----------------------------- */
 

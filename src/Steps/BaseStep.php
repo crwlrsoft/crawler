@@ -307,13 +307,11 @@ abstract class BaseStep implements StepInterface
                     'instead of keep()',
                 );
             } elseif ($outputType === StepOutputType::Mixed) {
-                $stepClassName = get_class($this);
-
                 $this->logger?->warning(
-                    'The ' . $stepClassName . ' step potentially yields scalar value outputs (= single ' .
-                    'string/int/bool/float with no key like in an associative array or object). If it does (yield a ' .
-                    'scalar value output), it can not keep that output value, because it needs a key for that. ' .
-                    'To avoid this, define a key for scalar outputs by using the keepAs() method.',
+                    $this->getPreValidationRunMessageStartWithStepClassName() . ' potentially yields scalar value ' .
+                    'outputs (= single string/int/bool/float with no key like in an associative array or object). ' .
+                    'If it does (yield a scalar value output), it can not keep that output value, because it needs ' .
+                    'a key for that. To avoid this, define a key for scalar outputs by using the keepAs() method.',
                 );
             }
         }
@@ -332,13 +330,12 @@ abstract class BaseStep implements StepInterface
                     'array or object). Please define a key for the input data to keep, by using keepAs() instead.',
                 );
             } elseif ($previousStepOutputType === StepOutputType::Mixed) {
-                $stepClassName = get_class($this);
-
                 $this->logger?->warning(
-                    'The step before the ' . $stepClassName . ' step, potentially yields scalar value outputs ' .
-                    '(= single string/int/bool/float with no key like in an associative array or object). If it does ' .
-                    '(yield a scalar value output) the next step can not keep it by using keepFromInput(). To avoid ' .
-                    'this, define a key for scalar inputs by using the keepInputAs() method.',
+                    $this->getPreValidationRunMessageStartWithStepClassName($previousStepOrInitialInputs) .
+                    ' potentially yields scalar value outputs (= single string/int/bool/float with no key like in ' .
+                    'an associative array or object). If it does (yield a scalar value output) the next step can not ' .
+                    'keep it by using keepFromInput(). To avoid this, define a key for scalar inputs by using the ' .
+                    'keepInputAs() method.',
                 );
             }
         }
@@ -438,6 +435,51 @@ abstract class BaseStep implements StepInterface
                 }
             }
         }
+    }
+
+    protected function getPreValidationRunMessageStartWithStepClassName(?BaseStep $step = null): string
+    {
+        $stepClassName = $this->getStepClassName($step);
+
+        if ($stepClassName) {
+            return 'The ' . $stepClassName . ' step';
+        } else {
+            $stepClassName = $this->getParentStepClassName($step);
+
+            if (
+                $stepClassName &&
+                $stepClassName !== 'Crwlr\\Crawler\\Steps\\Step' &&
+                $stepClassName !== 'Crwlr\\Crawler\\Steps\\BaseStep'
+            ) {
+                return 'An anonymous class step, that is extending the ' . $stepClassName . ' step';
+            } else {
+                return 'An anonymous class step';
+            }
+        }
+    }
+
+    protected function getStepClassName(?BaseStep $step = null): ?string
+    {
+        $stepClassName = get_class($step ?? $this);
+
+        if (str_contains($stepClassName, '@anonymous')) {
+            return null;
+        }
+
+        return $stepClassName;
+    }
+
+    protected function getParentStepClassName(?BaseStep $step = null): ?string
+    {
+        $parents = class_parents($step ?? $this);
+
+        $firstLevelParent = reset($parents);
+
+        if ($firstLevelParent && is_string($firstLevelParent) && !str_contains($firstLevelParent, '@anonymous')) {
+            return $firstLevelParent;
+        }
+
+        return null;
     }
 
     protected function getInputKeyToUse(Input $input): ?Input
