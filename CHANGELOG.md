@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2024-x-x
+## [2.0.0] - 2024-10-11
 ### Changed
 * __BREAKING__: Removed methods `BaseStep::addToResult()`, `BaseStep::addLaterToResult()`, `BaseStep::addsToOrCreatesResult()`, `BaseStep::createsResult()`, and `BaseStep::keepInputData()`. These methods were deprecated in v1.8.0 and should be replaced with `Step::keep()`, `Step::keepAs()`, `Step::keepFromInput()`, and `Step::keepInputAs()`.
 * __BREAKING__: Added the following keep methods to the `StepInterface`: `StepInterface::keep()`, `StepInterface::keepAs()`, `StepInterface::keepFromInput()`, `StepInterface::keepInputAs()`, as well as `StepInterface::keepsAnything()`, `StepInterface::keepsAnythingFromInputData()` and `StepInterface::keepsAnythingFromOutputData()`. If you have a class that implements this interface without extending `Step` (or `BaseStep`), you will need to implement these methods yourself. However, it is strongly recommended to extend `Step` instead.
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * __BREAKING__: Removed method `RespondedRequest::cacheKeyFromRequest()`. Use `RequestKey::from()` instead.
 * __BREAKING__: The `HttpLoader::retryCachedErrorResponses()` method now returns an instance of the new `Crwlr\Crawler\Loader\Http\Cache\RetryManager` class. This class provides the methods `only()` and `except()` to restrict retries to specific HTTP response status codes. Previously, this method returned the `HttpLoader` itself (`$this`), so if you're using it in a chain and calling other loader methods after it, you will need to refactor your code.
 * __BREAKING__: Removed the `Microseconds` class from this package. It has been moved to the `crwlr/utils` package, which you can use instead.
+* __BREAKING__: When a 
 
 ### Added
 * New methods `FileCache::prolong()` and `FileCache::prolongAll()` to allow prolonging the time to live for cached responses.
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * The `maxOutputs()` method is now also available and working on `Group` steps.
 * Improved warning messages for step validations that are happening before running a crawler.
+* A `PreRunValidationException` when the crawler finds a problem with the setup, before actually running, is not only logged as an error via the logger, but also rethrown to the user. This way the user won't get the impression, that the crawler ran successfully without looking at the log messages.
 
 ## [1.10.0] - 2024-08-05
 ### Added
