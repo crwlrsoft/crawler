@@ -202,9 +202,7 @@ abstract class Crawler
      */
     public function run(): Generator
     {
-        if (!$this->validateSteps()) {
-            return;
-        }
+        $this->validateSteps();
 
         $inputs = $this->prepareInput();
 
@@ -311,7 +309,7 @@ abstract class Crawler
     /**
      * @throws PreRunValidationException
      */
-    protected function validateSteps(): bool
+    protected function validateSteps(): void
     {
         $previousStep = null;
 
@@ -328,12 +326,10 @@ abstract class Crawler
                         'Pre-Run validation error in step number ' . ($index + 1) . ': ' . $exception->getMessage(),
                     );
 
-                    return false;
+                    throw $exception;
                 }
             }
         }
-
-        return true;
     }
 
     /**

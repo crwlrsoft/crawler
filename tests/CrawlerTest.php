@@ -2,6 +2,7 @@
 
 namespace tests;
 
+use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
 use Crwlr\Crawler\Steps\StepOutputType;
 use tests\_Stubs\Crawlers\DummyOne;
 use tests\_Stubs\Crawlers\DummyTwo;
@@ -313,11 +314,15 @@ it('immediately stops when keepAs() is not used with a scalar value output step'
         ->addStep($step1->keep())
         ->addStep($step2->keep());
 
-    $results = iterator_to_array($crawler->run());
+    try {
+        $results = iterator_to_array($crawler->run());
+    } catch (PreRunValidationException $exception) {
+    }
 
-    expect($results)->toBeEmpty()
+    expect($results ?? null)->toBeEmpty()
         ->and($step1->wasCalled)->toBeFalse()
-        ->and($this->getActualOutputForAssertion())->toContain('Pre-Run validation error in step number 2');
+        ->and($this->getActualOutputForAssertion())->toContain('Pre-Run validation error in step number 2')
+        ->and($exception ?? null)->toBeInstanceOf(PreRunValidationException::class);
 });
 
 it('sends all results to the Store when there is one and still yields the results', function () {
