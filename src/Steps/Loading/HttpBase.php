@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Loading;
 
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Utils\HttpHeaders;
@@ -14,6 +15,9 @@ use Psr\Http\Message\UriInterface;
 
 abstract class HttpBase extends Step
 {
+    /**
+     * @use LoadingStep<HttpLoader>
+     */
     use LoadingStep;
 
     protected bool $stopOnErrorResponse = false;

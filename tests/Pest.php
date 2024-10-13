@@ -158,6 +158,9 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
 function helper_getLoadingStep(): Step
 {
     return new class extends Step {
+        /**
+         * @use LoadingStep<LoaderInterface>
+         */
         use LoadingStep;
 
         protected function invoke(mixed $input): Generator
