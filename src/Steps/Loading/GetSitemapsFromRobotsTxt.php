@@ -13,6 +13,9 @@ use Psr\Http\Message\UriInterface;
 
 class GetSitemapsFromRobotsTxt extends Step
 {
+    /**
+     * @use LoadingStep<HttpLoader>
+     */
     use LoadingStep;
 
     public function outputType(): StepOutputType
@@ -25,17 +28,17 @@ class GetSitemapsFromRobotsTxt extends Step
      */
     protected function invoke(mixed $input): Generator
     {
-        if (!method_exists($this->loader, 'robotsTxt')) {
+        $loader = $this->getLoader();
+
+        if (!method_exists($loader, 'robotsTxt')) {
             throw new Exception('The Loader doesn\'t expose the RobotsTxtHandler.');
         }
-
-        $loader = $this->getLoader();
 
         if (!$loader instanceof HttpLoader) {
             throw new Exception('The GetSitemapsFromRobotsTxt step needs an HttpLoader as loader instance.');
         }
 
-        $robotsTxtHandler = $loader->robotsTxt();
+        $robotsTxtHandler = $this->getLoader()->robotsTxt();
 
         foreach ($robotsTxtHandler->getSitemaps($input) as $sitemapUrl) {
             yield $sitemapUrl;
