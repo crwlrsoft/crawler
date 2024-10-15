@@ -404,7 +404,7 @@ test(
     function () {
         $warnings = [];
 
-        $previousHandler = set_error_handler(function ($errno, $errstr) use (&$warnings) {
+        set_error_handler(function ($errno, $errstr) use (&$warnings) {
             if ($errno === E_WARNING) {
                 $warnings[] = $errstr;
             }
@@ -420,7 +420,7 @@ test(
 
         $string = Http::getBodyString($response);
 
-        set_error_handler($previousHandler);
+        restore_error_handler();
 
         expect($warnings)->toBeEmpty()
             ->and($string)->toBe('Servas!');

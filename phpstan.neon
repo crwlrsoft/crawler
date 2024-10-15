@@ -10,3 +10,4 @@ parameters:
         - "#^Call to an undefined method Pest\\\\PendingCalls\\\\TestCall\\|Pest\\\\Support\\\\HigherOrderTapProxy\\:\\:(with|throws)\\(\\).$#"
         - "#^Access to an undefined property Spatie\\\\Invade\\\\Invader#"
         - "#^Call to an undefined method Spatie\\\\Invade\\\\Invader#"
+        - "#^Call to protected method [a-zA-Z]{5,30}\\(\\) of class PHPUnit\\\\Framework\\\\TestCase.#"

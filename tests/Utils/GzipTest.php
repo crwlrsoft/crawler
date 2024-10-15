@@ -23,7 +23,7 @@ it('decodes a string', function () {
 it('does not generate a warning, when string to decode actually isn\'t encoded', function () {
     $warnings = [];
 
-    $previousHandler = set_error_handler(function ($errno, $errstr) use (&$warnings) {
+    set_error_handler(function ($errno, $errstr) use (&$warnings) {
         if ($errno === E_WARNING) {
             $warnings[] = $errstr;
         }
@@ -33,7 +33,7 @@ it('does not generate a warning, when string to decode actually isn\'t encoded',
 
     $decoded = Gzip::decode('Hello World!');
 
-    set_error_handler($previousHandler);
+    restore_error_handler();
 
     expect($decoded)->toBe('Hello World!')
         ->and($warnings)->toBeEmpty();
