@@ -44,7 +44,7 @@
         "crwlr/html-2-text": "^0.1.0"
     },
     "require-dev": {
-        "pestphp/pest": "^3.0",
+        "pestphp/pest": "^2.3|^3.0",
         "mockery/mockery": "^1.5",
         "phpstan/phpstan": "^1.4",
         "phpstan/phpstan-mockery": "^1.0",
