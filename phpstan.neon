@@ -6,6 +6,7 @@ parameters:
     excludePaths:
         analyse:
             - tests/_Integration/_Server
+    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - "#^Call to an undefined method Pest\\\\PendingCalls\\\\TestCall\\|Pest\\\\Support\\\\HigherOrderTapProxy\\:\\:(with|throws)\\(\\).$#"
         - "#^Access to an undefined property Spatie\\\\Invade\\\\Invader#"
