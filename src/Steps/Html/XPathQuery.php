@@ -30,7 +30,7 @@ class XPathQuery extends DomQuery
     private function validateQuery(string $query): void
     {
         // Temporarily set a new error handler, so checking an invalid XPath query does not generate a PHP warning.
-        $previousHandler = set_error_handler(function ($errno, $errstr) {
+        set_error_handler(function ($errno, $errstr) {
             if ($errno === E_WARNING && $errstr === 'DOMXPath::evaluate(): Invalid expression') {
                 return true;
             }
@@ -38,12 +38,12 @@ class XPathQuery extends DomQuery
             return false;
         });
 
-        if ((new DOMXPath(new DOMDocument()))->evaluate($query) === false) {
-            set_error_handler($previousHandler);
+        $evaluation = (new DOMXPath(new DOMDocument()))->evaluate($query);
 
+        restore_error_handler();
+
+        if ($evaluation === false) {
             throw InvalidDomQueryException::make('Invalid XPath query', $query);
-        } else {
-            set_error_handler($previousHandler);
         }
     }
 }

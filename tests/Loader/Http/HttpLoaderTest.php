@@ -826,11 +826,9 @@ it('updates an existing cached response', function () {
 
     /** @var RespondedRequestChild $response */
 
-    expect($response)
-        ->toBeInstanceOf(RespondedRequestChild::class)
-        ->toHaveMethods(['itseme'])
-        ->and($response->itseme())
-        ->toBe('mario');
+    expect($response)->toBeInstanceOf(RespondedRequestChild::class)
+        ->and(method_exists($response, 'itseme'))->toBeTrue()
+        ->and($response->itseme())->toBe('mario');
 });
 
 test('By default it uses the cookie jar and passes on cookies', function () {

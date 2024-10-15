@@ -213,7 +213,7 @@ class FileCache implements CacheInterface
     protected function unserialize(string $content): mixed
     {
         // Temporarily set a new error handler, so unserializing a compressed string does not result in a PHP warning.
-        $previousHandler = set_error_handler(function ($errno, $errstr) {
+        set_error_handler(function ($errno, $errstr) {
             return $errno === E_WARNING && str_starts_with($errstr, 'unserialize(): Error at offset 0 of ');
         });
 
@@ -228,7 +228,7 @@ class FileCache implements CacheInterface
             }
         }
 
-        set_error_handler($previousHandler);
+        restore_error_handler();
 
         return $unserialized;
     }
