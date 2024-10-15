@@ -84,15 +84,14 @@ it(
 
         $afterLoadWasCalled = false;
 
-        $httpLoader->beforeLoad(function () use (&$afterLoadWasCalled) {
+        $httpLoader->afterLoad(function () use (&$afterLoadWasCalled) {
             $afterLoadWasCalled = true;
         });
 
         $httpLoader->load('https://www.otsch.codes');
 
-        expect($beforeLoadWasCalled)->toBeTrue();
-
-        expect($afterLoadWasCalled)->toBeTrue();
+        expect($beforeLoadWasCalled)->toBeTrue()
+            ->and($afterLoadWasCalled)->toBeTrue();
     },
 )->with([
     [100],

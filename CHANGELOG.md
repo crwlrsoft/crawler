@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2024-10-15
+### Fixed
+* Issue with the `afterLoad` hook of the `HttpLoader`, introduced in v2. Calling the hook was commented out, which slipped through because the test case was faulty.
+
 ## [2.0.0] - 2024-10-15
 ### Changed
 * __BREAKING__: Removed methods `BaseStep::addToResult()`, `BaseStep::addLaterToResult()`, `BaseStep::addsToOrCreatesResult()`, `BaseStep::createsResult()`, and `BaseStep::keepInputData()`. These methods were deprecated in v1.8.0 and should be replaced with `Step::keep()`, `Step::keepAs()`, `Step::keepFromInput()`, and `Step::keepInputAs()`.

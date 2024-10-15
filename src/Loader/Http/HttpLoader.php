@@ -155,7 +155,7 @@ class HttpLoader extends Loader
 
             return null;
         } finally {
-            //$this->callHook('afterLoad', $request);
+            $this->callHook('afterLoad', $request);
         }
     }
 
