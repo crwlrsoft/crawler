@@ -133,3 +133,43 @@ it('uses the correct executable', function () {
 
     expect($invadedBrowserFactory->chromeBinary)->toBe($chromeExecutable);
 });
+
+it('calls the temporary post navigate hooks once', function () {
+    $browserFactoryMock = helper_setUpHeadlessChromeMocks();
+
+    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+    $hook1Called = $hook2Called = $hook3Called = false;
+
+    $helper->setTempPostNavigateHooks([
+        function (Page $page) use (& $hook1Called) {
+            $hook1Called = true;
+        },
+        function (Page $page) use (& $hook2Called) {
+            $hook2Called = true;
+        },
+        function (Page $page) use (& $hook3Called) {
+            $hook3Called = true;
+        },
+    ]);
+
+    $helper->navigateToPageAndGetRespondedRequest(
+        new Request('GET', 'https://www.example.com/foo'),
+        helper_getMinThrottler(),
+    );
+
+    expect($hook1Called)->toBeTrue()
+        ->and($hook2Called)->toBeTrue()
+        ->and($hook3Called)->toBeTrue();
+
+    $hook1Called = $hook2Called = $hook3Called = false;
+
+    $helper->navigateToPageAndGetRespondedRequest(
+        new Request('GET', 'https://www.example.com/foo'),
+        helper_getMinThrottler(),
+    );
+
+    expect($hook1Called)->toBeFalse()
+        ->and($hook2Called)->toBeFalse()
+        ->and($hook3Called)->toBeFalse();
+});
