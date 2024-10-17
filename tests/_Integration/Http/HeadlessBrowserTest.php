@@ -10,6 +10,7 @@ use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
+use HeadlessChromium\Page;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -130,4 +131,31 @@ it('also gets cookies that are set via javascript', function () {
     expect($results)->toHaveCount(1)
         ->and($results[0]->get('printed-cookie'))->toBeString()
         ->and($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
+});
+
+it('gets a cookie that is set via a click, executed via after navigate hook', function () {
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler
+        ->input('http://localhost:8000/set-delayed-js-cookie')
+        ->addStep(
+            Http::get()
+                ->postBrowserNavigateHook(function (Page $page) {
+                    $page->mouse()->find('#setCookieButton')->click();
+                }),
+        )
+        ->addStep(new class extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'http://localhost:8000/print-cookie';
+            }
+        })
+        ->addStep(Http::get())
+        ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookie'));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('printed-cookie'))->toBeString()
+        ->and($results[0]->get('printed-cookie'))->toBe('jscookie');
 });
