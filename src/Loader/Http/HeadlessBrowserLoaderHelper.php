@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Loader\Http;
 
+use Closure;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Exception;
@@ -42,7 +43,27 @@ class HeadlessBrowserLoaderHelper
 
     protected int $timeout = 30_000;
 
+    /**
+     * @var Closure[]
+     */
+    protected array $tempPostNavigateHooks = [];
+
     public function __construct(private ?BrowserFactory $browserFactory = null) {}
+
+    /**
+     * Set temporary post navigate hooks
+     *
+     * They will be executed after the next call to navigateToPageAndGetRespondedRequest()
+     * and forgotten afterward.
+     *
+     * @param Closure[] $hooks
+     */
+    public function setTempPostNavigateHooks(array $hooks): static
+    {
+        $this->tempPostNavigateHooks = $hooks;
+
+        return $this;
+    }
 
     /**
      * @throws OperationTimedOut
@@ -80,6 +101,8 @@ class HeadlessBrowserLoaderHelper
         $throttler->trackRequestStartFor($request->getUri());
 
         $this->navigate($request->getUri()->__toString());
+
+        $this->callPostNavigateHooks();
 
         $throttler->trackRequestEndFor($request->getUri());
 
@@ -194,6 +217,17 @@ class HeadlessBrowserLoaderHelper
         } else {
             $this->page?->navigate($url)->waitForNavigation(timeout: $this->timeout);
         }
+    }
+
+    protected function callPostNavigateHooks(): void
+    {
+        if (!empty($this->tempPostNavigateHooks)) {
+            foreach ($this->tempPostNavigateHooks as $hook) {
+                $hook->call($this, $this->page);
+            }
+        }
+
+        $this->tempPostNavigateHooks = [];
     }
 
     /**

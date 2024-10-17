@@ -57,6 +57,10 @@ if ($route === '/set-js-cookie') {
     return include(__DIR__ . '/_Server/SetCookieJs.php');
 }
 
+if ($route === '/set-delayed-js-cookie') {
+    return include(__DIR__ . '/_Server/SetDelayedCookieJs.php');
+}
+
 if ($route === '/print-cookie') {
     return include(__DIR__ . '/_Server/PrintCookie.php');
 }

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-10-17
+### Added
+* The new `postBrowserNavigateHook()` method in the `Http` step classes, which allows to define callback functions that are triggered after the headless browser navigated to the specified URL. They are called with the chrome-php `Page` object as argument.
+
 ## [2.0.1] - 2024-10-15
 ### Fixed
 * Issue with the `afterLoad` hook of the `HttpLoader`, introduced in v2. Calling the hook was commented out, which slipped through because the test case was faulty.

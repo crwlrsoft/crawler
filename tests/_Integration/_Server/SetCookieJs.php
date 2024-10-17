@@ -1,3 +1,4 @@
+<?php setcookie('testcookie', 'foo123'); ?>
 <!doctype html>
 <html lang="de">
 <head><meta charset=utf-8><title>yo</title></head>

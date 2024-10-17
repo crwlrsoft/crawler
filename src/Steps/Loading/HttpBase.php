@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading;
 
+use Closure;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -41,6 +42,11 @@ abstract class HttpBase extends Step
      * @var null|array<string, string|string[]>
      */
     protected ?array $inputHeaders = null;
+
+    /**
+     * @var Closure[]
+     */
+    protected array $postBrowserNavigateHooks = [];
 
     /**
      * @param string $method
@@ -127,6 +133,13 @@ abstract class HttpBase extends Step
         return $this;
     }
 
+    public function postBrowserNavigateHook(Closure $callback): static
+    {
+        $this->postBrowserNavigateHooks[] = $callback;
+
+        return $this;
+    }
+
     /**
      * @return UriInterface|UriInterface[]
      * @throws InvalidArgumentException
@@ -185,10 +198,16 @@ abstract class HttpBase extends Step
      */
     protected function getResponseFromRequest(RequestInterface $request): ?RespondedRequest
     {
+        $loader = $this->getLoader();
+
+        if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
+            $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
+        }
+
         if ($this->stopOnErrorResponse) {
-            $response = $this->getLoader()->loadOrFail($request);
+            $response = $loader->loadOrFail($request);
         } else {
-            $response = $this->getLoader()->load($request);
+            $response = $loader->load($request);
         }
 
         if ($response !== null && ($response->response->getStatusCode() < 400 || $this->yieldErrorResponses)) {
