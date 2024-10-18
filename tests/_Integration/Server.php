@@ -61,6 +61,28 @@ if ($route === '/set-delayed-js-cookie') {
     return include(__DIR__ . '/_Server/SetDelayedCookieJs.php');
 }
 
+if (str_starts_with($route, '/browser-actions')) {
+    if ($route === '/browser-actions') {
+        return include(__DIR__ . '/_Server/BrowserActions/Main.php');
+    }
+
+    if (str_starts_with($route, '/browser-actions/click-and-wait-for-reload')) {
+        return include(__DIR__ . '/_Server/BrowserActions/ClickAndWaitForReload.php');
+    }
+
+    if ($route === '/browser-actions/evaluate-and-wait-for-reload') {
+        return include(__DIR__ . '/_Server/BrowserActions/EvaluateAndWaitForReload.php');
+    }
+
+    if ($route === '/browser-actions/evaluate-and-wait-for-reload-reloaded') {
+        return include(__DIR__ . '/_Server/BrowserActions/EvaluateAndWaitForReloadReloaded.php');
+    }
+
+    if ($route === '/browser-actions/wait') {
+        return include(__DIR__ . '/_Server/BrowserActions/Wait.php');
+    }
+}
+
 if ($route === '/print-cookie') {
     return include(__DIR__ . '/_Server/PrintCookie.php');
 }
