@@ -6,9 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.0] - 2024-10-17
+## [2.1.0] - 2024-10-18
 ### Added
-* The new `postBrowserNavigateHook()` method in the `Http` step classes, which allows to define callback functions that are triggered after the headless browser navigated to the specified URL. They are called with the chrome-php `Page` object as argument.
+* The new `postBrowserNavigateHook()` method in the `Http` step classes, which allows to define callback functions that are triggered after the headless browser navigated to the specified URL. They are called with the chrome-php `Page` object as argument, so you can interact with the page. Also, there is a new class `BrowserAction` providing some simple actions (like wait for element, click element,...) as Closures via static methods. You can use it like `Http::get()->postBrowserNavigateHook(BrowserAction::clickElement('#element'))`.
 
 ## [2.0.1] - 2024-10-15
 ### Fixed
