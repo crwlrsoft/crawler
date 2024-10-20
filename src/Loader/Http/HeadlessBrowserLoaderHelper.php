@@ -3,6 +3,8 @@
 namespace Crwlr\Crawler\Loader\Http;
 
 use Closure;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Exception;
@@ -19,6 +21,7 @@ use HeadlessChromium\Exception\NoResponseAvailable;
 use HeadlessChromium\Exception\OperationTimedOut;
 use HeadlessChromium\Page;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\UriInterface;
 
 class HeadlessBrowserLoaderHelper
 {
@@ -80,6 +83,7 @@ class HeadlessBrowserLoaderHelper
         RequestInterface $request,
         Throttler $throttler,
         ?string $proxy = null,
+        ?CookieJar $cookieJar = null,
     ): RespondedRequest {
         $browser = $this->getBrowser($request, $proxy);
 
@@ -102,11 +106,13 @@ class HeadlessBrowserLoaderHelper
 
         $this->navigate($request->getUri()->__toString());
 
-        $this->callPostNavigateHooks();
-
         $throttler->trackRequestEndFor($request->getUri());
 
+        $this->callPostNavigateHooks();
+
         $html = $this->page?->getHtml();
+
+        $this->addCookiesToJar($cookieJar, $request->getUri());
 
         return new RespondedRequest(
             $request,
@@ -228,6 +234,25 @@ class HeadlessBrowserLoaderHelper
         }
 
         $this->tempPostNavigateHooks = [];
+    }
+
+    /**
+     * @throws CommunicationException
+     * @throws OperationTimedOut
+     * @throws NoResponseAvailable
+     * @throws InvalidCookieException
+     */
+    protected function addCookiesToJar(?CookieJar $cookieJar, UriInterface $requestUrl): void
+    {
+        if (!$cookieJar) {
+            return;
+        }
+
+        $cookies = $this->page?->getCookies();
+
+        if ($cookies) {
+            $cookieJar->addFrom($requestUrl, $cookies);
+        }
     }
 
     /**

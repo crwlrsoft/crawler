@@ -11,6 +11,7 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use GuzzleHttp\Psr7\Response;
 use HeadlessChromium\Browser;
 use HeadlessChromium\Communication\Session;
+use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
 use HeadlessChromium\PageUtils\PageNavigation;
 use Mockery;
@@ -54,9 +55,8 @@ it('throttles requests to the same domain', function ($loadingMethod) {
 
     $diff = $secondResponse - $firstResponse;
 
-    expect($diff)->toBeGreaterThan(0.3);
-
-    expect($diff)->toBeLessThan(0.62);
+    expect($diff)->toBeGreaterThan(0.3)
+        ->and($diff)->toBeLessThan(0.62);
 })->with(['load', 'loadOrFail']);
 
 it('also throttles requests using the headless browser', function ($loadingMethod) {
@@ -83,6 +83,8 @@ it('also throttles requests using the headless browser', function ($loadingMetho
             return $pageNavigationMock;
         });
 
+    $pageMock->shouldReceive('getCookies')->andReturn(new CookiesCollection());
+
     $pageMock->shouldReceive('getHtml')->andReturn('<html>foo</html>');
 
     $browserMock->shouldReceive('createPage')->andReturn($pageMock);
@@ -104,6 +106,8 @@ it('also throttles requests using the headless browser', function ($loadingMetho
 
     $pageMock->shouldReceive('navigate')->andReturn($pageNavigationMock);
 
+    $pageMock->shouldReceive('getCookies')->andReturn(new CookiesCollection());
+
     $firstResponse = microtime(true);
 
     $loader->{$loadingMethod}('https://www.example.com/bar');
@@ -112,9 +116,8 @@ it('also throttles requests using the headless browser', function ($loadingMetho
 
     $diff = $secondResponse - $firstResponse;
 
-    expect($diff)->toBeGreaterThan(0.3);
-
-    expect($diff)->toBeLessThan(0.62);
+    expect($diff)->toBeGreaterThan(0.3)
+        ->and($diff)->toBeLessThan(0.62);
 })->with(['load', 'loadOrFail']);
 
 it('does not throttle requests to different domains', function ($loadingMethod) {

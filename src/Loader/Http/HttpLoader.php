@@ -387,7 +387,12 @@ class HttpLoader extends Loader
         if ($this->useHeadlessBrowser) {
             $proxy = $this->proxies?->getProxy() ?? null;
 
-            return $this->browser()->navigateToPageAndGetRespondedRequest($request, $this->throttler, $proxy);
+            return $this->browser()->navigateToPageAndGetRespondedRequest(
+                $request,
+                $this->throttler,
+                $proxy,
+                $this->cookieJar,
+            );
         }
 
         return $this->handleRedirects($request);
@@ -626,7 +631,7 @@ class HttpLoader extends Loader
      */
     protected function addCookiesToRequest(RequestInterface $request): RequestInterface
     {
-        if (!$this->useCookies) {
+        if (!$this->useCookies || $this->usesHeadlessBrowser()) {
             return $request;
         }
 

@@ -3,6 +3,9 @@
 namespace tests\_Integration\Http;
 
 use Crwlr\Crawler\HttpCrawler;
+use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
@@ -54,6 +57,18 @@ class GetStringFromResponseHtmlBody extends Step
 
         yield (new Crawler($html))->filter('body')->text();
     }
+}
+
+/**
+ * @return Cookie[]
+ */
+function helper_getCookiesByDomainFromLoader(HttpLoader $loader, string $domain): array
+{
+    $cookieJar = invade($loader)->cookieJar;
+
+    /** @var CookieJar $cookieJar */
+
+    return $cookieJar->allByDomain($domain);
 }
 
 it('automatically uses the Loader\'s user agent', function () {
@@ -111,26 +126,22 @@ it('renders javascript', function () {
         ]);
 });
 
-it('also gets cookies that are set via javascript', function () {
+it('gets cookies that are set via javascript', function () {
     $crawler = new HeadlessBrowserCrawler();
 
     $crawler
         ->input('http://localhost:8000/set-js-cookie')
-        ->addStep(Http::get())
-        ->addStep(new class extends Step {
-            protected function invoke(mixed $input): Generator
-            {
-                yield 'http://localhost:8000/print-cookie';
-            }
-        })
-        ->addStep(Http::get())
-        ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookie'));
+        ->addStep(Http::get());
 
-    $results = helper_generatorToArray($crawler->run());
+    helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(1)
-        ->and($results[0]->get('printed-cookie'))->toBeString()
-        ->and($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
+    $cookiesInJar = helper_getCookiesByDomainFromLoader($crawler->getLoader(), 'localhost');
+
+    $testCookie = $cookiesInJar['testcookie'] ?? null;
+
+    expect($cookiesInJar)->toHaveCount(1)
+        ->and($testCookie?->name())->toBe('testcookie')
+        ->and($testCookie?->value())->toBe('javascriptcookie');
 });
 
 it('gets a cookie that is set via a click, executed via post browser navigate hook', function () {
@@ -140,7 +151,7 @@ it('gets a cookie that is set via a click, executed via post browser navigate ho
         ->input('http://localhost:8000/set-delayed-js-cookie')
         ->addStep(
             Http::get()
-                ->postBrowserNavigateHook(BrowserAction::clickElement('#setCookieButton')),
+                ->postBrowserNavigateHook(BrowserAction::clickElement('#consent_btn')),
         )
         ->addStep(new class extends Step {
             protected function invoke(mixed $input): Generator
@@ -155,7 +166,15 @@ it('gets a cookie that is set via a click, executed via post browser navigate ho
 
     expect($results)->toHaveCount(1)
         ->and($results[0]->get('printed-cookie'))->toBeString()
-        ->and($results[0]->get('printed-cookie'))->toBe('jscookie');
+        ->and($results[0]->get('printed-cookie'))->toBe('javascriptcookie');
+
+    $cookiesInJar = helper_getCookiesByDomainFromLoader($crawler->getLoader(), 'localhost');
+
+    $testCookie = $cookiesInJar['testcookie'] ?? null;
+
+    expect($cookiesInJar)->toHaveCount(1)
+        ->and($testCookie?->name())->toBe('testcookie')
+        ->and($testCookie?->value())->toBe('javascriptcookie');
 });
 
 test('BrowserActions waitUntilDocumentContainsElement(), clickElement() and evaluate() work as expected', function () {
