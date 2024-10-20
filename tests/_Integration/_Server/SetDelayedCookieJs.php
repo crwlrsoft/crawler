@@ -1,10 +1,14 @@
-<?php setcookie('testcookie', 'foo123'); ?>
 <!doctype html>
 <html lang="de">
-<head><meta charset=utf-8><title>Hey</title></head>
+<head>
+    <meta charset=utf-8><title>Hey</title>
+    <script src="/scripts/set-cookie.js"></script>
+</head>
 <body>
 <div>
-    <button id="setCookieButton" onclick="document.cookie = 'testcookie=jscookie'"></button>
+    <button type="button" id="consent_btn">
+        Accept Cookie
+    </button>
 </div>
 </body>
 </html>

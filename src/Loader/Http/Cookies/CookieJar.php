@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Loader\Http\Cookies;
 use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Url;
 use Exception;
+use HeadlessChromium\Cookies\CookiesCollection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -37,17 +38,38 @@ class CookieJar
      * @throws InvalidCookieException
      * @throws Exception
      */
-    public function addFrom(string|UriInterface|Url $url, ResponseInterface $response): void
+    public function addFrom(string|UriInterface|Url $url, ResponseInterface|CookiesCollection $response): void
     {
-        $cookieHeaders = $response->getHeader('set-cookie');
+        if ($response instanceof CookiesCollection) {
+            $this->addFromBrowserCookieCollection($url, $response);
+        } else {
+            $cookieHeaders = $response->getHeader('set-cookie');
 
-        if (!empty($cookieHeaders)) {
+            if (!empty($cookieHeaders)) {
+                $url = !$url instanceof Url ? Url::parse($url) : $url;
+
+                foreach ($cookieHeaders as $cookieHeader) {
+                    $cookie = new Cookie($url, $cookieHeader);
+
+                    $this->jar[$cookie->domain()][$cookie->name()] = $cookie;
+                }
+            }
+        }
+    }
+
+    /**
+     * @throws InvalidCookieException
+     * @throws Exception
+     */
+    public function addFromBrowserCookieCollection(string|UriInterface|Url $url, CookiesCollection $collection): void
+    {
+        if ($collection->count() > 0) {
             $url = !$url instanceof Url ? Url::parse($url) : $url;
 
-            foreach ($cookieHeaders as $cookieHeader) {
-                $cookie = new Cookie($url, $cookieHeader);
+            foreach ($collection as $cookie) {
+                $cookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
 
-                $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
+                $this->jar[$cookie->domain()][$cookie->name()] = $cookie;
             }
         }
     }
@@ -91,5 +113,40 @@ class CookieJar
         }
 
         return $forDomain;
+    }
+
+    protected function buildSetCookieHeaderFromBrowserCookie(\HeadlessChromium\Cookies\Cookie $cookie): string
+    {
+        $header = $cookie->getName() . '=' . $cookie->getValue();
+
+        if ($cookie->getDomain() !== null) {
+            $header .= '; Domain=' . $cookie->getDomain();
+        }
+
+        if ($cookie->offsetExists('expires') && $cookie->offsetGet('expires') !== -1) {
+            $header .= '; Expires=' . $cookie->offsetGet('expires');
+        }
+
+        if ($cookie->offsetExists('max-age') && !empty($cookie->offsetGet('path'))) {
+            $header .= '; Max-Age=' . $cookie->offsetGet('max-age');
+        }
+
+        if ($cookie->offsetExists('path') && !empty($cookie->offsetGet('path'))) {
+            $header .= '; Path=' . $cookie->offsetGet('path');
+        }
+
+        if ($cookie->offsetExists('secure') && !empty($cookie->offsetGet('secure'))) {
+            $header .= '; Secure=' . $cookie->offsetGet('path');
+        }
+
+        if ($cookie->offsetExists('httpOnly') && $cookie->offsetGet('httpOnly') === true) {
+            $header .= '; HttpOnly';
+        }
+
+        if ($cookie->offsetExists('sameSite') && !empty($cookie->offsetGet('sameSite'))) {
+            $header .= '; SameSite=' . $cookie->offsetGet('sameSite');
+        }
+
+        return $header;
     }
 }

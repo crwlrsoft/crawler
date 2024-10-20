@@ -57,6 +57,18 @@ if ($route === '/set-js-cookie') {
     return include(__DIR__ . '/_Server/SetCookieJs.php');
 }
 
+if ($route === '/scripts/set-cookie.js') {
+    echo <<<JS
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById('consent_btn').addEventListener('click', function (ev) {
+                ev.preventDefault();
+                document.cookie = "testcookie=javascriptcookie";
+            }, false);
+        }, false);
+        JS;
+    return;
+}
+
 if ($route === '/set-delayed-js-cookie') {
     return include(__DIR__ . '/_Server/SetDelayedCookieJs.php');
 }
