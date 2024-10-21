@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.1] - 2024-10-20
+## [2.1.1] - 2024-10-21
 ### Fixed
 * Also add cookies, set during headless browser usage, to the cookie jar. When switching back to the (guzzle) HTTP client the cookies should also be sent.
 * Don't call `Loader::afterLoad()` when `Loader::beforeLoad()` was not called before. This can potentially happen, when an exception is thrown before the call to the `beforeLoad` hook, but it is caught and the `afterLoader` hook method is called anyway. As this most likely won't make sense to users, the `afterLoad` hook callback functions will just not be called in this case.
