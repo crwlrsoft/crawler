@@ -128,7 +128,7 @@ class CookieJar
             $header .= '; Expires=' . $this->formatExpiresValue($cookie->offsetGet('expires'));
         }
 
-        if ($cookie->offsetExists('max-age') && !empty($cookie->offsetGet('path'))) {
+        if ($cookie->offsetExists('max-age') && !empty($cookie->offsetGet('max-age'))) {
             $header .= '; Max-Age=' . $cookie->offsetGet('max-age');
         }
 
