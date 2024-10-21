@@ -52,7 +52,7 @@ class CookieJar
                 foreach ($cookieHeaders as $cookieHeader) {
                     $cookie = new Cookie($url, $cookieHeader);
 
-                    $this->jar[$cookie->domain()][$cookie->name()] = $cookie;
+                    $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
                 }
             }
         }
@@ -70,7 +70,7 @@ class CookieJar
             foreach ($collection as $cookie) {
                 $cookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
 
-                $this->jar[$cookie->domain()][$cookie->name()] = $cookie;
+                $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
             }
         }
     }
@@ -154,7 +154,15 @@ class CookieJar
     private function formatExpiresValue(mixed $value): string
     {
         if (is_numeric($value)) {
-            $expires = DateTime::createFromFormat('U.v', (string) $value);
+            $value = (string) $value;
+
+            if (str_contains($value, '.')) {
+                $expires = strlen(explode('.', $value, 2)[1]) <= 3 ?
+                    DateTime::createFromFormat('U.v', $value) :
+                    DateTime::createFromFormat('U.u', $value);
+            } else {
+                $expires = DateTime::createFromFormat('U', $value);
+            }
 
             if ($expires !== false) {
                 return $expires->format('l, d M Y H:i:s T');
