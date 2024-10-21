@@ -119,6 +119,8 @@ class HttpLoader extends Loader
      */
     public function load(mixed $subject): ?RespondedRequest
     {
+        $this->_resetCalledHooks();
+
         try {
             $request = $this->validateSubjectType($subject);
         } catch (InvalidArgumentException) {

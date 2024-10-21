@@ -29,9 +29,8 @@ it('waits between 1.0 and 2.0 times of the time span that the last request took 
 
     $diff = $readyForNextRequest->subtract($requestEndTime);
 
-    expect($diff->value)->toBeGreaterThan(100000);
-
-    expect($diff->value)->toBeLessThan(220000); // A bit more than * 2.0 because other things happening also take time.
+    expect($diff->value)->toBeGreaterThan(100000)
+        ->and($diff->value)->toBeLessThan(220000); // A bit more than * 2.0 because other things happening also take time.
 });
 
 it('waits min 0.25s by default', function () {
@@ -124,4 +123,39 @@ it('does not throw an exception when from and to values are equal', function () 
     new Throttler(new MultipleOf(1.0), new MultipleOf(1.0));
 
     expect(true)->toBeTrue();
+});
+
+test('internal _requestToUrlWasStarted returns false when _internalTrackStartFor was not called', function () {
+    $url = Url::parsePsr7('https://www.example.com');
+
+    $throttler = new Throttler();
+
+    $throttler
+        ->waitBetween(Microseconds::fromSeconds(0.001), Microseconds::fromSeconds(0.002))
+        ->waitAtMax(Microseconds::fromSeconds(0.002));
+
+    expect(invade($throttler)->_requestToUrlWasStarted($url))->toBeFalse();
+
+    $throttler->trackRequestEndFor($url); // To check if no error/exception occurs when start was not called before.
+});
+
+test('internal _requestToUrlWasStarted returns true when _internalTrackStartFor was called', function () {
+    $url = Url::parsePsr7('https://www.example.com');
+
+    $throttler = new Throttler();
+
+    $throttler
+        ->waitBetween(Microseconds::fromSeconds(0.001), Microseconds::fromSeconds(0.002))
+        ->waitAtMax(Microseconds::fromSeconds(0.002));
+
+    $throttler->trackRequestStartFor($url);
+
+    $invadedThrottler = invade($throttler);
+
+    expect($invadedThrottler->_requestToUrlWasStarted($url))->toBeTrue();
+
+    // And after end of the request is tracked, it should return false again.
+    $throttler->trackRequestEndFor($url);
+
+    expect($invadedThrottler->_requestToUrlWasStarted($url))->toBeFalse();
 });
