@@ -25,6 +25,11 @@ abstract class Loader implements LoaderInterface
         'afterLoad' => [],
     ];
 
+    /**
+     * @var array<string, bool>
+     */
+    private array $_hooksCalledInCurrentLoadCall = [];
+
     public function __construct(
         protected UserAgentInterface $userAgent,
         ?LoggerInterface $logger = null,
@@ -84,11 +89,32 @@ abstract class Loader implements LoaderInterface
             return;
         }
 
+        if (array_key_exists($hook, $this->_hooksCalledInCurrentLoadCall)) {
+            $this->logger->warning(
+                $hook . ' was already called in this load call. Probably a problem in the loader implementation.',
+            );
+        }
+
+        if (
+            $hook === 'afterLoad' &&
+            !empty($this->hooks[$hook]) &&
+            !array_key_exists('beforeLoad', $this->_hooksCalledInCurrentLoadCall)
+        ) {
+            $this->logger->warning(
+                'The afterLoad hook was called without a preceding call to the beforeLoad hook. Therefore don\'t ' .
+                'run the hook callbacks. Most likely an exception/error occurred  before the beforeLoad hook call.',
+            );
+
+            return;
+        }
+
         $arguments[] = $this->logger;
 
         foreach ($this->hooks[$hook] as $callback) {
             call_user_func($callback, ...$arguments);
         }
+
+        $this->_hooksCalledInCurrentLoadCall[$hook] = true;
     }
 
     protected function logger(): LoggerInterface
@@ -99,5 +125,14 @@ abstract class Loader implements LoaderInterface
     protected function addHookCallback(string $hook, callable $callback): void
     {
         $this->hooks[$hook][] = $callback;
+    }
+
+    /**
+     * @internal
+     * @return void
+     */
+    protected function _resetCalledHooks(): void
+    {
+        $this->_hooksCalledInCurrentLoadCall = [];
     }
 }

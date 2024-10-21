@@ -27,8 +27,15 @@ class Throttler
     protected array $latestDurations = [];
 
     protected Microseconds|MultipleOf $from;
+
     protected Microseconds|MultipleOf $to;
+
     protected Microseconds $min;
+
+    /**
+     * @var string[]
+     */
+    private array $_currentRequestUrls = [];
 
     /**
      * @throws InvalidArgumentException
@@ -84,6 +91,8 @@ class Throttler
         $domain = $this->getDomain($url);
 
         $this->latestRequestTimes[$domain] = $this->time();
+
+        $this->_internalTrackStartFor($url);
     }
 
     /**
@@ -91,6 +100,10 @@ class Throttler
      */
     public function trackRequestEndFor(UriInterface $url): void
     {
+        if (!$this->_requestToUrlWasStarted($url)) {
+            return;
+        }
+
         $domain = $this->getDomain($url);
 
         if (!isset($this->latestRequestTimes[$domain])) {
@@ -102,6 +115,8 @@ class Throttler
         $this->latestDurations[$domain] = $responseTime->subtract($this->latestRequestTimes[$domain]);
 
         unset($this->latestRequestTimes[$domain]);
+
+        $this->_internalTrackEndFor($url);
     }
 
     /**
@@ -179,6 +194,35 @@ class Throttler
         }
 
         return new Microseconds(rand($from->value, $to->value));
+    }
+
+    /**
+     * @internal
+     */
+    protected function _internalTrackStartFor(UriInterface $url): void
+    {
+        $urlString = (string) $url;
+
+        $this->_currentRequestUrls[$urlString] = $urlString;
+    }
+
+    /**
+     * @internal
+     */
+    protected function _internalTrackEndFor(UriInterface $url): void
+    {
+        unset($this->_currentRequestUrls[(string) $url]);
+    }
+
+    protected function _requestToUrlWasStarted(UriInterface $url): bool
+    {
+        $urlString = (string) $url;
+
+        if (array_key_exists($urlString, $this->_currentRequestUrls)) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function validateFromAndTo(): void
