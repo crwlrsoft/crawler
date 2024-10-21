@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Loader\Http\Cookies;
 
 use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Url;
+use DateTime;
 use Exception;
 use HeadlessChromium\Cookies\CookiesCollection;
 use Psr\Http\Message\ResponseInterface;
@@ -124,7 +125,7 @@ class CookieJar
         }
 
         if ($cookie->offsetExists('expires') && $cookie->offsetGet('expires') !== -1) {
-            $header .= '; Expires=' . $cookie->offsetGet('expires');
+            $header .= '; Expires=' . $this->formatExpiresValue($cookie->offsetGet('expires'));
         }
 
         if ($cookie->offsetExists('max-age') && !empty($cookie->offsetGet('path'))) {
@@ -148,5 +149,18 @@ class CookieJar
         }
 
         return $header;
+    }
+
+    private function formatExpiresValue(mixed $value): string
+    {
+        if (is_numeric($value)) {
+            $expires = DateTime::createFromFormat('U.v', (string) $value);
+
+            if ($expires !== false) {
+                return $expires->format('l, d M Y H:i:s T');
+            }
+        }
+
+        return (string) $value;
     }
 }
