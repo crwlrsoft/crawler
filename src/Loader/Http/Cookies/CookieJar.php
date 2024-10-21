@@ -64,14 +64,18 @@ class CookieJar
      */
     public function addFromBrowserCookieCollection(string|UriInterface|Url $url, CookiesCollection $collection): void
     {
-        if ($collection->count() > 0) {
-            $url = !$url instanceof Url ? Url::parse($url) : $url;
+        if ($collection->count() === 0) {
+            return;
+        }
 
-            foreach ($collection as $cookie) {
-                $cookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
+        if (!$url instanceof Url) {
+            $url = Url::parse($url);
+        }
 
-                $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
-            }
+        foreach ($collection as $cookie) {
+            $setCookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
+
+            $this->jar[$this->getForDomainFromUrl($url)][$setCookie->name()] = $setCookie;
         }
     }
 
