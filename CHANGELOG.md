@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2024-10-22
+### Fixed
+* Issue when converting cookie objects received from the chrome-php library.
+
 ## [2.1.1] - 2024-10-21
 ### Fixed
 * Also add cookies, set during headless browser usage, to the cookie jar. When switching back to the (guzzle) HTTP client the cookies should also be sent.

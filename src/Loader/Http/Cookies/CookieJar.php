@@ -6,6 +6,7 @@ use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Url\Url;
 use DateTime;
 use Exception;
+use HeadlessChromium\Cookies\Cookie as BrowserCookie;
 use HeadlessChromium\Cookies\CookiesCollection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
@@ -120,7 +121,7 @@ class CookieJar
         return $forDomain;
     }
 
-    protected function buildSetCookieHeaderFromBrowserCookie(\HeadlessChromium\Cookies\Cookie $cookie): string
+    protected function buildSetCookieHeaderFromBrowserCookie(BrowserCookie $cookie): string
     {
         $header = $cookie->getName() . '=' . $cookie->getValue();
 
@@ -140,8 +141,8 @@ class CookieJar
             $header .= '; Path=' . $cookie->offsetGet('path');
         }
 
-        if ($cookie->offsetExists('secure') && !empty($cookie->offsetGet('secure'))) {
-            $header .= '; Secure=' . $cookie->offsetGet('path');
+        if ($cookie->offsetExists('secure') && $cookie->offsetGet('secure') === true) {
+            $header .= '; Secure';
         }
 
         if ($cookie->offsetExists('httpOnly') && $cookie->offsetGet('httpOnly') === true) {
