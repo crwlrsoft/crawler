@@ -137,7 +137,7 @@ class CookieJar
 
         foreach ($attributes as $name => $setCookieName) {
             $setCookieValue = $cookie->offsetGet($name);
-            if ($setCookieValue === null) {
+            if (empty($setCookieValue)) {
                 continue;
             }
 
@@ -150,10 +150,8 @@ class CookieJar
             }
 
             // Flag attributes
-            if (is_bool($setCookieValue)) {
-                if ($setCookieValue === true) {
-                    $parts[] = $setCookieName;
-                }
+            if ($setCookieValue === true) {
+                $parts[] = $setCookieName;
                 continue;
             }
 
