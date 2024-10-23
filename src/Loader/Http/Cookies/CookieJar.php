@@ -150,8 +150,10 @@ class CookieJar
             }
 
             // Flag attributes
-            if ($setCookieValue === true) {
-                $header[] = $setCookieName;
+            if (is_bool($setCookieValue)) {
+                if ($setCookieValue === true) {
+                    $header[] = $setCookieName;
+                }
                 continue;
             }
 
