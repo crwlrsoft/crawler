@@ -142,7 +142,7 @@ class CookieJar
             }
 
             // "Expires" attribute
-            if ($name === 'expires')) {
+            if ($name === 'expires') {
                 if ($setCookieValue !== -1) {
                     $header[] = sprintf('%s=%s', $setCookieName, $this->formatExpiresValue($setCookieValue));
                 }
