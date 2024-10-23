@@ -123,37 +123,42 @@ class CookieJar
 
     protected function buildSetCookieHeaderFromBrowserCookie(BrowserCookie $cookie): string
     {
-        $header = $cookie->getName() . '=' . $cookie->getValue();
+        $attributes = [
+            'domain' => 'Domain',
+            'expires' => 'Expires',
+            'max-age' => 'Max-Age',
+            'path' => 'Path',
+            'secure' => 'Secure',
+            'httpOnly' => 'HttpOnly',
+            'sameSite' => 'SameSite',
+        ];
 
-        if ($cookie->getDomain() !== null) {
-            $header .= '; Domain=' . $cookie->getDomain();
+        $header = [sprintf('%s=%s', $cookie->getName(), $cookie->getValue())];
+
+        foreach ($attributes as $name => $setCookieName) {
+            $setCookieValue = $cookie->offsetGet($name);
+            if ($setCookieValue === null) {
+                continue;
+            }
+
+            // "Expires" attribute
+            if ($name === 'expires')) {
+                if ($setCookieValue !== -1) {
+                    $header[] = sprintf('%s=%s', $setCookieName, $this->formatExpiresValue($setCookieValue));
+                }
+                continue;
+            }
+
+            // Flag attributes
+            if ($setCookieValue === true) {
+                $header[] = $setCookieName;
+                continue;
+            }
+
+            $header[] = sprintf('%s=%s', $setCookieName, $setCookieValue);
         }
 
-        if ($cookie->offsetExists('expires') && $cookie->offsetGet('expires') !== -1) {
-            $header .= '; Expires=' . $this->formatExpiresValue($cookie->offsetGet('expires'));
-        }
-
-        if ($cookie->offsetExists('max-age') && !empty($cookie->offsetGet('max-age'))) {
-            $header .= '; Max-Age=' . $cookie->offsetGet('max-age');
-        }
-
-        if ($cookie->offsetExists('path') && !empty($cookie->offsetGet('path'))) {
-            $header .= '; Path=' . $cookie->offsetGet('path');
-        }
-
-        if ($cookie->offsetExists('secure') && $cookie->offsetGet('secure') === true) {
-            $header .= '; Secure';
-        }
-
-        if ($cookie->offsetExists('httpOnly') && $cookie->offsetGet('httpOnly') === true) {
-            $header .= '; HttpOnly';
-        }
-
-        if ($cookie->offsetExists('sameSite') && !empty($cookie->offsetGet('sameSite'))) {
-            $header .= '; SameSite=' . $cookie->offsetGet('sameSite');
-        }
-
-        return $header;
+        return implode('; ', $header);
     }
 
     private function formatExpiresValue(mixed $value): string
