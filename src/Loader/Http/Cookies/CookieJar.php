@@ -133,7 +133,7 @@ class CookieJar
             'sameSite' => 'SameSite',
         ];
 
-        $header = [sprintf('%s=%s', $cookie->getName(), $cookie->getValue())];
+        $parts = [sprintf('%s=%s', $cookie->getName(), $cookie->getValue())];
 
         foreach ($attributes as $name => $setCookieName) {
             $setCookieValue = $cookie->offsetGet($name);
@@ -144,7 +144,7 @@ class CookieJar
             // "Expires" attribute
             if ($name === 'expires') {
                 if ($setCookieValue !== -1) {
-                    $header[] = sprintf('%s=%s', $setCookieName, $this->formatExpiresValue($setCookieValue));
+                    $parts[] = sprintf('%s=%s', $setCookieName, $this->formatExpiresValue($setCookieValue));
                 }
                 continue;
             }
@@ -152,15 +152,15 @@ class CookieJar
             // Flag attributes
             if (is_bool($setCookieValue)) {
                 if ($setCookieValue === true) {
-                    $header[] = $setCookieName;
+                    $parts[] = $setCookieName;
                 }
                 continue;
             }
 
-            $header[] = sprintf('%s=%s', $setCookieName, $setCookieValue);
+            $parts[] = sprintf('%s=%s', $setCookieName, $setCookieValue);
         }
 
-        return implode('; ', $header);
+        return implode('; ', $parts);
     }
 
     private function formatExpiresValue(mixed $value): string
