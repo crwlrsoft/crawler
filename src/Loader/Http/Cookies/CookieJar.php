@@ -137,6 +137,7 @@ class CookieJar
 
         foreach ($attributes as $name => $setCookieName) {
             $setCookieValue = $cookie->offsetGet($name);
+
             if (empty($setCookieValue)) {
                 continue;
             }
@@ -146,12 +147,14 @@ class CookieJar
                 if ($setCookieValue !== -1) {
                     $parts[] = sprintf('%s=%s', $setCookieName, $this->formatExpiresValue($setCookieValue));
                 }
+
                 continue;
             }
 
             // Flag attributes
             if ($setCookieValue === true) {
                 $parts[] = $setCookieName;
+
                 continue;
             }
 

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2024-11-05
+### Fixed
+* Improvements for deprecations in PHP 8.4.
+
 ## [2.1.2] - 2024-10-22
 ### Fixed
 * Issue when converting cookie objects received from the chrome-php library.

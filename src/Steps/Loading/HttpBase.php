@@ -106,7 +106,7 @@ abstract class HttpBase extends Step
      *
      * If input is an array with string keys, you can choose a key from that array and map it to an HTTP request header.
      */
-    public function useInputKeyAsHeader(string $key, string $asHeader = null): static
+    public function useInputKeyAsHeader(string $key, ?string $asHeader = null): static
     {
         $asHeader = $asHeader ?? $key;
 

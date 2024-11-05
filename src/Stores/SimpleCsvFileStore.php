@@ -30,7 +30,7 @@ class SimpleCsvFileStore extends Store
         }
 
         if ($this->isFirstResult) {
-            fputcsv($fileHandle, array_keys($result->toArray()));
+            fputcsv($fileHandle, array_keys($result->toArray()), escape: '');
 
             $this->isFirstResult = false;
         }
@@ -41,7 +41,7 @@ class SimpleCsvFileStore extends Store
             $resultArray = $this->flattenResultArray($resultArray);
         }
 
-        fputcsv($fileHandle, array_values($resultArray));
+        fputcsv($fileHandle, array_values($resultArray), escape: '');
 
         fclose($fileHandle);
     }
