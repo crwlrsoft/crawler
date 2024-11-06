@@ -14,7 +14,6 @@ return (new Config())
     ->setRules([
         '@PER-CS' => true,
         'strict_param' => true,
-        'single_class_element_per_statement' => false,
         'array_syntax' => ['syntax' => 'short'],
         'no_unused_imports' => true,
     ])
