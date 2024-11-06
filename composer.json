@@ -50,13 +50,19 @@
         "phpstan/phpstan-mockery": "^1.0",
         "phpstan/extension-installer": "^1.1",
         "phpstan/phpstan-phpunit": "^1.0",
-        "friendsofphp/php-cs-fixer": "^3.6",
+        "friendsofphp/php-cs-fixer": "^3.57",
         "spatie/invade": "^2.0",
         "symfony/process": "^6.0|^7.0"
     },
     "suggest": {
         "ext-zlib": "Needed to uncompress compressed responses"
     },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/otsch"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Crwlr\\Crawler\\": "src/"
