@@ -18,6 +18,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
+          tools: parallel-lint
+
+      - name: Check source code for syntax errors
+        run: composer exec --no-interaction -- parallel-lint bin/ src/ tests/
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
