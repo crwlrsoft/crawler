@@ -2,10 +2,13 @@
 
 namespace Crwlr\Crawler\Steps\Sitemap;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Steps\Dom\XmlDocument;
+use Crwlr\Crawler\Steps\Dom\XmlElement;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
+use Crwlr\Utils\PhpVersion;
 use Generator;
-use Symfony\Component\DomCrawler\Crawler;
 
 class GetUrlsFromSitemap extends Step
 {
@@ -17,10 +20,10 @@ class GetUrlsFromSitemap extends Step
      * Symfony's DomCrawler component has problems when a sitemap's <urlset> tag contains certain attributes.
      * So, if the count of urls in the sitemap is zero, try to remove all attributes from the <urlset> tag.
      */
-    public static function fixUrlSetTag(Crawler $dom): Crawler
+    public static function fixUrlSetTag(XmlDocument $dom): XmlDocument
     {
-        if ($dom->filter('urlset url')->count() === 0) {
-            return new Crawler(preg_replace('/<urlset.+?>/', '<urlset>', $dom->outerHtml()));
+        if ($dom->querySelectorAll('urlset url')->count() === 0) {
+            return new XmlDocument(preg_replace('/<urlset.+?>/', '<urlset>', $dom->outerXml()) ?? $dom->outerXml());
         }
 
         return $dom;
@@ -39,43 +42,46 @@ class GetUrlsFromSitemap extends Step
     }
 
     /**
-     * @param Crawler $input
+     * @param XmlDocument $input
      */
     protected function invoke(mixed $input): Generator
     {
-        $input = self::fixUrlSetTag($input);
+        if (PhpVersion::isBelow(8, 4)) {
+            $input = self::fixUrlSetTag($input);
+        }
 
-        foreach ($input->filter('urlset url') as $urlNode) {
-            $urlNode = new Crawler($urlNode);
-
-            if ($urlNode->children('loc')->first()->count() > 0) {
+        foreach ($input->querySelectorAll('urlset url') as $urlNode) {
+            if ($urlNode->querySelector('loc')) {
                 if ($this->withData) {
                     yield $this->getWithAdditionalData($urlNode);
                 } else {
-                    yield $urlNode->children('loc')->first()->text();
+                    yield $urlNode->querySelector('loc')->text();
                 }
             }
         }
     }
 
+    /**
+     * @throws MissingZlibExtensionException
+     */
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        return $this->validateAndSanitizeToDomCrawlerInstance($input);
+        return $this->validateAndSanitizeToXmlDocumentInstance($input);
     }
 
     /**
      * @return string[]
      */
-    protected function getWithAdditionalData(Crawler $urlNode): array
+    protected function getWithAdditionalData(XmlElement $urlNode): array
     {
-        $data = ['url' => $urlNode->children('loc')->first()->text()];
+        $data = ['url' => $urlNode->querySelector('loc')?->text() ?? ''];
 
         $properties = ['lastmod', 'changefreq', 'priority'];
 
         foreach ($properties as $property) {
-            $node = $urlNode->children($property)->first();
+            $node = $urlNode->querySelector($property);
 
-            if ($node->count() > 0) {
+            if ($node) {
                 $data[$property] = $node->text();
             }
         }

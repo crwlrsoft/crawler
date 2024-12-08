@@ -2,41 +2,46 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Dom\DomDocument;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
+use Crwlr\Crawler\Steps\Dom\Node;
+use Crwlr\Crawler\Steps\Dom\NodeList;
+use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Html\CssSelector;
-use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
+use Crwlr\Html2Text\Exceptions\InvalidHtmlException;
 use Exception;
 use Generator;
 use InvalidArgumentException;
-use Symfony\Component\DomCrawler\Crawler;
 
 abstract class Dom extends Step
 {
     protected bool $root = false;
 
-    protected ?DomQueryInterface $each = null;
+    protected ?DomQuery $each = null;
 
-    protected ?DomQueryInterface $first = null;
+    protected ?DomQuery $first = null;
 
-    protected ?DomQueryInterface $last = null;
+    protected ?DomQuery $last = null;
 
     /**
-     * @var array<int|string, string|DomQueryInterface|Dom>
+     * @var array<int|string, string|DomQuery|Dom>
      */
     protected array $mapping = [];
 
-    protected null|string|DomQueryInterface $singleSelector = null;
+    protected null|string|DomQuery $singleSelector = null;
 
     protected ?string $baseUrl = null;
 
     /**
-     * @param string|DomQueryInterface|array<int|string, string|DomQueryInterface> $selectorOrMapping
+     * @param string|DomQuery|array<int|string, string|DomQuery> $selectorOrMapping
      */
-    final public function __construct(
-        string|DomQueryInterface|array $selectorOrMapping = [],
-    ) {
+    final public function __construct(string|DomQuery|array $selectorOrMapping = [])
+    {
         $this->extract($selectorOrMapping);
     }
 
@@ -49,7 +54,7 @@ abstract class Dom extends Step
         return $instance;
     }
 
-    public static function each(string|DomQueryInterface $domQuery): static
+    public static function each(string|DomQuery $domQuery): static
     {
         $instance = new static();
 
@@ -58,7 +63,7 @@ abstract class Dom extends Step
         return $instance;
     }
 
-    public static function first(string|DomQueryInterface $domQuery): static
+    public static function first(string|DomQuery $domQuery): static
     {
         $instance = new static();
 
@@ -67,7 +72,7 @@ abstract class Dom extends Step
         return $instance;
     }
 
-    public static function last(string|DomQueryInterface $domQuery): static
+    public static function last(string|DomQuery $domQuery): static
     {
         $instance = new static();
 
@@ -86,18 +91,20 @@ abstract class Dom extends Step
 
     /**
      * @throws InvalidDomQueryException
+     * @deprecated As the usage of XPath queries is no longer an option with the new DOM API introduced in
+     *             PHP 8.4, please switch to using CSS selectors instead!
      */
     public static function xPath(string $query): XPathQuery
     {
         return new XPathQuery($query);
     }
 
-    abstract protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface;
+    abstract protected function makeDefaultDomQueryInstance(string $query): DomQuery;
 
     /**
-     * @param string|DomQueryInterface|array<string|DomQueryInterface|Dom> $selectorOrMapping
+     * @param string|DomQuery|array<string|DomQuery|Dom> $selectorOrMapping
      */
-    public function extract(string|DomQueryInterface|array $selectorOrMapping): static
+    public function extract(string|DomQuery|array $selectorOrMapping): static
     {
         if (is_array($selectorOrMapping)) {
             $this->mapping = $selectorOrMapping;
@@ -108,18 +115,6 @@ abstract class Dom extends Step
         return $this;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    protected function validateAndSanitizeInput(mixed $input): Crawler
-    {
-        if ($input instanceof RespondedRequest) {
-            $this->baseUrl = $input->effectiveUri();
-        }
-
-        return new Crawler($this->validateAndSanitizeStringOrHttpResponse($input));
-    }
-
     public function outputType(): StepOutputType
     {
         return empty($this->mapping) && $this->singleSelector ?
@@ -128,14 +123,14 @@ abstract class Dom extends Step
     }
 
     /**
-     * @param Crawler $input
+     * @param HtmlDocument|Node $input
      * @throws Exception
      */
     protected function invoke(mixed $input): Generator
     {
         $base = $this->getBase($input);
 
-        if ($base->count() === 0) {
+        if (!$base || ($base instanceof NodeList && $base->count() === 0)) {
             return;
         }
 
@@ -143,16 +138,35 @@ abstract class Dom extends Step
             yield from $this->singleSelector($base);
         } else {
             if ($this->each) {
-                foreach ($base as $element) {
-                    yield $this->mapProperties(new Crawler($element));
+                if ($base instanceof NodeList) {
+                    foreach ($base as $element) {
+                        yield $this->mapProperties($element);
+                    }
                 }
-            } else {
+            } elseif ($base instanceof Node) {
                 yield $this->mapProperties($base);
             }
         }
     }
 
-    protected function singleSelector(Crawler $domCrawler): Generator
+
+    /**
+     * @throws InvalidArgumentException|MissingZlibExtensionException
+     */
+    protected function validateAndSanitizeInput(mixed $input): HtmlDocument|XmlDocument
+    {
+        if ($input instanceof RespondedRequest) {
+            $this->baseUrl = $input->effectiveUri();
+        }
+
+        return new HtmlDocument($this->validateAndSanitizeStringOrHttpResponse($input));
+    }
+
+    /**
+     * @throws InvalidHtmlException
+     * @throws Exception
+     */
+    protected function singleSelector(Node|NodeList $nodeOrNodeList): Generator
     {
         if ($this->singleSelector === null) {
             return;
@@ -166,7 +180,15 @@ abstract class Dom extends Step
             $domQuery->setBaseUrl($this->baseUrl);
         }
 
-        $outputs = $domQuery->apply($domCrawler);
+        if ($nodeOrNodeList instanceof NodeList) {
+            $outputs = [];
+
+            foreach ($nodeOrNodeList as $node) {
+                $outputs[] = $domQuery->apply($node);
+            }
+        } else {
+            $outputs = $domQuery->apply($nodeOrNodeList);
+        }
 
         if (is_array($outputs)) {
             foreach ($outputs as $output) {
@@ -181,7 +203,7 @@ abstract class Dom extends Step
      * @return mixed[]
      * @throws Exception
      */
-    protected function mapProperties(Crawler $domCrawler): array
+    protected function mapProperties(Node $node): array
     {
         $mappedProperties = [];
 
@@ -189,7 +211,7 @@ abstract class Dom extends Step
             if ($domQuery instanceof Dom) {
                 $domQuery->baseUrl = $this->baseUrl;
 
-                $mappedProperties[$key] = iterator_to_array($domQuery->invoke($domCrawler));
+                $mappedProperties[$key] = iterator_to_array($domQuery->invoke($node));
             } else {
                 if (is_string($domQuery)) {
                     $domQuery = $this->makeDefaultDomQueryInstance($domQuery);
@@ -199,7 +221,7 @@ abstract class Dom extends Step
                     $domQuery->setBaseUrl($this->baseUrl);
                 }
 
-                $mappedProperties[$key] = $domQuery->apply($domCrawler);
+                $mappedProperties[$key] = $domQuery->apply($node);
             }
         }
 
@@ -209,16 +231,22 @@ abstract class Dom extends Step
     /**
      * @throws Exception
      */
-    protected function getBase(Crawler $domCrawler): Crawler
+    protected function getBase(DomDocument|Node $document): null|Node|NodeList
     {
         if ($this->root) {
-            return $domCrawler;
+            return $document;
         } elseif ($this->each) {
-            return $this->each->filter($domCrawler);
+            return $this->each instanceof CssSelector ?
+                $document->querySelectorAll($this->each->query) :
+                $document->queryXPath($this->each->query);
         } elseif ($this->first) {
-            return $this->first->filter($domCrawler)->first();
+            return $this->first instanceof CssSelector ?
+                $document->querySelector($this->first->query) :
+                $document->queryXPath($this->first->query)->first();
         } elseif ($this->last) {
-            return $this->last->filter($domCrawler)->last();
+            return $this->last instanceof CssSelector ?
+                $document->querySelectorAll($this->last->query)->last() :
+                $document->queryXPath($this->last->query)->last();
         }
 
         throw new Exception('Invalid state: no base selector');

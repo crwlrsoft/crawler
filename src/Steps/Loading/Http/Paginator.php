@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading\Http;
 
-use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\QueryParamsPaginator;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\SimpleWebsitePaginator;
@@ -15,7 +15,7 @@ class Paginator
      * @throws InvalidDomQueryException
      */
     public static function simpleWebsite(
-        string|DomQueryInterface $paginationLinksSelector,
+        string|DomQuery $paginationLinksSelector,
         int $maxPages = self::MAX_PAGES_DEFAULT,
     ): SimpleWebsitePaginator {
         return new SimpleWebsitePaginator($paginationLinksSelector, $maxPages);

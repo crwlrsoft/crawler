@@ -2,14 +2,18 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
+use Crwlr\Crawler\Steps\Dom\HtmlElement;
+use Crwlr\Crawler\Steps\Dom\Node;
+use Crwlr\Crawler\Steps\Dom\NodeList;
+use Crwlr\Crawler\Steps\Dom\XmlElement;
 use Crwlr\Html2Text\Exceptions\InvalidHtmlException;
 use Crwlr\Html2Text\Html2Text;
 use Crwlr\Url\Url;
 use Exception;
 use InvalidArgumentException;
-use Symfony\Component\DomCrawler\Crawler;
 
-abstract class DomQuery implements DomQueryInterface
+abstract class DomQuery
 {
     public ?string $attributeName = null;
 
@@ -38,41 +42,20 @@ abstract class DomQuery implements DomQueryInterface
     ) {}
 
     /**
-     * When there is a <base> tag with a href attribute in an HTML document all links in the document must be resolved
-     * against that base url. This method finds the base href in a document if there is one.
-     */
-    public static function getBaseHrefFromDocument(Crawler $document): ?string
-    {
-        $baseTag = $document->filter('base');
-
-        if ($baseTag->count() > 0) {
-            // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-            // "If multiple <base> elements are used, only the first href and first target are obeyed..."
-            $href = $baseTag->first()->attr('href');
-
-            if (!empty($href)) {
-                return $href;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * @return string[]|string|null
      * @throws InvalidHtmlException|Exception
      */
-    public function apply(Crawler $domCrawler): array|string|null
+    public function apply(Node $node): array|string|null
     {
-        if ($this->toAbsoluteUrl) {
-            $baseHref = self::getBaseHrefFromDocument($domCrawler);
+        if ($this->toAbsoluteUrl && $node instanceof HtmlDocument) {
+            $baseHref = $node->getBaseHref();
 
             if ($baseHref) {
                 $this->setBaseUrl($baseHref);
             }
         }
 
-        $filtered = $this->filter($domCrawler);
+        $filtered = $this->filter($node);
 
         if ($this->filtersMatches()) {
             $filtered = $this->filterMatches($filtered);
@@ -87,7 +70,11 @@ abstract class DomQuery implements DomQueryInterface
                 return $this->getTarget($element);
             });
         } elseif ($filtered->count() === 1) {
-            return $this->getTarget($filtered);
+            $node = $filtered->first();
+
+            if ($node instanceof HtmlElement || $node instanceof XmlElement) {
+                return $this->getTarget($node);
+            }
         }
 
         return null;
@@ -157,13 +144,6 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
-    public function innerText(): self
-    {
-        $this->target = SelectorTarget::InnerText;
-
-        return $this;
-    }
-
     public function attribute(string $attributeName): self
     {
         $this->target = SelectorTarget::Attribute;
@@ -226,6 +206,8 @@ abstract class DomQuery implements DomQueryInterface
         return $this;
     }
 
+    abstract protected function filter(Node $node): NodeList;
+
     protected function filtersMatches(): bool
     {
         return $this->onlyFirstMatch ||
@@ -235,31 +217,45 @@ abstract class DomQuery implements DomQueryInterface
             $this->onlyOddMatches;
     }
 
-    protected function filterMatches(Crawler $domCrawler): ?Crawler
+    /**
+     * @return NodeList|null
+     * @throws Exception
+     */
+    protected function filterMatches(NodeList $matches): NodeList|null
     {
         if (
-            $domCrawler->count() === 0 ||
-            ($this->onlyNthMatch !== false && $domCrawler->count() < $this->onlyNthMatch)
+            $matches->count() === 0 ||
+            ($this->onlyNthMatch !== false && $matches->count() < $this->onlyNthMatch)
         ) {
             return null;
         }
 
         if ($this->onlyFirstMatch) {
-            return $domCrawler->first();
+            $node = $matches->first();
+
+            return $node ? new NodeList([$node]) : new NodeList([]);
         } elseif ($this->onlyLastMatch) {
-            return $domCrawler->last();
+            $node = $matches->last();
+
+            return $node ? new NodeList([$node]) : new NodeList([]);
         } elseif ($this->onlyNthMatch !== false) {
-            return new Crawler($domCrawler->getNode($this->onlyNthMatch - 1));
+            $node = $matches->nth($this->onlyNthMatch);
+
+            return $node ? new NodeList([$node]) : new NodeList([]);
         } elseif ($this->onlyEvenMatches || $this->onlyOddMatches) {
-            return $this->filterEvenOrOdd($domCrawler);
+            return $this->filterEvenOrOdd($matches);
         }
 
         return null;
     }
 
-    protected function filterEvenOrOdd(Crawler $domCrawler): Crawler
+    /**
+     * @param NodeList $domCrawler
+     * @return NodeList
+     */
+    protected function filterEvenOrOdd(NodeList $domCrawler): NodeList
     {
-        $newDomCrawler = new Crawler();
+        $nodes = [];
 
         $i = 1;
 
@@ -268,32 +264,38 @@ abstract class DomQuery implements DomQueryInterface
                 ($this->onlyEvenMatches && $i % 2 === 0) ||
                 ($this->onlyOddMatches && $i % 2 !== 0)
             ) {
-                $newDomCrawler->addNode($node);
+                $nodes[] = $node;
             }
 
             $i++;
         }
 
-        return $newDomCrawler;
+        return new NodeList($nodes);
     }
 
     /**
      * @throws InvalidHtmlException
      * @throws Exception
      */
-    protected function getTarget(Crawler $filtered): string
+    protected function getTarget(HtmlElement|XmlElement $node): string
     {
         if ($this->target === SelectorTarget::FormattedText) {
             if (!$this->html2TextConverter) {
                 $this->html2TextConverter = new Html2Text();
             }
 
-            $target = $this->html2TextConverter->convertHtmlToText($filtered->outerHtml());
+            $target = $this->html2TextConverter->convertHtmlToText(
+                $node instanceof HtmlElement ? $node->outerHtml() : $node->outerXml(),
+            );
+        } elseif ($this->target === SelectorTarget::Html) {
+            $target = $node instanceof HtmlElement ? trim($node->innerHtml()) : trim($node->innerXml());
+        } elseif ($this->target === SelectorTarget::OuterHtml) {
+            $target = $node instanceof HtmlElement ? trim($node->outerHtml()) : trim($node->outerXml());
         } else {
             $target = trim(
                 $this->attributeName ?
-                    $filtered->attr($this->attributeName) :
-                    $filtered->{strtolower($this->target->name)}(),
+                    $node->getAttribute($this->attributeName) :
+                    $node->{strtolower($this->target->name)}(),
             );
         }
 

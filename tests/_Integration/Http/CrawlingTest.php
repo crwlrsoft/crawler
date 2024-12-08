@@ -10,6 +10,7 @@ use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Http\Politeness\TimingUnits\MultipleOf;
 use Crwlr\Crawler\Result;
+use Crwlr\Crawler\Steps\Dom\HtmlElement;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
@@ -151,9 +152,8 @@ it('stays on the same domain when method sameDomain() is called', function () {
 
     $crawler->runAndTraverse();
 
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://foo.example.com/crawling/main-on-subdomain');
-
-    expect($crawler->getLoader()->loadedUrls)->not()->toContain('https://www.crwlr.software/packages/crawler');
+    expect($crawler->getLoader()->loadedUrls)->toContain('http://foo.example.com/crawling/main-on-subdomain')
+        ->and($crawler->getLoader()->loadedUrls)->not()->toContain('https://www.crwlr.software/packages/crawler');
 });
 
 it('stays on the same host when method sameHost() is called', function () {
@@ -177,19 +177,13 @@ it('crawls every page of a website that is linked somewhere', function () {
 
     $crawler->runAndTraverse();
 
-    expect($crawler->getLoader()->loadedUrls)->toHaveCount(6);
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
+    expect($crawler->getLoader()->loadedUrls)->toHaveCount(6)
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
 });
 
 it('crawls only to a certain depth when the crawl depth is defined', function () {
@@ -254,13 +248,10 @@ it('loads only pages where the path starts with a certain string when method pat
 
     $crawler->runAndTraverse();
 
-    expect($crawler->getLoader()->loadedUrls)->toHaveCount(3);
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sitemap.xml');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1');
+    expect($crawler->getLoader()->loadedUrls)->toHaveCount(3)
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sitemap.xml')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1');
 });
 
 it('loads only URLs where the path matches a regex when method pathMatches() is used', function () {
@@ -294,13 +285,10 @@ it('loads only URLs where the Closure passed to method customFilter() returns tr
 
     $crawler->runAndTraverse();
 
-    expect($crawler->getLoader()->loadedUrls)->toHaveCount(4);
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1');
-
-    expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
+    expect($crawler->getLoader()->loadedUrls)->toHaveCount(4)
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub1/sub1')
+        ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
 });
 
 it(
@@ -311,22 +299,18 @@ it(
             ->input('http://www.example.com/crawling/main')
             ->addStep(
                 Http::crawl()
-                    ->customFilter(function (Url $url, ?\Symfony\Component\DomCrawler\Crawler $linkElement) {
+                    ->customFilter(function (Url $url, ?HtmlElement $linkElement) {
                         return $linkElement && str_contains($linkElement->text(), 'Subpage 2');
                     }),
             );
 
         $crawler->runAndTraverse();
 
-        expect($crawler->getLoader()->loadedUrls)->toHaveCount(4);
-
-        expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main');
-
-        expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2');
-
-        expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1');
-
-        expect($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
+        expect($crawler->getLoader()->loadedUrls)->toHaveCount(4)
+            ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/main')
+            ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2')
+            ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1')
+            ->and($crawler->getLoader()->loadedUrls)->toContain('http://www.example.com/crawling/sub2/sub1/sub1');
     },
 );
 
@@ -345,9 +329,8 @@ it(
 
         $results = helper_generatorToArray($crawler->run());
 
-        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
-
-        expect($results)->toHaveCount(3);
+        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7)
+            ->and($results)->toHaveCount(3);
     },
 );
 
@@ -366,9 +349,8 @@ it(
 
         $results = helper_generatorToArray($crawler->run());
 
-        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
-
-        expect($results)->toHaveCount(2);
+        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7)
+            ->and($results)->toHaveCount(2);
     },
 );
 
@@ -393,9 +375,8 @@ it(
 
         $results = helper_generatorToArray($crawler->run());
 
-        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7);
-
-        expect($results)->toHaveCount(3);
+        expect($crawler->getLoader()->loadedUrls)->toHaveCount(7)
+            ->and($results)->toHaveCount(3);
     },
 );
 

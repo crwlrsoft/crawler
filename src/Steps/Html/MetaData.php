@@ -2,11 +2,11 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
-use DOMElement;
 use Generator;
-use Symfony\Component\DomCrawler\Crawler;
 
 class MetaData extends Step
 {
@@ -31,14 +31,13 @@ class MetaData extends Step
     }
 
     /**
-     * @param Crawler $input
+     * @param HtmlDocument $input
      */
     protected function invoke(mixed $input): Generator
     {
         $data = $this->addToData([], 'title', $this->getTitle($input));
 
-        foreach ($input->filter('meta') as $metaElement) {
-            /** @var DOMElement $metaElement */
+        foreach ($input->querySelectorAll('meta') as $metaElement) {
             $metaName = $metaElement->getAttribute('name');
 
             if (empty($metaName)) {
@@ -46,24 +45,27 @@ class MetaData extends Step
             }
 
             if (!empty($metaName) && (empty($this->onlyKeys) || in_array($metaName, $this->onlyKeys, true))) {
-                $data = $this->addToData($data, $metaName, $metaElement->getAttribute('content'));
+                $data = $this->addToData($data, $metaName, $metaElement->getAttribute('content') ?? '');
             }
         }
 
         yield $data;
     }
 
+    /**
+     * @throws MissingZlibExtensionException
+     */
     protected function validateAndSanitizeInput(mixed $input): mixed
     {
-        return $this->validateAndSanitizeToDomCrawlerInstance($input);
+        return $this->validateAndSanitizeToHtmlDocumentInstance($input);
     }
 
-    protected function getTitle(Crawler $document): string
+    protected function getTitle(HtmlDocument $document): string
     {
-        $titleElement = $document->filter('title');
+        $titleElement = $document->querySelector('title');
 
-        if ($titleElement->count() > 0) {
-            return $titleElement->first()->text();
+        if ($titleElement) {
+            return $titleElement->text();
         }
 
         return '';

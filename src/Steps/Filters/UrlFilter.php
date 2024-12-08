@@ -5,7 +5,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 use Crwlr\Crawler\Steps\Filters\Enums\UrlFilterRule;
 use Exception;
 
-class UrlFilter extends Filter
+class UrlFilter extends AbstractFilter
 {
     public function __construct(protected readonly UrlFilterRule $filterRule, protected readonly string $filterString) {}
 

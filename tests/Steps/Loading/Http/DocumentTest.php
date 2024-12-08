@@ -3,12 +3,12 @@
 namespace tests\Steps\Loading\Http;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Loading\Http\Document;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Symfony\Component\DomCrawler\Crawler;
 
-it('creates a symfony DomCrawler instance from a RespondedRequest', function () {
+it('creates a HtmlDocument instance from a RespondedRequest', function () {
     $body = '<html><head><title>foo</title></head><body>hello</body></html>';
 
     $respondedRequest = new RespondedRequest(
@@ -18,9 +18,8 @@ it('creates a symfony DomCrawler instance from a RespondedRequest', function () 
 
     $document = new Document($respondedRequest);
 
-    expect($document->dom())->toBeInstanceOf(Crawler::class);
-
-    expect($document->dom()->outerHtml())->toBe('<html><head><title>foo</title></head><body>hello</body></html>');
+    expect($document->dom())->toBeInstanceOf(HtmlDocument::class)
+        ->and($document->dom()->outerHtml())->toBe('<html><head><title>foo</title></head><body>hello</body></html>');
 });
 
 it('returns the effectiveUri as url()', function () {

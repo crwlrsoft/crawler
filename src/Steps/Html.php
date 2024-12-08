@@ -2,8 +2,11 @@
 
 namespace Crwlr\Crawler\Steps;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Html\CssSelector;
-use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Html\GetLinks;
@@ -39,9 +42,23 @@ class Html extends Dom
     }
 
     /**
+     * @param mixed $input
+     * @return HtmlDocument
+     * @throws MissingZlibExtensionException
+     */
+    protected function validateAndSanitizeInput(mixed $input): HtmlDocument
+    {
+        if ($input instanceof RespondedRequest) {
+            $this->baseUrl = $input->effectiveUri();
+        }
+
+        return $this->validateAndSanitizeToHtmlDocumentInstance($input);
+    }
+
+    /**
      * @throws InvalidDomQueryException
      */
-    protected function makeDefaultDomQueryInstance(string $query): DomQueryInterface
+    protected function makeDefaultDomQueryInstance(string $query): DomQuery
     {
         return new CssSelector($query);
     }

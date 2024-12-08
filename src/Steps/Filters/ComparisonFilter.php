@@ -5,7 +5,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 use Crwlr\Crawler\Steps\Filters\Enums\ComparisonFilterRule;
 use Exception;
 
-class ComparisonFilter extends Filter
+class ComparisonFilter extends AbstractFilter
 {
     public function __construct(
         protected readonly ComparisonFilterRule $filterRule,

@@ -2,7 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Loading\Http\Paginators\StopRules;
 
-use Crwlr\Crawler\Steps\Html\DomQueryInterface;
+use Crwlr\Crawler\Steps\Html\DomQuery;
 
 class PaginatorStopRules
 {
@@ -16,12 +16,12 @@ class PaginatorStopRules
         return new IsEmptyInJson($dotNotationKey);
     }
 
-    public static function isEmptyInHtml(string|DomQueryInterface $selector): IsEmptyInHtml
+    public static function isEmptyInHtml(string|DomQuery $selector): IsEmptyInHtml
     {
         return new IsEmptyInHtml($selector);
     }
 
-    public static function isEmptyInXml(string|DomQueryInterface $selector): IsEmptyInXml
+    public static function isEmptyInXml(string|DomQuery $selector): IsEmptyInXml
     {
         return new IsEmptyInXml($selector);
     }

@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Html\Exceptions;
 
+use DOMException;
 use Exception;
 use Symfony\Component\CssSelector\Exception\ExpressionErrorException;
 use Symfony\Component\CssSelector\Exception\SyntaxErrorException;
@@ -23,6 +24,19 @@ class InvalidDomQueryException extends Exception
         string $domQuery,
         ExpressionErrorException|SyntaxErrorException $originalException,
     ): self {
+        $exception = new self(
+            $originalException->getMessage(),
+            $originalException->getCode(),
+            $originalException,
+        );
+
+        $exception->setDomQuery($domQuery);
+
+        return $exception;
+    }
+
+    public static function fromDomException(string $domQuery, DOMException $originalException): self
+    {
         $exception = new self(
             $originalException->getMessage(),
             $originalException->getCode(),

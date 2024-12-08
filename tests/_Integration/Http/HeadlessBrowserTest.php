@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\LoaderInterface;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Loading\Http\Browser\BrowserAction;
@@ -15,7 +16,6 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
@@ -43,7 +43,7 @@ class GetJsonFromResponseHtmlBody extends Step
     {
         $html = Http::getBodyString($input->response);
 
-        $jsonString = (new Crawler($html))->filter('body pre')->text();
+        $jsonString = (new HtmlDocument($html))->querySelector('body pre')?->text() ?? '';
 
         yield json_decode($jsonString, true);
     }
@@ -55,7 +55,7 @@ class GetStringFromResponseHtmlBody extends Step
     {
         $html = Http::getBodyString($input->response);
 
-        yield (new Crawler($html))->filter('body')->text();
+        yield (new HtmlDocument($html))->querySelector('body')?->text() ?? '';
     }
 }
 

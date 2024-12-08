@@ -6,6 +6,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2024-12-x
+The primary change in version 3.0.0 is that the library now leverages PHP 8.4’s new DOM API when used in an environment with PHP >= 8.4. To maintain compatibility with PHP < 8.4, an abstraction layer has been implemented. This layer dynamically uses either the Symfony DomCrawler component or the new DOM API, depending on the PHP version.
+
+Since no direct interaction with an instance of the Symfony DomCrawler library was required at the step level provided by the library, it is highly likely that you won’t need to make any changes to your code to upgrade to v3. To ensure a smooth transition, please review the points under “Changed.”
+
+If you're using XPath queries for data extraction, please try to switch to using CSS selectors instead, because XPath is no longer supported by the new DOM API. Therefor XPath related functionality was deprecated in this version of the library and will probably be removed in the next major version.
+
+### Changed
+* The `DomQuery::innerText()` method (a.k.a. `Dom::cssSelector('...')->innerText()`) has been removed. `innerText` exists only in the Symfony DomCrawler component, and its usefulness is questionable. If you still require this variant of the DOM element text, please let us know or create a pull request yourself. Thank you!
+* The `DomQueryInterface` was removed. As the `DomQuery` class offers a lot more functionality than the interface defines, the purpose of the interface was questionable. Please use the abstract `DomQuery` class instead. This also means that some method signatures, type hinting the interface, have changed. Look for occurences of `DomQueryInterface` and replace them.
+* The visibility of the `DomQuery::filter()` method was changed from public to protected. It is still needed in the `DomQuery` class, but outside of it, it is probably better and easier to directly use the new DOM abstraction (see the `src/Steps/Dom` directory). If you are extending the `DomQuery` class (which is not recommended), be aware that the argument now takes a `Node` (from the new DOM abstraction) instead of a Symfony `Crawler`.
+* The `Step::validateAndSanitizeToDomCrawlerInstance()` method was removed. Please use the `Step::validateAndSanitizeToHtmlDocumentInstance()` and `Step::validateAndSanitizeToXmlDocumentInstance()` methods instead.
+* The second argument in `Closure`s passed to the `Http::crawl()->customFilter()` has changed from an instance of Symfony `Crawler` class, to an `HtmlElement` instance from the new DOM abstraction (`Crwlr\Crawler\Steps\Dom\HtmlElement`).
+* The second argument in `Closure`s passed to the `Http::crawl()->customFilter()` has changed from an instance of Symfony `Crawler` class, to an `HtmlElement` instance from the new DOM abstraction (`Crwlr\Crawler\Steps\Dom\HtmlElement`).
+* The Filter class was split into `AbstractFilter` (base class for actual filter classes) and `Filter` only hosting the static function for easy instantiation, because otherwise each filter class also has all the static methods.
+* Further, the signatures of some methods that are mainly here for internal usage, have changed due to the new DOM abstraction:
+  * The static `GetLink::isSpecialNonHttpLink()` method now needs an instance of `HtmlElement` instead of a Symfony `Crawler`.
+  * `GetUrlsFromSitemap::fixUrlSetTag()` now takes an `XmlDocument` instead of a Symfony `Crawler`.
+  * The `DomQuery::apply()` method now takes a `Node` instead of a Symfony `Crawler`.
+
+### Deprecated
+* `Dom::xPath()` method and
+* the `XPathQuery` class as well as
+* the new `Node::queryXPath()` method.
+
+### Added
+* New step output filter `Filter::arrayHasElement()`. When a step produces array output with a property being a numeric array, you can now filter outputs by checking if one element of that array property, matches certain filter criteria. Example: The outputs look like `['foo' => 'bar', 'baz' => ['one', 'two', 'three']]`. You can filter all outputs where `baz` contains `two` like: `Filter::arrayHasElement()->where('baz', Filter::equal('two'))`.
+
 ## [2.1.3] - 2024-11-05
 ### Fixed
 * Improvements for deprecations in PHP 8.4.

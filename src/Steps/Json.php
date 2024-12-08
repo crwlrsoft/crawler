@@ -3,10 +3,10 @@
 namespace Crwlr\Crawler\Steps;
 
 use Adbar\Dot;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Utils\Json as JsonUtil;
 use Crwlr\Utils\Exceptions\InvalidJsonException;
 use Generator;
-use Symfony\Component\DomCrawler\Crawler;
 use Throwable;
 
 class Json extends Step
@@ -89,7 +89,7 @@ class Json extends Step
             // If headless browser is used in loader, the JSON in the response body is wrapped in an HTML document.
             if (str_contains($input, '<html') || str_contains($input, '<HTML')) {
                 try {
-                    $bodyText = (new Crawler($input))->filter('body')->text();
+                    $bodyText = (new HtmlDocument($input))->querySelector('body')?->text() ?? '';
 
                     return JsonUtil::stringToArray($bodyText);
                 } catch (Throwable) {

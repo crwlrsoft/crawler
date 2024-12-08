@@ -4,8 +4,8 @@ namespace Crwlr\Crawler\Steps\Loading\Http\Paginators;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Dom;
+use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQuery;
-use Crwlr\Crawler\Steps\Html\DomQueryInterface;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Utils\RequestKey;
@@ -13,7 +13,6 @@ use Crwlr\Url\Url;
 use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DomCrawler\Crawler;
 
 class SimpleWebsitePaginator extends Http\AbstractPaginator
 {
@@ -27,7 +26,7 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
      */
     protected array $loadedUrls = [];
 
-    protected DomQueryInterface $paginationLinksSelector;
+    protected DomQuery $paginationLinksSelector;
 
     protected string $latestRequestKey = '';
 
@@ -39,7 +38,7 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
     /**
      * @throws InvalidDomQueryException
      */
-    public function __construct(string|DomQueryInterface $paginationLinksSelector, int $maxPages = 1000)
+    public function __construct(string|DomQuery $paginationLinksSelector, int $maxPages = 1000)
     {
         if (is_string($paginationLinksSelector)) {
             $this->paginationLinksSelector = Dom::cssSelector($paginationLinksSelector);
@@ -114,25 +113,24 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
     {
         $responseBody = Http::getBodyString($respondedRequest);
 
-        $dom = new Crawler($responseBody);
+        $document = new Dom\HtmlDocument($responseBody);
 
-        $paginationLinksElements = $this->paginationLinksSelector->filter($dom);
+        $paginationLinksElements = $this->paginationLinksSelector instanceof CssSelector ?
+            $document->querySelectorAll($this->paginationLinksSelector->query) :
+            $document->queryXPath($this->paginationLinksSelector->query);
 
         foreach ($paginationLinksElements as $paginationLinksElement) {
-            $paginationLinksElement = new Crawler($paginationLinksElement);
-
+            /** @var Dom\HtmlElement $paginationLinksElement */
             $this->addFoundUrlFromLinkElement(
                 $paginationLinksElement,
-                $dom,
+                $document,
                 $respondedRequest->effectiveUri(),
             );
 
-            foreach ($paginationLinksElement->filter('a') as $linkInPaginationLinksElement) {
-                $linkInPaginationLinksElement = new Crawler($linkInPaginationLinksElement);
-
+            foreach ($paginationLinksElement->querySelectorAll('a') as $linkInPaginationLinksElement) {
                 $this->addFoundUrlFromLinkElement(
                     $linkInPaginationLinksElement,
-                    $dom,
+                    $document,
                     $respondedRequest->effectiveUri(),
                 );
             }
@@ -143,8 +141,8 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
      * @throws Exception
      */
     protected function addFoundUrlFromLinkElement(
-        Crawler $linkElement,
-        Crawler $document,
+        Dom\HtmlElement $linkElement,
+        Dom\HtmlDocument $document,
         string $documentUrl,
     ): void {
         if ($this->isRelevantLinkElement($linkElement)) {
@@ -158,30 +156,30 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
      * @throws Exception
      */
     protected function getAbsoluteUrlFromLinkElement(
-        Crawler $linkElement,
-        Crawler $document,
+        Dom\HtmlElement $linkElement,
+        Dom\HtmlDocument $document,
         string $documentUrl,
     ): string {
         $baseUrl = Url::parse($documentUrl);
 
-        $baseHref = DomQuery::getBaseHrefFromDocument($document);
+        $baseHref = $document->getBaseHref();
 
         if ($baseHref) {
             $baseUrl = $baseUrl->resolve($baseHref);
         }
 
-        $linkHref = $linkElement->attr('href') ?? '';
+        $linkHref = $linkElement->getAttribute('href') ?? '';
 
         return $baseUrl->resolve($linkHref)->__toString();
     }
 
-    protected function isRelevantLinkElement(Crawler $element): bool
+    protected function isRelevantLinkElement(Dom\HtmlElement $element): bool
     {
         if ($element->nodeName() !== 'a') {
             return false;
         }
 
-        $href = $element->attr('href');
+        $href = $element->getAttribute('href');
 
         return !empty($href) && !str_starts_with($href, '#');
     }

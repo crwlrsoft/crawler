@@ -5,7 +5,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 use Crwlr\Crawler\Steps\Filters\Enums\StringLengthFilterRule;
 use Exception;
 
-class StringLengthFilter extends Filter
+class StringLengthFilter extends AbstractFilter
 {
     public function __construct(
         protected readonly StringLengthFilterRule $filterRule,

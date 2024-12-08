@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Html;
 
 use Adbar\Dot;
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Generator;
@@ -48,6 +49,9 @@ class SchemaOrg extends Step
         return StepOutputType::AssociativeArrayOrObject;
     }
 
+    /**
+     * @param string $input
+     */
     protected function invoke(mixed $input): Generator
     {
         $data = \Crwlr\SchemaOrg\SchemaOrg::fromHtml($input, $this->logger);
@@ -63,6 +67,9 @@ class SchemaOrg extends Step
         }
     }
 
+    /**
+     * @throws MissingZlibExtensionException
+     */
     protected function validateAndSanitizeInput(mixed $input): string
     {
         return $this->validateAndSanitizeStringOrHttpResponse($input);
