@@ -28,6 +28,28 @@ jobs:
       - name: Run integration tests
         run: composer test-integration
 
+  tests84:
+    name: PestPHP Tests Running only on PHP >= 8.4
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: [ '8.4' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests
+        run: composer test-php84
+
   stanAndCs:
     name: Static Analysis (phpstan) and Code Style (PHP CS Fixer)
     runs-on: ubuntu-latest

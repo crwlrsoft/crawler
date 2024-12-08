@@ -10,10 +10,9 @@ use Crwlr\Crawler\Io;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
-use Crwlr\Crawler\Steps\Filters\FilterInterface;
+use Crwlr\Crawler\Steps\Filters\Filterable;
 use Crwlr\Crawler\Steps\Refiners\RefinerInterface;
 use Crwlr\Crawler\Utils\OutputTypeHelper;
-use Exception;
 use Generator;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -24,6 +23,8 @@ use Psr\Log\LoggerInterface;
 
 abstract class BaseStep implements StepInterface
 {
+    use Filterable;
+
     /**
      * true means: keep the whole output array/object
      * string: keep that one key from the (array/object) output
@@ -68,11 +69,6 @@ abstract class BaseStep implements StepInterface
      * @var array<int|string, true>
      */
     protected array $uniqueOutputKeys = [];
-
-    /**
-     * @var FilterInterface[]
-     */
-    protected array $filters = [];
 
     /**
      * @var array<Closure|RefinerInterface|array{ key: string, refiner: Closure|RefinerInterface}>
@@ -179,47 +175,6 @@ abstract class BaseStep implements StepInterface
     public function uniqueOutputs(?string $key = null): static
     {
         $this->uniqueOutput = $key ?? true;
-
-        return $this;
-    }
-
-    public function where(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
-    {
-        if (is_string($keyOrFilter) && $filter === null) {
-            throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
-        } elseif (is_string($keyOrFilter)) {
-            if ($this->isOutputKeyAlias($keyOrFilter)) {
-                $keyOrFilter = $this->getOutputKeyAliasRealKey($keyOrFilter);
-            }
-
-            $filter->useKey($keyOrFilter);
-
-            $this->filters[] = $filter;
-        } else {
-            $this->filters[] = $keyOrFilter;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function orWhere(string|FilterInterface $keyOrFilter, ?FilterInterface $filter = null): static
-    {
-        if (empty($this->filters)) {
-            throw new Exception('No where before orWhere');
-        } elseif (is_string($keyOrFilter) && $filter === null) {
-            throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
-        } elseif (is_string($keyOrFilter)) {
-            $filter->useKey($keyOrFilter);
-        } else {
-            $filter = $keyOrFilter;
-        }
-
-        $lastFilter = end($this->filters);
-
-        $lastFilter->addOr($filter);
 
         return $this;
     }
@@ -534,29 +489,6 @@ abstract class BaseStep implements StepInterface
             $this->uniqueInputKeys[$key] = true; // Don't keep value, just the key, to keep memory usage low.
         } else {
             $this->uniqueOutputKeys[$key] = true;
-        }
-
-        return true;
-    }
-
-    protected function passesAllFilters(mixed $output): bool
-    {
-        foreach ($this->filters as $filter) {
-            if (!$filter->evaluate($output)) {
-                if ($filter->getOr()) {
-                    $orFilter = $filter->getOr();
-
-                    while ($orFilter) {
-                        if ($orFilter->evaluate($output)) {
-                            continue 2;
-                        }
-
-                        $orFilter = $orFilter->getOr();
-                    }
-                }
-
-                return false;
-            }
         }
 
         return true;

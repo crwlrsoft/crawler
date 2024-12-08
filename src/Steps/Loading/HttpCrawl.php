@@ -4,14 +4,16 @@ namespace Crwlr\Crawler\Steps\Loading;
 
 use Closure;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Dom\HtmlElement;
+use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use Crwlr\Crawler\Steps\Loading\Http\Document;
 use Crwlr\Crawler\Steps\Sitemap\GetUrlsFromSitemap;
+use Crwlr\Utils\PhpVersion;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
 use Psr\Http\Message\UriInterface;
-use Symfony\Component\DomCrawler\Crawler;
 use Throwable;
 
 class HttpCrawl extends Http
@@ -254,12 +256,16 @@ class HttpCrawl extends Http
      */
     protected function getUrlsFromSitemap(RespondedRequest $respondedRequest): array
     {
-        $domCrawler = GetUrlsFromSitemap::fixUrlSetTag(new Crawler(Http::getBodyString($respondedRequest)));
+        $document = new XmlDocument(Http::getBodyString($respondedRequest));
+
+        if (PhpVersion::isBelow(8, 4)) {
+            $document = GetUrlsFromSitemap::fixUrlSetTag($document);
+        }
 
         $urls = [];
 
-        foreach ($domCrawler->filter('urlset url loc') as $url) {
-            $url = $this->handleUrlFragment(Url::parse($url->textContent));
+        foreach ($document->querySelectorAll('urlset url loc') as $url) {
+            $url = $this->handleUrlFragment(Url::parse($url->text()));
 
             if (!$this->isOnSameHostOrDomain($url)) {
                 continue;
@@ -291,17 +297,15 @@ class HttpCrawl extends Http
 
         $urls = [];
 
-        foreach ($document->dom()->filter('a') as $link) {
-            $linkElement = new Crawler($link);
-
-            if (GetLink::isSpecialNonHttpLink($linkElement)) {
+        foreach ($document->dom()->querySelectorAll('a') as $link) {
+            if (GetLink::isSpecialNonHttpLink($link)) {
                 continue;
             }
 
             try {
-                $url = $this->handleUrlFragment($document->baseUrl()->resolve($linkElement->attr('href') ?? ''));
+                $url = $this->handleUrlFragment($document->baseUrl()->resolve($link->getAttribute('href') ?? ''));
             } catch (Throwable) {
-                $this->logger?->warning('Failed to resolve a link with href: ' . $linkElement->attr('href'));
+                $this->logger?->warning('Failed to resolve a link with href: ' . $link->getAttribute('href'));
 
                 continue;
             }
@@ -310,7 +314,7 @@ class HttpCrawl extends Http
                 continue;
             }
 
-            $matchesCriteria = $this->matchesCriteriaBesidesHostOrDomain($url, $linkElement);
+            $matchesCriteria = $this->matchesCriteriaBesidesHostOrDomain($url, $link);
 
             if (!$matchesCriteria && !$this->loadAll) {
                 continue;
@@ -410,7 +414,7 @@ class HttpCrawl extends Http
     /**
      * @throws Exception
      */
-    protected function matchesAllCriteria(Url $url, ?Crawler $linkElement = null): bool
+    protected function matchesAllCriteria(Url $url, ?HtmlElement $linkElement = null): bool
     {
         return $this->isOnSameHostOrDomain($url) && $this->matchesCriteriaBesidesHostOrDomain($url, $linkElement);
     }
@@ -418,7 +422,7 @@ class HttpCrawl extends Http
     /**
      * @throws Exception
      */
-    protected function matchesCriteriaBesidesHostOrDomain(Url $url, ?Crawler $linkElement = null): bool
+    protected function matchesCriteriaBesidesHostOrDomain(Url $url, ?HtmlElement $linkElement = null): bool
     {
         return $this->matchesPathCriteria($url) &&
             $this->matchesCustomCriteria($url, $linkElement);
@@ -451,7 +455,7 @@ class HttpCrawl extends Http
             ($this->pathRegex === null || preg_match($this->pathRegex, $path) === 1);
     }
 
-    protected function matchesCustomCriteria(Url $url, ?Crawler $linkElement): bool
+    protected function matchesCustomCriteria(Url $url, ?HtmlElement $linkElement): bool
     {
         return $this->customClosure === null || $this->customClosure->call($this, $url, $linkElement);
     }

@@ -29,11 +29,9 @@ it('returns single strings when extract is called with a selector only', functio
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(4);
-
-    expect($output[0]->get())->toBe('Everyday Italian');
-
-    expect($output[3]->get())->toBe('Learning XML');
+    expect($output)->toHaveCount(4)
+        ->and($output[0]->get())->toBe('Everyday Italian')
+        ->and($output[3]->get())->toBe('Learning XML');
 });
 
 it('extracts data from an HTML document with CSS selectors by default', function () {
@@ -42,23 +40,19 @@ it('extracts data from an HTML document with CSS selectors by default', function
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(4);
-
-    expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
-    );
-
-    expect($output[1]->get())->toBe(['title' => 'Harry Potter', 'author' => 'J K. Rowling', 'year' => '2005']);
-
-    expect($output[2]->get())->toBe(
-        [
-            'title' => 'XQuery Kick Start',
-            'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003',
-        ],
-    );
-
-    expect($output[3]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
+    expect($output)->toHaveCount(4)
+        ->and($output[0]->get())->toBe(
+            ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
+        )
+        ->and($output[1]->get())->toBe(['title' => 'Harry Potter', 'author' => 'J K. Rowling', 'year' => '2005'])
+        ->and($output[2]->get())->toBe(
+            [
+                'title' => 'XQuery Kick Start',
+                'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
+                'year' => '2003',
+            ],
+        )
+        ->and($output[3]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
 });
 
 it('can also extract data using XPath queries', function () {
@@ -71,15 +65,14 @@ it('can also extract data using XPath queries', function () {
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(4);
-
-    expect($output[2]->get())->toBe(
-        [
-            'title' => 'XQuery Kick Start',
-            'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
-            'year' => '2003',
-        ],
-    );
+    expect($output)->toHaveCount(4)
+        ->and($output[2]->get())->toBe(
+            [
+                'title' => 'XQuery Kick Start',
+                'author' => ['James McGovern', 'Per Bothner', 'Kurt Cagle', 'James Linn', 'Vaidyanathan Nagarajan'],
+                'year' => '2003',
+            ],
+        );
 });
 
 it('returns only one (compound) output when the root method is used', function () {
@@ -88,9 +81,8 @@ it('returns only one (compound) output when the root method is used', function (
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(1);
-
-    expect($output[0]->get()['title'])->toBe(['Everyday Italian', 'Harry Potter', 'XQuery Kick Start', 'Learning XML']);
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->get()['title'])->toBe(['Everyday Italian', 'Harry Potter', 'XQuery Kick Start', 'Learning XML']);
 });
 
 it('extracts the data of the first matching element when the first method is used', function () {
@@ -99,11 +91,10 @@ it('extracts the data of the first matching element when the first method is use
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(1);
-
-    expect($output[0]->get())->toBe(
-        ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
-    );
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->get())->toBe(
+            ['title' => 'Everyday Italian', 'author' => 'Giada De Laurentiis', 'year' => '2005'],
+        );
 });
 
 it('extracts the data of the last matching element when the last method is used', function () {
@@ -112,9 +103,8 @@ it('extracts the data of the last matching element when the last method is used'
         helper_getHtmlContent('bookstore.html'),
     );
 
-    expect($output)->toHaveCount(1);
-
-    expect($output[0]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->get())->toBe(['title' => 'Learning XML', 'author' => 'Erik T. Ray', 'year' => '2003']);
 });
 
 test(
@@ -140,30 +130,29 @@ test(
             $response,
         );
 
-        expect($output)->toHaveCount(1);
-
-        expect($output[0]->get())->toBe([
-            'title' => 'Some Meetup',
-            'location' => 'Somewhere',
-            'date' => '2023-01-14 21:00',
-            'talks' => [
-                [
-                    'title' => 'Sophisticated talk title',
-                    'speaker' => 'Super Mario',
-                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk1.pdf',
+        expect($output)->toHaveCount(1)
+            ->and($output[0]->get())->toBe([
+                'title' => 'Some Meetup',
+                'location' => 'Somewhere',
+                'date' => '2023-01-14 21:00',
+                'talks' => [
+                    [
+                        'title' => 'Sophisticated talk title',
+                        'speaker' => 'Super Mario',
+                        'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk1.pdf',
+                    ],
+                    [
+                        'title' => 'Simple beginner talk',
+                        'speaker' => 'Luigi',
+                        'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk2.pdf',
+                    ],
+                    [
+                        'title' => 'Fun talk',
+                        'speaker' => 'Princess Peach',
+                        'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk3.pdf',
+                    ],
                 ],
-                [
-                    'title' => 'Simple beginner talk',
-                    'speaker' => 'Luigi',
-                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk2.pdf',
-                ],
-                [
-                    'title' => 'Fun talk',
-                    'speaker' => 'Princess Peach',
-                    'slides' => 'https://www.example.com/meetups/some-meetup/slides/talk3.pdf',
-                ],
-            ],
-        ]);
+            ]);
     },
 );
 

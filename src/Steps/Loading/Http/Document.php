@@ -3,16 +3,15 @@
 namespace Crwlr\Crawler\Steps\Loading\Http;
 
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
-use Crwlr\Crawler\Steps\Html\DomQuery;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use Exception;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DomCrawler\Crawler;
 
 final class Document
 {
-    private Crawler $dom;
+    private HtmlDocument $dom;
 
     private Url $url;
 
@@ -26,12 +25,12 @@ final class Document
     ) {
         $responseBody = Http::getBodyString($this->respondedRequest);
 
-        $this->dom = new Crawler($responseBody);
+        $this->dom = new HtmlDocument($responseBody);
 
         $this->setBaseUrl();
     }
 
-    public function dom(): Crawler
+    public function dom(): HtmlDocument
     {
         return $this->dom;
     }
@@ -49,10 +48,10 @@ final class Document
     public function canonicalUrl(): string
     {
         if ($this->canonicalUrl === null) {
-            $canonicalLinkElement = $this->dom->filter('link[rel=canonical]')->first();
+            $canonicalLinkElement = $this->dom->querySelector('link[rel=canonical]');
 
-            if ($canonicalLinkElement->count() > 0) {
-                $canonicalHref = $canonicalLinkElement->first()->attr('href');
+            if ($canonicalLinkElement) {
+                $canonicalHref = $canonicalLinkElement->getAttribute('href');
 
                 if ($canonicalHref) {
                     try {
@@ -77,7 +76,7 @@ final class Document
 
         $this->baseUrl = $this->url;
 
-        $documentBaseHref = DomQuery::getBaseHrefFromDocument($this->dom);
+        $documentBaseHref = $this->dom->getBaseHref();
 
         if ($documentBaseHref) {
             try {

@@ -24,11 +24,9 @@ it('gets all urls from a sitemap XML', function () {
 
     $outputs = helper_invokeStepWithInput(Sitemap::getUrlsFromSitemap(), $xml);
 
-    expect($outputs)->toHaveCount(9);
-
-    expect($outputs[0]->get())->toBe('https://www.crwlr.software/');
-
-    expect($outputs[8]->get())->toBe('https://www.crwlr.software/blog/prevent-homograph-attacks-in-user-input-urls');
+    expect($outputs)->toHaveCount(9)
+        ->and($outputs[0]->get())->toBe('https://www.crwlr.software/')
+        ->and($outputs[8]->get())->toBe('https://www.crwlr.software/blog/prevent-homograph-attacks-in-user-input-urls');
 });
 
 it('gets all urls with additional data when the withData() method is used', function () {
@@ -43,25 +41,22 @@ it('gets all urls with additional data when the withData() method is used', func
 
     $outputs = helper_invokeStepWithInput(Sitemap::getUrlsFromSitemap()->withData(), $xml);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe([
-        'url' => 'https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-5',
-        'lastmod' => '2022-09-03',
-        'priority' => '1',
-    ]);
-
-    expect($outputs[1]->get())->toBe([
-        'url' => 'https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php',
-        'lastmod' => '2022-06-02',
-        'priority' => '1',
-    ]);
-
-    expect($outputs[2]->get())->toBe([
-        'url' => 'https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-4',
-        'lastmod' => '2022-05-10',
-        'priority' => '0.7',
-    ]);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe([
+            'url' => 'https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-5',
+            'lastmod' => '2022-09-03',
+            'priority' => '1',
+        ])
+        ->and($outputs[1]->get())->toBe([
+            'url' => 'https://www.crwlr.software/blog/dealing-with-http-url-query-strings-in-php',
+            'lastmod' => '2022-06-02',
+            'priority' => '1',
+        ])
+        ->and($outputs[2]->get())->toBe([
+            'url' => 'https://www.crwlr.software/blog/whats-new-in-crwlr-crawler-v0-4',
+            'lastmod' => '2022-05-10',
+            'priority' => '0.7',
+        ]);
 });
 
 it('doesn\'t fail when sitemap is empty', function () {

@@ -2,10 +2,16 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Steps\Dom\Node;
+use Crwlr\Crawler\Steps\Dom\NodeList;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use DOMDocument;
 use DOMXPath;
-use Symfony\Component\DomCrawler\Crawler;
+
+/**
+ * @deprecated As the usage of XPath queries is no longer an option with the new DOM API introduced in
+ *              PHP 8.4, please switch to using CSS selectors instead!
+ */
 
 class XPathQuery extends DomQuery
 {
@@ -19,9 +25,9 @@ class XPathQuery extends DomQuery
         parent::__construct($query);
     }
 
-    public function filter(Crawler $domCrawler): Crawler
+    protected function filter(Node $node): NodeList
     {
-        return $domCrawler->filterXPath($this->query);
+        return $node->queryXPath($this->query);
     }
 
     /**

@@ -2,14 +2,14 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Exception;
 use Generator;
-use Symfony\Component\DomCrawler\Crawler;
 
 class GetLinks extends GetLink
 {
     /**
-     * @param Crawler $input
+     * @param HtmlDocument $input
      * @return Generator<string>
      * @throws Exception
      */
@@ -23,7 +23,7 @@ class GetLinks extends GetLink
             $selector = new CssSelector($selector);
         }
 
-        foreach ($selector->filter($input) as $link) {
+        foreach ($input->querySelectorAll($selector->query) as $link) {
             $linkUrl = $this->getLinkUrl($link);
 
             if ($linkUrl) {

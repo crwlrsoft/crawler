@@ -5,7 +5,7 @@ namespace Crwlr\Crawler\Steps\Filters;
 use Closure;
 use Exception;
 
-class ClosureFilter extends Filter
+class ClosureFilter extends AbstractFilter
 {
     public function __construct(
         protected readonly Closure $closure,

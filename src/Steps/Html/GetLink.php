@@ -2,17 +2,18 @@
 
 namespace Crwlr\Crawler\Steps\Html;
 
+use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
+use Crwlr\Crawler\Steps\Dom\HtmlElement;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\Url\Url;
-use DOMNode;
 use Exception;
 use Generator;
 use InvalidArgumentException;
-use Symfony\Component\DomCrawler\Crawler;
 
 class GetLink extends Step
 {
@@ -44,9 +45,9 @@ class GetLink extends Step
         $this->selector = is_string($selector) ? new CssSelector($selector) : $selector;
     }
 
-    public static function isSpecialNonHttpLink(Crawler $linkElement): bool
+    public static function isSpecialNonHttpLink(HtmlElement $linkElement): bool
     {
-        $href = $linkElement->attr('href') ?? '';
+        $href = $linkElement->getAttribute('href') ?? '';
 
         return str_starts_with($href, 'mailto:') ||
             str_starts_with($href, 'tel:') ||
@@ -58,7 +59,10 @@ class GetLink extends Step
         return StepOutputType::Scalar;
     }
 
-    protected function validateAndSanitizeInput(mixed $input): Crawler
+    /**
+     * @throws MissingZlibExtensionException
+     */
+    protected function validateAndSanitizeInput(mixed $input): HtmlDocument
     {
         if (!$input instanceof RespondedRequest) {
             throw new InvalidArgumentException('Input must be an instance of RespondedRequest.');
@@ -66,11 +70,11 @@ class GetLink extends Step
 
         $this->baseUri = Url::parse($input->effectiveUri());
 
-        return new Crawler(Http::getBodyString($input));
+        return new HtmlDocument(Http::getBodyString($input));
     }
 
     /**
-     * @param Crawler $input
+     * @param HtmlDocument $input
      * @return Generator<string>
      * @throws Exception
      */
@@ -84,7 +88,7 @@ class GetLink extends Step
             $selector = new CssSelector($selector);
         }
 
-        foreach ($selector->filter($input) as $link) {
+        foreach ($input->querySelectorAll($selector->query) as $link) {
             $linkUrl = $this->getLinkUrl($link);
 
             if ($linkUrl) {
@@ -166,9 +170,9 @@ class GetLink extends Step
     /**
      * @throws Exception
      */
-    protected function getBaseFromDocument(Crawler $document): void
+    protected function getBaseFromDocument(HtmlDocument $document): void
     {
-        $baseHref = DomQuery::getBaseHrefFromDocument($document);
+        $baseHref = $document->getBaseHref();
 
         if (!empty($baseHref)) {
             $this->baseUri = $this->baseUri->resolve($baseHref);
@@ -178,22 +182,20 @@ class GetLink extends Step
     /**
      * @throws Exception
      */
-    protected function getLinkUrl(DOMNode $link): ?Url
+    protected function getLinkUrl(HtmlElement $link): ?Url
     {
-        if ($link->nodeName !== 'a') {
-            $this->logger?->warning('Selector matched <' . $link->nodeName . '> html element. Ignored it.');
+        if ($link->nodeName() !== 'a') {
+            $this->logger?->warning('Selector matched <' . $link->nodeName() . '> html element. Ignored it.');
 
             return null;
         }
-
-        $link = new Crawler($link);
 
         if (self::isSpecialNonHttpLink($link)) {
             return null;
         }
 
         $linkUrl = $this->handleUrlFragment(
-            $this->baseUri->resolve($link->attr('href') ?? ''),
+            $this->baseUri->resolve($link->getAttribute('href') ?? ''),
         );
 
         if ($this->matchesAdditionalCriteria($linkUrl)) {

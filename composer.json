@@ -40,7 +40,7 @@
         "guzzlehttp/guzzle": "^7.4",
         "adbario/php-dot-notation": "^3.1",
         "chrome-php/chrome": "^1.7",
-        "crwlr/utils": "^1.1",
+        "crwlr/utils": "^1.2",
         "crwlr/html-2-text": "^0.1.0"
     },
     "require-dev": {
@@ -74,7 +74,8 @@
         }
     },
     "scripts": {
-        "test": "pest --exclude-group integration --display-warnings --bail",
+        "test": "pest --exclude-group integration,php84 --display-warnings --bail",
+        "test-php84": "pest --group php84 --display-warnings --bail",
         "test-integration": "pest --group integration --display-warnings --bail",
         "stan": "@php -d memory_limit=4G vendor/bin/phpstan analyse",
         "cs": "php-cs-fixer fix -v --dry-run",

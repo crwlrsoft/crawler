@@ -2,13 +2,13 @@
 
 namespace tests\Steps\Filters;
 
-use Crwlr\Crawler\Steps\Filters\Filter;
+use Crwlr\Crawler\Steps\Filters\AbstractFilter;
 use Exception;
 use InvalidArgumentException;
 
 use function tests\helper_getStdClassWithData;
 
-class TestFilter extends Filter
+class TestFilter extends AbstractFilter
 {
     public string $value = '';
 

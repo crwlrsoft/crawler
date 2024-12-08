@@ -7,6 +7,8 @@ use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Output;
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
+use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Url\Url;
 use Exception;
@@ -14,7 +16,6 @@ use Generator;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
-use Symfony\Component\DomCrawler\Crawler;
 
 abstract class Step extends BaseStep
 {
@@ -175,11 +176,21 @@ abstract class Step extends BaseStep
     /**
      * @throws MissingZlibExtensionException
      */
-    protected function validateAndSanitizeToDomCrawlerInstance(
+    protected function validateAndSanitizeToHtmlDocumentInstance(
         mixed $inputValue,
         string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
-    ): Crawler {
-        return new Crawler($this->validateAndSanitizeStringOrHttpResponse($inputValue, $exceptionMessage));
+    ): HtmlDocument {
+        return new HtmlDocument($this->validateAndSanitizeStringOrHttpResponse($inputValue, $exceptionMessage));
+    }
+
+    /**
+     * @throws MissingZlibExtensionException
+     */
+    protected function validateAndSanitizeToXmlDocumentInstance(
+        mixed $inputValue,
+        string $exceptionMessage = 'Input must be string, stringable or HTTP response (RespondedRequest)',
+    ): XmlDocument {
+        return new XmlDocument($this->validateAndSanitizeStringOrHttpResponse($inputValue, $exceptionMessage));
     }
 
     protected function getSingleElementFromArray(mixed $inputValue): mixed

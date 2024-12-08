@@ -2,9 +2,10 @@
 
 namespace tests\Steps\Html;
 
+use Crwlr\Crawler\Steps\Dom\HtmlDocument;
+use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
-use Symfony\Component\DomCrawler\Crawler;
 
 use function tests\helper_getSimpleListHtml;
 
@@ -15,25 +16,19 @@ it('throws an exception when created with an invalid XPath query', function () {
 test('The apply method returns a string for a single match', function () {
     $xml = '<item>test</item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->apply($domCrawler))->toBe('test');
+    expect((new XPathQuery('//item'))->apply(new XmlDocument($xml)))->toBe('test');
 });
 
 test('The apply method returns an array of strings for multiple matches', function () {
-    $xml = '<item>test</item><item>test 2 <test>sub</test></item><item>test 3</item>';
+    $html = '<item>test</item><item>test 2 <test>sub</test></item><item>test 3</item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->apply($domCrawler))->toBe(['test', 'test 2 sub', 'test 3']);
+    expect((new XPathQuery('//item'))->apply(new HtmlDocument($html)))->toBe(['test', 'test 2 sub', 'test 3']);
 });
 
 test('The apply method returns null if nothing matches', function () {
     $xml = '<item>test</item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//aitem'))->apply($domCrawler))->toBeNull();
+    expect((new XPathQuery('//aitem'))->apply(new XmlDocument($xml)))->toBeNull();
 });
 
 it('trims whitespace', function () {
@@ -43,133 +38,89 @@ it('trims whitespace', function () {
         </item>
         XML;
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->apply($domCrawler))->toBe('test');
-});
-
-test('The filter method returns the filtered Symfony DOM Crawler instance', function () {
-    $xml = '<items><item match="1">one</item><item match="1">two</item><item>three</item></items>';
-
-    $domCrawler = new Crawler($xml);
-
-    $filtered = (new XPathQuery('//items/item[@match=\'1\']'))->filter($domCrawler);
-
-    expect($filtered)->toBeInstanceOf(Crawler::class);
-
-    expect($filtered->count())->toBe(2);
-
-    expect($filtered->first()->outerHtml())->toBe('<item match="1">one</item>');
-
-    expect($filtered->last()->outerHtml())->toBe('<item match="1">two</item>');
+    expect((new XPathQuery('//item'))->apply(new XmlDocument($xml)))->toBe('test');
 });
 
 it('contains inner tags when the html method is called', function () {
     $xml = '<item>test <sub>sub</sub></item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->html()->apply($domCrawler))->toBe('test <sub>sub</sub>');
+    expect((new XPathQuery('//item'))->html()->apply(new XmlDocument($xml)))->toBe('test <sub>sub</sub>');
 });
 
 it('contains also the outer tag when the outerHtml method is called', function () {
     $xml = '<item>test <sub>sub</sub></item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->outerHtml()->apply($domCrawler))->toBe('<item>test <sub>sub</sub></item>');
-});
-
-it('does not contain text of children when innerText is called', function () {
-    $xml = '<item>test <sub>sub</sub></item>';
-
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->innerText()->apply($domCrawler))->toBe('test');
+    expect((new XPathQuery('//item'))->outerHtml()->apply(new XmlDocument($xml)))->toBe('<item>test <sub>sub</sub></item>');
 });
 
 it('gets the contents of an attribute using the attribute method', function () {
     $xml = '<item attr="content">test</item>';
 
-    $domCrawler = new Crawler($xml);
-
-    expect((new XPathQuery('//item'))->attribute('attr')->apply($domCrawler))->toBe('content');
+    expect((new XPathQuery('//item'))->attribute('attr')->apply(new XmlDocument($xml)))->toBe('content');
 });
 
 it('turns the value into an absolute url when toAbsoluteUrl() is called', function () {
-    $html = '<item>/foo/bar</item>';
+    $xml = '<item>/foo/bar</item>';
 
-    $domCrawler = new Crawler($html);
+    $document = new XmlDocument($xml);
 
     $query = (new XPathQuery('//item'))
         ->setBaseUrl('https://www.example.com');
 
-    expect($query->apply($domCrawler))->toBe('/foo/bar');
+    expect($query->apply($document))->toBe('/foo/bar');
 
     $query->toAbsoluteUrl();
 
-    expect($query->apply($domCrawler))->toBe('https://www.example.com/foo/bar');
+    expect($query->apply($document))->toBe('https://www.example.com/foo/bar');
 });
 
 it('gets an absolute link from the href attribute of a link element, when the link() method is called', function () {
     $html = '<div id="foo"><a class="bar" href="/foo/bar">Foo</a></div>';
 
-    $domCrawler = new Crawler($html);
+    $document = new HtmlDocument($html);
 
     $selector = (new XPathQuery('//*[@id=\'foo\']/a[@class=\'bar\']'))
         ->setBaseUrl('https://www.example.com/');
 
-    expect($selector->apply($domCrawler))->toBe('Foo');
+    expect($selector->apply($document))->toBe('Foo');
 
     $selector->link();
 
-    expect($selector->apply($domCrawler))->toBe('https://www.example.com/foo/bar');
+    expect($selector->apply($document))->toBe('https://www.example.com/foo/bar');
 });
 
 it('gets only the first matching element when the first() method is called', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->first();
 
-    expect($selector->apply($domCrawler))->toBe('one');
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBe('one');
 });
 
 it('gets only the last matching element when the last() method is called', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->last();
 
-    expect($selector->apply($domCrawler))->toBe('four');
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBe('four');
 });
 
 it('gets only the nth matching element when the nth() method is called', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->nth(3);
 
-    expect($selector->apply($domCrawler))->toBe('three');
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBe('three');
 });
 
 it('returns null when no nth matching element exists', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->nth(5);
 
-    expect($selector->apply($domCrawler))->toBeNull();
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBeNull();
 });
 
 it('gets only even matching elements when the even() method is called', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->even();
 
-    expect($selector->apply($domCrawler))->toBe(['two', 'four']);
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBe(['two', 'four']);
 });
 
 it('gets only odd matching elements when the odd() method is called', function () {
-    $domCrawler = new Crawler(helper_getSimpleListHtml());
-
     $selector = (new XPathQuery("//*[@id = 'list']/*[contains(@class, 'item')]"))->odd();
 
-    expect($selector->apply($domCrawler))->toBe(['one', 'three']);
+    expect($selector->apply(new HtmlDocument(helper_getSimpleListHtml())))->toBe(['one', 'three']);
 });
