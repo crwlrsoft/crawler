@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Dom;
 use Crwlr\Utils\PhpVersion;
 use DOMNode;
 use Symfony\Component\DomCrawler\Crawler;
+
 use const DOM\HTML_NO_DEFAULT_NS;
 
 /**
