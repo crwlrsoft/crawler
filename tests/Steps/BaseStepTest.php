@@ -830,7 +830,7 @@ it('runs a sub crawler for a certain output property', function () {
 
     $results = helper_invokeStepWithInput($step, [
         'foo' => 'hey',
-        'bar' => '<html><head></head><body><h1>Hello World!</h1></body>',
+        'bar' => '<!doctype html><html><head></head><body><h1>Hello World!</h1></body>',
     ]);
 
     expect($results)->toHaveCount(1)
@@ -847,14 +847,15 @@ test('when a sub crawler returns multiple results, they are an array in the pare
     });
 
     $html = <<<HTML
-<html>
-<head></head>
-<body>
-<div class="item"><h3>one</h3></div>
-<div class="item"><h3>two</h3></div>
-<div class="item"><h3>three</h3></div>
-</body>
-HTML;
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+        <div class="item"><h3>one</h3></div>
+        <div class="item"><h3>two</h3></div>
+        <div class="item"><h3>three</h3></div>
+        </body>
+        HTML;
 
     $results = helper_invokeStepWithInput($step, ['foo' => 'hey', 'bar' => $html, 'baz' => 'yo']);
 
@@ -883,9 +884,9 @@ it('runs a sub crawler with multiple inputs, when defined property is array', fu
     $results = helper_invokeStepWithInput($step, [
         'foo' => 'hey',
         'bar' => [
-            '<html><head></head><body><h1>No. 1</h1></body>',
-            '<html><head></head><body><h1>No. 2</h1></body>',
-            '<html><head></head><body><h1>No. 3</h1></body>',
+            '<!doctype html><html><head></head><body><h1>No. 1</h1></body>',
+            '<!doctype html><html><head></head><body><h1>No. 2</h1></body>',
+            '<!doctype html><html><head></head><body><h1>No. 3</h1></body>',
         ],
         'baz' => 'yo',
     ]);

@@ -6,12 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2024-12-10
+### Undeprecated
+* Removed deprecations for all XPath functionality (`Dom::xPath()`, `XPathQuery` class and `Node::queryXPath()`), because it's still available with the net DOM API in PHP 8.4.
+
 ## [3.0.0] - 2024-12-08
 The primary change in version 3.0.0 is that the library now leverages PHP 8.4’s new DOM API when used in an environment with PHP >= 8.4. To maintain compatibility with PHP < 8.4, an abstraction layer has been implemented. This layer dynamically uses either the Symfony DomCrawler component or the new DOM API, depending on the PHP version.
 
 Since no direct interaction with an instance of the Symfony DomCrawler library was required at the step level provided by the library, it is highly likely that you won’t need to make any changes to your code to upgrade to v3. To ensure a smooth transition, please review the points under “Changed.”
-
-If you're using XPath queries for data extraction, please try to switch to using CSS selectors instead, because XPath is no longer supported by the new DOM API. Therefor XPath related functionality was deprecated in this version of the library and will probably be removed in the next major version.
 
 ### Changed
 * __BREAKING__: The `DomQuery::innerText()` method (a.k.a. `Dom::cssSelector('...')->innerText()`) has been removed. `innerText` exists only in the Symfony DomCrawler component, and its usefulness is questionable. If you still require this variant of the DOM element text, please let us know or create a pull request yourself. Thank you!

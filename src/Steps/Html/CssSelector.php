@@ -27,7 +27,7 @@ final class CssSelector extends DomQuery
             }
         } else {
             try {
-                (new HtmlDocument('<p></p>'))->querySelector($query);
+                (new HtmlDocument('<!doctype html><html></html>'))->querySelector($query);
             } catch (DOMException $exception) {
                 throw InvalidDomQueryException::fromDomException($query, $exception);
             }

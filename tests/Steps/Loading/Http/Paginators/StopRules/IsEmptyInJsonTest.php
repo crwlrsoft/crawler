@@ -19,7 +19,7 @@ it('throws an exception when response is not valid JSON', function () {
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.crwl.io/'),
-        new Response(body: '<html></html>'),
+        new Response(body: '<!doctype html><html></html>'),
     );
 
     expect($rule->shouldStop($respondedRequest->request, $respondedRequest))->toBeTrue();

@@ -7,7 +7,7 @@ use Crwlr\Crawler\Steps\Dom\HtmlElement;
 use Crwlr\Crawler\Steps\Dom\NodeList;
 
 it('gets the href of a base tag in the document', function () {
-    $html = '<html><head><title>foo</title><base href="/foo/bar" /></head><body>hello</body></html>';
+    $html = '<!doctype html><html><head><title>foo</title><base href="/foo/bar" /></head><body>hello</body></html>';
 
     $document = new HtmlDocument($html);
 
@@ -16,6 +16,7 @@ it('gets the href of a base tag in the document', function () {
 
 it('gets the href of the first base tag in the document', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head>
             <title>foo</title>
@@ -32,7 +33,7 @@ it('gets the href of the first base tag in the document', function () {
 });
 
 test('getBaseHref() returns null if the document does not contain a base tag', function () {
-    $html = '<html><head><title>foo</title></head><body>hey</body></html>';
+    $html = '<!doctype html><html><head><title>foo</title></head><body>hey</body></html>';
 
     $document = new HtmlDocument($html);
 
@@ -40,7 +41,7 @@ test('getBaseHref() returns null if the document does not contain a base tag', f
 });
 
 test('the querySelector() method returns an HtmlElement object', function () {
-    $html = '<html><head><title>foo</title></head><body><div class="element">hello</div></body></html>';
+    $html = '<!doctype html><html><head><title>foo</title></head><body><div class="element">hello</div></body></html>';
 
     $document = new HtmlDocument($html);
 
@@ -48,7 +49,7 @@ test('the querySelector() method returns an HtmlElement object', function () {
 });
 
 test('the querySelectorAll() method returns a NodeList of HtmlElement objects', function () {
-    $html = '<html><head><title>foo</title></head><body><ul><li>foo</li><li>bar</li></ul></body></html>';
+    $html = '<!doctype html><html><head><title>foo</title></head><body><ul><li>foo</li><li>bar</li></ul></body></html>';
 
     $document = new HtmlDocument($html);
 
@@ -68,7 +69,7 @@ test('the querySelectorAll() method returns a NodeList of HtmlElement objects', 
 });
 
 test('the queryXPath() method returns a NodeList of HtmlElement objects', function () {
-    $html = '<html><head><title>foo</title></head><body><ul><li>foo</li><li>bar</li></ul></body></html>';
+    $html = '<!doctype html><html><head><title>foo</title></head><body><ul><li>foo</li><li>bar</li></ul></body></html>';
 
     $document = new HtmlDocument($html);
 

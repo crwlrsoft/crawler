@@ -47,10 +47,6 @@ abstract class Node
         return $this->makeNodeListInstance($this->node->querySelectorAll($selector));
     }
 
-    /**
-     * @deprecated As the usage of XPath queries is no longer an option with the new DOM API introduced in
-     *             PHP 8.4, please switch to using CSS selectors instead!
-     */
     public function queryXPath(string $query): NodeList
     {
         $node = $this->node;
@@ -107,12 +103,24 @@ abstract class Node
             return $this->node->outerHtml();
         }
 
+        if ($this->node instanceof Document) {
+            $node = $this->node->documentElement;
+
+            if ($this->node instanceof \Dom\HTMLDocument) {
+                return $this->node->saveHTML($node);
+            } elseif ($this->node instanceof \Dom\XMLDocument) {
+                return $this->node->saveXML($node);
+            }
+        }
+
         $parentDocument = $this->getParentDocumentOfNode($this->node);
 
-        if ($parentDocument instanceof \Dom\HTMLDocument) {
-            return $parentDocument->saveHTML($this->node);
-        } elseif ($parentDocument instanceof \Dom\XMLDocument) {
-            return $parentDocument->saveXML($this->node);
+        if ($parentDocument) {
+            if ($parentDocument instanceof \Dom\HTMLDocument) {
+                return $parentDocument->saveHTML($this->node);
+            } elseif ($parentDocument instanceof \Dom\XMLDocument) {
+                return $parentDocument->saveXML($this->node);
+            }
         }
 
         return $this->node->innerHTML;
