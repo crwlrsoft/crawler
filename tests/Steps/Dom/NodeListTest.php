@@ -11,6 +11,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 it('can be constructed from a symfony Crawler instance', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -40,6 +41,7 @@ it('can be constructed from a symfony Crawler instance', function () {
 
 it('can be constructed from a \Dom\NodeList instance', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -67,6 +69,7 @@ it('can be constructed from a \Dom\NodeList instance', function () {
 
 it('can be instantiated from an array of Nodes (object instances from this library)', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -95,6 +98,7 @@ it('can be instantiated from an array of Nodes (object instances from this libra
 
 it('gets the count of the node list', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head>
             <title>Foo</title>
@@ -112,6 +116,7 @@ it('gets the count of the node list', function () {
 
 it('can be iterated and the elements are instances of Crwlr\Crawler\Steps\Dom\Node', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head>
             <title>Foo</title>
@@ -139,6 +144,7 @@ it(
     'can be iterated with the each() method and return values are returned as an array from the each() call',
     function () {
         $html = <<<HTML
+            <!doctype html>
             <html>
             <head></head>
             <body>
@@ -169,6 +175,7 @@ it(
 
 test('an empty NodeList can be iterated', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head>
             <title>Foo</title>
@@ -192,6 +199,7 @@ test('an empty NodeList can be iterated', function () {
 
 it('returns the first, last and nth element of the NodeList', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>

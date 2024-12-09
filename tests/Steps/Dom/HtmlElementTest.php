@@ -8,6 +8,7 @@ use Crwlr\Crawler\Steps\Dom\NodeList;
 
 test('child nodes selected via querySelector() are HtmlElement instances', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -26,6 +27,7 @@ test('child nodes selected via querySelector() are HtmlElement instances', funct
 
 test('child nodes selected via querySelectorAll() are HtmlElement instances', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -53,6 +55,7 @@ test('child nodes selected via querySelectorAll() are HtmlElement instances', fu
 
 test('child nodes selected via queryXPath() are HtmlElement instances', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -82,6 +85,7 @@ test('child nodes selected via queryXPath() are HtmlElement instances', function
 
 it('gets the node name', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -100,6 +104,7 @@ it('gets the node name', function () {
 
 it('gets the text of a node', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -119,6 +124,7 @@ it('gets the text of a node', function () {
 
 it('gets the outer HTML of a node', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -142,6 +148,7 @@ it('gets the outer HTML of a node', function () {
 
 it('gets the inner HTML of a node', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>
@@ -164,6 +171,7 @@ it('gets the inner HTML of a node', function () {
 
 it('gets an attribute from a node', function () {
     $html = <<<HTML
+        <!doctype html>
         <html>
         <head></head>
         <body>

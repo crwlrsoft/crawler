@@ -21,3 +21,4 @@ parameters:
         - "#^Call to an undefined (static )?method Dom\\\\.+::.+\\(\\)\\.#"
         - "#^Access to an undefined property Dom\\\\.+::\\$.+\\.#"
         - "#^Function .+ has invalid return type Dom\\\\.+\\.#"
+        - "#^(?:Used )?(?:C|c)onstant DOM\\\\.+ not found\\.#"

@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Dom;
 use Crwlr\Utils\PhpVersion;
 use DOMNode;
 use Symfony\Component\DomCrawler\Crawler;
+use const DOM\HTML_NO_DEFAULT_NS;
 
 /**
  * @method HtmlElement|null querySelector(string $selector)
@@ -47,7 +48,7 @@ class HtmlDocument extends DomDocument
     protected function makeDocumentInstance(string $source): object
     {
         if (PhpVersion::isAtLeast(8, 4)) {
-            return \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR);
+            return \Dom\HTMLDocument::createFromString($source, HTML_NO_DEFAULT_NS | LIBXML_NOERROR);
         }
 
         return new Crawler($source);

@@ -9,7 +9,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 
 it('creates a HtmlDocument instance from a RespondedRequest', function () {
-    $body = '<html><head><title>foo</title></head><body>hello</body></html>';
+    $body = '<!DOCTYPE html><html><head><title>foo</title></head><body>hello</body></html>';
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
@@ -19,11 +19,13 @@ it('creates a HtmlDocument instance from a RespondedRequest', function () {
     $document = new Document($respondedRequest);
 
     expect($document->dom())->toBeInstanceOf(HtmlDocument::class)
-        ->and($document->dom()->outerHtml())->toBe('<html><head><title>foo</title></head><body>hello</body></html>');
+        ->and($document->dom()->outerHtml())->toBe(
+            '<html><head><title>foo</title></head><body>hello</body></html>',
+        );
 });
 
 it('returns the effectiveUri as url()', function () {
-    $body = '<html><head><title>foo</title><base href="/baz" /></head><body>hello</body></html>';
+    $body = '<!doctype html><html><head><title>foo</title><base href="/baz" /></head><body>hello</body></html>';
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
@@ -51,7 +53,7 @@ it('returns the effectiveUri as baseUrl() if no base tag in HTML', function () {
 });
 
 it('returns the URL referenced in base tag as baseUrl()', function () {
-    $body = '<html><head><title>foo</title><base href="/baz" /></head><body>hello</body></html>';
+    $body = '<!doctype html><html><head><title>foo</title><base href="/baz" /></head><body>hello</body></html>';
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
@@ -79,7 +81,7 @@ it('returns the effectiveUri as canonicalUrl() if no canonical link in HTML', fu
 });
 
 it('returns the URL referenced in canonical link as canonicalUrl()', function () {
-    $body = '<html><head><title>foo</title><link rel="canonical" href="/quz" /></head><body>hello</body></html>';
+    $body = '<!doctype html><html><head><title>foo</title><link rel="canonical" href="/quz" /></head><body>hello</body></html>';
 
     $respondedRequest = new RespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),

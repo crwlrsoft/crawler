@@ -91,8 +91,6 @@ abstract class Dom extends Step
 
     /**
      * @throws InvalidDomQueryException
-     * @deprecated As the usage of XPath queries is no longer an option with the new DOM API introduced in
-     *             PHP 8.4, please switch to using CSS selectors instead!
      */
     public static function xPath(string $query): XPathQuery
     {

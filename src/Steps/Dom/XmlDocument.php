@@ -33,7 +33,7 @@ class XmlDocument extends DomDocument
     protected function makeDocumentInstance(string $source): object
     {
         if (PhpVersion::isAtLeast(8, 4)) {
-            return \Dom\XMLDocument::createFromString($source, LIBXML_NOERROR);
+            return \Dom\XMLDocument::createFromString($source, LIBXML_NOERROR | LIBXML_NONET);
         }
 
         return new Crawler($source);

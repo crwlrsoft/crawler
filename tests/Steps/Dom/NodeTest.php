@@ -13,6 +13,7 @@ use Exception;
 use Symfony\Component\DomCrawler\Crawler;
 use tests\Steps\Dom\_Stubs\HtmlNodeStub;
 use tests\Steps\Dom\_Stubs\XmlNodeStub;
+use const DOM\HTML_NO_DEFAULT_NS;
 
 function helper_getSymfonyCrawlerInstanceFromSource(string $source, string $selectNode = 'body'): Crawler
 {
@@ -35,7 +36,7 @@ function helper_getLegacyDomNodeInstanceFromSource(string $source, string $selec
 
 function helper_getPhp84HtmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): \Dom\Node
 {
-    return HTMLDocument::createFromString($source, LIBXML_NOERROR)->querySelector($selectNode);
+    return HTMLDocument::createFromString($source, HTML_NO_DEFAULT_NS | LIBXML_NOERROR)->querySelector($selectNode);
 }
 
 function helper_getPhp84XmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): \Dom\Node
@@ -125,17 +126,18 @@ it('can be instantiated from a DOMNode instance', function () {
 });
 
 $html = <<<HTML
-        <html>
-        <head>
-            <title>Foo</title>
-        </head>
-        <body>
-            <div class="foo">
-                <h1>Title</h1>
-            </div>
-        </body>
-        </html>
-        HTML;
+    <!doctype html>
+    <html>
+    <head>
+        <title>Foo</title>
+    </head>
+    <body>
+        <div class="foo">
+            <h1>Title</h1>
+        </div>
+    </body>
+    </html>
+    HTML;
 
 it('selects an element within a node via querySelector()', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
@@ -162,6 +164,7 @@ it('selects an element within a node via querySelector() in PHP >= 8.4', functio
 })->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Bar</title></head>
     <body>
@@ -206,6 +209,7 @@ it(
 )->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Foo</title></head>
     <body>
@@ -318,6 +322,7 @@ it(
 )->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Lorem Ipsum</title></head>
     <body>
@@ -390,6 +395,7 @@ it(
 )->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Foo</title></head>
     <body>
@@ -417,6 +423,7 @@ it('gets the value of an attribute in PHP >= 8.4', function () use ($html) {
 })->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Foo</title></head>
     <body><div class="element"></div></body>
@@ -460,6 +467,7 @@ it('gets the name of a node in PHP >= 8.4', function () use ($html) {
 })->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Bar</title></head>
     <body>
@@ -582,6 +590,7 @@ it('gets the outer source of an XML node in PHP >= 8.4', function () use ($xml) 
 })->group('php84');
 
 $html = <<<HTML
+    <!doctype html>
     <html>
     <head><title>Bar</title></head>
     <body>
