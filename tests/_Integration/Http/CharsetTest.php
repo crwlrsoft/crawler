@@ -26,7 +26,7 @@ class CharsetExampleCrawler extends HttpCrawler
     }
 }
 
-it('removes (and not replaces with broken ? replacement char) non utf-8 characters from extracted data', function () {
+it('Fixes non UTF-8 characters in HTML documents declared as UTF-8', function () {
     $crawler = new CharsetExampleCrawler();
 
     $crawler
@@ -37,5 +37,5 @@ it('removes (and not replaces with broken ? replacement char) non utf-8 characte
     $results = helper_generatorToArray($crawler->run());
 
     expect($results)->toHaveCount(1)
-        ->and($results[0]->toArray())->toBe(['foo' => '0 l/m']);
+        ->and($results[0]->toArray())->toBe(['foo' => '0 l/m²']);
 });
