@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] - 2024-12-11
+### Fixed
+* When the new PHP 8.4 DOM API is used, and HTML declared as UTF-8 contains non UTF-8 compatible characters, it does not replace them with a � character, but instead removes it. This behaviour is consistent with the data returned by Symfony DomCrawler.
+
 ## [3.0.1] - 2024-12-10
 ### Undeprecated
 * Removed deprecations for all XPath functionality (`Dom::xPath()`, `XPathQuery` class and `Node::queryXPath()`), because it's still available with the net DOM API in PHP 8.4.
