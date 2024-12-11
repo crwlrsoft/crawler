@@ -48,10 +48,40 @@ class HtmlDocument extends DomDocument
      */
     protected function makeDocumentInstance(string $source): object
     {
+        $source = $this->fixInvalidCharactersInSource($source);
+
         if (PhpVersion::isAtLeast(8, 4)) {
             return \Dom\HTMLDocument::createFromString($source, HTML_NO_DEFAULT_NS | LIBXML_NOERROR);
         }
 
         return new Crawler($source);
+    }
+
+    /**
+     * Converts charset to HTML-entities to ensure valid parsing.
+     */
+    private function fixInvalidCharactersInSource(string $source): string
+    {
+        if (function_exists('iconv')) {
+            $charset = preg_match('//u', $source) ? 'UTF-8' : 'ISO-8859-1';
+
+            preg_match('/(charset *= *["\']?)([a-zA-Z\-0-9_:.]+)/i', $source, $matches);
+
+            if ($matches && !empty($matches[2])) {
+                $declaredCharset = strtoupper($matches[2]);
+            } else {
+                $declaredCharset = null;
+            }
+
+            if ($charset === 'ISO-8859-1' && $declaredCharset === 'UTF-8') {
+                $fixedSource = iconv("ISO-8859-1", "UTF-8//TRANSLIT", $source);
+
+                if ($fixedSource !== false) {
+                    $source = $fixedSource;
+                }
+            }
+        }
+
+        return $source;
     }
 }

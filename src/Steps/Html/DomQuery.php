@@ -303,10 +303,6 @@ abstract class DomQuery
             $target = $this->handleUrlFragment(Url::parse($this->baseUrl)->resolve($target));
         }
 
-        if (str_contains($target, '�')) {
-            $target = str_replace('�', '', $target);
-        }
-
         return $target;
     }
 
