@@ -204,3 +204,7 @@ if (str_starts_with($route, '/redirect')) {
 
     header('Location: http://localhost:8000/redirect?no=' . ($redirectNo + 1) . $stopAt);
 }
+
+if (str_starts_with($route, '/non-utf-8-charset')) {
+    return include(__DIR__ . '/_Server/NonUtf8.php');
+}
