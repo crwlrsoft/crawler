@@ -156,6 +156,52 @@ test(
     },
 );
 
+test(
+    'when selecting elements with each(), you can reference the element already selected within the each() selector ' .
+    'itself, in sub selectors',
+    function () {
+        $html = <<<HTML
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>Bookstore Example in HTML :)</title>
+            </head>
+            <body>
+                <div id="list">
+                    <div class="element" data-attr="yo">
+                        <a href="/bar">direct element child</a>
+                        <div class="sub-element">
+                            <a href="/baz">sub child</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            HTML;
+
+        $response = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/foo'),
+            new Response(body: $html),
+        );
+
+        $output = helper_invokeStepWithInput(
+            Html::each('#list .element')->extract([
+                // This is what this test is about. The element already selected in each (.element) can be
+                // referenced in these child selectors.
+                'link' => Dom::cssSelector('.element > a')->link(),
+                'attribute' => Dom::cssSelector('')->attribute('data-attr'),
+            ]),
+            $response,
+        );
+
+        expect($output)->toHaveCount(1)
+            ->and($output[0]->get())->toBe([
+                'link' => 'https://www.example.com/bar',
+                'attribute' => 'yo',
+            ]);
+    },
+);
+
 test('the static getLink method works without argument', function () {
     expect(Html::getLink())->toBeInstanceOf(GetLink::class);
 });

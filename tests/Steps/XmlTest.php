@@ -176,6 +176,46 @@ it('works when the response string starts with an UTF-8 byte order mark characte
     ]);
 });
 
+test(
+    'when selecting elements with each(), you can reference the element already selected within the each() selector ' .
+    'itself, in sub selectors',
+    function () {
+        $xml = <<<XML
+            <?xml version="1.0" encoding="utf-8"?>
+            <data>
+                <items>
+                    <item attr="abc">
+                        <id>123</id>
+                        <subitems>
+                            <subitem>
+                                <id>456</id>
+                            </subitem>
+                        </subitems>
+                    </item>
+                </items>
+            </data>
+            XML;
+
+        $response = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/foo'),
+            new Response(body: $xml),
+        );
+
+        $output = helper_invokeStepWithInput(
+            Xml::each('data items item')->extract([
+                // This is what this test is about. The element already selected in each (item) can be
+                // referenced in these child selectors.
+                'id' => Dom::cssSelector('item > id'),
+                'attribute' => Dom::cssSelector('')->attribute('attr'),
+            ]),
+            $response,
+        );
+
+        expect($output)->toHaveCount(1)
+            ->and($output[0]->get())->toBe(['id' => '123', 'attribute' => 'abc']);
+    },
+);
+
 it('works with tags with camelCase names', function () {
     $xml = <<<XML
         <?xml version="1.0" encoding="utf-8"?>
