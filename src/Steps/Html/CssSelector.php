@@ -19,17 +19,21 @@ final class CssSelector extends DomQuery
      */
     public function __construct(string $query)
     {
-        if (PhpVersion::isBelow(8, 4)) {
-            try {
-                (new CssSelectorConverter())->toXPath($query);
-            } catch (ExpressionErrorException|SyntaxErrorException $exception) {
-                throw InvalidDomQueryException::fromSymfonyException($query, $exception);
-            }
-        } else {
-            try {
-                (new HtmlDocument('<!doctype html><html></html>'))->querySelector($query);
-            } catch (DOMException $exception) {
-                throw InvalidDomQueryException::fromDomException($query, $exception);
+        $query = trim($query);
+
+        if ($query !== '') {
+            if (PhpVersion::isBelow(8, 4)) {
+                try {
+                    (new CssSelectorConverter())->toXPath($query);
+                } catch (ExpressionErrorException|SyntaxErrorException $exception) {
+                    throw InvalidDomQueryException::fromSymfonyException($query, $exception);
+                }
+            } else {
+                try {
+                    (new HtmlDocument('<!doctype html><html></html>'))->querySelector($query);
+                } catch (DOMException $exception) {
+                    throw InvalidDomQueryException::fromDomException($query, $exception);
+                }
             }
         }
 
@@ -38,6 +42,10 @@ final class CssSelector extends DomQuery
 
     protected function filter(Node $node): NodeList
     {
+        if ($this->query === '') {
+            return new NodeList([$node]);
+        }
+
         return $node->querySelectorAll($this->query);
     }
 }

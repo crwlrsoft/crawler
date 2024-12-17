@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [3.0.4] - 2024-12-18
+### Fixed
+* Minor improvement for the `DomQuery` (base for `Dom::cssSelector()` and `Dom::xPath()`): enable providing an empty string as selector, to simply get the node that the selector is applied to.
+
 ### [3.0.3] - 2024-12-11
 ### Fixed
 * Improved fix for non UTF-8 characters in HTML documents declared as UTF-8.

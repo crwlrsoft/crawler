@@ -15,13 +15,21 @@ class XPathQuery extends DomQuery
      */
     public function __construct(string $query)
     {
-        $this->validateQuery($query);
+        $query = trim($query);
 
-        parent::__construct($query);
+        if ($query !== '') {
+            $this->validateQuery($query);
+        }
+
+        parent::__construct(trim($query));
     }
 
     protected function filter(Node $node): NodeList
     {
+        if ($this->query === '') {
+            return new NodeList([$node]);
+        }
+
         return $node->queryXPath($this->query);
     }
 
