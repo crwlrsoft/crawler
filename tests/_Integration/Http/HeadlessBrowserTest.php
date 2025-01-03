@@ -86,6 +86,30 @@ it('automatically uses the Loader\'s user agent', function () {
         ->and($results[0]->get('responseBody')['User-Agent'])->toBe('HeadlessBrowserBot');
 });
 
+it(
+    'does not use the user-agent defined in the crawler, when useNativeUserAgent() was called on the browser loader ' .
+    'helper',
+    function () {
+        $crawler = new HeadlessBrowserCrawler();
+
+        $crawler
+            ->getLoader()
+            ->browser()
+            ->useNativeUserAgent();
+
+        $crawler->input('http://localhost:8000/print-headers')
+            ->addStep(Http::get())
+            ->addStep((new GetJsonFromResponseHtmlBody())->keepAs('responseBody'));
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(1)
+            ->and($results[0]->get('responseBody'))->toBeArray()
+            ->and($results[0]->get('responseBody'))->toHaveKey('User-Agent')
+            ->and($results[0]->get('responseBody')['User-Agent'])->toStartWith('Mozilla/5.0 (');
+    },
+);
+
 it('uses cookies', function () {
     $crawler = new HeadlessBrowserCrawler();
 
@@ -262,4 +286,22 @@ test('BrowserAction::wait() works as expected', function () {
     $body = $results[0]->get('body');
 
     expect($body)->toContain('<div id="delayed_container">hooray</div>');
+});
+
+it('executes the javascript code provided via HeadlessBrowserLoaderHelper::setPageInitScript()', function () {
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler
+        ->getLoader()
+        ->browser()
+        ->setPageInitScript('window._secret_content = \'secret content\'');
+
+    $crawler
+        ->input('http://localhost:8000/page-init-script')
+        ->addStep(Http::get())
+        ->addStep(Html::root()->extract(['content' => '#content']));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results[0]->get('content'))->toBe('secret content');
 });

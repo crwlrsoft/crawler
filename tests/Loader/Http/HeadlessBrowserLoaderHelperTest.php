@@ -19,16 +19,28 @@ use function tests\helper_getMinThrottler;
 
 function helper_setUpHeadlessChromeMocks(
     ?Closure $pageNavigationArgsClosure = null,
+    ?Closure $createBrowserArgsExpectationCallback = null,
+    ?Closure $browserMockCallback = null,
 ): BrowserFactory {
     $browserFactoryMock = Mockery::mock(BrowserFactory::class);
 
     $browserMock = Mockery::mock(ProcessAwareBrowser::class);
 
-    $browserFactoryMock->shouldReceive('createBrowser')->andReturn($browserMock);
+    $createBrowserExpectation = $browserFactoryMock->shouldReceive('createBrowser');
+
+    if ($createBrowserArgsExpectationCallback) {
+        $createBrowserExpectation->withArgs($createBrowserArgsExpectationCallback);
+    }
+
+    $createBrowserExpectation->andReturn($browserMock);
 
     $pageMock = Mockery::mock(Page::class);
 
     $browserMock->shouldReceive('createPage')->andReturn($pageMock);
+
+    if ($browserMockCallback) {
+        $browserMockCallback($browserMock);
+    }
 
     $sessionMock = Mockery::mock(Session::class);
 
@@ -173,3 +185,86 @@ it('calls the temporary post navigate hooks once', function () {
         ->and($hook2Called)->toBeFalse()
         ->and($hook3Called)->toBeFalse();
 });
+
+it(
+    'passes the script source provided via the setPageInitScript() method, to the ' .
+    'ProcessAwareBrowser::setPagePreScript() method',
+    function () {
+        $script = 'console.log(\'hey\');';
+
+        $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+            browserMockCallback: function (Mockery\MockInterface $browser) use ($script) {
+                $browser
+                    ->shouldReceive('setPagePreScript')
+                    ->once()
+                    ->with($script);
+            },
+        );
+
+        $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+        $helper->setPageInitScript($script);
+
+        $helper->navigateToPageAndGetRespondedRequest(
+            new Request('GET', 'https://www.example.com/bar'),
+            helper_getMinThrottler(),
+        );
+    },
+);
+
+it('does not call the ProcessAwareBrowser::setPagePreScript() when no page init script was defined', function () {
+    $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+        browserMockCallback: function (Mockery\MockInterface $browser) {
+            $browser->shouldNotReceive('setPagePreScript');
+        },
+    );
+
+    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+    $helper->navigateToPageAndGetRespondedRequest(
+        new Request('GET', 'https://www.example.com/bar'),
+        helper_getMinThrottler(),
+    );
+});
+
+it(
+    'passes the userAgent option when Request contains a user-agent header and useNativeUserAgent() was not called',
+    function () {
+        $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+            createBrowserArgsExpectationCallback: function ($options) {
+                return array_key_exists('userAgent', $options) && $options['userAgent'] === 'MyBot';
+            },
+        );
+
+        $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+        $response = $helper->navigateToPageAndGetRespondedRequest(
+            new Request('GET', 'https://www.example.com/bar', ['user-agent' => ['MyBot']]),
+            helper_getMinThrottler(),
+        );
+
+        expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
+    },
+);
+
+it(
+    'does not pass the userAgent option when Request contains a user-agent header and useNativeUserAgent() was called',
+    function () {
+        $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+            createBrowserArgsExpectationCallback: function ($options) {
+                return !array_key_exists('userAgent', $options);
+            },
+        );
+
+        $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+        $helper->useNativeUserAgent();
+
+        $response = $helper->navigateToPageAndGetRespondedRequest(
+            new Request('GET', 'https://www.example.com/bar', ['user-agent' => ['MyBot']]),
+            helper_getMinThrottler(),
+        );
+
+        expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
+    },
+);

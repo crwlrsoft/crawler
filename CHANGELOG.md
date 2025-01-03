@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [3.1.0] - 2025-01-03
+### Added
+* New method `HeadlessBrowserLoaderHelper::setPageInitScript()` (`$crawler->getLoader()->browser()->setPageInitScript()`) to provide javascript code that is executed on every new browser page before navigating anywhere.
+* New method `HeadlessBrowserLoaderHelper::useNativeUserAgent()` (`$crawler->getLoader()->browser()->useNativeUserAgent()`) to allow using the native `User-Agent` that your Chrome browser sends by default.
+
 ### [3.0.4] - 2024-12-18
 ### Fixed
 * Minor improvement for the `DomQuery` (base for `Dom::cssSelector()` and `Dom::xPath()`): enable providing an empty string as selector, to simply get the node that the selector is applied to.
