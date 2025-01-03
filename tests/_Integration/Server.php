@@ -208,3 +208,7 @@ if (str_starts_with($route, '/redirect')) {
 if (str_starts_with($route, '/non-utf-8-charset')) {
     return include(__DIR__ . '/_Server/NonUtf8.php');
 }
+
+if (str_starts_with($route, '/page-init-script')) {
+    return include(__DIR__ . '/_Server/PageInitScript.php');
+}

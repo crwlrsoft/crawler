@@ -46,6 +46,10 @@ class HeadlessBrowserLoaderHelper
 
     protected int $timeout = 30_000;
 
+    protected ?string $pageInitScript = null;
+
+    protected bool $useNativeUserAgent = false;
+
     /**
      * @var Closure[]
      */
@@ -208,6 +212,24 @@ class HeadlessBrowserLoaderHelper
     }
 
     /**
+     * @param string $scriptSource
+     * @return $this
+     */
+    public function setPageInitScript(string $scriptSource): static
+    {
+        $this->pageInitScript = $scriptSource;
+
+        return $this;
+    }
+
+    public function useNativeUserAgent(): static
+    {
+        $this->useNativeUserAgent = true;
+
+        return $this;
+    }
+
+    /**
      * @throws OperationTimedOut
      * @throws CommunicationException
      * @throws NavigationExpired
@@ -273,6 +295,10 @@ class HeadlessBrowserLoaderHelper
 
             $this->browser = $this->browserFactory->createBrowser($options);
 
+            if ($this->pageInitScript) {
+                $this->browser->setPagePreScript($this->pageInitScript);
+            }
+
             $this->optionsDirty = false;
         }
 
@@ -292,8 +318,10 @@ class HeadlessBrowserLoaderHelper
     {
         $options = $this->options;
 
-        if (isset($request->getHeader('User-Agent')[0])) {
+        if (isset($request->getHeader('User-Agent')[0]) && !$this->useNativeUserAgent) {
             $options['userAgent'] = $request->getHeader('User-Agent')[0];
+        } elseif ($this->useNativeUserAgent && !empty($request->getHeader('User-Agent'))) {
+            $request = $request->withoutHeader('User-Agent');
         }
 
         $options['headers'] = array_merge(
