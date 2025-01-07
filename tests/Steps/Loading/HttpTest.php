@@ -10,10 +10,10 @@ use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
-use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getRespondedRequest;
 use function tests\helper_invokeStepWithInput;
@@ -39,13 +39,21 @@ it('can be invoked with a PSR-7 Uri object as input', function () {
     helper_traverseIterable($step->invokeStep(new Input(Url::parsePsr7('https://www.linkedin.com/'))));
 });
 
-it('throws an InvalidArgumentException when invoked with something else as input', function () {
+it('logs an error message when invoked with something else as input', function () {
+    $logger = new DummyLogger();
+
     $loader = Mockery::mock(HttpLoader::class);
 
-    $step = (new Http('GET'))->setLoader($loader);
+    $step = (new Http('GET'))->setLoader($loader)->addLogger($logger);
 
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
-})->throws(InvalidArgumentException::class);
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toStartWith(
+            'The Crwlr\Crawler\Steps\Loading\Http step was called with input that it can not work with:',
+        )
+        ->and($logger->messages[0]['message'])->toEndWith('. The invalid input is of type object.');
+});
 
 test('You can set the request method via constructor', function (string $httpMethod) {
     $loader = Mockery::mock(HttpLoader::class);

@@ -7,7 +7,7 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Html\GetLink;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use InvalidArgumentException;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
@@ -20,16 +20,23 @@ it('works with a RespondedRequest as input', function () {
         new Response(200, [], '<a href="/blog">link</a>'),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://www.crwl.io/blog');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://www.crwl.io/blog');
 });
 
-it('does not work with something else as input', function () {
-    $step = (new GetLink());
+it('logs an error message when feeded with invalid input', function () {
+    $logger = new DummyLogger();
+
+    $step = (new GetLink())->addLogger($logger);
 
     helper_traverseIterable($step->invokeStep(new Input(new Response())));
-})->throws(InvalidArgumentException::class);
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toBe(
+            'The Crwlr\Crawler\Steps\Html\GetLink step was called with input that it can not work with: Input must ' .
+            'be an instance of RespondedRequest.',
+        );
+});
 
 test('When called without selector it just returns the first link', function () {
     $step = (new GetLink());
@@ -73,9 +80,8 @@ test('When selector matches on a non-link element it\'s ignored', function () {
         new Response(200, [], '<span class="link">not a link</span><a class="link" href="foo">link</a>'),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://www.otsch.codes/foo');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://www.otsch.codes/foo');
 });
 
 it('finds only links on the same domain when onSameDomain() was called', function () {
@@ -91,9 +97,8 @@ it('finds only links on the same domain when onSameDomain() was called', functio
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://blog.otsch.codes/articles');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://blog.otsch.codes/articles');
 });
 
 it('doesn\'t find a link on the same domain when notOnSameDomain() was called', function () {
@@ -109,9 +114,8 @@ it('doesn\'t find a link on the same domain when notOnSameDomain() was called', 
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://www.crwlr.software/packages');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://www.crwlr.software/packages');
 });
 
 it('finds only links from domains the onDomain() method was called with', function () {
@@ -129,9 +133,8 @@ it('finds only links from domains the onDomain() method was called with', functi
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.example.com');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.example.com');
 });
 
 test('onDomain() also takes an array of domains', function () {
@@ -147,9 +150,8 @@ test('onDomain() also takes an array of domains', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/contact');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/contact');
 
     $html = <<<HTML
         <a href="https://www.crwlr.software/packages">link1</a>
@@ -161,9 +163,8 @@ test('onDomain() also takes an array of domains', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.example.com/foo');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.example.com/foo');
 });
 
 test('onDomain() can be called multiple times and merges all domains it was called with', function () {
@@ -192,9 +193,8 @@ test('onDomain() can be called multiple times and merges all domains it was call
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.crwl.io');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.crwl.io');
 
     $html = <<<HTML
         <a href="https://www.otsch.codes/contact">link1</a>
@@ -206,9 +206,8 @@ test('onDomain() can be called multiple times and merges all domains it was call
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/contact');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/contact');
 });
 
 it('finds only links on the same host when onSameHost() was called', function () {
@@ -225,9 +224,8 @@ it('finds only links on the same host when onSameHost() was called', function ()
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://www.otsch.codes/contact');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://www.otsch.codes/contact');
 });
 
 it('doesn\'t find a link on the same host when notOnSameHost() was called', function () {
@@ -243,9 +241,8 @@ it('doesn\'t find a link on the same host when notOnSameHost() was called', func
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(1);
-
-    expect($link[0]->get())->toBe('https://jobs.otsch.codes');
+    expect($link)->toHaveCount(1)
+        ->and($link[0]->get())->toBe('https://jobs.otsch.codes');
 });
 
 it('finds only links from hosts the onHost() method was called with', function () {
@@ -263,9 +260,8 @@ it('finds only links from hosts the onHost() method was called with', function (
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.example.com');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.example.com');
 });
 
 test('onHost() also takes an array of hosts', function () {
@@ -281,9 +277,8 @@ test('onHost() also takes an array of hosts', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/contact');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/contact');
 
     $html = <<<HTML
         <a href="https://www.example.com/foo">link1</a>
@@ -296,9 +291,8 @@ test('onHost() also takes an array of hosts', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://blog.example.com/articles/1');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://blog.example.com/articles/1');
 });
 
 test('onHost() can be called multiple times and merges all hosts it was called with', function () {
@@ -326,9 +320,8 @@ test('onHost() can be called multiple times and merges all hosts it was called w
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.crwl.io');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.crwl.io');
 
     $html = <<<HTML
         <a href="https://www.otsch.codes/blog">link1</a>
@@ -340,9 +333,8 @@ test('onHost() can be called multiple times and merges all hosts it was called w
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/blog');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/blog');
 });
 
 it('works correctly when HTML contains a base tag', function () {

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [3.1.1] - 2025-01-07
+### Fixed
+* When the `validateAndSanitize()` method of a step throws an `InvalidArgumentException`, the exception is now caught, logged and the step is not invoked with the invalid input. This improves fault tolerance. Feeding a step with one invalid input shouldn't cause the whole crawler run to fail. Exceptions other than `InvalidArgumentException` remain uncaught.
+
 ### [3.1.0] - 2025-01-03
 ### Added
 * New method `HeadlessBrowserLoaderHelper::setPageInitScript()` (`$crawler->getLoader()->browser()->setPageInitScript()`) to provide javascript code that is executed on every new browser page before navigating anywhere.

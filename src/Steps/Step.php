@@ -43,7 +43,13 @@ abstract class Step extends BaseStep
         $inputForStepInvocation = $this->getInputKeyToUse($input);
 
         if ($inputForStepInvocation) {
-            $validInputValue = $this->validateAndSanitizeInput($inputForStepInvocation->get());
+            try {
+                $validInputValue = $this->validateAndSanitizeInput($inputForStepInvocation->get());
+            } catch (InvalidArgumentException $exception) {
+                $this->logInvalidInputException($exception, $inputForStepInvocation->get());
+
+                return;
+            }
 
             if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
                 yield from $this->invokeAndYield($validInputValue, $input);
@@ -248,5 +254,21 @@ abstract class Step extends BaseStep
         }
 
         return $string;
+    }
+
+    private function logInvalidInputException(InvalidArgumentException $exception, mixed $input): void
+    {
+        $exceptionMessage = $exception->getMessage();
+
+        $stepClassName = $this->getStepClassName();
+
+        $logMessage = ($stepClassName ? 'The ' . $stepClassName . ' step' : 'A step') . ' was called with input ' .
+            'that it can not work with: ' . $exceptionMessage;
+
+        if (str_starts_with($exceptionMessage, 'Input must be string')) {
+            $logMessage .= '. The invalid input is of type ' . gettype($input) . '.';
+        }
+
+        $this->logger?->error($logMessage);
     }
 }
