@@ -11,12 +11,14 @@ use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
+use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
@@ -349,9 +351,11 @@ test(
 );
 
 test(
-    'when calling validateAndSanitizeStringOrStringable() and the input is array with multiple elements it throws ' .
-    'an InvalidArgumentException',
+    'when calling validateAndSanitizeStringOrStringable() and the input is array with multiple elements it logs ' .
+    'an error message',
     function () {
+        $logger = new DummyLogger();
+
         $step = new class extends Step {
             protected function validateAndSanitizeInput(mixed $input): string
             {
@@ -364,9 +368,70 @@ test(
             }
         };
 
+        $step->addLogger($logger);
+
         helper_invokeStepWithInput($step, ['inputValue', 'foo' => 'bar']);
+
+        expect($logger->messages)->not->toBeEmpty()
+            ->and($logger->messages[0]['message'])->toStartWith(
+                'A step was called with input that it can not work with:',
+            )
+            ->and($logger->messages[0]['message'])->toEndWith('. The invalid input is of type array.');
     },
-)->throws(InvalidArgumentException::class);
+);
+
+test(
+    'when throwing an InvalidArgumentException from the validateAndSanitizeInput() it is caught and logged as an error',
+    function () {
+        $logger = new DummyLogger();
+
+        $step = new class extends Step {
+            protected function validateAndSanitizeInput(mixed $input): string
+            {
+                throw new InvalidArgumentException('hey :)');
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        $step->addLogger($logger);
+
+        $outputs = helper_invokeStepWithInput($step, 'anything');
+
+        expect($outputs)->toBeEmpty()
+            ->and($logger->messages)->not->toBeEmpty()
+            ->and($logger->messages[0]['message'])->toBe(
+                'A step was called with input that it can not work with: hey :)',
+            );
+    },
+);
+
+test(
+    'when throwing an Exception that is not an InvalidArgumentException, from the validateAndSanitizeInput() it is ' .
+    'not caught',
+    function () {
+        $logger = new DummyLogger();
+
+        $step = new class extends Step {
+            protected function validateAndSanitizeInput(mixed $input): string
+            {
+                throw new Exception('hey :)');
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        $step->addLogger($logger);
+
+        helper_invokeStepWithInput($step, 'anything');
+    },
+)->throws(Exception::class);
 
 it('is possible that a step does not produce any output at all', function () {
     $step = new class extends Step {

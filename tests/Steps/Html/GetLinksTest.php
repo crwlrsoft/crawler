@@ -7,8 +7,8 @@ use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Steps\Html\GetLinks;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use InvalidArgumentException;
 use stdClass;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
@@ -21,16 +21,23 @@ it('works with a RespondedRequest as input', function () {
         new Response(200, [], '<a href="/blog">link</a>'),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.example.com/blog');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.example.com/blog');
 });
 
-it('does not work with something else as input', function () {
-    $step = new GetLinks();
+it('logs an error message when feeded with invalid input', function () {
+    $logger = new DummyLogger();
+
+    $step = (new GetLinks())->addLogger($logger);
 
     helper_traverseIterable($step->invokeStep(new Input(new stdClass())));
-})->throws(InvalidArgumentException::class);
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toBe(
+            'The Crwlr\Crawler\Steps\Html\GetLinks step was called with input that it can not work with: Input must ' .
+            'be an instance of RespondedRequest.',
+        );
+});
 
 test('When called without selector it just gets all links', function () {
     $step = (new GetLinks());
@@ -44,11 +51,9 @@ test('When called without selector it just gets all links', function () {
         ),
     ));
 
-    expect($links[0]->get())->toBe('https://www.crwlr.software/packages/url/v0.1');
-
-    expect($links[1]->get())->toBe('https://www.crwlr.software/packages/url/v1.0');
-
-    expect($links[2]->get())->toBe('https://www.crwlr.software/packages/url/v1.1');
+    expect($links[0]->get())->toBe('https://www.crwlr.software/packages/url/v0.1')
+        ->and($links[1]->get())->toBe('https://www.crwlr.software/packages/url/v1.0')
+        ->and($links[2]->get())->toBe('https://www.crwlr.software/packages/url/v1.1');
 });
 
 test('When passing a CSS selector it only selects matching links', function () {
@@ -63,18 +68,15 @@ test('When passing a CSS selector it only selects matching links', function () {
         </div>
         HTML;
 
-    $links = helper_invokeStepWithInput($step, new RespondedRequest(
+    $outputs = helper_invokeStepWithInput($step, new RespondedRequest(
         new Request('GET', 'https://www.example.com/company/about'),
         new Response(200, [], $responseHtml),
     ));
 
-    expect($links)->toHaveCount(3);
-
-    expect(reset($links)->get())->toBe('https://www.example.com/company/jobs'); // @phpstan-ignore-line
-
-    expect(next($links)->get())->toBe('https://www.example.com/company/numbers'); // @phpstan-ignore-line
-
-    expect(next($links)->get())->toBe('https://www.example.com/team'); // @phpstan-ignore-line
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe('https://www.example.com/company/jobs')
+        ->and($outputs[1]->get())->toBe('https://www.example.com/company/numbers')
+        ->and($outputs[2]->get())->toBe('https://www.example.com/team');
 });
 
 test('When selector matches on a non-link element it\'s ignored', function () {
@@ -85,9 +87,8 @@ test('When selector matches on a non-link element it\'s ignored', function () {
         new Response(200, [], '<a class="link" href="foo">Foo</a><span class="link">Bar</span>'),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/foo');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/foo');
 });
 
 it('finds only links on the same domain when onSameDomain() was called', function () {
@@ -104,11 +105,9 @@ it('finds only links on the same domain when onSameDomain() was called', functio
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(2);
-
-    expect($link[0]->get())->toBe('https://blog.otsch.codes/articles');
-
-    expect($link[1]->get())->toBe('https://www.otsch.codes/blog');
+    expect($link)->toHaveCount(2)
+        ->and($link[0]->get())->toBe('https://blog.otsch.codes/articles')
+        ->and($link[1]->get())->toBe('https://www.otsch.codes/blog');
 });
 
 it('doesn\'t find links on the same domain when notOnSameDomain() was called', function () {
@@ -125,11 +124,9 @@ it('doesn\'t find links on the same domain when notOnSameDomain() was called', f
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(2);
-
-    expect($link[0]->get())->toBe('https://www.crwlr.software/packages');
-
-    expect($link[1]->get())->toBe('https://www.example.com/foo');
+    expect($link)->toHaveCount(2)
+        ->and($link[0]->get())->toBe('https://www.crwlr.software/packages')
+        ->and($link[1]->get())->toBe('https://www.example.com/foo');
 });
 
 it('finds only links from domains the onDomain() method was called with', function () {
@@ -147,11 +144,9 @@ it('finds only links from domains the onDomain() method was called with', functi
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(2);
-
-    expect($links[0]->get())->toBe('https://www.crwlr.software/packages');
-
-    expect($links[1]->get())->toBe('https://www.crwlr.software/blog');
+    expect($links)->toHaveCount(2)
+        ->and($links[0]->get())->toBe('https://www.crwlr.software/packages')
+        ->and($links[1]->get())->toBe('https://www.crwlr.software/blog');
 });
 
 test('onDomain() also takes an array of domains', function () {
@@ -168,11 +163,9 @@ test('onDomain() also takes an array of domains', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(2);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/contact');
-
-    expect($links[1]->get())->toBe('https://www.crwlr.software/packages');
+    expect($links)->toHaveCount(2)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/contact')
+        ->and($links[1]->get())->toBe('https://www.crwlr.software/packages');
 });
 
 test('onDomain() can be called multiple times and merges all domains it was called with', function () {
@@ -225,11 +218,9 @@ it('finds only links on the same host when onSameHost() was called', function ()
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(2);
-
-    expect($link[0]->get())->toBe('https://www.otsch.codes/contact');
-
-    expect($link[1]->get())->toBe('https://www.otsch.codes/blog');
+    expect($link)->toHaveCount(2)
+        ->and($link[0]->get())->toBe('https://www.otsch.codes/contact')
+        ->and($link[1]->get())->toBe('https://www.otsch.codes/blog');
 });
 
 it('doesn\'t find links on the same host when notOnSameHost() was called', function () {
@@ -246,11 +237,9 @@ it('doesn\'t find links on the same host when notOnSameHost() was called', funct
         new Response(200, [], $html),
     ));
 
-    expect($link)->toHaveCount(2);
-
-    expect($link[0]->get())->toBe('https://jobs.otsch.codes');
-
-    expect($link[1]->get())->toBe('https://www.crwlr.software/packages');
+    expect($link)->toHaveCount(2)
+        ->and($link[0]->get())->toBe('https://jobs.otsch.codes')
+        ->and($link[1]->get())->toBe('https://www.crwlr.software/packages');
 });
 
 it('finds only links from hosts the onHost() method was called with', function () {
@@ -268,11 +257,9 @@ it('finds only links from hosts the onHost() method was called with', function (
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(2);
-
-    expect($links[0]->get())->toBe('https://www.crwlr.software/packages');
-
-    expect($links[1]->get())->toBe('https://www.crwlr.software/packages/crawler/v0.4/getting-started');
+    expect($links)->toHaveCount(2)
+        ->and($links[0]->get())->toBe('https://www.crwlr.software/packages')
+        ->and($links[1]->get())->toBe('https://www.crwlr.software/packages/crawler/v0.4/getting-started');
 });
 
 test('onHost() also takes an array of hosts', function () {
@@ -288,9 +275,8 @@ test('onHost() also takes an array of hosts', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/contact');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/contact');
 
     $html = <<<HTML
         <a href="https://www.otsch.codes/contact">link1</a>
@@ -303,9 +289,8 @@ test('onHost() also takes an array of hosts', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(2);
-
-    expect($links[1]->get())->toBe('https://blog.example.com/articles/1');
+    expect($links)->toHaveCount(2)
+        ->and($links[1]->get())->toBe('https://blog.example.com/articles/1');
 });
 
 test('onHost() can be called multiple times and merges all hosts it was called with', function () {
@@ -333,9 +318,8 @@ test('onHost() can be called multiple times and merges all hosts it was called w
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(1);
-
-    expect($links[0]->get())->toBe('https://www.crwl.io');
+    expect($links)->toHaveCount(1)
+        ->and($links[0]->get())->toBe('https://www.crwl.io');
 
     $html = <<<HTML
         <a href="https://www.otsch.codes/blog">link1</a>
@@ -347,11 +331,9 @@ test('onHost() can be called multiple times and merges all hosts it was called w
         new Response(200, [], $html),
     ));
 
-    expect($links)->toHaveCount(2);
-
-    expect($links[0]->get())->toBe('https://www.otsch.codes/blog');
-
-    expect($links[1]->get())->toBe('https://www.crwl.io');
+    expect($links)->toHaveCount(2)
+        ->and($links[0]->get())->toBe('https://www.otsch.codes/blog')
+        ->and($links[1]->get())->toBe('https://www.crwl.io');
 });
 
 it('works correctly when HTML contains a base tag', function () {
@@ -376,11 +358,9 @@ it('works correctly when HTML contains a base tag', function () {
         new Response(200, [], $html),
     ));
 
-    expect($links[0]->get())->toBe('https://www.example.com/c/e');
-
-    expect($links[1]->get())->toBe('https://www.example.com/f/g');
-
-    expect($links[2]->get())->toBe('https://www.example.com/c/h');
+    expect($links[0]->get())->toBe('https://www.example.com/c/e')
+        ->and($links[1]->get())->toBe('https://www.example.com/f/g')
+        ->and($links[2]->get())->toBe('https://www.example.com/c/h');
 });
 
 it('throws away the URL fragment part when withoutFragment() was called', function () {
@@ -404,17 +384,15 @@ it('throws away the URL fragment part when withoutFragment() was called', functi
 
     $links = helper_invokeStepWithInput($step, $respondedRequest);
 
-    expect($links[0]->get())->toBe('https://www.example.com/foo/bar#fragment');
-
-    expect($links[1]->get())->toBe('https://www.example.com/baz#quz-fragment');
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar#fragment')
+        ->and($links[1]->get())->toBe('https://www.example.com/baz#quz-fragment');
 
     $step->withoutFragment();
 
     $links = helper_invokeStepWithInput($step, $respondedRequest);
 
-    expect($links[0]->get())->toBe('https://www.example.com/foo/bar');
-
-    expect($links[1]->get())->toBe('https://www.example.com/baz');
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar')
+        ->and($links[1]->get())->toBe('https://www.example.com/baz');
 });
 
 it('ignores special non HTTP links', function () {
@@ -442,11 +420,8 @@ it('ignores special non HTTP links', function () {
 
     $links = helper_invokeStepWithInput($step, $respondedRequest);
 
-    expect($links)->toHaveCount(3);
-
-    expect($links[0]->get())->toBe('https://www.example.com/one');
-
-    expect($links[1]->get())->toBe('https://www.example.com/two');
-
-    expect($links[2]->get())->toBe('https://www.example.com/three');
+    expect($links)->toHaveCount(3)
+        ->and($links[0]->get())->toBe('https://www.example.com/one')
+        ->and($links[1]->get())->toBe('https://www.example.com/two')
+        ->and($links[2]->get())->toBe('https://www.example.com/three');
 });

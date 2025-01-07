@@ -10,8 +10,8 @@ use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\XPathQuery;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use InvalidArgumentException;
 use stdClass;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getStepFilesContent;
 use function tests\helper_invokeStepWithInput;
@@ -53,9 +53,15 @@ test('RespondedRequest is a valid input', function () {
     expect($output[0]->get())->toBe([]);
 });
 
-test('For other inputs an InvalidArgumentException is thrown', function (mixed $input) {
-    helper_traverseIterable(helper_getDomStepInstance()::root()->invokeStep(new Input($input)));
-})->throws(InvalidArgumentException::class)->with([
+test('For other inputs an error message is logged', function (mixed $input) {
+    $logger = new DummyLogger();
+
+    helper_traverseIterable(helper_getDomStepInstance()::root()->addLogger($logger)->invokeStep(new Input($input)));
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toStartWith('A step was called with input that it can not work with: ')
+        ->and($logger->messages[0]['message'])->toEndWith('. The invalid input is of type ' . gettype($input) . '.');
+})->with([
     [123],
     [123.456],
     [new stdClass()],

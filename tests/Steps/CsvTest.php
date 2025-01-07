@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use InvalidArgumentException;
 use stdClass;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_invokeStepWithInput;
 use function tests\helper_traverseIterable;
@@ -30,29 +31,22 @@ it('maps a CSV string', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'domain', 'url']), $string);
 
-    expect($outputs)->toHaveCount(4);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'domain' => 'crwl.io', 'url' => 'https://www.crwl.io']);
-
-    expect($outputs[1]->get())->toBe(['id' => '234', 'domain' => 'example.com', 'url' => 'https://www.example.com']);
-
-    expect($outputs[2]->get())->toBe(['id' => '345', 'domain' => 'otsch.codes', 'url' => 'https://www.otsch.codes']);
-
-    expect($outputs[3]->get())->toBe(
-        ['id' => '456', 'domain' => 'crwlr.software', 'url' => 'https://www.crwlr.software'],
-    );
+    expect($outputs)->toHaveCount(4)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'domain' => 'crwl.io', 'url' => 'https://www.crwl.io'])
+        ->and($outputs[1]->get())->toBe(['id' => '234', 'domain' => 'example.com', 'url' => 'https://www.example.com'])
+        ->and($outputs[2]->get())->toBe(['id' => '345', 'domain' => 'otsch.codes', 'url' => 'https://www.otsch.codes'])
+        ->and($outputs[3]->get())->toBe(
+            ['id' => '456', 'domain' => 'crwlr.software', 'url' => 'https://www.crwlr.software'],
+        );
 });
 
 it('maps a file', function () {
     $outputs = helper_invokeStepWithInput(Csv::parseFile(['id', 'name', 'homepage']), helper_csvFilePath('basic.csv'));
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'name' => 'Otsch', 'homepage' => 'https://www.otsch.codes']);
-
-    expect($outputs[1]->get())->toBe(['id' => '234', 'name' => 'John Doe', 'homepage' => 'https://www.john.doe']);
-
-    expect($outputs[2]->get())->toBe(['id' => '345', 'name' => 'Jane Doe', 'homepage' => 'https://www.jane.doe']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'name' => 'Otsch', 'homepage' => 'https://www.otsch.codes'])
+        ->and($outputs[1]->get())->toBe(['id' => '234', 'name' => 'John Doe', 'homepage' => 'https://www.john.doe'])
+        ->and($outputs[2]->get())->toBe(['id' => '345', 'name' => 'Jane Doe', 'homepage' => 'https://www.jane.doe']);
 });
 
 it('works with a RespondedRequest as input', function () {
@@ -65,11 +59,9 @@ it('works with a RespondedRequest as input', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'name', 'phone']), $respondedRequest);
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'name' => 'John Doe', 'phone' => '+431234567']);
-
-    expect($outputs[1]->get())->toBe(['id' => '234', 'name' => 'Jane Doe', 'phone' => '+432345678']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'name' => 'John Doe', 'phone' => '+431234567'])
+        ->and($outputs[1]->get())->toBe(['id' => '234', 'name' => 'Jane Doe', 'phone' => '+432345678']);
 });
 
 it('works with an object having a __toString method', function () {
@@ -85,24 +77,26 @@ it('works with an object having a __toString method', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString(['id', 'name', 'phone']), $object);
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'name' => 'Max Mustermann', 'phone' => '+431234567']);
-
-    expect($outputs[1]->get())->toBe(['id' => '234', 'name' => 'Julia Musterfrau', 'phone' => '+432345678']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'name' => 'Max Mustermann', 'phone' => '+431234567'])
+        ->and($outputs[1]->get())->toBe(['id' => '234', 'name' => 'Julia Musterfrau', 'phone' => '+432345678']);
 });
 
-it('throws an InvalidArgumentException for other inputs', function (string $method, mixed $input) {
-    if ($method === 'string') {
-        helper_traverseIterable(
-            Csv::parseString(['column'])->invokeStep(new Input($input)),
-        );
-    } elseif ($method === 'file') {
-        helper_traverseIterable(
-            Csv::parseFile(['column'])->invokeStep(new Input($input)),
-        );
-    }
-})->throws(InvalidArgumentException::class)->with([
+it('logs an error message for other inputs', function (string $method, mixed $input) {
+    $logger = new DummyLogger();
+
+    $step = ($method === 'string' ? Csv::parseString(['column']) : Csv::parseFile(['column']))->addLogger($logger);
+
+    helper_traverseIterable($step->invokeStep(new Input($input)));
+
+    $logMessages = $logger->messages;
+
+    expect($logMessages)->not->toBeEmpty()
+        ->and($logMessages[0]['message'])->toStartWith(
+            'The Crwlr\\Crawler\\Steps\\Csv step was called with input that it can not work with: ',
+        )
+        ->and($logMessages[0]['message'])->toEndWith('. The invalid input is of type ' . gettype($input) . '.');
+})->with([
     ['string', 123],
     ['string', new stdClass()],
     ['string', 12.345],
@@ -123,13 +117,11 @@ it('can map columns using numerical array keys for the columns', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString([1 => 'domain', 3 => 'description']), $string);
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe([
-        'domain' => 'crwlr.software', 'description' => 'PHP Web Crawling and Scraping Library',
-    ]);
-
-    expect($outputs[1]->get())->toBe(['domain' => 'otsch.codes', 'description' => 'I am Otsch, I code']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe([
+            'domain' => 'crwlr.software', 'description' => 'PHP Web Crawling and Scraping Library',
+        ])
+        ->and($outputs[1]->get())->toBe(['domain' => 'otsch.codes', 'description' => 'I am Otsch, I code']);
 });
 
 it('can map columns using numerical array keys for the columns when parsing file', function () {
@@ -138,13 +130,10 @@ it('can map columns using numerical array keys for the columns when parsing file
         helper_csvFilePath('basic.csv'),
     );
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['name' => 'Otsch', 'homepage' => 'https://www.otsch.codes']);
-
-    expect($outputs[1]->get())->toBe(['name' => 'John Doe', 'homepage' => 'https://www.john.doe']);
-
-    expect($outputs[2]->get())->toBe(['name' => 'Jane Doe', 'homepage' => 'https://www.jane.doe']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['name' => 'Otsch', 'homepage' => 'https://www.otsch.codes'])
+        ->and($outputs[1]->get())->toBe(['name' => 'John Doe', 'homepage' => 'https://www.john.doe'])
+        ->and($outputs[2]->get())->toBe(['name' => 'Jane Doe', 'homepage' => 'https://www.jane.doe']);
 });
 
 it('can map columns using null for columns to skip', function () {
@@ -156,25 +145,19 @@ it('can map columns using null for columns to skip', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString([null, 'make', null, null, 'price']), $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00']);
-
-    expect($outputs[1]->get())->toBe(['make' => 'Chevy', 'price' => '4900.00']);
-
-    expect($outputs[2]->get())->toBe(['make' => 'Chevy', 'price' => '5000.00']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00'])
+        ->and($outputs[1]->get())->toBe(['make' => 'Chevy', 'price' => '4900.00'])
+        ->and($outputs[2]->get())->toBe(['make' => 'Chevy', 'price' => '5000.00']);
 });
 
 it('can map columns using null for columns to skip when parsing file', function () {
     $outputs = helper_invokeStepWithInput(Csv::parseFile(['id', null, 'homepage']), helper_csvFilePath('basic.csv'));
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'homepage' => 'https://www.otsch.codes']);
-
-    expect($outputs[1]->get())->toBe(['id' => '234', 'homepage' => 'https://www.john.doe']);
-
-    expect($outputs[2]->get())->toBe(['id' => '345', 'homepage' => 'https://www.jane.doe']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'homepage' => 'https://www.otsch.codes'])
+        ->and($outputs[1]->get())->toBe(['id' => '234', 'homepage' => 'https://www.john.doe'])
+        ->and($outputs[2]->get())->toBe(['id' => '345', 'homepage' => 'https://www.jane.doe']);
 });
 
 it('uses the values from the first line as output keys when no column mapping defined', function () {
@@ -187,9 +170,8 @@ it('uses the values from the first line as output keys when no column mapping de
 
     $outputs = helper_invokeStepWithInput(Csv::parseString()->skipFirstLine(), $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['id' => '1', 'title' => 'Raspberry Pi Zero 2 W', 'price' => '16.99']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['id' => '1', 'title' => 'Raspberry Pi Zero 2 W', 'price' => '16.99']);
 });
 
 it('uses the values from the first line as output keys when no column mapping defined when parsing file', function () {
@@ -198,16 +180,15 @@ it('uses the values from the first line as output keys when no column mapping de
         helper_csvFilePath('with-column-headlines.csv'),
     );
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe([
-        'Stunde' => '1',
-        'Montag' => 'Mathematik',
-        'Dienstag' => 'Deutsch',
-        'Mittwoch' => 'Englisch',
-        'Donnerstag' => 'Erdkunde',
-        'Freitag' => 'Politik',
-    ]);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe([
+            'Stunde' => '1',
+            'Montag' => 'Mathematik',
+            'Dienstag' => 'Deutsch',
+            'Mittwoch' => 'Englisch',
+            'Donnerstag' => 'Erdkunde',
+            'Freitag' => 'Politik',
+        ]);
 });
 
 it('skips the first line when defined via method call to skipFirstLine method', function () {
@@ -223,9 +204,8 @@ it('skips the first line when defined via method call to skipFirstLine method', 
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00']);
 });
 
 it('skips the first line when parsing file when defined via method call to skipFirstLine method', function () {
@@ -234,13 +214,10 @@ it('skips the first line when parsing file when defined via method call to skipF
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['fach-erste' => 'Mathematik', 'fach-zweite' => 'Deutsch']);
-
-    expect($outputs[1]->get())->toBe(['fach-erste' => 'Sport', 'fach-zweite' => 'Deutsch']);
-
-    expect($outputs[2]->get())->toBe(['fach-erste' => 'Sport', 'fach-zweite' => 'Religion (ev., kath.)']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['fach-erste' => 'Mathematik', 'fach-zweite' => 'Deutsch'])
+        ->and($outputs[1]->get())->toBe(['fach-erste' => 'Sport', 'fach-zweite' => 'Deutsch'])
+        ->and($outputs[2]->get())->toBe(['fach-erste' => 'Sport', 'fach-zweite' => 'Religion (ev., kath.)']);
 });
 
 it('skips the first line when defined via constructor param', function () {
@@ -251,9 +228,8 @@ it('skips the first line when defined via constructor param', function () {
 
     $outputs = helper_invokeStepWithInput(Csv::parseString([null, 'make', null, null, 'price'], true), $string);
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00']);
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['make' => 'Ford', 'price' => '3000.00']);
 });
 
 it('skips the first line when parsing file when defined via constructor param', function () {
@@ -262,13 +238,10 @@ it('skips the first line when parsing file when defined via constructor param', 
         helper_csvFilePath('with-column-headlines.csv'),
     );
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['fach-erste' => 'Mathematik', 'fach-dritte' => 'Englisch']);
-
-    expect($outputs[1]->get())->toBe(['fach-erste' => 'Sport', 'fach-dritte' => 'Englisch']);
-
-    expect($outputs[2]->get())->toBe(['fach-erste' => 'Sport', 'fach-dritte' => 'Kunst']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['fach-erste' => 'Mathematik', 'fach-dritte' => 'Englisch'])
+        ->and($outputs[1]->get())->toBe(['fach-erste' => 'Sport', 'fach-dritte' => 'Englisch'])
+        ->and($outputs[2]->get())->toBe(['fach-erste' => 'Sport', 'fach-dritte' => 'Kunst']);
 });
 
 it('uses a different separator when you set one', function () {
@@ -283,13 +256,10 @@ it('uses a different separator when you set one', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['username' => 'CoDerOtsch', 'firstname' => 'Christian', 'surname' => 'Olear']);
-
-    expect($outputs[1]->get())->toBe(['username' => 'g3n1u5', 'firstname' => 'Albert', 'surname' => 'Einstein']);
-
-    expect($outputs[2]->get())->toBe(['username' => 'sWiFtY', 'firstname' => 'Taylor', 'surname' => 'Swift']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['username' => 'CoDerOtsch', 'firstname' => 'Christian', 'surname' => 'Olear'])
+        ->and($outputs[1]->get())->toBe(['username' => 'g3n1u5', 'firstname' => 'Albert', 'surname' => 'Einstein'])
+        ->and($outputs[2]->get())->toBe(['username' => 'sWiFtY', 'firstname' => 'Taylor', 'surname' => 'Swift']);
 });
 
 it('uses a different separator when you set one, when parsing a file', function () {
@@ -298,13 +268,10 @@ it('uses a different separator when you set one, when parsing a file', function 
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('separator.csv'));
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['username' => 'CoDerOtsch', 'age' => '35']);
-
-    expect($outputs[1]->get())->toBe(['username' => 'g3n1u5', 'age' => '143']);
-
-    expect($outputs[2]->get())->toBe(['username' => 'sWiFtY', 'age' => '32']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['username' => 'CoDerOtsch', 'age' => '35'])
+        ->and($outputs[1]->get())->toBe(['username' => 'g3n1u5', 'age' => '143'])
+        ->and($outputs[2]->get())->toBe(['username' => 'sWiFtY', 'age' => '32']);
 });
 
 it('throws an InvalidArgumentException when you try to set a multi character separator', function () {
@@ -323,13 +290,10 @@ it('uses a different enclosure when you set one', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['meal' => 'Fritattensuppe', 'price' => '3.9']);
-
-    expect($outputs[1]->get())->toBe(['meal' => 'Wiener Schnitzel vom Schwein', 'price' => '12.7']);
-
-    expect($outputs[2]->get())->toBe(['meal' => 'Semmelknödel mit Schwammerlsauce', 'price' => '9.5']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['meal' => 'Fritattensuppe', 'price' => '3.9'])
+        ->and($outputs[1]->get())->toBe(['meal' => 'Wiener Schnitzel vom Schwein', 'price' => '12.7'])
+        ->and($outputs[2]->get())->toBe(['meal' => 'Semmelknödel mit Schwammerlsauce', 'price' => '9.5']);
 });
 
 it('uses a different enclosure when you set one, when parsing a file', function () {
@@ -338,13 +302,10 @@ it('uses a different enclosure when you set one, when parsing a file', function 
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('enclosure.csv'));
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['meal' => 'Kräftige Rindsuppe', 'price' => '4.5']);
-
-    expect($outputs[1]->get())->toBe(['meal' => 'Crispy Chicken Burger', 'price' => '12']);
-
-    expect($outputs[2]->get())->toBe(['meal' => 'Duett von Saibling und Forelle', 'price' => '21']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['meal' => 'Kräftige Rindsuppe', 'price' => '4.5'])
+        ->and($outputs[1]->get())->toBe(['meal' => 'Crispy Chicken Burger', 'price' => '12'])
+        ->and($outputs[2]->get())->toBe(['meal' => 'Duett von Saibling und Forelle', 'price' => '21']);
 });
 
 it('uses a different escape character when you set one', function () {
@@ -357,9 +318,8 @@ it('uses a different escape character when you set one', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe(['escaped' => 'test &"escape&" test']);
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['escaped' => 'test &"escape&" test']);
 });
 
 it('uses a different escape character when you set one, when parsing a file', function () {
@@ -368,11 +328,9 @@ it('uses a different escape character when you set one, when parsing a file', fu
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('escape.csv'));
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe(['escaped' => 'test %"escape%" test']);
-
-    expect($outputs[1]->get())->toBe(['escaped' => 'foo %"escape%" bar %"baz%" lorem']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe(['escaped' => 'test %"escape%" test'])
+        ->and($outputs[1]->get())->toBe(['escaped' => 'foo %"escape%" bar %"baz%" lorem']);
 });
 
 it('filters rows', function () {
@@ -389,11 +347,9 @@ it('filters rows', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'isPremium' => '1']);
-
-    expect($outputs[1]->get())->toBe(['id' => '124', 'isPremium' => '1']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'isPremium' => '1'])
+        ->and($outputs[1]->get())->toBe(['id' => '124', 'isPremium' => '1']);
 });
 
 it('filters rows when parsing a file', function () {
@@ -403,11 +359,9 @@ it('filters rows when parsing a file', function () {
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
-    expect($outputs)->toHaveCount(2);
-
-    expect($outputs[0]->get())->toBe(['Stunde' => '2', 'Fach' => 'Sport']);
-
-    expect($outputs[1]->get())->toBe(['Stunde' => '3', 'Fach' => 'Sport']);
+    expect($outputs)->toHaveCount(2)
+        ->and($outputs[0]->get())->toBe(['Stunde' => '2', 'Fach' => 'Sport'])
+        ->and($outputs[1]->get())->toBe(['Stunde' => '3', 'Fach' => 'Sport']);
 });
 
 it('filters rows by multiple filters', function () {
@@ -425,9 +379,8 @@ it('filters rows by multiple filters', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'isVip' => '1', 'isQueenBandMember' => '1']);
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'isVip' => '1', 'isQueenBandMember' => '1']);
 });
 
 it('filters rows by multiple filters when parsing a file', function () {
@@ -438,16 +391,15 @@ it('filters rows by multiple filters when parsing a file', function () {
 
     $outputs = helper_invokeStepWithInput($step, helper_csvFilePath('with-column-headlines.csv'));
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBe([
-        'Stunde' => '2',
-        'Montag' => 'Sport',
-        'Dienstag' => 'Deutsch',
-        'Mittwoch' => 'Englisch',
-        'Donnerstag' => 'Sport',
-        'Freitag' => 'Geschichte',
-    ]);
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe([
+            'Stunde' => '2',
+            'Montag' => 'Sport',
+            'Dienstag' => 'Deutsch',
+            'Mittwoch' => 'Englisch',
+            'Donnerstag' => 'Sport',
+            'Freitag' => 'Geschichte',
+        ]);
 });
 
 it('filters rows with a StringCheck filter', function () {
@@ -465,11 +417,8 @@ it('filters rows with a StringCheck filter', function () {
 
     $outputs = helper_invokeStepWithInput($step, $string);
 
-    expect($outputs)->toHaveCount(3);
-
-    expect($outputs[0]->get())->toBe(['id' => '123', 'firstname' => 'Christian']);
-
-    expect($outputs[1]->get())->toBe(['id' => '124', 'firstname' => 'Christian Anton']);
-
-    expect($outputs[2]->get())->toBe(['id' => '125', 'firstname' => 'Another Christian']);
+    expect($outputs)->toHaveCount(3)
+        ->and($outputs[0]->get())->toBe(['id' => '123', 'firstname' => 'Christian'])
+        ->and($outputs[1]->get())->toBe(['id' => '124', 'firstname' => 'Christian Anton'])
+        ->and($outputs[2]->get())->toBe(['id' => '125', 'firstname' => 'Another Christian']);
 });
