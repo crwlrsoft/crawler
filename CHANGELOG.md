@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [3.1.2] - 2025-01-08
+### Fixed
+* When loading a non-HTML document (e.g., XML) via the Chrome browser, the library now retrieves the original source. Previously, it returned the outerHTML of the rendered document, which wrapped the content in an HTML structure.
+
 ### [3.1.1] - 2025-01-07
 ### Fixed
 * When the `validateAndSanitize()` method of a step throws an `InvalidArgumentException`, the exception is now caught, logged and the step is not invoked with the invalid input. This improves fault tolerance. Feeding a step with one invalid input shouldn't cause the whole crawler run to fail. Exceptions other than `InvalidArgumentException` remain uncaught.

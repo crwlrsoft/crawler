@@ -11,6 +11,7 @@ use Exception;
 use GuzzleHttp\Psr7\Response;
 use HeadlessChromium\Browser;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Communication\Message;
 use HeadlessChromium\Exception\CommunicationException;
 use HeadlessChromium\Exception\CommunicationException\CannotReadResponse;
 use HeadlessChromium\Exception\CommunicationException\InvalidResponse;
@@ -22,6 +23,7 @@ use HeadlessChromium\Exception\OperationTimedOut;
 use HeadlessChromium\Page;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
+use Throwable;
 
 class HeadlessBrowserLoaderHelper
 {
@@ -97,12 +99,18 @@ class HeadlessBrowserLoaderHelper
 
         $responseHeaders = [];
 
+        $responseBody = '';
+
         $this->page->getSession()->once(
             "method:Network.responseReceived",
-            function ($params) use (&$statusCode, &$responseHeaders) {
+            function ($params) use (&$statusCode, &$responseHeaders, &$responseBody) {
                 $statusCode = $params['response']['status'];
 
                 $responseHeaders = $this->sanitizeResponseHeaders($params['response']['headers']);
+
+                $responseBody = $this->page?->getSession()->sendMessageSync(new Message('Network.getResponseBody', [
+                    'requestId' => $params['requestId'],
+                ]))->getData()['result']['body'] ?? '';
             },
         );
 
@@ -114,14 +122,11 @@ class HeadlessBrowserLoaderHelper
 
         $this->callPostNavigateHooks();
 
-        $html = $this->page?->getHtml();
+        $html = $this->responseIsHtmlDocument($this->page) ? $this->page?->getHtml() : $responseBody;
 
         $this->addCookiesToJar($cookieJar, $request->getUri());
 
-        return new RespondedRequest(
-            $request,
-            new Response($statusCode, $responseHeaders, $html),
-        );
+        return new RespondedRequest($request, new Response($statusCode, $responseHeaders, $html));
     }
 
     public function getOpenBrowser(): ?Browser
@@ -366,5 +371,20 @@ class HeadlessBrowserLoaderHelper
         }
 
         return $headers;
+    }
+
+    protected function responseIsHtmlDocument(?Page $page = null): bool
+    {
+        if (!$page) {
+            return false;
+        }
+
+        try {
+            return $page->evaluate(
+                'document.contentType === \'text/html\' || document instanceof HTMLDocument',
+            )->getReturnValue(3000);
+        } catch (Throwable $e) {
+            return true;
+        }
     }
 }
