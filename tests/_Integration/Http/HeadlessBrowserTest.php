@@ -305,3 +305,15 @@ it('executes the javascript code provided via HeadlessBrowserLoaderHelper::setPa
 
     expect($results[0]->get('content'))->toBe('secret content');
 });
+
+it('gets the source of an XML response without being wrapped in an HTML document', function () {
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler
+        ->input('http://localhost:8000/rss-feed')
+        ->addStep(Http::get()->keep(['body']));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results[0]->get('body'))->toStartWith('<?xml version="1.0" encoding="utf-8"?>' . PHP_EOL . '<rss');
+});

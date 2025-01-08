@@ -212,3 +212,9 @@ if (str_starts_with($route, '/non-utf-8-charset')) {
 if (str_starts_with($route, '/page-init-script')) {
     return include(__DIR__ . '/_Server/PageInitScript.php');
 }
+
+if ($route === '/rss-feed') {
+    header('Content-Type: text/xml; charset=utf-8');
+
+    return include(__DIR__ . '/_Server/RssFeed.php');
+}
