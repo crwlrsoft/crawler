@@ -25,7 +25,7 @@ it('works with a RespondedRequest as input', function () {
         ->and($links[0]->get())->toBe('https://www.example.com/blog');
 });
 
-it('logs an error message when feeded with invalid input', function () {
+it('logs an error message when fed with invalid input', function () {
     $logger = new DummyLogger();
 
     $step = (new GetLinks())->addLogger($logger);
