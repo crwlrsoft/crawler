@@ -132,6 +132,29 @@ it('uses cookies', function () {
         ->and($results[0]->get('printed-cookie'))->toBe('foo123');
 });
 
+it('does not use cookies when HttpLoader::dontUseCookies() was called', function () {
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler->getLoader()->dontUseCookies();
+
+    $crawler
+        ->input('http://localhost:8000/set-cookie')
+        ->addStep(Http::get())
+        ->addStep(new class extends Step {
+            protected function invoke(mixed $input): Generator
+            {
+                yield 'http://localhost:8000/print-cookie';
+            }
+        })
+        ->addStep(Http::get())
+        ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookie'));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->get('printed-cookie'))->toBeEmpty();
+});
+
 it('renders javascript', function () {
     $crawler = new HeadlessBrowserCrawler();
 

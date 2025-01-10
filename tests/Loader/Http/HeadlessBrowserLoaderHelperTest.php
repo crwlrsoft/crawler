@@ -3,6 +3,7 @@
 namespace tests\Loader\Http;
 
 use Closure;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\HeadlessBrowserLoaderHelper;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Exception;
@@ -10,7 +11,9 @@ use GuzzleHttp\Psr7\Request;
 use HeadlessChromium\AutoDiscover;
 use HeadlessChromium\Browser\ProcessAwareBrowser;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Communication\Message;
 use HeadlessChromium\Communication\Session;
+use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
 use HeadlessChromium\PageUtils\PageNavigation;
 use Mockery;
@@ -21,6 +24,7 @@ function helper_setUpHeadlessChromeMocks(
     ?Closure $pageNavigationArgsClosure = null,
     ?Closure $createBrowserArgsExpectationCallback = null,
     ?Closure $browserMockCallback = null,
+    ?Closure $pageSessionMockCallback = null,
 ): BrowserFactory {
     $browserFactoryMock = Mockery::mock(BrowserFactory::class);
 
@@ -45,6 +49,12 @@ function helper_setUpHeadlessChromeMocks(
     $sessionMock = Mockery::mock(Session::class);
 
     $pageMock->shouldReceive('getSession')->andReturn($sessionMock);
+
+    if ($pageSessionMockCallback) {
+        $pageSessionMockCallback($sessionMock);
+    }
+
+    $pageMock->shouldReceive('getCookies')->andReturn(new CookiesCollection([]));
 
     $sessionMock->shouldReceive('once');
 
@@ -75,6 +85,7 @@ it('uses the configured timeout', function () {
     $response = $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
         helper_getMinThrottler(),
+        cookieJar: new CookieJar(),
     );
 
     expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
@@ -104,6 +115,7 @@ it('waits for the configured browser navigation event', function () {
     $response = $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
         helper_getMinThrottler(),
+        cookieJar: new CookieJar(),
     );
 
     expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
@@ -168,6 +180,7 @@ it('calls the temporary post navigate hooks once', function () {
     $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
         helper_getMinThrottler(),
+        cookieJar: new CookieJar(),
     );
 
     expect($hook1Called)->toBeTrue()
@@ -179,6 +192,7 @@ it('calls the temporary post navigate hooks once', function () {
     $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
         helper_getMinThrottler(),
+        cookieJar: new CookieJar(),
     );
 
     expect($hook1Called)->toBeFalse()
@@ -208,6 +222,7 @@ it(
         $helper->navigateToPageAndGetRespondedRequest(
             new Request('GET', 'https://www.example.com/bar'),
             helper_getMinThrottler(),
+            cookieJar: new CookieJar(),
         );
     },
 );
@@ -224,6 +239,7 @@ it('does not call the ProcessAwareBrowser::setPagePreScript() when no page init 
     $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/bar'),
         helper_getMinThrottler(),
+        cookieJar: new CookieJar(),
     );
 });
 
@@ -241,6 +257,7 @@ it(
         $response = $helper->navigateToPageAndGetRespondedRequest(
             new Request('GET', 'https://www.example.com/bar', ['user-agent' => ['MyBot']]),
             helper_getMinThrottler(),
+            cookieJar: new CookieJar(),
         );
 
         expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
@@ -263,8 +280,31 @@ it(
         $response = $helper->navigateToPageAndGetRespondedRequest(
             new Request('GET', 'https://www.example.com/bar', ['user-agent' => ['MyBot']]),
             helper_getMinThrottler(),
+            cookieJar: new CookieJar(),
         );
 
         expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
     },
 );
+
+it('clears the browsers cookies when no cookie jar is provided', function () {
+    $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+        pageSessionMockCallback: function (Mockery\MockInterface $mock) {
+            $mock
+                ->shouldReceive('sendMessageSync')
+                ->once()
+                ->withArgs(function (Message $message) {
+                    return $message->getMethod() === 'Network.clearBrowserCookies';
+                });
+        },
+    );
+
+    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+    $response = $helper->navigateToPageAndGetRespondedRequest(
+        new Request('GET', 'https://www.example.com/yolo', ['user-agent' => ['MyBot']]),
+        helper_getMinThrottler(),
+    );
+
+    expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
+});

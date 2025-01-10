@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.4] - 2025-01-10
+### Fixed
+* `HttpLoader::dontUseCookies()` now also works when using the Chrome browser. Cookies are cleared before every request.
+
 ## [3.1.3] - 2025-01-10
 ### Fixed
 * Further improve getting the raw response body from non-HTML documents via Chrome browser.
