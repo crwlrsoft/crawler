@@ -393,7 +393,7 @@ class HttpLoader extends Loader
                 $request,
                 $this->throttler,
                 $proxy,
-                $this->cookieJar,
+                $this->useCookies ? $this->cookieJar : null,
             );
         }
 

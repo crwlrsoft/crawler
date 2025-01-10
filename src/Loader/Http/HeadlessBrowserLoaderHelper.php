@@ -93,6 +93,10 @@ class HeadlessBrowserLoaderHelper
     ): RespondedRequest {
         $this->page = $this->getBrowser($request, $proxy)->createPage();
 
+        if ($cookieJar === null) {
+            $this->page->getSession()->sendMessageSync(new Message('Network.clearBrowserCookies'));
+        }
+
         $statusCode = 200;
 
         $responseHeaders = [];
