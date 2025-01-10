@@ -218,3 +218,9 @@ if ($route === '/rss-feed') {
 
     return include(__DIR__ . '/_Server/RssFeed.php');
 }
+
+if ($route === '/broken-mime-type-rss') {
+    header('Content-Type: application/rss+xml; charset=UTF-8');
+
+    return include(__DIR__ . '/_Server/BrokenMimeTypeRss.php');
+}
