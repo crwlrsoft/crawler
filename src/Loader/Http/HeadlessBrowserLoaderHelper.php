@@ -91,26 +91,22 @@ class HeadlessBrowserLoaderHelper
         ?string $proxy = null,
         ?CookieJar $cookieJar = null,
     ): RespondedRequest {
-        $browser = $this->getBrowser($request, $proxy);
-
-        $this->page = $browser->createPage();
+        $this->page = $this->getBrowser($request, $proxy)->createPage();
 
         $statusCode = 200;
 
         $responseHeaders = [];
 
-        $responseBody = '';
+        $requestId = null;
 
         $this->page->getSession()->once(
             "method:Network.responseReceived",
-            function ($params) use (&$statusCode, &$responseHeaders, &$responseBody) {
+            function ($params) use (&$statusCode, &$responseHeaders, &$requestId) {
                 $statusCode = $params['response']['status'];
 
                 $responseHeaders = $this->sanitizeResponseHeaders($params['response']['headers']);
 
-                $responseBody = $this->page?->getSession()->sendMessageSync(new Message('Network.getResponseBody', [
-                    'requestId' => $params['requestId'],
-                ]))->getData()['result']['body'] ?? '';
+                $requestId = $params['requestId'] ?? null;
             },
         );
 
@@ -122,7 +118,11 @@ class HeadlessBrowserLoaderHelper
 
         $this->callPostNavigateHooks();
 
-        $html = $this->responseIsHtmlDocument($this->page) ? $this->page?->getHtml() : $responseBody;
+        if (is_string($requestId) && $this->page && !$this->responseIsHtmlDocument($this->page)) {
+            $html = $this->tryToGetRawResponseBody($this->page, $requestId) ?? $this->page->getHtml();
+        } else {
+            $html = $this->page?->getHtml();
+        }
 
         $this->addCookiesToJar($cookieJar, $request->getUri());
 
@@ -386,5 +386,30 @@ class HeadlessBrowserLoaderHelper
         } catch (Throwable $e) {
             return true;
         }
+    }
+
+    /**
+     * In production, retrieving the raw response body using the Network.getResponseBody message sometimes failed.
+     * Waiting briefly before sending the message appeared to resolve the issue.
+     * So, this method tries up to three times with a brief wait between each attempt.
+     */
+    protected function tryToGetRawResponseBody(Page $page, string $requestId): ?string
+    {
+        for ($i = 1; $i <= 3; $i++) {
+            try {
+                $message = $page->getSession()->sendMessageSync(new Message('Network.getResponseBody', [
+                    'requestId' => $requestId,
+                ]));
+
+                if ($message->isSuccessful() && $message->getData()['result']['body']) {
+                    return $message->getData()['result']['body'];
+                }
+            } catch (Throwable) {
+            }
+
+            usleep($i * 100000);
+        }
+
+        return null;
     }
 }

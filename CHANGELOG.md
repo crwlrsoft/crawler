@@ -6,24 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [3.1.2] - 2025-01-08
+## [3.1.3] - 2025-01-10
+### Fixed
+* Further improve getting the raw response body from non-HTML documents via Chrome browser.
+
+## [3.1.2] - 2025-01-08
 ### Fixed
 * When loading a non-HTML document (e.g., XML) via the Chrome browser, the library now retrieves the original source. Previously, it returned the outerHTML of the rendered document, which wrapped the content in an HTML structure.
 
-### [3.1.1] - 2025-01-07
+## [3.1.1] - 2025-01-07
 ### Fixed
 * When the `validateAndSanitize()` method of a step throws an `InvalidArgumentException`, the exception is now caught, logged and the step is not invoked with the invalid input. This improves fault tolerance. Feeding a step with one invalid input shouldn't cause the whole crawler run to fail. Exceptions other than `InvalidArgumentException` remain uncaught.
 
-### [3.1.0] - 2025-01-03
+## [3.1.0] - 2025-01-03
 ### Added
 * New method `HeadlessBrowserLoaderHelper::setPageInitScript()` (`$crawler->getLoader()->browser()->setPageInitScript()`) to provide javascript code that is executed on every new browser page before navigating anywhere.
 * New method `HeadlessBrowserLoaderHelper::useNativeUserAgent()` (`$crawler->getLoader()->browser()->useNativeUserAgent()`) to allow using the native `User-Agent` that your Chrome browser sends by default.
 
-### [3.0.4] - 2024-12-18
+## [3.0.4] - 2024-12-18
 ### Fixed
 * Minor improvement for the `DomQuery` (base for `Dom::cssSelector()` and `Dom::xPath()`): enable providing an empty string as selector, to simply get the node that the selector is applied to.
 
-### [3.0.3] - 2024-12-11
+## [3.0.3] - 2024-12-11
 ### Fixed
 * Improved fix for non UTF-8 characters in HTML documents declared as UTF-8.
 
