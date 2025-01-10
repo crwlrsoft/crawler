@@ -385,7 +385,10 @@ class HeadlessBrowserLoaderHelper
 
         try {
             return $page->evaluate(
-                'document.contentType === \'text/html\' || document instanceof HTMLDocument',
+                <<<JS
+                (document.contentType === 'text/html' || document instanceof HTMLDocument) &&
+                !(document.contentType === 'text/plain' && document.body.textContent.trimLeft().startsWith('<?xml '))
+                JS,
             )->getReturnValue(3000);
         } catch (Throwable $e) {
             return true;

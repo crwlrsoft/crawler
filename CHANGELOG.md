@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.5] - 2025-01-10
+### Fixed
+* Another improvement for getting XML source when using the browser, in cases where Chrome doesn't identify the response as an XML document (even though a Content-Type header is sent).
+
 ## [3.1.4] - 2025-01-10
 ### Fixed
 * `HttpLoader::dontUseCookies()` now also works when using the Chrome browser. Cookies are cleared before every request.

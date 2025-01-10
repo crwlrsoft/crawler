@@ -340,3 +340,19 @@ it('gets the source of an XML response without being wrapped in an HTML document
 
     expect($results[0]->get('body'))->toStartWith('<?xml version="1.0" encoding="utf-8"?>' . PHP_EOL . '<rss');
 });
+
+it(
+    'gets the source of an XML response without being wrapped in an HTML document even when chrome does not ' .
+    'identify the document as an XML document',
+    function () {
+        $crawler = new HeadlessBrowserCrawler();
+
+        $crawler
+            ->input('http://localhost:8000/broken-mime-type-rss')
+            ->addStep(Http::get()->keep(['body']));
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results[0]->get('body'))->toStartWith('<?xml version="1.0" encoding="UTF-8"?>');
+    },
+);
