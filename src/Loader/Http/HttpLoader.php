@@ -324,9 +324,11 @@ class HttpLoader extends Loader
 
         $respondedRequest = $this->shouldRequestBeServedFromCache($request) ? $this->getFromCache($request) : null;
 
-        $isFromCache = $respondedRequest !== null;
+        if ($respondedRequest) {
+            $isFromCache = true;
 
-        if ($isFromCache) {
+            $respondedRequest->setIsServedFromCache();
+
             $this->callHook('onCacheHit', $request, $respondedRequest->response);
         }
 

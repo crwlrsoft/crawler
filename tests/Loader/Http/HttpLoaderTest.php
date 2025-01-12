@@ -11,6 +11,7 @@ use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Exception;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -178,9 +179,12 @@ it('calls the onCacheHit hook when a response for the request was found in the c
         $onCacheHitWasCalled = true;
     });
 
-    $httpLoader->{$loadMethod}('https://www.example.com/foo');
+    $response = $httpLoader->{$loadMethod}('https://www.example.com/foo');
 
-    expect($onCacheHitWasCalled)->toBeTrue();
+    /** @var RespondedRequest $response */
+
+    expect($onCacheHitWasCalled)->toBeTrue()
+        ->and($response->isServedFromCache())->toBeTrue();
 })->with(['load', 'loadOrFail']);
 
 it('throws an Exception when request fails in loadOrFail method', function () {
@@ -269,11 +273,9 @@ it('automatically handles redirects', function (string $loadingMethod) {
     $respondedRequest = $httpLoader->{$loadingMethod}('https://www.crwlr.software/packages');
 
     /** @var RespondedRequest $respondedRequest */
-    expect($respondedRequest->requestedUri())->toBe('https://www.crwlr.software/packages');
-
-    expect($respondedRequest->effectiveUri())->toBe('https://www.redirect.com');
-
-    expect($respondedRequest->response->getBody()->getContents())->toBe('YES');
+    expect($respondedRequest->requestedUri())->toBe('https://www.crwlr.software/packages')
+        ->and($respondedRequest->effectiveUri())->toBe('https://www.redirect.com')
+        ->and($respondedRequest->response->getBody()->getContents())->toBe('YES');
 })->with(['load', 'loadOrFail']);
 
 it('calls request start and end tracking methods', function (string $loadingMethod) {
@@ -303,9 +305,8 @@ it('calls request start and end tracking methods', function (string $loadingMeth
 
     $output = $this->getActualOutputForAssertion();
 
-    expect($output)->toContain('Track request start https://www.twitter.com');
-
-    expect($output)->toContain('Track request end https://www.twitter.com');
+    expect($output)->toContain('Track request start https://www.twitter.com')
+        ->and($output)->toContain('Track request end https://www.twitter.com');
 })->with(['load', 'loadOrFail']);
 
 it(
@@ -344,9 +345,8 @@ it(
 
         $output = $this->getActualOutputForAssertion();
 
-        expect($output)->toContain('Track request end https://www.example.com/foo');
-
-        expect(count(explode('Track request end', $output)))->toBe(2);
+        expect($output)->toContain('Track request end https://www.example.com/foo')
+            ->and(count(explode('Track request end', $output)))->toBe(2);
     },
 )->with(['load', 'loadOrFail']);
 
@@ -413,6 +413,50 @@ it('tries to get responses from cache', function () {
     $httpLoader->load('https://www.facebook.com');
 });
 
+test(
+    'when a response is served from cache, the RespondedRequest::isServedFromCache() method returns true,',
+    function (string $loadMethod) {
+        $cache = new FileCache(helper_cachedir());
+
+        $userAgent = helper_nonBotUserAgent();
+
+        $respondedRequest = new RespondedRequest(
+            new Request(
+                'GET',
+                'https://www.example.com/bar',
+                ['Host' => ['www.example.com'], 'User-Agent' => [(string) $userAgent]],
+            ),
+            new Response(body: 'Hi!'),
+        );
+
+        $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+        $clientMock = Mockery::mock(Client::class);
+
+        $clientMock
+            ->shouldReceive('sendRequest')
+            ->once()
+            ->withArgs(function (Request $request) {
+                return (string) $request->getUri() === 'https://www.example.com/foo';
+            })
+            ->andReturn(new Response(body: 'Hi!'));
+
+        $httpLoader = (new HttpLoader($userAgent, $clientMock))->setCache($cache);
+
+        $response = $httpLoader->{$loadMethod}('https://www.example.com/foo');
+
+        /** @var RespondedRequest $response */
+
+        expect($response->isServedFromCache())->toBeFalse();
+
+        $response = $httpLoader->{$loadMethod}('https://www.example.com/bar');
+
+        /** @var RespondedRequest $response */
+
+        expect($response->isServedFromCache())->toBeTrue();
+    },
+)->with(['load', 'loadOrFail']);
+
 it('still handles legacy (until v0.7) cached responses', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
@@ -441,23 +485,15 @@ it('still handles legacy (until v0.7) cached responses', function () {
 
     $respondedRequest = $httpLoader->load('https://www.example.com/index');
 
-    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class);
-
-    expect($respondedRequest?->request->getMethod())->toBe('GET');
-
-    expect($respondedRequest?->requestedUri())->toBe('https://www.example.com/index');
-
-    expect($respondedRequest?->request->getHeaders())->toHaveKey('foo');
-
-    expect($respondedRequest?->request->getBody()->getContents())->toBe('requestbody');
-
-    expect($respondedRequest?->effectiveUri())->toBe('https://www.example.com/home');
-
-    expect($respondedRequest?->response->getStatusCode())->toBe(201);
-
-    expect($respondedRequest?->response->getHeaders())->toHaveKey('baz');
-
-    expect($respondedRequest?->response->getBody()->getContents())->toBe('responsebody');
+    expect($respondedRequest)->toBeInstanceOf(RespondedRequest::class)
+        ->and($respondedRequest?->request->getMethod())->toBe('GET')
+        ->and($respondedRequest?->requestedUri())->toBe('https://www.example.com/index')
+        ->and($respondedRequest?->request->getHeaders())->toHaveKey('foo')
+        ->and($respondedRequest?->request->getBody()->getContents())->toBe('requestbody')
+        ->and($respondedRequest?->effectiveUri())->toBe('https://www.example.com/home')
+        ->and($respondedRequest?->response->getStatusCode())->toBe(201)
+        ->and($respondedRequest?->response->getHeaders())->toHaveKey('baz')
+        ->and($respondedRequest?->response->getBody()->getContents())->toBe('responsebody');
 });
 
 it('fails when it gets a failed response from cache', function () {

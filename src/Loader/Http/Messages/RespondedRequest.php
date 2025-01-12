@@ -19,6 +19,8 @@ class RespondedRequest
      */
     protected array $redirects = [];
 
+    protected bool $isServedFromCache = false;
+
     /**
      * @throws Exception
      */
@@ -171,6 +173,16 @@ class RespondedRequest
     public function cacheKey(): string
     {
         return RequestKey::from($this->request);
+    }
+
+    public function isServedFromCache(): bool
+    {
+        return $this->isServedFromCache;
+    }
+
+    public function setIsServedFromCache(bool $value = true): void
+    {
+        $this->isServedFromCache = $value;
     }
 
     /**
