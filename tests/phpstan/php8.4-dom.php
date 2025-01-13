@@ -553,7 +553,7 @@ class DOMNameSpaceNode
 
 namespace Dom;
 
-final readonly class NamespaceInfo
+final class NamespaceInfo
 {
     /**
      * @var ?string
