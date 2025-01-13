@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [3.2.1] - 2025-01-13
+### Fixed
+* Reuse previously opened page when using the (headless) Chrome browser, instead of opening a new page for each request.
+
 ### [3.2.0] - 2025-01-12
 ### Added
 * `RespondedRequest::isServedFromCache()` to determine whether a response was served from cache or actually loaded.

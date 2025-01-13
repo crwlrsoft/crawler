@@ -68,6 +68,8 @@ it('also throttles requests using the headless browser', function ($loadingMetho
 
     $sessionMock->shouldReceive('once');
 
+    $pageMock->shouldReceive('assertNotClosed')->once();
+
     $pageMock->shouldReceive('getSession')->andReturn($sessionMock);
 
     $pageNavigationMock = Mockery::mock(PageNavigation::class);
