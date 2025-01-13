@@ -25,6 +25,7 @@ function helper_setUpHeadlessChromeMocks(
     ?Closure $createBrowserArgsExpectationCallback = null,
     ?Closure $browserMockCallback = null,
     ?Closure $pageSessionMockCallback = null,
+    ?Closure $pageMockCallback = null,
 ): BrowserFactory {
     $browserFactoryMock = Mockery::mock(BrowserFactory::class);
 
@@ -63,6 +64,10 @@ function helper_setUpHeadlessChromeMocks(
     $pageMock->shouldReceive('navigate')->andReturn($pageNavigationMock);
 
     $pageMock->shouldReceive('getHtml')->andReturn('<html><head></head><body>Hello World!</body></html>');
+
+    if ($pageMockCallback) {
+        $pageMockCallback($pageMock);
+    }
 
     $waitForNavigationCall = $pageNavigationMock->shouldReceive('waitForNavigation');
 
@@ -159,7 +164,11 @@ it('uses the correct executable', function () {
 });
 
 it('calls the temporary post navigate hooks once', function () {
-    $browserFactoryMock = helper_setUpHeadlessChromeMocks();
+    $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+        pageMockCallback: function (Mockery\MockInterface $pageMock) {
+            $pageMock->shouldReceive('assertNotClosed')->once();
+        },
+    );
 
     $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
 
@@ -307,4 +316,24 @@ it('clears the browsers cookies when no cookie jar is provided', function () {
     );
 
     expect(Http::getBodyString($response))->toBe('<html><head></head><body>Hello World!</body></html>');
+});
+
+it('reuses a previously opened page', function () {
+    $browserFactoryMock = helper_setUpHeadlessChromeMocks(
+        pageMockCallback: function (Mockery\MockInterface $pageMock) {
+            $pageMock->shouldReceive('assertNotClosed')->twice();
+        },
+    );
+
+    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+
+    $t = helper_getMinThrottler();
+
+    $c = new CookieJar();
+
+    $helper->navigateToPageAndGetRespondedRequest(new Request('GET', 'https://www.example.com/foo'), $t, null, $c);
+
+    $helper->navigateToPageAndGetRespondedRequest(new Request('GET', 'https://www.example.com/bar'), $t, null, $c);
+
+    $helper->navigateToPageAndGetRespondedRequest(new Request('GET', 'https://www.example.com/baz'), $t, null, $c);
 });

@@ -20,6 +20,7 @@ use HeadlessChromium\Exception\JavascriptException;
 use HeadlessChromium\Exception\NavigationExpired;
 use HeadlessChromium\Exception\NoResponseAvailable;
 use HeadlessChromium\Exception\OperationTimedOut;
+use HeadlessChromium\Exception\TargetDestroyed;
 use HeadlessChromium\Page;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -91,7 +92,15 @@ class HeadlessBrowserLoaderHelper
         ?string $proxy = null,
         ?CookieJar $cookieJar = null,
     ): RespondedRequest {
-        $this->page = $this->getBrowser($request, $proxy)->createPage();
+        if (!$this->page || $this->shouldRenewBrowser($proxy)) {
+            $this->page = $this->getBrowser($request, $proxy)->createPage();
+        } else {
+            try {
+                $this->page->assertNotClosed();
+            } catch (TargetDestroyed) {
+                $this->page = $this->getBrowser($request, $proxy)->createPage();
+            }
+        }
 
         if ($cookieJar === null) {
             $this->page->getSession()->sendMessageSync(new Message('Network.clearBrowserCookies'));
@@ -149,6 +158,12 @@ class HeadlessBrowserLoaderHelper
     public function closeBrowser(): void
     {
         if ($this->browser) {
+            if ($this->page) {
+                $this->page->close();
+
+                $this->page = null;
+            }
+
             $this->browser->close();
 
             $this->browser = null;
