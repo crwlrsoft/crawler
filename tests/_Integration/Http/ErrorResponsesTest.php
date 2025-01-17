@@ -9,12 +9,21 @@ use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Psr\Log\LoggerInterface;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
 
+/**
+ * @method DummyLogger getLogger()
+ */
 class ErrorCrawler extends HttpCrawler
 {
+    protected function logger(): LoggerInterface
+    {
+        return new DummyLogger();
+    }
+
     protected function userAgent(): UserAgentInterface
     {
         return new UserAgent('SomeBot');
@@ -124,3 +133,16 @@ it(
         $crawler->runAndTraverse();
     },
 )->with(['get', 'post', 'put', 'patch', 'delete'])->throws(LoadingException::class);
+
+it('does not log warnings about multiple loader hook calls when stopOnErrorResponse() is used', function () {
+    $crawler = new ErrorCrawler();
+
+    $crawler->inputs(['http://localhost:8000/hello-world', 'http://localhost:8000/simple-listing'])
+        ->addStep(Http::get()->stopOnErrorResponse());
+
+    $crawler->runAndTraverse();
+
+    foreach ($crawler->getLogger()->messages as $message) {
+        expect($message['message'])->not->toContain(' was already called in this load call.');
+    }
+});

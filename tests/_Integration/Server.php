@@ -224,3 +224,14 @@ if ($route === '/broken-mime-type-rss') {
 
     return include(__DIR__ . '/_Server/BrokenMimeTypeRss.php');
 }
+
+if ($route === '/robots.txt') {
+    return <<<ROBOTSTXT
+        User-Agent: *
+        Disallow:
+        ROBOTSTXT;
+}
+
+if ($route === '/hello-world') {
+    return include(__DIR__ . '/_Server/HelloWorld.php');
+}

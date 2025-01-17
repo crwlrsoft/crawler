@@ -6,11 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [3.2.1] - 2025-01-13
+## [3.2.2] - 2025-01-17
+### Fixed
+* Warnings about loader hooks being called multiple times, when using a `BotUserAgent` and therefore loading and respecting the robots.txt file, or when using the `Http::stopOnErrorResponse()` method.
+
+## [3.2.1] - 2025-01-13
 ### Fixed
 * Reuse previously opened page when using the (headless) Chrome browser, instead of opening a new page for each request.
 
-### [3.2.0] - 2025-01-12
+## [3.2.0] - 2025-01-12
 ### Added
 * `RespondedRequest::isServedFromCache()` to determine whether a response was served from cache or actually loaded.
 
@@ -315,7 +319,7 @@ Since no direct interaction with an instance of the Symfony DomCrawler library w
 * The `HttpCrawl` step (`Http::crawl()`) by default now removes the fragment part of URLs to not load the same page multiple times, because in almost any case, servers won't respond with different content based on the fragment. That's why this change is considered non-breaking. For the rare cases when servers respond with different content based on the fragment, you can call the new `keepUrlFragment()` method of the step.
 * Although the `HttpCrawl` step (`Http::crawl()`) already respected the limit of outputs defined via the `maxOutputs()` method, it actually didn't stop loading pages. The limit had no effect on loading, only on passing on outputs (responses) to the next step. This is fixed in this version.
 * A so-called byte order mark at the beginning of a file (/string) can cause issues. So just remove it, when a step's input string starts with a UTF-8 BOM.
-* There seems to be an issue in guzzle when it gets a PSR-7 request object with a header with multiple string values (as array, like: `['accept-encoding' => ['gzip', 'deflate', 'br']]`). When testing it happened that it only sent the last part (in this case `br`). Therefor the `HttpLoader` now prepares headers before sending (in this case to: `['accept-encoding' => ['gzip, deflate, br']]`).
+* There seems to be an issue in guzzle when it gets a PSR-7 request object with a header with multiple string values (as array, like: `['accept-encoding' => ['gzip', 'deflate', 'br']]`). When testing it happened that it only sent the last part (in this case `br`). Therefore, the `HttpLoader` now prepares headers before sending (in this case to: `['accept-encoding' => ['gzip, deflate, br']]`).
 * You can now also use the output key aliases when filtering step outputs. You can even use keys that are only present in the serialized version of an output object.
 
 ## [1.0.2] - 2023-03-20
@@ -351,7 +355,7 @@ Since no direct interaction with an instance of the Symfony DomCrawler library w
 ### Added
 * New functionality to paginate: There is the new `Paginate` child class of the `Http` step class (easy access via `Http::get()->paginate()`). It takes an instance of the `PaginatorInterface` and uses it to iterate through pagination links. There is one implementation of that interface, the `SimpleWebsitePaginator`. The `Http::get()->paginate()` method uses it by default, when called just with a CSS selector to get pagination links. Paginators receive all loaded pages and implement the logic to find pagination links. The paginator class is also called before sending a request, with the request object that is about to be sent as an argument (`prepareRequest()`). This way, it should even be doable to implement more complex pagination functionality. For example when pagination is built using POST request with query strings in the request body.
 * New methods `stopOnErrorResponse()` and `yieldErrorResponses()` that can be used with `Http` steps. By calling `stopOnErrorResponse()` the step will throw a `LoadingException` when a response has a 4xx or 5xx status code. By calling the `yieldErrorResponse()` even error responses will be yielded and passed on to the next steps (this was default behaviour until this version. See the breaking change below).
-* The body of HTTP responses with a `Content-Type` header containing `application/x-gzip` are automatically decoded when `Http::getBodyString()` is used. Therefor added `ext-zlib` to suggested in `composer.json`.
+* The body of HTTP responses with a `Content-Type` header containing `application/x-gzip` are automatically decoded when `Http::getBodyString()` is used. Therefore, added `ext-zlib` to suggested in `composer.json`.
 * New methods `addToResult()` and `addLaterToResult()`. `addToResult()` is a single replacement for `setResultKey()` and `addKeysToResult()` (they are removed, see `Changed` below) that can be used for array and non array output. `addLaterToResult()` is a new method that does not create a Result object immediately, but instead adds the output of the current step to all the Results that will later be created originating from the current output.
 * New methods `outputKey()` and `keepInputData()` that can be used with any step. Using the `outputKey()` method, the step will convert non array output to an array and use the key provided as an argument to this method as array key for the output value. The `keepInputData()` method allows you to forward data from the step's input to the output. If the input is non array you can define a key using the method's argument. This is useful e.g. if you're having data in the initial inputs that you also want to add to the final crawling results.
 * New method `createsResult()` that can be used with any step, so you can differentiate if a step creates a Result object, or just keeps data to add to results later (new `addLaterToResult()` method). But primarily relevant for library internal use.
