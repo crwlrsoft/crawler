@@ -1,24 +1,17 @@
 parameters:
     level: 8
+    bootstrapFiles:
+        - tests/phpstan/php8.4-dom.php
     paths:
         - src
         - tests
     excludePaths:
         analyse:
             - tests/_Integration/_Server
+            - tests/phpstan/php8.4-dom.php
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - "#^Call to an undefined method Pest\\\\PendingCalls\\\\TestCall\\|Pest\\\\Support\\\\HigherOrderTapProxy\\:\\:(with|throws)\\(\\).$#"
         - "#^Access to an undefined property Spatie\\\\Invade\\\\Invader#"
         - "#^Call to an undefined method Spatie\\\\Invade\\\\Invader#"
         - "#^Call to protected method [a-zA-Z]{5,30}\\(\\) of class PHPUnit\\\\Framework\\\\TestCase.#"
-        - "#^(?:Parameter|Method) .+ has invalid (return )?type Dom\\\\.+\\.#"
-        - "#^Call to .+ on an unknown class Dom\\\\.+\\.#"
-        - "#^Property .+ has unknown class Dom\\\\.+ as its type\\.#"
-        - "#^Class Dom\\\\.+ not found.#"
-        - "#^Access to property .+ on an unknown class Dom\\\\.+\\.#"
-        - "#^PHPDoc tag .+ contains unknown class Dom\\\\.+\\.#"
-        - "#^Call to an undefined (static )?method Dom\\\\.+::.+\\(\\)\\.#"
-        - "#^Access to an undefined property Dom\\\\.+::\\$.+\\.#"
-        - "#^Function .+ has invalid return type Dom\\\\.+\\.#"
-        - "#^(?:Used )?(?:C|c)onstant DOM\\\\.+ not found\\.#"
