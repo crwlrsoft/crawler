@@ -158,6 +158,8 @@ class HttpLoader extends Loader
             return null;
         } finally {
             $this->callHook('afterLoad', $request);
+
+            $this->_resetCalledHooks();
         }
     }
 
@@ -166,6 +168,8 @@ class HttpLoader extends Loader
      */
     public function loadOrFail(mixed $subject): RespondedRequest
     {
+        $this->_resetCalledHooks();
+
         $request = $this->validateSubjectType($subject);
 
         try {
@@ -189,6 +193,8 @@ class HttpLoader extends Loader
 
             return $respondedRequest;
         } catch (Throwable $exception) {
+            $this->_resetCalledHooks();
+
             throw LoadingException::from($exception);
         }
     }

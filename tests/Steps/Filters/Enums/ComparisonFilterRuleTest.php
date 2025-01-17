@@ -43,6 +43,18 @@ it('correctly applies greater than operator', function (bool $expectedResult, mi
     [false, 11, 11],
     [false, 0, 1],
     [false, 3.59, 3.591],
+    [true, '123', '122'],
+    [true, '123', 122],
+    [true, 123, '122'],
+    [false, '123', '124'],
+    [false, '123', 124],
+    [false, 123, '124'],
+    [true, '123.45', '123.44'],
+    [true, '123.45', 123.44],
+    [true, 123.45, '123.44'],
+    [false, '123.45', '123.46'],
+    [false, '123.45', 123.46],
+    [false, 123.45, '123.46'],
 ]);
 
 it('correctly applies greater than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
@@ -56,6 +68,18 @@ it('correctly applies greater than or equal operator', function (bool $expectedR
     [true, 11, 11],
     [false, 0, 1],
     [false, 3.59, 3.591],
+    [true, '123', '122'],
+    [true, '123', 122],
+    [true, 123, '123'],
+    [false, '123', '124'],
+    [false, '123', 124],
+    [false, 123, '124'],
+    [true, '123.45', '123.44'],
+    [true, '123.44', 123.44],
+    [true, 123.45, '123.44'],
+    [false, '123.45', '123.46'],
+    [false, '123.45', 123.46],
+    [false, 123.45, '123.46'],
 ]);
 
 it('correctly applies less than operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
@@ -69,6 +93,18 @@ it('correctly applies less than operator', function (bool $expectedResult, mixed
     [false, 11, 11],
     [false, 1, 0],
     [false, 9.2901, 9.29],
+    [true, '123', '124'],
+    [true, '123', 124],
+    [true, 123, '124'],
+    [false, '123', '122'],
+    [false, '123', 122],
+    [false, 123, '122'],
+    [true, '123.45', '123.46'],
+    [true, '123.45', 123.46],
+    [true, 123.45, '123.46'],
+    [false, '123.45', '123.44'],
+    [false, '123.45', 123.44],
+    [false, 123.45, '123.44'],
 ]);
 
 it('correctly applies less than or equal operator', function (bool $expectedResult, mixed $value1, mixed $value2) {
@@ -82,4 +118,16 @@ it('correctly applies less than or equal operator', function (bool $expectedResu
     [true, 11, 11],
     [false, 1, 0],
     [false, 9.2901, 9.29],
+    [true, '123', '124'],
+    [true, '123', 124],
+    [true, 123, '123'],
+    [false, '123', '122'],
+    [false, '123', 122],
+    [false, 123, '122'],
+    [true, '123.45', '123.46'],
+    [true, '123.45', 123.45],
+    [true, 123.45, '123.46'],
+    [false, '123.45', '123.44'],
+    [false, '123.45', 123.44],
+    [false, 123.45, '123.44'],
 ]);
