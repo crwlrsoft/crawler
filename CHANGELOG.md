@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.3] - 2025-01-28
+### Fixed
+* Fix deprecation warning triggered in the `DomQuery` class, when trying to get the value of an HTML/XML attribute that does not exist on the element.
+
 ## [3.2.2] - 2025-01-17
 ### Fixed
 * Warnings about loader hooks being called multiple times, when using a `BotUserAgent` and therefore loading and respecting the robots.txt file, or when using the `Http::stopOnErrorResponse()` method.

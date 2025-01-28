@@ -92,6 +92,12 @@ it('gets the contents of an attribute using the attribute method', function () {
     expect((new CssSelector('.item'))->attribute('data-attr')->apply(new HtmlDocument($html)))->toBe('content');
 });
 
+test('getting an attribute value returns an empty string when the attribute does not exist', function () {
+    $html = '<div class="item">test</div>';
+
+    expect((new CssSelector('.item'))->attribute('foo')->apply(new HtmlDocument($html)))->toBe('');
+});
+
 it('turns the value into an absolute url when toAbsoluteUrl() is called', function () {
     $html = '<a href="/packages/crawler/v0.4/getting-started">getting started</a>';
 

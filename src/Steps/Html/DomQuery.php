@@ -294,7 +294,7 @@ abstract class DomQuery
         } else {
             $target = trim(
                 $this->attributeName ?
-                    $node->getAttribute($this->attributeName) :
+                    ($node->getAttribute($this->attributeName) ?? '') :
                     $node->{strtolower($this->target->name)}(),
             );
         }

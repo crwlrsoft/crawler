@@ -59,6 +59,12 @@ it('gets the contents of an attribute using the attribute method', function () {
     expect((new XPathQuery('//item'))->attribute('attr')->apply(new XmlDocument($xml)))->toBe('content');
 });
 
+test('getting an attribute value returns an empty string when the attribute does not exist', function () {
+    $xml = '<item>test</item>';
+
+    expect((new XPathQuery('//item'))->attribute('attr')->apply(new XmlDocument($xml)))->toBe('');
+});
+
 it('turns the value into an absolute url when toAbsoluteUrl() is called', function () {
     $xml = '<item>/foo/bar</item>';
 
