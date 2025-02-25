@@ -9,28 +9,25 @@ use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
-use Crwlr\Crawler\UserAgents\UserAgent;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\CacheInterface;
+use tests\_Stubs\DummyLogger;
 use tests\_Stubs\RespondedRequestChild;
 use Throwable;
 
 use function tests\helper_cachedir;
 use function tests\helper_getFastLoader;
+use function tests\helper_nonBotUserAgent;
 use function tests\helper_resetCacheDir;
-
-function helper_nonBotUserAgent(): UserAgent
-{
-    return new UserAgent('Mozilla/5.0 (compatible; FooBot)');
-}
 
 afterEach(function () {
     helper_resetCacheDir();
@@ -50,6 +47,27 @@ it('accepts url string as argument to load', function () {
     $httpLoader->loadOrFail('https://www.crwlr.software');
 });
 
+it('fails and logs an error when invoked with a relative reference URI', function () {
+    $logger = new DummyLogger();
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+    $httpLoader->load('/foo');
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toBe(
+            'Invalid input URL: /foo - The URI is a relative reference and therefore can\'t be loaded.',
+        );
+});
+
+it('fails and throws an exception when loadOrFail() is called with a relative reference URI', function () {
+    $logger = new DummyLogger();
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+    $httpLoader->loadOrFail('/foo');
+})->throws(InvalidArgumentException::class);
+
 it('accepts RequestInterface as argument to load', function () {
     $httpClient = Mockery::mock(ClientInterface::class);
 
@@ -61,6 +79,31 @@ it('accepts RequestInterface as argument to load', function () {
 
     $httpLoader->loadOrFail(new Request('GET', 'https://www.crwlr.software'));
 });
+
+it('fails and logs an error when invoked with a RequestInterface object having a relative reference URI', function () {
+    $logger = new DummyLogger();
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+    $httpLoader->load(new Request('GET', '/foo'));
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toBe(
+            'Invalid input URL: /foo - The URI is a relative reference and therefore can\'t be loaded.',
+        );
+});
+
+it(
+    'fails and throws an exception when loadOrFail() is called with a RequestInterface object having a relative ' .
+    'reference URI',
+    function () {
+        $logger = new DummyLogger();
+
+        $httpLoader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+        $httpLoader->loadOrFail(new Request('GET', '/foo'));
+    },
+)->throws(InvalidArgumentException::class);
 
 it(
     'calls the before and after load hooks regardless whether the response was successful or not',
@@ -217,15 +260,15 @@ test('You can implement logic to disallow certain request', function () {
     $httpLoader = new class (new BotUserAgent('Foo'), $httpClient) extends HttpLoader {
         public function isAllowedToBeLoaded(UriInterface $uri, bool $throwsException = false): bool
         {
-            return $uri->__toString() === '/foo';
+            return $uri->__toString() === 'https://www.example.com/foo';
         }
     };
 
-    $response = $httpLoader->load('/foo');
+    $response = $httpLoader->load('https://www.example.com/foo');
 
     expect($response)->toBeInstanceOf(RespondedRequest::class);
 
-    $response = $httpLoader->load('/bar');
+    $response = $httpLoader->load('https://www.example.com/bar');
 
     expect($response)->toBeNull();
 });

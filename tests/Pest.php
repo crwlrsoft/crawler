@@ -291,6 +291,11 @@ function helper_getFastCrawler(): HttpCrawler
     };
 }
 
+function helper_nonBotUserAgent(): UserAgent
+{
+    return new UserAgent('Mozilla/5.0 (compatible; FooBot)');
+}
+
 function helper_getMinThrottler(): Throttler
 {
     return new Throttler(new MultipleOf(0.0001), new MultipleOf(0.0002), Microseconds::fromSeconds(0.0001));

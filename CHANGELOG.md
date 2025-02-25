@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.4] - 2025-02-25
+### Fixed
+* Trying to load a relative reference URI (no scheme and host/authority, only path) via the `HttpLoader` now immediately logs (or throws when `loadOrFail()` is used) an error instead of trying to actually load it.
+
 ## [3.2.3] - 2025-01-28
 ### Fixed
 * Fix deprecation warning triggered in the `DomQuery` class, when trying to get the value of an HTML/XML attribute that does not exist on the element.
