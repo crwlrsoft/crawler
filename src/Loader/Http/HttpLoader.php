@@ -123,8 +123,10 @@ class HttpLoader extends Loader
 
         try {
             $request = $this->validateSubjectType($subject);
-        } catch (InvalidArgumentException) {
-            $this->logger->error('Invalid input URL: ' . var_export($subject, true));
+        } catch (InvalidArgumentException|Exception $exception) {
+            $url = $subject instanceof RequestInterface ? (string) $subject->getUri() : (string) $subject;
+
+            $this->logger->error('Invalid input URL: ' . $url . ' - ' . $exception->getMessage());
 
             return null;
         }
@@ -164,7 +166,7 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @throws LoadingException
+     * @throws LoadingException|InvalidArgumentException|Exception
      */
     public function loadOrFail(mixed $subject): RespondedRequest
     {
@@ -592,16 +594,29 @@ class HttpLoader extends Loader
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|Exception
      */
     protected function validateSubjectType(RequestInterface|string $requestOrUri): RequestInterface
     {
         if (is_string($requestOrUri)) {
             try {
-                return new Request('GET', Url::parsePsr7($requestOrUri));
+                $url = Url::parse($requestOrUri);
+
+                if ($url->isRelativeReference()) {
+                    throw new InvalidArgumentException(
+                        'The URI is a relative reference and therefore can\'t be loaded.',
+                    );
+                }
+
+                return new Request('GET', $url->toPsr7());
             } catch (InvalidUrlException) {
                 throw new InvalidArgumentException('Invalid URL.');
             }
+        } elseif (
+            empty(trim($requestOrUri->getUri()->getScheme())) &&
+            Url::parse($requestOrUri->getUri())->isRelativeReference()
+        ) {
+            throw new InvalidArgumentException('The URI is a relative reference and therefore can\'t be loaded.');
         }
 
         return $requestOrUri;

@@ -10,6 +10,7 @@ use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use InvalidArgumentException;
 use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
@@ -17,6 +18,7 @@ use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getRespondedRequest;
 use function tests\helper_invokeStepWithInput;
+use function tests\helper_nonBotUserAgent;
 use function tests\helper_traverseIterable;
 
 it('can be invoked with a string as input', function () {
@@ -54,6 +56,33 @@ it('logs an error message when invoked with something else as input', function (
         )
         ->and($logger->messages[0]['message'])->toEndWith('. The invalid input is of type object.');
 });
+
+it('logs an error message when invoked with a relative reference URI', function () {
+    $logger = new DummyLogger();
+
+    $loader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+    $step = (new Http('GET'))->setLoader($loader)->addLogger($logger);
+
+    helper_invokeStepWithInput($step, '/foo/bar');
+
+    expect($logger->messages)->not->toBeEmpty()
+        ->and($logger->messages[0]['message'])->toBe(
+            'Invalid input URL: /foo/bar - The URI is a relative reference and therefore can\'t be loaded.',
+        );
+});
+
+it('throws an exception when invoked with a relative reference URI and stopOnErrorResponse() was called', function () {
+    $logger = new DummyLogger();
+
+    $loader = new HttpLoader(helper_nonBotUserAgent(), logger: $logger);
+
+    $step = (new Http('GET'))->setLoader($loader)->addLogger($logger);
+
+    $step->stopOnErrorResponse();
+
+    helper_invokeStepWithInput($step, '/foo/bar');
+})->throws(InvalidArgumentException::class);
 
 test('You can set the request method via constructor', function (string $httpMethod) {
     $loader = Mockery::mock(HttpLoader::class);

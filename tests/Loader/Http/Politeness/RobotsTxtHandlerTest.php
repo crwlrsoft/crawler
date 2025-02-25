@@ -124,7 +124,7 @@ it('fails silently when parsing fails', function () {
 
     $robotsTxt = new RobotsTxtHandler($loader, new CliLogger());
 
-    expect($robotsTxt->isAllowed('/anything'))->toBeTrue();
+    expect($robotsTxt->isAllowed('https://www.example.com/anything'))->toBeTrue();
 
     $logOutput = $this->getActualOutputForAssertion();
 
