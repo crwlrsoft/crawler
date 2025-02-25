@@ -157,6 +157,86 @@ test(
 );
 
 test(
+    'When a child step is nested in the extraction and does not use each(), the extracted value is an array with ' .
+    'the keys defined in extract(), rather than an array of such arrays as it would be with each().',
+    function () {
+        $xml = <<<HTML
+            <!DOCTYPE html>
+            <html lang="en">
+                <head><title>something</title></head>
+                <body>
+                <div class="company">
+                    <div class="name">ABCDEFGmbH</div>
+                    <div class="founded">1984</div>
+                    <div class="location">
+                        <span class="country">Germany</span>, <span class="city">Frankfurt</span>
+                    </div>
+                </div>
+                <div class="company">
+                    <div class="name">Saubär GmbH</div>
+                    <div class="founded">2014</div>
+                    <div class="location">
+                        <span class="country">Austria</span>, <span class="city">Klagenfurt</span>
+                    </div>
+                </div>
+                </body>
+            </html>
+            HTML;
+
+        $expectedCompany1 = [
+            'name' => 'ABCDEFGmbH',
+            'founded' => '1984',
+            'location' => ['country' => 'Germany', 'city' => 'Frankfurt'],
+        ];
+
+        $expectedCompany2 = [
+            'name' => 'Saubär GmbH',
+            'founded' => '2014',
+            'location' => ['country' => 'Austria', 'city' => 'Klagenfurt'],
+        ];
+
+        // With base root()
+        $step = Html::each('.company')->extract([
+            'name' => '.name',
+            'founded' => '.founded',
+            'location' => Html::root()->extract(['country' => '.location .country', 'city' => '.location .city']),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+
+        // With base first()
+        $step = Html::each('.company')->extract([
+            'name' => '.name',
+            'founded' => '.founded',
+            'location' => Html::first('.location')->extract(['country' => '.country', 'city' => '.city']),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+
+        // With base last()
+        $step = Html::each('.company')->extract([
+            'name' => '.name',
+            'founded' => '.founded',
+            'location' => Html::last('.location')->extract(['country' => '.country', 'city' => '.city']),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+    },
+);
+
+test(
     'when selecting elements with each(), you can reference the element already selected within the each() selector ' .
     'itself, in sub selectors',
     function () {

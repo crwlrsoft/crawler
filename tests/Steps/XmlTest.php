@@ -156,6 +156,94 @@ test(
     },
 );
 
+test(
+    'When a child step is nested in the extraction and does not use each(), the extracted value is an array with ' .
+    'the keys defined in extract(), rather than an array of such arrays as it would be with each().',
+    function () {
+        $xml = <<<XML
+            <?xml version="1.0" encoding="UTF-8"?>
+            <companies>
+            <company>
+                <name>ABCDEFGmbH</name>
+                <founded year="1984">foo</founded>
+                <location>
+                    <country>Germany</country>
+                    <city>Frankfurt</city>
+                </location>
+            </company>
+            <company>
+                <name>Saubär GmbH</name>
+                <founded year="2014">bar</founded>
+                <location>
+                    <country>Austria</country>
+                    <city>Klagenfurt</city>
+                </location>
+            </company>
+            </companies>
+            XML;
+
+        $expectedCompany1 = [
+            'name' => 'ABCDEFGmbH',
+            'founded' => '1984',
+            'location' => ['country' => 'Germany', 'city' => 'Frankfurt'],
+        ];
+
+        $expectedCompany2 = [
+            'name' => 'Saubär GmbH',
+            'founded' => '2014',
+            'location' => ['country' => 'Austria', 'city' => 'Klagenfurt'],
+        ];
+
+        // With base root()
+        $step = Xml::each(Dom::xPath('//companies/company'))->extract([
+            'name' => Dom::cssSelector('name')->text(),
+            'founded' => Dom::xPath('//founded')->attribute('year'),
+            'location' => Xml::root()->extract([
+                'country' => Dom::xPath('//location/country')->text(),
+                'city' => Dom::cssSelector('location city')->text(),
+            ]),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+
+        // With base first()
+        $step = Xml::each(Dom::xPath('//companies/company'))->extract([
+            'name' => Dom::cssSelector('name')->text(),
+            'founded' => Dom::xPath('//founded')->attribute('year'),
+            'location' => Xml::first(Dom::cssSelector('location'))->extract([
+                'country' => Dom::xPath('//country')->text(),
+                'city' => Dom::cssSelector('city')->text(),
+            ]),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+
+        // With base last()
+        $step = Xml::each(Dom::xPath('//companies/company'))->extract([
+            'name' => Dom::cssSelector('name')->text(),
+            'founded' => Dom::xPath('//founded')->attribute('year'),
+            'location' => Xml::last(Dom::cssSelector('location'))->extract([
+                'country' => Dom::xPath('//country')->text(),
+                'city' => Dom::cssSelector('city')->text(),
+            ]),
+        ]);
+
+        $outputs = helper_invokeStepWithInput($step, $xml);
+
+        expect($outputs)->toHaveCount(2)
+            ->and($outputs[0]->get())->toBe($expectedCompany1)
+            ->and($outputs[1]->get())->toBe($expectedCompany2);
+    },
+);
+
 it('works when the response string starts with an UTF-8 byte order mark character', function () {
     $response = new RespondedRequest(
         new Request('GET', 'https://www.example.com/rss'),

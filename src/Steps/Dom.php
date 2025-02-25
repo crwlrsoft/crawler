@@ -209,7 +209,7 @@ abstract class Dom extends Step
             if ($domQuery instanceof Dom) {
                 $domQuery->baseUrl = $this->baseUrl;
 
-                $mappedProperties[$key] = iterator_to_array($domQuery->invoke($node));
+                $mappedProperties[$key] = $this->getDataFromChildDomStep($domQuery, $node);
             } else {
                 if (is_string($domQuery)) {
                     $domQuery = $this->makeDefaultDomQueryInstance($domQuery);
@@ -248,5 +248,22 @@ abstract class Dom extends Step
         }
 
         throw new Exception('Invalid state: no base selector');
+    }
+
+    /**
+     * @return mixed[]
+     * @throws Exception
+     */
+    protected function getDataFromChildDomStep(Dom $step, Node $node): array
+    {
+        $childValue = iterator_to_array($step->invoke($node));
+
+        // When the child step was not used with each() as base and the result is an array with one
+        // element (index/key "0") being an array, use that child array.
+        if (!$step->each && count($childValue) === 1 && isset($childValue[0]) && is_array($childValue[0])) {
+            return $childValue[0];
+        }
+
+        return $childValue;
     }
 }
