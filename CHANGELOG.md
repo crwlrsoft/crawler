@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.5] - 2025-02-26
+### Fixed
+* When a child step is nested in the `extract()` method of an `Html` or `Xml` step, and does not use `each()` as the base, the extracted value is an array with the keys defined in the `extract()` call, rather than an array of such arrays as it would be with `each()` as base.
+
 ## [3.2.4] - 2025-02-25
 ### Fixed
 * Trying to load a relative reference URI (no scheme and host/authority, only path) via the `HttpLoader` now immediately logs (or throws when `loadOrFail()` is used) an error instead of trying to actually load it.
