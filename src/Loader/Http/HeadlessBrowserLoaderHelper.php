@@ -53,6 +53,8 @@ class HeadlessBrowserLoaderHelper
 
     protected bool $useNativeUserAgent = false;
 
+    protected bool $includeShadowElements = false;
+
     /**
      * @var Closure[]
      */
@@ -132,9 +134,9 @@ class HeadlessBrowserLoaderHelper
         $this->callPostNavigateHooks();
 
         if (is_string($requestId) && $this->page && !$this->responseIsHtmlDocument($this->page)) {
-            $html = $this->tryToGetRawResponseBody($this->page, $requestId) ?? $this->page->getHtml();
+            $html = $this->tryToGetRawResponseBody($this->page, $requestId) ?? $this->getHtmlFromPage();
         } else {
-            $html = $this->page?->getHtml();
+            $html = $this->getHtmlFromPage();
         }
 
         $this->addCookiesToJar($cookieJar, $request->getUri());
@@ -249,6 +251,13 @@ class HeadlessBrowserLoaderHelper
     public function useNativeUserAgent(): static
     {
         $this->useNativeUserAgent = true;
+
+        return $this;
+    }
+
+    public function includeShadowElementsInHtml(): static
+    {
+        $this->includeShadowElements = true;
 
         return $this;
     }
@@ -433,5 +442,50 @@ class HeadlessBrowserLoaderHelper
         }
 
         return null;
+    }
+
+    /**
+     * @throws CommunicationException
+     * @throws JavascriptException
+     */
+    protected function getHtmlFromPage(): string
+    {
+        if ($this->page instanceof Page && $this->includeShadowElements) {
+            try {
+                // Found this script on
+                // https://stackoverflow.com/questions/69867758/how-can-i-get-all-the-html-in-a-document-or-node-containing-shadowroot-elements
+                return $this->page->evaluate(<<<JS
+                    function extractHTML(node) {
+                        if (!node) return ''
+                        if (node.nodeType===3) return node.textContent;
+                        if (node.nodeType!==1) return ''
+
+                        let html = ''
+                        let outer = node.cloneNode();
+                        node = node.shadowRoot || node
+
+                        if (node.children.length) {
+                            for (let n of node.childNodes) {
+                                if (n.assignedNodes) {
+                                    if (n.assignedNodes()[0]) {
+                                        html += extractHTML(n.assignedNodes()[0])
+                                    } else { html += n.innerHTML }
+                                } else { html += extractHTML(n) }
+                            }
+                        } else { html = node.innerHTML }
+
+                        outer.innerHTML = html
+
+                        return outer.outerHTML
+                    }
+
+                    extractHTML(document.documentElement);
+                    JS)->getReturnValue();
+            } catch (Throwable) {
+                return $this->page->getHtml();
+            }
+        }
+
+        return $this->page?->getHtml() ?? '';
     }
 }

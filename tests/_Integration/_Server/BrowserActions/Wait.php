@@ -6,11 +6,11 @@
 </head>
 <body>
 <div>
-    <div id="delayed_container"></div>
+    <div id="insert_here"></div>
 
     <script>
         setTimeout(function () {
-            document.getElementById('delayed_container').innerHTML = 'hooray';
+            document.getElementById('insert_here').innerHTML = '<div id="delayed_container">hooray</div>';
         }, 200);
     </script>
 </div>
