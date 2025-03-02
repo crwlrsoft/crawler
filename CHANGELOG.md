@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-03-02
+### Added
+* New `BrowserAction`s to use with the `postBrowserNavigateHook()` method: 
+  * `BrowserAction::clickInsideShadowDom()`
+  * `BrowserAction::moveMouseToElement()`
+  * `BrowserAction::moveMouseToPosition()`
+  * `BrowserAction::scrollDown()`
+  * `BrowserAction::scrollUp()`
+  * `BrowserAction::typeText()`
+  * `BrowserAction::waitForReload()`
+* A new method in `HeadlessBrowserLoaderHelper` to include the HTML content of shadow DOM elements in the returned HTML. Use it like this: `$crawler->getLoader()->browser()->includeShadowElementsInHtml()`.
+
+### Changed
+* The `BrowserAction::clickElement()` action, now automatically waits for an element matching the selector to be rendered, before performing the click. This means you don't need to put a `BrowserAction::waitUntilDocumentContainsElement()` before it. It works the same in the new `BrowserAction::clickInsideShadowDom()` and `BrowserAction::moveMouseToElement()` actions.
+
+### Deprecated
+* `BrowserAction::clickElementAndWaitForReload()` and `BrowserAction::evaluateAndWaitForReload()`. As a replacement, please use `BrowserAction::clickElement()` or `BrowserAction::evaluate()` and `BrowserAction::waitForReload()` separately.
+
 ## [3.2.5] - 2025-02-26
 ### Fixed
 * When a child step is nested in the `extract()` method of an `Html` or `Xml` step, and does not use `each()` as the base, the extracted value is an array with the keys defined in the `extract()` call, rather than an array of such arrays as it would be with `each()` as base.

@@ -224,21 +224,68 @@ it('gets a cookie that is set via a click, executed via post browser navigate ho
         ->and($testCookie?->value())->toBe('javascriptcookie');
 });
 
-test('BrowserActions waitUntilDocumentContainsElement(), clickElement() and evaluate() work as expected', function () {
+test(
+    'BrowserAction::clickElement(), clickInsideShadowDom(), evaluate(), moveMouseToElement(), ' .
+    'moveMouseToPosition(), scrollDown(), scrollUp() and typeText() work as expected',
+    function () {
+        $crawler = new HeadlessBrowserCrawler();
+
+        $crawler
+            ->getLoader()
+            ->browser()
+            ->includeShadowElementsInHtml();
+
+        $crawler
+            ->input('http://localhost:8000/browser-actions')
+            ->addStep(
+                Http::get()
+                    // Inserting the #click_element is delayed in the page, so this also tests, that the
+                    // BrowserAction::clickElement() action automatically waits for an element matching the selector
+                    // to be present.
+                    ->postBrowserNavigateHook(BrowserAction::clickElement('#click_element'))
+                    ->postBrowserNavigateHook(BrowserAction::clickInsideShadowDom('#shadow_host', '#shadow_click_div'))
+                    ->postBrowserNavigateHook(
+                        BrowserAction::evaluate(
+                            'document.getElementById(\'evaluation_container\').innerHTML = \'evaluated\'',
+                        ),
+                    )
+                    ->postBrowserNavigateHook(BrowserAction::moveMouseToElement('#mouseover_check_1'))
+                    ->postBrowserNavigateHook(BrowserAction::moveMouseToPosition(305, 405))
+                    ->postBrowserNavigateHook(BrowserAction::scrollDown(4000))
+                    ->postBrowserNavigateHook(BrowserAction::scrollUp(2000))
+                    ->postBrowserNavigateHook(BrowserAction::scrollUp(2000))
+                    ->postBrowserNavigateHook(BrowserAction::clickElement('#input'))
+                    ->postBrowserNavigateHook(BrowserAction::typeText('typing text works'))
+                    ->keep('body'),
+            );
+
+        $results = helper_generatorToArray($crawler->run());
+
+        $body = $results[0]->get('body');
+
+        expect($body)->toContain('<div id="click_worked">yes</div>')
+            // This also tests the `HeadlessBrowserLoaderHelper::includeShadowElementsInHtml()` method,
+            // because even if the click worked, with the normal way of getting HTML this wouldn't be
+            // included in the returned HTML.
+            ->and($body)->toContain('<div id="shadow_host"><div id="shadow_click_div">clicked</div></div>')
+            ->and($body)->toContain('<div id="evaluation_container">evaluated</div>')
+            ->and($body)->toContain('<div id="mouseover_check_1">mouse was here</div>')
+            ->and($body)->toContain('<div id="mouseover_check_2">mouse was here</div>')
+            ->and($body)->toContain('<div id="scroll_down_check">scrolled down</div>')
+            ->and($body)->toContain('<div id="scroll_up_check">scrolled up</div>')
+            ->and($body)->toContain('<div id="input_value">typing text works</div>');
+    },
+);
+
+test('BrowserAction::waitUntilDocumentContainsElement() works as expected', function () {
     $crawler = new HeadlessBrowserCrawler();
 
     $crawler
-        ->input('http://localhost:8000/browser-actions')
+        ->input('http://localhost:8000/browser-actions/wait')
         ->addStep(
             Http::get()
                 ->postBrowserNavigateHook(
-                    BrowserAction::waitUntilDocumentContainsElement('#delayed_el_container #delayed_el'),
-                )
-                ->postBrowserNavigateHook(BrowserAction::clickElement('#click_element'))
-                ->postBrowserNavigateHook(
-                    BrowserAction::evaluate(
-                        'document.getElementById(\'evaluation_container\').innerHTML = \'evaluated\'',
-                    ),
+                    BrowserAction::waitUntilDocumentContainsElement('#delayed_container'),
                 )
                 ->keep('body'),
         );
@@ -247,9 +294,7 @@ test('BrowserActions waitUntilDocumentContainsElement(), clickElement() and eval
 
     $body = $results[0]->get('body');
 
-    expect($body)->toContain('<div id="delayed_el_container"><div id="delayed_el">a</div></div>')
-        ->and($body)->toContain('<div id="click_worked">yes</div>')
-        ->and($body)->toContain('<div id="evaluation_container">evaluated</div>');
+    expect($body)->toContain('<div id="delayed_container">hooray</div>');
 });
 
 test('BrowserAction::clickElementAndWaitForReload() works as expected', function () {
@@ -269,6 +314,51 @@ test('BrowserAction::clickElementAndWaitForReload() works as expected', function
 
     expect($body)->toContain('<div id="reloaded">yes</div>');
 });
+
+test(
+    'when on the click and wait for reload page, and the element is only clicked but we don\'t wait for reload, ' .
+    'we don\'t get the reloaded page content',
+    function () {
+        $crawler = new HeadlessBrowserCrawler();
+
+        $crawler
+            ->input('http://localhost:8000/browser-actions/click-and-wait-for-reload')
+            ->addStep(
+                Http::get()
+                    ->postBrowserNavigateHook(BrowserAction::clickElement('#click'))
+                    ->keep('body'),
+            );
+
+        $results = helper_generatorToArray($crawler->run());
+
+        $body = $results[0]->get('body');
+
+        expect($body)->not()->toContain('<div id="reloaded">yes</div>');
+    },
+);
+
+test(
+    'when on the click and wait for reload page, and the element is clicked and we also wait for reload, we get the ' .
+    'reloaded page content',
+    function () {
+        $crawler = new HeadlessBrowserCrawler();
+
+        $crawler
+            ->input('http://localhost:8000/browser-actions/click-and-wait-for-reload')
+            ->addStep(
+                Http::get()
+                    ->postBrowserNavigateHook(BrowserAction::clickElement('#click'))
+                    ->postBrowserNavigateHook(BrowserAction::waitForReload())
+                    ->keep('body'),
+            );
+
+        $results = helper_generatorToArray($crawler->run());
+
+        $body = $results[0]->get('body');
+
+        expect($body)->toContain('<div id="reloaded">yes</div>');
+    },
+);
 
 test('BrowserAction::evaluateAndWaitForReload() works as expected', function () {
     $crawler = new HeadlessBrowserCrawler();

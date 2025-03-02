@@ -6,7 +6,15 @@
 </head>
 <body>
 <div>
-    <a id="click" href="?reloaded=1">Click here</a>
+    <div id="click">Click here</div>
+
+    <script>
+        document.getElementById('click').addEventListener('click', function (ev) {
+            setTimeout(function () {
+                window.location.href = '/browser-actions/click-and-wait-for-reload?reloaded=1';
+            }, 200);
+        })
+    </script>
 
     <?php if (isset($_GET['reloaded'])) { ?>
         <div id="reloaded">yes</div>
