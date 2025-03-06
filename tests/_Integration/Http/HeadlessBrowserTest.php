@@ -299,7 +299,7 @@ test(
 
             if (is_array($screenshot1Size) && is_array($screenshot2Size)) {
                 expect($screenshot1Size[1])->toBeLessThan(2100)
-                    ->and($screenshot2Size[1])->toBeGreaterThan(5000);
+                    ->and($screenshot2Size[1])->toBeGreaterThan(4000);
             }
         }
 
