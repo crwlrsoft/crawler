@@ -17,6 +17,8 @@ use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
 use HeadlessChromium\PageUtils\PageNavigation;
 use Mockery;
+use Psr\Log\LoggerInterface;
+use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getMinThrottler;
 
@@ -170,19 +172,19 @@ it('calls the temporary post navigate hooks once', function () {
         },
     );
 
-    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock);
+    $logger = new DummyLogger();
 
-    $hook1Called = $hook2Called = $hook3Called = false;
+    $helper = new HeadlessBrowserLoaderHelper($browserFactoryMock, $logger);
 
     $helper->setTempPostNavigateHooks([
-        function (Page $page) use (& $hook1Called) {
-            $hook1Called = true;
+        function (Page $page, LoggerInterface $logger) {
+            $logger->info('hook 1 called');
         },
-        function (Page $page) use (& $hook2Called) {
-            $hook2Called = true;
+        function (Page $page, LoggerInterface $logger) {
+            $logger->info('hook 2 called');
         },
-        function (Page $page) use (& $hook3Called) {
-            $hook3Called = true;
+        function (Page $page, LoggerInterface $logger) {
+            $logger->info('hook 3 called');
         },
     ]);
 
@@ -192,11 +194,10 @@ it('calls the temporary post navigate hooks once', function () {
         cookieJar: new CookieJar(),
     );
 
-    expect($hook1Called)->toBeTrue()
-        ->and($hook2Called)->toBeTrue()
-        ->and($hook3Called)->toBeTrue();
-
-    $hook1Called = $hook2Called = $hook3Called = false;
+    expect($logger->messages)->toHaveCount(3)
+        ->and($logger->messages[0]['message'])->toBe('hook 1 called')
+        ->and($logger->messages[1]['message'])->toBe('hook 2 called')
+        ->and($logger->messages[2]['message'])->toBe('hook 3 called');
 
     $helper->navigateToPageAndGetRespondedRequest(
         new Request('GET', 'https://www.example.com/foo'),
@@ -204,9 +205,7 @@ it('calls the temporary post navigate hooks once', function () {
         cookieJar: new CookieJar(),
     );
 
-    expect($hook1Called)->toBeFalse()
-        ->and($hook2Called)->toBeFalse()
-        ->and($hook3Called)->toBeFalse();
+    expect($logger->messages)->toHaveCount(3);
 });
 
 it(

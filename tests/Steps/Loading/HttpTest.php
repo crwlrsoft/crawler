@@ -3,6 +3,7 @@
 namespace tests\Steps\Loading;
 
 use Crwlr\Crawler\Input;
+use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
@@ -15,6 +16,7 @@ use Mockery;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 use tests\_Stubs\DummyLogger;
+use Throwable;
 
 use function tests\helper_getRespondedRequest;
 use function tests\helper_invokeStepWithInput;
@@ -461,5 +463,169 @@ test(
 
         expect($warnings)->toBeEmpty()
             ->and($string)->toBe('Servas!');
+    },
+);
+
+it(
+    'calls the HttpLoader::skipCacheForNextRequest() method before calling load when the skipCache() method was called',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/blog/posts'),
+            new Response(200, body: Utils::streamFor('blog posts')),
+        );
+
+        $loader->shouldReceive('skipCacheForNextRequest')->once();
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->skipCache();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'calls the HttpLoader::skipCacheForNextRequest() method before calling loadOrFail() when the skipCache() method ' .
+    'was called',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/blog/posts'),
+            new Response(200, body: Utils::streamFor('blog posts')),
+        );
+
+        $loader->shouldReceive('skipCacheForNextRequest')->once();
+
+        $loader->shouldReceive('loadOrFail')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->skipCache()->stopOnErrorResponse();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'switches the loader to use the browser, when useBrowser() was called and the loader is configured to use the ' .
+    'HTTP client',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(false);
+
+        $loader->shouldReceive('useHeadlessBrowser')->once();
+
+        $loader->shouldReceive('useHttpClient')->once();
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/hello/world'),
+            new Response(200, body: Utils::streamFor('Hello World!')),
+        );
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->useBrowser();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'switches the loader to use the browser, when stopOnErrorResponse() and useBrowser() was called and the loader ' .
+    'is configured to use the HTTP client',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(false);
+
+        $loader->shouldReceive('useHeadlessBrowser')->once();
+
+        $loader->shouldReceive('useHttpClient')->once();
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/hello/world'),
+            new Response(200, body: Utils::streamFor('Hello World!')),
+        );
+
+        $loader->shouldReceive('loadOrFail')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->stopOnErrorResponse()->useBrowser();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'switches back the loader to use the HTTP client, when stopOnErrorResponse() and useBrowser() was called and ' .
+    'loading throws an exception',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(false);
+
+        $loader->shouldReceive('useHeadlessBrowser')->once();
+
+        $loader->shouldReceive('useHttpClient')->once();
+
+        $loader->shouldReceive('loadOrFail')->once()->andThrow(new LoadingException('error message'));
+
+        $step = Http::get()->setLoader($loader)->stopOnErrorResponse()->useBrowser();
+
+        try {
+            helper_invokeStepWithInput($step);
+        } catch (Throwable $exception) {
+        }
+    },
+);
+
+it(
+    'does not call the useHeadlessBrowser() method of the loader, when useBrowser() was called and the loader is ' .
+    'already configured to use the browser',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(true);
+
+        $loader->shouldNotReceive('useHeadlessBrowser');
+
+        $loader->shouldNotReceive('useHttpClient');
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/hello/world'),
+            new Response(200, body: Utils::streamFor('Hello World!')),
+        );
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->useBrowser();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'does not call the useHeadlessBrowser() method of the loader, when stopOnErrorResponse() and useBrowser() was ' .
+    'called and the loader is already configured to use the browser',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(true);
+
+        $loader->shouldNotReceive('useHeadlessBrowser');
+
+        $loader->shouldNotReceive('useHttpClient');
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/hello/world'),
+            new Response(200, body: Utils::streamFor('Hello World!')),
+        );
+
+        $loader->shouldReceive('loadOrFail')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->stopOnErrorResponse()->useBrowser();
+
+        helper_invokeStepWithInput($step);
     },
 );
