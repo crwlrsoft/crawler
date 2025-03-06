@@ -3,22 +3,32 @@
 namespace Crwlr\Crawler\Steps\Loading\Http\Browser;
 
 use Closure;
+use Crwlr\Crawler\Loader\Http\Browser\Screenshot;
+use Crwlr\Crawler\Loader\Http\Browser\ScreenshotConfig;
 use Crwlr\Utils\Microseconds;
 use HeadlessChromium\Page;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 class BrowserAction
 {
-    public static function waitUntilDocumentContainsElement(string $cssSelector): Closure
-    {
-        return function (Page $page) use ($cssSelector) {
-            $page->waitUntilContainsElement($cssSelector);
+    public const DEFAULT_TIMEOUT = 15_000;
+
+    public static function waitUntilDocumentContainsElement(
+        string $cssSelector,
+        int $timeout = self::DEFAULT_TIMEOUT,
+    ): Closure {
+        return function (Page $page) use ($cssSelector, $timeout) {
+            $page->waitUntilContainsElement($cssSelector, $timeout);
         };
     }
 
-    public static function clickElement(string $cssSelector): Closure
-    {
-        return function (Page $page) use ($cssSelector) {
-            $page->waitUntilContainsElement($cssSelector);
+    public static function clickElement(
+        string $cssSelector,
+        int $timeout = self::DEFAULT_TIMEOUT,
+    ): Closure {
+        return function (Page $page) use ($cssSelector, $timeout) {
+            $page->waitUntilContainsElement($cssSelector, $timeout);
 
             $page->mouse()->find($cssSelector)->click();
         };
@@ -30,15 +40,18 @@ class BrowserAction
      * For this purpose the action needs two selectors: the first one to select the shadow host element and the
      * second one to select the element that shall be clicked inside that shadow DOM.
      */
-    public static function clickInsideShadowDom(string $shadowHostSelector, string $clickElementSelector): Closure
-    {
-        return function (Page $page) use ($shadowHostSelector, $clickElementSelector) {
+    public static function clickInsideShadowDom(
+        string $shadowHostSelector,
+        string $clickElementSelector,
+        int $timeout = self::DEFAULT_TIMEOUT,
+    ): Closure {
+        return function (Page $page) use ($shadowHostSelector, $clickElementSelector, $timeout) {
             $page->evaluate(<<<JS
             (async function() {
                 let shadowHostElement = document.querySelector('{$shadowHostSelector}');
 
                 while (!shadowHostElement) {
-                    await new Promise(resolve => setTimeout(resolve, 25)); // Kleine Pause
+                    await new Promise(resolve => setTimeout(resolve, 25));
                     shadowHostElement = document.querySelector('{$shadowHostSelector}');
                 }
 
@@ -46,21 +59,21 @@ class BrowserAction
                     let clickElement = shadowHostElement.shadowRoot.querySelector('{$clickElementSelector}');
 
                     while (!clickElement) {
-                        await new Promise(resolve => setTimeout(resolve, 25)); // Kleine Pause
+                        await new Promise(resolve => setTimeout(resolve, 25));
                         clickElement = shadowHostElement.shadowRoot.querySelector('{$clickElementSelector}');
                     }
 
                     clickElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
                 }
             })()
-            JS)->waitForResponse(10_000);
+            JS)->waitForResponse($timeout);
         };
     }
 
-    public static function moveMouseToElement(string $cssSelector): Closure
+    public static function moveMouseToElement(string $cssSelector, int $timeout = self::DEFAULT_TIMEOUT): Closure
     {
-        return function (Page $page) use ($cssSelector) {
-            $page->waitUntilContainsElement($cssSelector);
+        return function (Page $page) use ($cssSelector, $timeout) {
+            $page->waitUntilContainsElement($cssSelector, $timeout);
 
             $page->mouse()->find($cssSelector);
         };
@@ -109,17 +122,36 @@ class BrowserAction
         };
     }
 
-    public static function waitForReload(): Closure
+    public static function waitForReload(int $timeout = self::DEFAULT_TIMEOUT): Closure
     {
-        return function (Page $page) {
-            $page->waitForReload();
+        return function (Page $page) use ($timeout) {
+            $page->waitForReload(timeout: $timeout);
         };
     }
 
     public static function wait(float $seconds): Closure
     {
-        return function (Page $page) use ($seconds) {
+        return function () use ($seconds) {
             usleep(Microseconds::fromSeconds($seconds)->value);
+        };
+    }
+
+    public static function screenshot(ScreenshotConfig $config): Closure
+    {
+        return function (Page $page, ?LoggerInterface $logger) use ($config) {
+            $fullFilePath = $config->getFullPath($page);
+
+            try {
+                $page->screenshot($config->toChromePhpScreenshotConfig($page))->saveToFile($fullFilePath);
+
+                return new Screenshot($fullFilePath);
+            } catch (Throwable $exception) {
+                $logger?->error('Failed to take screenshot.');
+
+                $logger?->debug($exception->getMessage());
+
+                return null;
+            }
         };
     }
 

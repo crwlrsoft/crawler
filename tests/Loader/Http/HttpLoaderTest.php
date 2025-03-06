@@ -8,6 +8,7 @@ use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Steps\Filters\Filter;
+use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\UserAgents\BotUserAgent;
 use Exception;
 use GuzzleHttp\Client;
@@ -497,6 +498,55 @@ test(
         /** @var RespondedRequest $response */
 
         expect($response->isServedFromCache())->toBeTrue();
+    },
+)->with(['load', 'loadOrFail']);
+
+it(
+    'does not serve a request from the cache, when skipCacheForNextRequest() was called',
+    function (string $loadMethod) {
+        $cache = new FileCache(helper_cachedir());
+
+        $userAgent = helper_nonBotUserAgent();
+
+        $respondedRequest = new RespondedRequest(
+            new Request(
+                'GET',
+                'https://www.example.com/blog/posts',
+                ['Host' => ['www.example.com'], 'User-Agent' => [(string) $userAgent]],
+            ),
+            new Response(body: 'previously cached blog posts'),
+        );
+
+        $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+        $clientMock = Mockery::mock(Client::class);
+
+        $clientMock
+            ->shouldReceive('sendRequest')
+            ->once()
+            ->withArgs(function (Request $request) {
+                return (string) $request->getUri() === 'https://www.example.com/blog/posts';
+            })
+            ->andReturn(new Response(body: 'loaded blog posts'));
+
+        $httpLoader = (new HttpLoader($userAgent, $clientMock))
+            ->setCache($cache)
+            ->skipCacheForNextRequest();
+
+        $response = $httpLoader->{$loadMethod}('https://www.example.com/blog/posts');
+
+        /** @var RespondedRequest $response */
+
+        expect($response->isServedFromCache())->toBeFalse()
+            ->and(Http::getBodyString($response))->toBe('loaded blog posts');
+
+        // Skipping the cache is only effective for loading. It still adds the loaded response to the cache.
+        // So on the next request, when not again calling the skip cache method, the cache will return that
+        // previously loaded response.
+        $response = $httpLoader->{$loadMethod}('https://www.example.com/blog/posts');
+
+        expect($response->isServedFromCache())->toBeTrue()
+            ->and(Http::getBodyString($response))->toBe('loaded blog posts');
     },
 )->with(['load', 'loadOrFail']);
 

@@ -342,9 +342,28 @@ function helper_cachedir(?string $inDir = null): string
 
 function helper_resetCacheDir(): void
 {
-    $dir = helper_cachedir();
+    helper_resetTempDir(helper_cachedir());
+}
 
-    $files = scandir($dir);
+function helper_storagedir(?string $inDir = null): string
+{
+    $path = __DIR__ . '/_Temp/_storagedir';
+
+    if ($inDir !== null) {
+        return $path . (str_starts_with($inDir, '/') ? $inDir : '/' . $inDir);
+    }
+
+    return $path;
+}
+
+function helper_resetStorageDir(): void
+{
+    helper_resetTempDir(helper_storagedir());
+}
+
+function helper_resetTempDir(string $dirPath): void
+{
+    $files = scandir($dirPath);
 
     if (is_array($files)) {
         foreach ($files as $file) {
@@ -352,7 +371,18 @@ function helper_resetCacheDir(): void
                 continue;
             }
 
-            @unlink($dir . '/' . $file);
+            @unlink($dirPath . '/' . $file);
         }
     }
+}
+
+function helper_testfilesdir(?string $inDir = null): string
+{
+    $path = __DIR__ . '/_Temp/_testfilesdir';
+
+    if ($inDir !== null) {
+        return $path . (str_starts_with($inDir, '/') ? $inDir : '/' . $inDir);
+    }
+
+    return $path;
 }

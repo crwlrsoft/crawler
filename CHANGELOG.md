@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.0] - 2025-03-05
+### Added
+* Two new methods to the base class of all `Http` steps:
+    * `skipCache()` – Allows using the cache while skipping it for a specific loading step.
+    * `useBrowser()` – Switches the loader to use a (headless) Chrome browser for loading calls in a specific step and then reverts the loader to its previous setting.
+* Introduced the new `BrowserAction::screenshot()` post browser navigate hook. It accepts an instance of the new `ScreenshotConfig` class, allowing you to configure various options (see the methods of `ScreenshotConfig`). If successful, the screenshot file paths are included in the `RespondedRequest` output object of the `Http` step.
+
 ## [3.3.0] - 2025-03-02
 ### Added
 * New `BrowserAction`s to use with the `postBrowserNavigateHook()` method: 

@@ -3,6 +3,7 @@
 namespace tests\_Integration\Http;
 
 use Crwlr\Crawler\HttpCrawler;
+use Crwlr\Crawler\Loader\Http\Browser\ScreenshotConfig;
 use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
@@ -19,6 +20,8 @@ use Psr\Log\LoggerInterface;
 
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
+use function tests\helper_resetStorageDir;
+use function tests\helper_storagedir;
 
 class HeadlessBrowserCrawler extends HttpCrawler
 {
@@ -243,6 +246,7 @@ test(
                     // BrowserAction::clickElement() action automatically waits for an element matching the selector
                     // to be present.
                     ->postBrowserNavigateHook(BrowserAction::clickElement('#click_element'))
+                    ->postBrowserNavigateHook(BrowserAction::screenshot(ScreenshotConfig::make(helper_storagedir())))
                     ->postBrowserNavigateHook(BrowserAction::clickInsideShadowDom('#shadow_host', '#shadow_click_div'))
                     ->postBrowserNavigateHook(
                         BrowserAction::evaluate(
@@ -252,16 +256,26 @@ test(
                     ->postBrowserNavigateHook(BrowserAction::moveMouseToElement('#mouseover_check_1'))
                     ->postBrowserNavigateHook(BrowserAction::moveMouseToPosition(305, 405))
                     ->postBrowserNavigateHook(BrowserAction::scrollDown(4000))
+                    ->postBrowserNavigateHook(
+                        BrowserAction::screenshot(
+                            ScreenshotConfig::make(helper_storagedir())
+                                ->setImageFileType('jpeg')
+                                ->setQuality(20)
+                                ->setFullPage(),
+                        ),
+                    )
                     ->postBrowserNavigateHook(BrowserAction::scrollUp(2000))
                     ->postBrowserNavigateHook(BrowserAction::scrollUp(2000))
                     ->postBrowserNavigateHook(BrowserAction::clickElement('#input'))
                     ->postBrowserNavigateHook(BrowserAction::typeText('typing text works'))
-                    ->keep('body'),
+                    ->keep(['body', 'screenshots']),
             );
 
         $results = helper_generatorToArray($crawler->run());
 
         $body = $results[0]->get('body');
+
+        $screenshots = $results[0]->get('screenshots');
 
         expect($body)->toContain('<div id="click_worked">yes</div>')
             // This also tests the `HeadlessBrowserLoaderHelper::includeShadowElementsInHtml()` method,
@@ -273,7 +287,23 @@ test(
             ->and($body)->toContain('<div id="mouseover_check_2">mouse was here</div>')
             ->and($body)->toContain('<div id="scroll_down_check">scrolled down</div>')
             ->and($body)->toContain('<div id="scroll_up_check">scrolled up</div>')
-            ->and($body)->toContain('<div id="input_value">typing text works</div>');
+            ->and($body)->toContain('<div id="input_value">typing text works</div>')
+            ->and($screenshots)->toHaveCount(2)
+            ->and($screenshots[0])->toEndWith('.png')
+            ->and($screenshots[1])->toEndWith('.jpeg');
+
+        if (function_exists('getimagesize')) {
+            $screenshot1Size = getimagesize($screenshots[0]);
+
+            $screenshot2Size = getimagesize($screenshots[1]);
+
+            if (is_array($screenshot1Size) && is_array($screenshot2Size)) {
+                expect($screenshot1Size[1])->toBeLessThan(2100)
+                    ->and($screenshot2Size[1])->toBeGreaterThan(5000);
+            }
+        }
+
+        helper_resetStorageDir();
     },
 );
 

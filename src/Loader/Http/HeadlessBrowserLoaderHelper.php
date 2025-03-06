@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http;
 
 use Closure;
+use Crwlr\Crawler\Loader\Http\Browser\Screenshot;
 use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Cookies\Exceptions\InvalidCookieException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
@@ -24,6 +25,7 @@ use HeadlessChromium\Exception\TargetDestroyed;
 use HeadlessChromium\Page;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class HeadlessBrowserLoaderHelper
@@ -60,7 +62,10 @@ class HeadlessBrowserLoaderHelper
      */
     protected array $tempPostNavigateHooks = [];
 
-    public function __construct(private ?BrowserFactory $browserFactory = null) {}
+    public function __construct(
+        private ?BrowserFactory $browserFactory = null,
+        protected ?LoggerInterface $logger = null,
+    ) {}
 
     /**
      * Set temporary post navigate hooks
@@ -131,7 +136,7 @@ class HeadlessBrowserLoaderHelper
 
         $throttler->trackRequestEndFor($request->getUri());
 
-        $this->callPostNavigateHooks();
+        $hookActionData = $this->callPostNavigateHooks();
 
         if (is_string($requestId) && $this->page && !$this->responseIsHtmlDocument($this->page)) {
             $html = $this->tryToGetRawResponseBody($this->page, $requestId) ?? $this->getHtmlFromPage();
@@ -141,7 +146,11 @@ class HeadlessBrowserLoaderHelper
 
         $this->addCookiesToJar($cookieJar, $request->getUri());
 
-        return new RespondedRequest($request, new Response($statusCode, $responseHeaders, $html));
+        return new RespondedRequest(
+            $request,
+            new Response($statusCode, $responseHeaders, $html),
+            $hookActionData['screenshots'] ?? [],
+        );
     }
 
     public function getOpenBrowser(): ?Browser
@@ -280,15 +289,30 @@ class HeadlessBrowserLoaderHelper
         }
     }
 
-    protected function callPostNavigateHooks(): void
+    /**
+     * @return array<string, mixed>
+     */
+    protected function callPostNavigateHooks(): array
     {
+        $returnData = [];
+
         if (!empty($this->tempPostNavigateHooks)) {
             foreach ($this->tempPostNavigateHooks as $hook) {
-                $hook->call($this, $this->page);
+                $returnValue = $hook->call($this, $this->page, $this->logger);
+
+                if ($returnValue instanceof Screenshot) {
+                    if (!array_key_exists('screenshots', $returnData)) {
+                        $returnData['screenshots'] = [$returnValue];
+                    } else {
+                        $returnData['screenshots'][] = $returnValue;
+                    }
+                }
             }
         }
 
         $this->tempPostNavigateHooks = [];
+
+        return $returnData;
     }
 
     /**

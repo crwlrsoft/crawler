@@ -13,6 +13,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Throwable;
 
 abstract class HttpBase extends Step
 {
@@ -47,6 +48,10 @@ abstract class HttpBase extends Step
      * @var Closure[]
      */
     protected array $postBrowserNavigateHooks = [];
+
+    protected bool $skipCache = false;
+
+    protected bool $forceBrowserUsage = false;
 
     /**
      * @param string $method
@@ -141,6 +146,39 @@ abstract class HttpBase extends Step
     }
 
     /**
+     * Skip using the cache for this step
+     *
+     * If you're using a cache in your crawler's loader, but want to skip using the cache for one
+     * particular step in the chain, use this method.
+     *
+     * Attention: this has no effect if you directly use the loader in a custom child step.
+     * If you want to use this feature, please use getResponseFromInputUri() or getResponseFromRequest()
+     * instead of the loader.
+     */
+    public function skipCache(): static
+    {
+        $this->skipCache = true;
+
+        return $this;
+    }
+
+    /**
+     * This allows the step to temporarily switch the loader to use the (headless) Chrome browser,
+     * even if it is configured to use the (guzzle) HTTP client. When a request is finished,
+     * it resets the loader setting.
+     *
+     * Attention: this has no effect if you directly use the loader in a custom child step.
+     * If you want to use this feature, please use getResponseFromInputUri() or getResponseFromRequest()
+     * instead of the loader.
+     */
+    public function useBrowser(): static
+    {
+        $this->forceBrowserUsage = true;
+
+        return $this;
+    }
+
+    /**
      * @return UriInterface|UriInterface[]
      * @throws InvalidArgumentException
      */
@@ -200,14 +238,12 @@ abstract class HttpBase extends Step
     {
         $loader = $this->getLoader();
 
-        if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
-            $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
-        }
+        $loaderResetConfig = $this->applyTempLoaderCustomizations();
 
-        if ($this->stopOnErrorResponse) {
-            $response = $loader->loadOrFail($request);
-        } else {
-            $response = $loader->load($request);
+        try {
+            $response = $this->stopOnErrorResponse ? $loader->loadOrFail($request) : $loader->load($request);
+        } finally {
+            $this->resetTempLoaderCustomizations($loaderResetConfig);
         }
 
         if ($response !== null && ($response->response->getStatusCode() < 400 || $this->yieldErrorResponses)) {
@@ -215,6 +251,47 @@ abstract class HttpBase extends Step
         }
 
         return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function applyTempLoaderCustomizations(): array
+    {
+        $resetConfig = ['resetToHttpClient' => false];
+
+        $loader = $this->getLoader();
+
+        if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
+            $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
+        }
+
+        if ($this->skipCache) {
+            $loader->skipCacheForNextRequest();
+        }
+
+        if ($this->forceBrowserUsage && !$loader->usesHeadlessBrowser()) {
+            $resetConfig['resetToHttpClient'] = true;
+
+            $loader->useHeadlessBrowser();
+        }
+
+        return $resetConfig;
+    }
+
+    /**
+     * @param array<string, mixed> $resetConfig
+     */
+    private function resetTempLoaderCustomizations(array $resetConfig): void
+    {
+        $loader = $this->getLoader();
+
+        if ($resetConfig['resetToHttpClient'] === true) {
+            try {
+                $loader->useHttpClient();
+            } catch (Throwable) {
+            }
+        }
     }
 
     /**

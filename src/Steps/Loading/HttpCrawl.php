@@ -146,7 +146,7 @@ class HttpCrawl extends Http
     {
         $this->setHostOrDomain($input);
 
-        $response = $this->getLoader()->load($this->getRequestFromInputUri($input));
+        $response = $this->getResponseFromInputUri($input);
 
         if (!$response) {
             return;

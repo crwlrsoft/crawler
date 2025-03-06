@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Loader\Http\Messages;
 
 use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Loader\Http\Browser\Screenshot;
 use Crwlr\Crawler\Steps\Loading\Http;
 use Crwlr\Crawler\Utils\RequestKey;
 use Crwlr\Url\Url;
@@ -22,11 +23,13 @@ class RespondedRequest
     protected bool $isServedFromCache = false;
 
     /**
+     * @param Screenshot[] $screenshots
      * @throws Exception
      */
     public function __construct(
         public RequestInterface $request,
         public ResponseInterface $response,
+        public array $screenshots = [],
     ) {
         $this->setResponse($this->response);
     }
@@ -41,6 +44,7 @@ class RespondedRequest
         $respondedRequest = new RespondedRequest(
             self::requestFromArray($data),
             self::responseFromArray($data),
+            self::screenshotsFromArray($data),
         );
 
         if ($data['effectiveUri'] && $data['effectiveUri'] !== $data['requestUri']) {
@@ -65,6 +69,7 @@ class RespondedRequest
             'responseStatusCode' => $this->response->getStatusCode(),
             'responseHeaders' => $this->response->getHeaders(),
             'responseBody' => Http::getBodyString($this->response),
+            'screenshots' => array_map(fn(Screenshot $screenshot) => $screenshot->path, $this->screenshots),
         ];
     }
 
@@ -104,6 +109,8 @@ class RespondedRequest
         if ($data['effectiveUri'] && $data['effectiveUri'] !== $data['requestUri']) {
             $this->addRedirectUri($data['effectiveUri']);
         }
+
+        $this->screenshots = self::screenshotsFromArray($data);
     }
 
     public function effectiveUri(): string
@@ -208,5 +215,24 @@ class RespondedRequest
             $data['responseHeaders'],
             $data['responseBody'],
         );
+    }
+
+    /**
+     * @param mixed[] $data
+     * @return Screenshot[]
+     */
+    protected static function screenshotsFromArray(array $data): array
+    {
+        $screenshots = [];
+
+        if (array_key_exists('screenshots', $data)) {
+            foreach ($data['screenshots'] as $screenshot) {
+                if (file_exists($screenshot)) {
+                    $screenshots[] = new Screenshot($screenshot);
+                }
+            }
+        }
+
+        return $screenshots;
     }
 }

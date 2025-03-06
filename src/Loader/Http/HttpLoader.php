@@ -72,6 +72,8 @@ class HttpLoader extends Loader
      */
     protected array $cacheUrlFilters = [];
 
+    protected bool $skipCacheForNextRequest = false;
+
     protected ?ProxyManager $proxies = null;
 
     /**
@@ -303,7 +305,7 @@ class HttpLoader extends Loader
     public function browser(): HeadlessBrowserLoaderHelper
     {
         if (!$this->browserHelper) {
-            $this->browserHelper = new HeadlessBrowserLoaderHelper();
+            $this->browserHelper = new HeadlessBrowserLoaderHelper(logger: $this->logger);
         }
 
         return $this->browserHelper;
@@ -317,6 +319,13 @@ class HttpLoader extends Loader
         if ($this->cache && $this->shouldResponseBeCached($respondedRequest)) {
             $this->cache->set($respondedRequest->cacheKey(), $respondedRequest);
         }
+    }
+
+    public function skipCacheForNextRequest(): static
+    {
+        $this->skipCacheForNextRequest = true;
+
+        return $this;
     }
 
     /**
@@ -339,6 +348,8 @@ class HttpLoader extends Loader
 
             $this->callHook('onCacheHit', $request, $respondedRequest->response);
         }
+
+        $this->skipCacheForNextRequest = false;
 
         if (!$respondedRequest) {
             $respondedRequest = $this->waitForGoAndLoad($request);
@@ -582,6 +593,10 @@ class HttpLoader extends Loader
 
     protected function shouldRequestBeServedFromCache(RequestInterface $request): bool
     {
+        if ($this->skipCacheForNextRequest === true) {
+            return false;
+        }
+
         if (!empty($this->cacheUrlFilters)) {
             foreach ($this->cacheUrlFilters as $filter) {
                 if (!$filter->evaluate((string) $request->getUri())) {
