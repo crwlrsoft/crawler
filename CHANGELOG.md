@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.2] - 2025-03-08
+### Fixed
+* Issue when using `Http::get()->useBrowser()->postBrowserNavigateHook()`. Previously in this case, when the loader is configured to use the HTTP client, the post browser navigate hook was actually not set because of an issue with the order, things happened internally.
+
 ## [3.4.1] - 2025-03-08
 ### Fixed
 * Since, when using the Chrome browser for loading, we can only execute GET requests:

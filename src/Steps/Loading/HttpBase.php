@@ -243,6 +243,7 @@ abstract class HttpBase extends Step
 
     /**
      * @throws LoadingException
+     * @throws Exception
      */
     protected function getResponseFromRequest(RequestInterface $request): ?RespondedRequest
     {
@@ -273,10 +274,6 @@ abstract class HttpBase extends Step
 
         $resetConfig = ['resetToHttpClient' => false, 'resetToBrowser' => false];
 
-        if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
-            $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
-        }
-
         if ($this->skipCache) {
             $loader->skipCacheForNextRequest();
         }
@@ -296,6 +293,10 @@ abstract class HttpBase extends Step
             $resetConfig['resetToHttpClient'] = true;
 
             $loader->useHeadlessBrowser();
+        }
+
+        if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
+            $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
         }
 
         return $resetConfig;

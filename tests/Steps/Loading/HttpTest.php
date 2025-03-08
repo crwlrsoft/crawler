@@ -2,8 +2,10 @@
 
 namespace tests\Steps\Loading;
 
+use Closure;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
+use Crwlr\Crawler\Loader\Http\HeadlessBrowserLoaderHelper;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
@@ -719,6 +721,36 @@ it(
         $loader->shouldReceive('loadOrFail')->once()->andReturn($respondedRequest);
 
         $step = Http::get()->setLoader($loader)->stopOnErrorResponse()->useBrowser();
+
+        helper_invokeStepWithInput($step);
+    },
+);
+
+it(
+    'sets post browser navigate hooks, when useBrowser() was called and the loader is configured to use the HTTP ' .
+    'client',
+    function () {
+        $loader = Mockery::mock(HttpLoader::class)->makePartial();
+
+        $browserHelperMock = Mockery::mock(HeadlessBrowserLoaderHelper::class);
+
+        $loader->shouldReceive('browser')->andReturn($browserHelperMock);
+
+        $browserHelperMock
+            ->shouldReceive('setTempPostNavigateHooks')
+            ->once()
+            ->withArgs(function (array $hooks) {
+                return $hooks[0] instanceof Closure;
+            });
+
+        $respondedRequest = new RespondedRequest(
+            new Request('GET', 'https://www.example.com/woop'),
+            new Response(200, body: Utils::streamFor('Woop')),
+        );
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::get()->setLoader($loader)->useBrowser()->postBrowserNavigateHook(BrowserAction::wait(1.0));
 
         helper_invokeStepWithInput($step);
     },
