@@ -7,6 +7,7 @@ use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Loading\Http;
+use Crwlr\Crawler\Steps\Loading\Http\Browser\BrowserAction;
 use Crwlr\Url\Url;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -93,6 +94,10 @@ test('You can set the request method via constructor', function (string $httpMet
         return $request->getMethod() === $httpMethod;
     })->once();
 
+    if ($httpMethod !== 'GET') {
+        $loader->shouldReceive('usesHeadlessBrowser')->andReturnFalse();
+    }
+
     $step = (new Http($httpMethod))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://www.foo.bar/baz')));
@@ -140,6 +145,8 @@ test('You can set request body via constructor', function () {
         return $request->getBody()->getContents() === $body;
     })->once();
 
+    $loader->shouldReceive('usesHeadlessBrowser')->andReturnFalse();
+
     $step = (new Http('PATCH', [], $body))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://github.com/')));
@@ -152,6 +159,8 @@ test('You can set the http version for the request via constructor', function (s
         return $request->getProtocolVersion() === $httpVersion;
     })->once();
 
+    $loader->shouldReceive('usesHeadlessBrowser')->andReturnFalse();
+
     $step = (new Http('PATCH', [], 'body', $httpVersion))->setLoader($loader);
 
     helper_traverseIterable($step->invokeStep(new Input('https://packagist.org/packages/crwlr/url')));
@@ -163,6 +172,10 @@ it('has static methods to create instances with all the different http methods',
     $loader->shouldReceive('load')->withArgs(function (RequestInterface $request) use ($httpMethod) {
         return $request->getMethod() === $httpMethod;
     })->once();
+
+    if ($httpMethod !== 'GET') {
+        $loader->shouldReceive('usesHeadlessBrowser')->andReturnFalse();
+    }
 
     $step = (Http::{strtolower($httpMethod)}())->setLoader($loader);
 
@@ -177,6 +190,10 @@ it(
         $loader->shouldReceive('loadOrFail')->withArgs(function (RequestInterface $request) use ($httpMethod) {
             return $request->getMethod() === $httpMethod;
         })->once()->andReturn(new RespondedRequest(new Request('GET', '/foo'), new Response(200)));
+
+        if ($httpMethod !== 'GET') {
+            $loader->shouldReceive('usesHeadlessBrowser')->andReturnFalse();
+        }
 
         $step = (Http::{strtolower($httpMethod)}())
             ->setLoader($loader)
@@ -466,6 +483,19 @@ test(
     },
 );
 
+it('rejects post browser navigate hooks, when the HTTP method is not GET', function (string $httpMethod) {
+    $logger = new DummyLogger();
+
+    $step = (new Http($httpMethod))->addLogger($logger)->postBrowserNavigateHook(BrowserAction::wait(1.0));
+
+    expect($logger->messages)->toHaveCount(1)
+        ->and($logger->messages[0]['message'])->toBe(
+            'A ' . $httpMethod . ' request cannot be executed using the (headless) browser, so post browser ' .
+            'navigate hooks can\'t be defined for this step either.',
+        )
+        ->and(invade($step)->postBrowserNavigateHooks)->toBe([]);
+})->with(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 it(
     'calls the HttpLoader::skipCacheForNextRequest() method before calling load when the skipCache() method was called',
     function () {
@@ -556,6 +586,70 @@ it(
         helper_invokeStepWithInput($step);
     },
 );
+
+it(
+    'does not switch the loader to use the browser, when useBrowser() was called, the loader is configured to use ' .
+    'the HTTP client, but the request method is not GET',
+    function (string $httpMethod) {
+        $logger = new DummyLogger();
+
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(false);
+
+        $loader->shouldNotReceive('useHeadlessBrowser');
+
+        $respondedRequest = new RespondedRequest(
+            new Request($httpMethod, 'https://www.example.com/something'),
+            new Response(200, body: Utils::streamFor('Something!')),
+        );
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::{$httpMethod}()->setLoader($loader)->addLogger($logger)->useBrowser();
+
+        helper_invokeStepWithInput($step);
+
+        expect($logger->messages)->toHaveCount(1)
+            ->and($logger->messages[0]['message'])->toBe(
+                'The (headless) browser can only be used for GET requests! Therefore this step will use the HTTP ' .
+                'client for loading.',
+            );
+    },
+)->with(['post', 'put', 'patch', 'delete']);
+
+it(
+    'automatically switches the loader to use the HTTP client, when the HTTP method is not GET and the loader is ' .
+    'configured to use the browser',
+    function (string $httpMethod) {
+        $logger = new DummyLogger();
+
+        $loader = Mockery::mock(HttpLoader::class);
+
+        $loader->shouldReceive('usesHeadlessBrowser')->once()->andReturn(true);
+
+        $loader->shouldReceive('useHttpClient')->once();
+
+        $loader->shouldReceive('useHeadlessBrowser')->once();
+
+        $respondedRequest = new RespondedRequest(
+            new Request($httpMethod, 'https://www.example.com/something'),
+            new Response(200, body: Utils::streamFor('Something!')),
+        );
+
+        $loader->shouldReceive('load')->once()->andReturn($respondedRequest);
+
+        $step = Http::{$httpMethod}()->setLoader($loader)->addLogger($logger)->useBrowser();
+
+        helper_invokeStepWithInput($step);
+
+        expect($logger->messages)->toHaveCount(1)
+            ->and($logger->messages[0]['message'])->toBe(
+                'The (headless) browser can only be used for GET requests! Therefore this step will use the HTTP ' .
+                'client for loading.',
+            );
+    },
+)->with(['post', 'put', 'patch', 'delete']);
 
 it(
     'switches back the loader to use the HTTP client, when stopOnErrorResponse() and useBrowser() was called and ' .

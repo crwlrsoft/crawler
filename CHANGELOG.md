@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.1] - 2025-03-08
+### Fixed
+* Since, when using the Chrome browser for loading, we can only execute GET requests:
+    * The loader now automatically switches to the HTTP client for POST, PUT, PATCH, and DELETE requests and logs a warning.
+    * A warning is logged when attempting to use "Post Browser Navigate Hooks" with POST, PUT, PATCH, or DELETE requests.
+    * Consequently, the `useBrowser()` method, introduced in v3.4.0, is also limited to GET requests.
+
 ## [3.4.0] - 2025-03-06
 ### Added
 * Two new methods to the base class of all `Http` steps:

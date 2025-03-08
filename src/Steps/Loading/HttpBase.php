@@ -8,6 +8,7 @@ use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Utils\HttpHeaders;
+use Exception;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
@@ -140,6 +141,15 @@ abstract class HttpBase extends Step
 
     public function postBrowserNavigateHook(Closure $callback): static
     {
+        if ($this->method !== 'GET') {
+            $this->logger?->warning(
+                'A ' . $this->method . ' request cannot be executed using the (headless) browser, so post browser ' .
+                'navigate hooks can\'t be defined for this step either.',
+            );
+
+            return $this;
+        }
+
         $this->postBrowserNavigateHooks[] = $callback;
 
         return $this;
@@ -255,12 +265,13 @@ abstract class HttpBase extends Step
 
     /**
      * @return array<string, mixed>
+     * @throws Exception
      */
     private function applyTempLoaderCustomizations(): array
     {
-        $resetConfig = ['resetToHttpClient' => false];
-
         $loader = $this->getLoader();
+
+        $resetConfig = ['resetToHttpClient' => false, 'resetToBrowser' => false];
 
         if (!empty($this->postBrowserNavigateHooks) && $loader->usesHeadlessBrowser()) {
             $loader->browser()->setTempPostNavigateHooks($this->postBrowserNavigateHooks);
@@ -270,7 +281,18 @@ abstract class HttpBase extends Step
             $loader->skipCacheForNextRequest();
         }
 
-        if ($this->forceBrowserUsage && !$loader->usesHeadlessBrowser()) {
+        if ($this->method !== 'GET' && ($this->forceBrowserUsage || $loader->usesHeadlessBrowser())) {
+            $this->logger?->warning(
+                'The (headless) browser can only be used for GET requests! Therefore this step will use the HTTP ' .
+                'client for loading.',
+            );
+
+            if ($loader->usesHeadlessBrowser()) {
+                $loader->useHttpClient();
+
+                $resetConfig['resetToBrowser'] = true;
+            }
+        } elseif ($this->forceBrowserUsage && !$loader->usesHeadlessBrowser()) {
             $resetConfig['resetToHttpClient'] = true;
 
             $loader->useHeadlessBrowser();
@@ -291,6 +313,8 @@ abstract class HttpBase extends Step
                 $loader->useHttpClient();
             } catch (Throwable) {
             }
+        } elseif ($resetConfig['resetToBrowser']) {
+            $loader->useHeadlessBrowser();
         }
     }
 
