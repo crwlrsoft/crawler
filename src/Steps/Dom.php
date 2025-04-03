@@ -4,6 +4,7 @@ namespace Crwlr\Crawler\Steps;
 
 use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
+use Crwlr\Crawler\Logger\PreStepInvocationLogger;
 use Crwlr\Crawler\Steps\Dom\DomDocument;
 use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Dom\Node;
@@ -42,6 +43,8 @@ abstract class Dom extends Step
      */
     final public function __construct(string|DomQuery|array $selectorOrMapping = [])
     {
+        $this->addLogger(new PreStepInvocationLogger());
+
         $this->extract($selectorOrMapping);
     }
 
@@ -60,6 +63,14 @@ abstract class Dom extends Step
 
         $instance->each = is_string($domQuery) ? $instance->makeDefaultDomQueryInstance($domQuery) : $domQuery;
 
+        if (trim($instance->each->query) === '') {
+            $instance->logger?->warning(
+                'The selector you provided for the ‘each’ option is empty. This option is intended to allow ' .
+                'extracting multiple output objects from a single page, so an empty selector most likely doesn’t ' .
+                'make sense, as it will definitely result in only one output object.',
+            );
+        }
+
         return $instance;
     }
 
@@ -69,6 +80,14 @@ abstract class Dom extends Step
 
         $instance->first = is_string($domQuery) ? $instance->makeDefaultDomQueryInstance($domQuery) : $domQuery;
 
+        if (trim($instance->first->query) === '') {
+            $instance->logger?->warning(
+                'The selector you provided for the ‘first’ option is empty. This option is meant to restrict your ' .
+                'extraction to a specific parent element, so an empty selector most likely doesn’t make sense. ' .
+                'Either define the desired selector or use the root() method instead.',
+            );
+        }
+
         return $instance;
     }
 
@@ -77,6 +96,14 @@ abstract class Dom extends Step
         $instance = new static();
 
         $instance->last = is_string($domQuery) ? $instance->makeDefaultDomQueryInstance($domQuery) : $domQuery;
+
+        if (trim($instance->last->query) === '') {
+            $instance->logger?->warning(
+                'The selector you provided for the ‘last’ option is empty. This option is meant to restrict your ' .
+                'extraction to a specific parent element, so an empty selector most likely doesn’t make sense. ' .
+                'Either define the desired selector or use the root() method instead.',
+            );
+        }
 
         return $instance;
     }
@@ -234,20 +261,45 @@ abstract class Dom extends Step
         if ($this->root) {
             return $document;
         } elseif ($this->each) {
-            return $this->each instanceof CssSelector ?
-                $document->querySelectorAll($this->each->query) :
-                $document->queryXPath($this->each->query);
+            return $this->getBaseFromDomNode($document, $this->each, each: true);
         } elseif ($this->first) {
-            return $this->first instanceof CssSelector ?
-                $document->querySelector($this->first->query) :
-                $document->queryXPath($this->first->query)->first();
+            return $this->getBaseFromDomNode($document, $this->first, first: true);
         } elseif ($this->last) {
-            return $this->last instanceof CssSelector ?
-                $document->querySelectorAll($this->last->query)->last() :
-                $document->queryXPath($this->last->query)->last();
+            return $this->getBaseFromDomNode($document, $this->last, last: true);
         }
 
         throw new Exception('Invalid state: no base selector');
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function getBaseFromDomNode(
+        DomDocument|Node $document,
+        DomQuery $query,
+        bool $each = false,
+        bool $first = false,
+        bool $last = false,
+    ): Node|NodeList|null {
+        if (trim($query->query) === '') {
+            return $each ? new NodeList([$document]) : $document;
+        }
+
+        if ($each) {
+            return $query instanceof CssSelector ?
+                $document->querySelectorAll($query->query) :
+                $document->queryXPath($query->query);
+        } elseif ($first) {
+            return $this->first instanceof CssSelector ?
+                $document->querySelector($query->query) :
+                $document->queryXPath($query->query)->first();
+        } elseif ($last) {
+            return $this->last instanceof CssSelector ?
+                $document->querySelectorAll($query->query)->last() :
+                $document->queryXPath($query->query)->last();
+        }
+
+        return $document;
     }
 
     /**

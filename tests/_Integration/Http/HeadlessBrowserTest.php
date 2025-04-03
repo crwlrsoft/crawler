@@ -2,6 +2,7 @@
 
 namespace tests\_Integration\Http;
 
+use Crwlr\Crawler\Cache\FileCache;
 use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Loader\Http\Browser\ScreenshotConfig;
 use Crwlr\Crawler\Loader\Http\Cookies\Cookie;
@@ -18,6 +19,7 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Generator;
 use Psr\Log\LoggerInterface;
 
+use function tests\helper_cachedir;
 use function tests\helper_generatorToArray;
 use function tests\helper_getFastLoader;
 use function tests\helper_resetStorageDir;
@@ -179,6 +181,10 @@ it('renders javascript', function () {
 it('gets cookies that are set via javascript', function () {
     $crawler = new HeadlessBrowserCrawler();
 
+    $cache = new FileCache(helper_cachedir());
+
+    $crawler->getLoader()->setCache($cache);
+
     $crawler
         ->input('http://localhost:8000/set-js-cookie')
         ->addStep(Http::get());
@@ -192,6 +198,21 @@ it('gets cookies that are set via javascript', function () {
     expect($cookiesInJar)->toHaveCount(1)
         ->and($testCookie?->name())->toBe('testcookie')
         ->and($testCookie?->value())->toBe('javascriptcookie');
+
+    // Check that cookie is not added to the cookiejar when the response was served from cache.
+    $crawler = new HeadlessBrowserCrawler();
+
+    $crawler->getLoader()->setCache($cache);
+
+    $crawler
+        ->input('http://localhost:8000/set-js-cookie')
+        ->addStep(Http::get());
+
+    helper_generatorToArray($crawler->run());
+
+    $cookiesInJar = helper_getCookiesByDomainFromLoader($crawler->getLoader(), 'localhost');
+
+    expect($cookiesInJar)->toHaveCount(0);
 });
 
 it('gets a cookie that is set via a click, executed via post browser navigate hook', function () {

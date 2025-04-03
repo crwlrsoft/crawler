@@ -159,6 +159,26 @@ it('extracts each matching result when the each method is used', function () {
         ->and($output[1]->get())->toBe(['match' => 'match 3']);
 });
 
+it('logs a warning, when the each() method is used with an empty selector', function (string|DomQuery $selector) {
+    $logger = new DummyLogger();
+
+    $step = helper_getDomStepInstance()::each($selector)->extract(['match' => '.match']);
+
+    $step->addLogger($logger);
+
+    $outputs = helper_invokeStepWithInput($step, helper_getStepFilesContent('Html/basic.html'));
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['match' => ['match 1', 'match 2', 'match 3']])
+        ->and($logger->messages[0]['level'])->toBe('warning')
+        ->and($logger->messages[0]['message'])
+        ->toStartWith('The selector you provided for the ‘each’ option is empty.');
+})->with([
+    [''],
+    [Dom::cssSelector('')],
+    [Dom::xPath('')],
+]);
+
 it('extracts the first matching result when the first method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::first('.list .item')->extract(['match' => '.match']),
@@ -169,6 +189,26 @@ it('extracts the first matching result when the first method is used', function 
         ->and($output[0]->get())->toBe(['match' => 'match 2']);
 });
 
+it('logs a warning, when the first() method is used with an empty selector', function (string|DomQuery $selector) {
+    $logger = new DummyLogger();
+
+    $step = helper_getDomStepInstance()::first($selector)->extract(['match' => '.match']);
+
+    $step->addLogger($logger);
+
+    $outputs = helper_invokeStepWithInput($step, helper_getStepFilesContent('Html/basic.html'));
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['match' => ['match 1', 'match 2', 'match 3']])
+        ->and($logger->messages[0]['level'])->toBe('warning')
+        ->and($logger->messages[0]['message'])
+        ->toStartWith('The selector you provided for the ‘first’ option is empty.');
+})->with([
+    [''],
+    [Dom::cssSelector('')],
+    [Dom::xPath('')],
+]);
+
 it('extracts the last matching result when the last method is used', function () {
     $output = helper_invokeStepWithInput(
         helper_getDomStepInstance()::last('.list .item')->extract(['match' => '.match']),
@@ -178,6 +218,26 @@ it('extracts the last matching result when the last method is used', function ()
     expect($output)->toHaveCount(1)
         ->and($output[0]->get())->toBe(['match' => 'match 3']);
 });
+
+it('logs a warning, when the last() method is used with an empty selector', function (string|DomQuery $selector) {
+    $logger = new DummyLogger();
+
+    $step = helper_getDomStepInstance()::last($selector)->extract(['match' => '.match']);
+
+    $step->addLogger($logger);
+
+    $outputs = helper_invokeStepWithInput($step, helper_getStepFilesContent('Html/basic.html'));
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['match' => ['match 1', 'match 2', 'match 3']])
+        ->and($logger->messages[0]['level'])->toBe('warning')
+        ->and($logger->messages[0]['message'])
+        ->toStartWith('The selector you provided for the ‘last’ option is empty.');
+})->with([
+    [''],
+    [Dom::cssSelector('')],
+    [Dom::xPath('')],
+]);
 
 it('doesn\'t yield any output when the each selector doesn\'t match anything', function () {
     $output = helper_invokeStepWithInput(

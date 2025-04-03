@@ -7,6 +7,7 @@ use Closure;
 use Crwlr\Crawler\Crawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Io;
+use Crwlr\Crawler\Logger\PreStepInvocationLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Result;
 use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
@@ -89,6 +90,10 @@ abstract class BaseStep implements StepInterface
 
     public function addLogger(LoggerInterface $logger): static
     {
+        if ($this->logger instanceof PreStepInvocationLogger) {
+            $this->logger->passToOtherLogger($logger);
+        }
+
         $this->logger = $logger;
 
         return $this;
