@@ -529,6 +529,46 @@ it('keeps all defined keys from a combined array output when keep() was called w
         ]);
 });
 
+it('keeps data, when keep() is called on child steps', function () {
+    $step1 = helper_getValueReturningStep(['foo' => 'fooValue', 'bar' => 'barValue']);
+
+    $step2 = helper_getValueReturningStep(['baz' => 'bazValue', 'quz' => 'quzValue']);
+
+    $group = (new Group())
+        ->addStep($step1->keep('foo'))
+        ->addStep($step2->keep(['baz', 'quz']));
+
+    $output = helper_invokeStepWithInput($group);
+
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->keep)->toBe([
+            'foo' => 'fooValue',
+            'baz' => 'bazValue',
+            'quz' => 'quzValue',
+        ]);
+});
+
+it('keeps data, when keepAs() is called on child steps', function () {
+    $step1 = helper_getValueReturningStep('fooValue');
+
+    $step2 = helper_getValueReturningStep(['bar' => 'barValue', 'baz' => 'bazValue']);
+
+    $group = (new Group())
+        ->addStep($step1->keepAs('foo'))
+        ->addStep($step2->keepAs('quz'));
+
+    $output = helper_invokeStepWithInput($group);
+
+    expect($output)->toHaveCount(1)
+        ->and($output[0]->keep)->toBe([
+            'foo' => 'fooValue',
+            'quz' => [
+                'bar' => 'barValue',
+                'baz' => 'bazValue',
+            ],
+        ]);
+});
+
 test(
     'when steps yield multiple outputs it combines the first output from first step with first output from second ' .
         'step and so on.',

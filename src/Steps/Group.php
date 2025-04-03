@@ -28,7 +28,7 @@ final class Group extends BaseStep
      */
     public function invokeStep(Input $input): Generator
     {
-        $combinedOutput = [];
+        $combinedOutput = $combinedKeptData = [];
 
         if ($this->uniqueInput && !$this->inputOrOutputIsUnique($input)) {
             return;
@@ -46,16 +46,23 @@ final class Group extends BaseStep
                     }
 
                     if ($this->includeOutput($step)) {
-                        $combinedOutput = $this->addOutputToCombinedOutputs(
+                        $combinedOutput = $this->addToCombinedOutputData(
                             $output->get(),
                             $combinedOutput,
                             $nthOutput,
                         );
                     }
+
+                    // Also transfer data, kept in group child steps, to the kept data of the final group output.
+                    if ($output->keep !== $inputForStepInvocation->keep) {
+                        $keep = $this->getNewlyKeptData($output, $inputForStepInvocation);
+
+                        $combinedKeptData = $this->addToCombinedOutputData($keep, $combinedKeptData, $nthOutput);
+                    }
                 }
             }
 
-            yield from $this->prepareCombinedOutputs($combinedOutput, $input);
+            yield from $this->prepareCombinedOutputs($combinedOutput, $combinedKeptData, $input);
         }
     }
 
@@ -134,31 +141,39 @@ final class Group extends BaseStep
      * @param mixed[] $combined
      * @return mixed[]
      */
-    private function addOutputToCombinedOutputs(
-        mixed $output,
-        array $combined,
-        int $nthOutput,
-    ): array {
-        if (is_array($output)) {
-            foreach ($output as $key => $value) {
-                $combined[$nthOutput][$key][] = $value;
+    private function addToCombinedOutputData(mixed $add, array $combined, int $nthElement): array
+    {
+        if (is_array($add)) {
+            foreach ($add as $key => $value) {
+                $combined[$nthElement][$key][] = $value;
             }
         } else {
-            $combined[$nthOutput][][] = $output;
+            $combined[$nthElement][][] = $add;
         }
 
         return $combined;
     }
 
     /**
+     * @return mixed[]
+     */
+    private function getNewlyKeptData(Output $output, Input $input): array
+    {
+        return array_filter($output->keep, function ($key) use ($input) {
+            return !array_key_exists($key, $input->keep);
+        }, ARRAY_FILTER_USE_KEY);
+    }
+
+    /**
      * @param mixed[] $combinedOutputs
+     * @param mixed[] $combinedKeptData
      * @param Input $input
      * @return Generator<Output>
      * @throws Exception
      */
-    private function prepareCombinedOutputs(array $combinedOutputs, Input $input): Generator
+    private function prepareCombinedOutputs(array $combinedOutputs, array $combinedKeptData, Input $input): Generator
     {
-        foreach ($combinedOutputs as $combinedOutput) {
+        foreach ($combinedOutputs as $key => $combinedOutput) {
             if ($this->maxOutputsExceeded()) {
                 break;
             }
@@ -169,6 +184,10 @@ final class Group extends BaseStep
 
             if ($this->passesAllFilters($outputData)) {
                 $output = $this->makeOutput($outputData, $input);
+
+                if (array_key_exists($key, $combinedKeptData)) {
+                    $output->keep($this->normalizeCombinedOutputs($combinedKeptData[$key]));
+                }
 
                 if ($this->uniqueOutput !== false && !$this->inputOrOutputIsUnique($output)) {
                     continue;
