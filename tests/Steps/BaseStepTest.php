@@ -22,8 +22,8 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-
 use tests\_Stubs\DummyLogger;
+
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
 use function tests\helper_getStepFilesContent;
@@ -222,7 +222,7 @@ it(
             ->and($crawlerLogger->messages[0]['message'])->toBe('test')
             ->and($crawlerLogger->messages[1]['level'])->toBe('warning')
             ->and($crawlerLogger->messages[1]['message'])->toBe('foo');
-    }
+    },
 );
 
 /* ----------------------------- validateBeforeRun() ----------------------------- */
