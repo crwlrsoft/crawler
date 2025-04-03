@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 * When providing an empty base selector to an `Html` step (`Html::each('')`, `Html::first('')`, `Html::last('')`), it won't fail with an error, but instead log a warning, that it most likely doesn't make sense.
+* The `Step::keep()` methods now also work when applied to child steps within a group step.
 
 ## [3.4.2] - 2025-03-08
 ### Fixed
