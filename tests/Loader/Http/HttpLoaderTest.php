@@ -3,6 +3,7 @@
 namespace tests\Loader\Http;
 
 use Crwlr\Crawler\Cache\FileCache;
+use Crwlr\Crawler\Loader\Http\Cookies\CookieJar;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\HttpLoader;
@@ -957,6 +958,39 @@ it('updates an existing cached response', function () {
     expect($response)->toBeInstanceOf(RespondedRequestChild::class)
         ->and(method_exists($response, 'itseme'))->toBeTrue()
         ->and($response->itseme())->toBe('mario');
+});
+
+it('does not add cookies to the cookie jar when a response was served from the cache', function () {
+    $httpClient = Mockery::mock(ClientInterface::class);
+
+    $httpClient->shouldNotReceive('sendRequest');
+
+    $cache = new FileCache(helper_cachedir());
+
+    $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
+
+    $httpLoader->setCache($cache);
+
+    $respondedRequest = new RespondedRequest(
+        new Request(
+            'GET',
+            'https://www.example.com/wtf',
+            ['Host' => ['www.example.com'], 'User-Agent' => [(string) helper_nonBotUserAgent()]],
+        ),
+        new Response(headers: ['Set-Cookie' => 'foo=bar'], body: 'Wtf!'),
+    );
+
+    $cache->set($respondedRequest->cacheKey(), $respondedRequest);
+
+    $httpLoader->load('https://www.example.com/wtf');
+
+    $cookieJar = invade($httpLoader)->cookieJar;
+
+    /** @var CookieJar $cookieJar */
+
+    $cookies = $cookieJar->allByDomain('example.com');
+
+    expect($cookies)->toHaveCount(0);
 });
 
 test('By default it uses the cookie jar and passes on cookies', function () {

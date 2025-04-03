@@ -7,6 +7,7 @@ use Crwlr\Crawler\HttpCrawler;
 use Crwlr\Crawler\Input;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
+use Crwlr\Crawler\Logger\PreStepInvocationLogger;
 use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\BaseStep;
 use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
@@ -22,6 +23,7 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use tests\_Stubs\DummyLogger;
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
 use function tests\helper_getStepFilesContent;
@@ -179,21 +181,49 @@ it('removes an UTF-8 byte order mark from the beginning of a string', function (
 
     $outputs = helper_invokeStepWithInput($step, $response);
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBeString();
-
-    expect(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBeString()
+        ->and(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
 
     // Also test with string as input.
     $outputs = helper_invokeStepWithInput($step, $stringWithBom);
 
-    expect($outputs)->toHaveCount(1);
-
-    expect($outputs[0]->get())->toBeString();
-
-    expect(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBeString()
+        ->and(substr($outputs[0]->get(), 0, 5))->toBe('<?xml');
 });
+
+it(
+    'transfers log messages already logged when the Step uses a PreStepInvocationLogger before receiving the logger ' .
+    'from the crawler',
+    function () {
+        $step = new class extends Step {
+            public function __construct()
+            {
+                $this->addLogger(new PreStepInvocationLogger());
+
+                $this->logger?->info('test');
+
+                $this->logger?->warning('foo');
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        $crawlerLogger = new DummyLogger();
+
+        $step->addLogger($crawlerLogger);
+
+        expect($crawlerLogger->messages)->toHaveCount(2)
+            ->and($crawlerLogger->messages[0]['level'])->toBe('info')
+            ->and($crawlerLogger->messages[0]['message'])->toBe('test')
+            ->and($crawlerLogger->messages[1]['level'])->toBe('warning')
+            ->and($crawlerLogger->messages[1]['message'])->toBe('foo');
+    }
+);
 
 /* ----------------------------- validateBeforeRun() ----------------------------- */
 
