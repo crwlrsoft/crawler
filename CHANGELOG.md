@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.4] - 2025-04-04
+### Fixed
+* As sometimes, XML parsing errors occur because of characters that aren't valid within XML documents, the library now catches XML parsing errors, tries to find and replace invalid characters (with transliterates or HTML entities) and retries parsing the document. Works best when you additionally install the `voku/portable-ascii` composer package.
+
 ## [3.4.3] - 2025-04-03
 ### Fixed
 * When providing an empty base selector to an `Html` step (`Html::each('')`, `Html::first('')`, `Html::last('')`), it won't fail with an error, but instead log a warning, that it most likely doesn't make sense.

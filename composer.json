@@ -55,7 +55,8 @@
         "symfony/process": "^6.0|^7.0"
     },
     "suggest": {
-        "ext-zlib": "Needed to uncompress compressed responses"
+        "ext-zlib": "Needed to uncompress compressed responses",
+        "voku/portable-ascii": "^2.0"
     },
     "funding": [
         {
