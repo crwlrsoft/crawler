@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.5] - 2025-04-09
+### Fixed
+* When feeding an `Http` step with a string that is not a valid URL (e.g. `https://`), the exception when trying to parse it as a URL is caught, and an error logged.
+
 ## [3.4.4] - 2025-04-04
 ### Fixed
 * As sometimes, XML parsing errors occur because of characters that aren't valid within XML documents, the library now catches XML parsing errors, tries to find and replace invalid characters (with transliterates or HTML entities) and retries parsing the document. Works best when you additionally install the `voku/portable-ascii` composer package.
