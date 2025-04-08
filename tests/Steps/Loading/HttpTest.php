@@ -77,6 +77,25 @@ it('logs an error message when invoked with a relative reference URI', function 
         );
 });
 
+it('catches the exception and logs an error when feeded with an invalid URL', function () {
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $logger = new DummyLogger();
+
+    $step = (new Http('GET'))->setLoader($loader);
+
+    $step->addLogger($logger);
+
+    helper_traverseIterable($step->invokeStep(new Input('https://')));
+
+    expect($logger->messages)->toHaveCount(1)
+        ->and($logger->messages[0]['level'])->toBe('error')
+        ->and($logger->messages[0]['message'])->toBe(
+            'The Crwlr\\Crawler\\Steps\\Loading\\Http step was called with input that it can not work with: https:// ' .
+            'is not a valid URL.',
+        );
+});
+
 it('throws an exception when invoked with a relative reference URI and stopOnErrorResponse() was called', function () {
     $logger = new DummyLogger();
 

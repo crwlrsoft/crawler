@@ -10,6 +10,7 @@ use Crwlr\Crawler\Output;
 use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Loading\Http;
+use Crwlr\Url\Exceptions\InvalidUrlException;
 use Crwlr\Url\Url;
 use Exception;
 use Generator;
@@ -173,7 +174,11 @@ abstract class Step extends BaseStep
             $inputValue instanceof Url ||
             (is_object($inputValue) && method_exists($inputValue, '__toString'))
         ) {
-            return Url::parsePsr7((string) $inputValue);
+            try {
+                return Url::parsePsr7((string) $inputValue);
+            } catch (InvalidUrlException $exception) {
+                throw new InvalidArgumentException($exception->getMessage());
+            }
         }
 
         throw new InvalidArgumentException($exceptionMessage);
