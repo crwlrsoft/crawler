@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Dom;
 
 use Dom\Document;
+use Dom\XPath;
 use DOMNode;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -58,6 +59,36 @@ abstract class Node
         return $this->makeNodeListInstance($node->filterXPath($query));
     }
 
+    public function removeNodesMatchingSelector(string $selector): void
+    {
+        foreach ($this->querySelectorAll($selector) as $node) {
+            if ($node->node instanceof Crawler) {
+                $node = $node->node->getNode(0);
+
+                if ($node) {
+                    $node->parentNode?->removeChild($node);
+                }
+            } else {
+                $node->node->parentNode?->removeChild($node->node);
+            }
+        }
+    }
+
+    public function removeNodesMatchingXPath(string $query): void
+    {
+        if ($this->node instanceof Crawler) {
+            foreach ($this->node->filterXPath($query) as $node) {
+                $node->parentNode?->removeChild($node);
+            }
+        } else {
+            $xpath = new XPath($this->getParentDocumentOfNode($this->node));
+
+            foreach ($xpath->query($query) as $node) {
+                $node->parentNode?->removeChild($node);
+            }
+        }
+    }
+
     public function nodeName(): string
     {
         if ($this->node instanceof Crawler) {
@@ -100,7 +131,7 @@ abstract class Node
     protected function outerSource(): string
     {
         if ($this->node instanceof Crawler) {
-            return $this->node->outerHtml();
+            return $this->node->count() > 0 ? $this->node->outerHtml() : '';
         }
 
         if ($this->node instanceof Document) {

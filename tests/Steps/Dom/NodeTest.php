@@ -57,6 +57,8 @@ function helper_getAbstractNodeInstance(object $originalNode, bool $html = true)
     return new XmlNodeStub($originalNode);
 }
 
+/* ----------------------------- Instantiation ----------------------------- */
+
 it('can be created from a \DOM\Node instance', function () {
     $xml = <<<XML
         <?xml version="1.0" encoding="utf-8"?>
@@ -125,6 +127,8 @@ it('can be instantiated from a DOMNode instance', function () {
     expect($node)->toBeInstanceOf(Node::class)
         ->and($node->text())->toBe('1Foo');
 });
+
+/* ----------------------------- querySelector(All)() ----------------------------- */
 
 $html = <<<HTML
     <!doctype html>
@@ -332,6 +336,8 @@ $html = <<<HTML
     </html>
     HTML;
 
+/* ----------------------------- queryXPath() ----------------------------- */
+
 it(
     'selects all elements within a node, matching an XPath query using queryXPath()',
     function (object $originalNode) {
@@ -395,6 +401,216 @@ it(
     },
 )->group('php84');
 
+/* ----------------------------- removeNodesMatchingSelector() ----------------------------- */
+
+$html = <<<HTML
+    <!doctype html>
+    <html>
+    <head></head>
+    <body>
+        <ul id="list">
+            <li class="remove">foo</li>
+            <li>bar</li>
+            <li>baz</li>
+            <li class="remove">quz</li>
+            <li>lorem</li>
+        </ul>
+    </body>
+    </html>
+    HTML;
+
+it('removes all nodes that match a given CSS selector', function (object $originalNode) {
+    /** @var Crawler|DOMNode $originalNode */
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingSelector('#list .remove');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<li>bar</li>')
+        ->toContain('<li>baz</li>')
+        ->not()->toContain('<li class="remove">')
+        ->not()->toContain('foo')
+        ->not()->toContain('quz');
+})->with([
+    [helper_getSymfonyCrawlerInstanceFromSource($html)],
+    [helper_getLegacyDomNodeInstanceFromSource($html)],
+]);
+
+it('removes all nodes that match a given CSS selector in PHP >= 8.4', function () use ($html) {
+    $originalNode = helper_getPhp84HtmlDomNodeInstanceFromSource($html);
+
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingSelector('#list .remove');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<li>bar</li>')
+        ->toContain('<li>baz</li>')
+        ->not()->toContain('<li class="remove">')
+        ->not()->toContain('foo')
+        ->not()->toContain('quz');
+})->group('php84');
+
+$xml = <<<XML
+    <?xml version="1.0" encoding="utf-8"?>
+    <feed>
+        <items>
+            <item>
+                <id>1</id>
+                <title>foo</title>
+                <description>lorem</description>
+            </item>
+            <item>
+                <id>2</id>
+                <title>bar</title>
+                <description>ipsum</description>
+            </item>
+            <item>
+                <id>3</id>
+                <title>baz</title>
+                <description>dolor</description>
+            </item>
+        </items>
+    </feed>
+    XML;
+
+it('removes all nodes that match a given CSS selector from XML', function (object $originalNode) {
+    /** @var Crawler|DOMNode $originalNode */
+    $node = helper_getAbstractNodeInstance($originalNode, false);
+
+    $node->removeNodesMatchingSelector('feed items item title');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<id>')
+        ->toContain('<description>')
+        ->not()->toContain('<title>');
+})->with([
+    [helper_getSymfonyCrawlerInstanceFromSource($xml, 'feed')],
+]);
+
+it('removes all nodes that match a given CSS selector from XML in PHP >= 8.4', function () use ($xml) {
+    $originalNode = helper_getPhp84XmlDomNodeInstanceFromSource($xml, 'feed');
+
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingSelector('feed items item title');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<id>')
+        ->toContain('<description>')
+        ->not()->toContain('<title>');
+})->group('php84');
+
+/* ----------------------------- removeNodesMatchingXPath() ----------------------------- */
+
+$html = <<<HTML
+    <!doctype html>
+    <html>
+    <head></head>
+    <body>
+        <ul id="list">
+            <li class="remove">foo</li>
+            <li>bar</li>
+            <li>baz</li>
+            <li class="remove">quz</li>
+            <li>lorem</li>
+        </ul>
+    </body>
+    </html>
+    HTML;
+
+it('removes all nodes that match a given XPath query', function (object $originalNode) {
+    /** @var Crawler|DOMNode $originalNode */
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingXPath('//li[contains(@class, \'remove\')]');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<li>bar</li>')
+        ->toContain('<li>baz</li>')
+        ->not()->toContain('<li class="remove">')
+        ->not()->toContain('foo')
+        ->not()->toContain('quz');
+})->with([
+    [helper_getSymfonyCrawlerInstanceFromSource($html)],
+    [helper_getLegacyDomNodeInstanceFromSource($html)],
+]);
+
+it('removes all nodes that match a given XPath query in PHP >= 8.4', function () use ($html) {
+    $originalNode = helper_getPhp84HtmlDomNodeInstanceFromSource($html);
+
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingXPath('//li[contains(@class, \'remove\')]');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<li>bar</li>')
+        ->toContain('<li>baz</li>')
+        ->not()->toContain('<li class="remove">')
+        ->not()->toContain('foo')
+        ->not()->toContain('quz');
+})->group('php84');
+
+$xml = <<<XML
+    <?xml version="1.0" encoding="utf-8"?>
+    <feed>
+        <items>
+            <item>
+                <id>1</id>
+                <title>foo</title>
+                <description>lorem</description>
+            </item>
+            <item>
+                <id>2</id>
+                <title>bar</title>
+                <description>ipsum</description>
+            </item>
+            <item>
+                <id>3</id>
+                <title>baz</title>
+                <description>dolor</description>
+            </item>
+        </items>
+    </feed>
+    XML;
+
+it('removes all nodes that match a given XPath query from XML', function (object $originalNode) {
+    /** @var Crawler|DOMNode $originalNode */
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingXPath('//feed/items/item/title');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<id>')
+        ->toContain('<description>')
+        ->not()->toContain('<title>');
+})->with([
+    [helper_getSymfonyCrawlerInstanceFromSource($xml, 'feed')],
+]);
+
+it('removes all nodes that match a given XPath query from XML in PHP >= 8.4', function () use ($xml) {
+    $originalNode = helper_getPhp84XmlDomNodeInstanceFromSource($xml, 'feed');
+
+    $node = helper_getAbstractNodeInstance($originalNode);
+
+    $node->removeNodesMatchingXPath('//feed/items/item/title');
+
+    $sourceAfterRemoval = $node->outer();
+
+    expect($sourceAfterRemoval)->toContain('<id>')
+        ->toContain('<description>')
+        ->not()->toContain('<title>');
+})->group('php84');
+
+/* ----------------------------- getAttribute() ----------------------------- */
+
 $html = <<<HTML
     <!doctype html>
     <html>
@@ -449,6 +665,8 @@ it('returns null when an attribute does not exist in PHP >= 8.4', function () us
     expect($node->getAttribute('data-test'))->toBeNull();
 })->group('php84');
 
+/* ----------------------------- nodeName() ----------------------------- */
+
 it('gets the name of a node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
     $node = helper_getAbstractNodeInstance($originalNode);
@@ -477,6 +695,8 @@ $html = <<<HTML
     </html>
     HTML;
 
+/* ----------------------------- text() ----------------------------- */
+
 it('gets the text content of an HTML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
     $node = helper_getAbstractNodeInstance($originalNode);
@@ -495,6 +715,8 @@ it('gets the text content of an HTML node in PHP >= 8.4', function () use ($html
     expect($node->text())->toBe('Title Lorem ipsum.');
 })->group('php84');
 
+/* ----------------------------- innerSource() ----------------------------- */
+
 it('gets the inner source of an HTML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
     $node = helper_getAbstractNodeInstance($originalNode);
@@ -512,6 +734,8 @@ it('gets the inner source of an HTML node in PHP >= 8.4', function () use ($html
 
     expect($node->inner())->toBe(' <h1>Title</h1> <p>Lorem ipsum.</p> ');
 })->group('php84');
+
+/* ----------------------------- outerSource () ----------------------------- */
 
 it('gets the outer source of an HTML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
@@ -536,6 +760,8 @@ $xml = <<<XML
     <items> <item> <id>1</id> <title>Lorem Ipsum</title> </item> </items>
     XML;
 
+/* ----------------------------- text() ----------------------------- */
+
 it('gets the text content of an XML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
     $node = helper_getAbstractNodeInstance($originalNode);
@@ -554,6 +780,8 @@ it('gets the text content of an XML node in PHP >= 8.4', function () use ($xml) 
     expect($node->text())->toBe('1 Lorem Ipsum');
 })->group('php84');
 
+/* ----------------------------- innerSource() XML ----------------------------- */
+
 it('gets the inner source of an XML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
     $node = helper_getAbstractNodeInstance($originalNode);
@@ -571,6 +799,8 @@ it('gets the inner source of an XML node in PHP >= 8.4', function () use ($xml) 
 
     expect($node->inner())->toBe(' <id>1</id> <title>Lorem Ipsum</title> ');
 })->group('php84');
+
+/* ----------------------------- outerSource() XML ----------------------------- */
 
 it('gets the outer source of an XML node', function (object $originalNode) {
     /** @var Crawler|DOMNode $originalNode */
@@ -601,6 +831,8 @@ $html = <<<HTML
     </body>
     </html>
     HTML;
+
+/* ------------ :has() :not() CSS pseudo class selectors in PHP 8.4 ------------- */
 
 it('selects elements using a CSS selector containing the :has() pseudo class', function () use ($html) {
     $originalNode = helper_getPhp84HtmlDomNodeInstanceFromSource($html);
