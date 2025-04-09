@@ -155,6 +155,18 @@ function helper_getStepYieldingMultipleObjectsWithNumber(): Step
     };
 }
 
+function helper_getStepYieldingInputArrayAsSeparateOutputs(): Step
+{
+    return new class extends Step {
+        protected function invoke(mixed $input): Generator
+        {
+            foreach ($input as $output) {
+                yield $output;
+            }
+        }
+    };
+}
+
 function helper_getLoadingStep(): Step
 {
     return new class extends Step {
