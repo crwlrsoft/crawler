@@ -24,6 +24,8 @@ abstract class Step extends BaseStep
 
     protected bool $excludeFromGroupOutput = false;
 
+    private bool $groupOutputsPerInput = false;
+
     /**
      * @return Generator<mixed>
      */
@@ -53,7 +55,11 @@ abstract class Step extends BaseStep
             }
 
             if ($this->uniqueInput === false || $this->inputOrOutputIsUnique(new Input($validInputValue))) {
-                yield from $this->invokeAndYield($validInputValue, $input);
+                if (!$this->groupOutputsPerInput) {
+                    yield from $this->invokeAndYield($validInputValue, $input);
+                } else {
+                    yield from $this->invokeAndYieldOneOutputPerInput($validInputValue, $input);
+                }
             }
         }
     }
@@ -74,6 +80,13 @@ abstract class Step extends BaseStep
     public function excludeFromGroupOutput(): static
     {
         $this->excludeFromGroupOutput = true;
+
+        return $this;
+    }
+
+    public function oneOutputPerInput(): static
+    {
+        $this->groupOutputsPerInput = true;
 
         return $this;
     }
@@ -241,6 +254,38 @@ abstract class Step extends BaseStep
 
             $this->trackYieldedOutput();
         }
+    }
+
+    /**
+     * Version of invokeAndYield() when oneOutputPerInput() was called.
+     */
+    private function invokeAndYieldOneOutputPerInput(mixed $validInputValue, Input $input): Generator
+    {
+        $outputDataArray = [];
+
+        foreach ($this->invoke($validInputValue) as $outputData) {
+            $outputData = $this->applyRefiners($outputData, $input->get());
+
+            if (!$this->passesAllFilters($outputData)) {
+                continue;
+            }
+
+            $outputDataArray[] = $outputData;
+        }
+
+        if ($this->outputKey) {
+            $outputDataArray = [$this->outputKey => $outputDataArray];
+        }
+
+        $output = $this->makeOutput($outputDataArray, $input);
+
+        if ($this->uniqueOutput && !$this->inputOrOutputIsUnique($output)) {
+            return;
+        }
+
+        yield $output;
+
+        $this->trackYieldedOutput();
     }
 
     /**

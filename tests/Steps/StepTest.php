@@ -22,6 +22,7 @@ use tests\_Stubs\DummyLogger;
 
 use function tests\helper_getInputReturningStep;
 use function tests\helper_getStdClassWithData;
+use function tests\helper_getStepYieldingInputArrayAsSeparateOutputs;
 use function tests\helper_getStepYieldingMultipleArraysWithNumber;
 use function tests\helper_getStepYieldingMultipleNumbers;
 use function tests\helper_getStepYieldingMultipleObjectsWithNumber;
@@ -63,6 +64,8 @@ test('The invokeStep method wraps the values returned by invoke in Output object
         ->and($output[0]->get())->toBe('returnValue');
 });
 
+/* ------------------------------- keep() ------------------------------- */
+
 test('keep() can pick keys from nested (array) output using dot notation', function () {
     $step = helper_getValueReturningStep([
         'users' => [
@@ -102,6 +105,8 @@ it('maps output keys to different keys when defined in the array passed to keep(
 
     expect($output[0]->keep)->toBe(['foo' => 'Christian', 'bar' => 'Olear']);
 });
+
+/* ------------------------------- useInputKey() ------------------------------- */
 
 it('uses a key from array input when defined', function () {
     $step = helper_getInputReturningStep()->useInputKey('bar');
@@ -155,6 +160,27 @@ it('does not lose previously kept data, when it uses the useInputKey() method', 
     expect($outputs[0]->keep)->toBe(['some' => 'thing']);
 });
 
+it('keeps the original input data when useInputKey() is used', function () {
+    $step = helper_getValueReturningStep(['baz' => 'three'])
+        ->keepFromInput()
+        ->useInputKey('bar');
+
+    $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
+
+    expect($outputs[0]->get())->toBe(['baz' => 'three'])
+        ->and($outputs[0]->keep)->toBe(['foo' => 'one', 'bar' => 'two']);
+});
+
+test('useInputKey() can be used to get data that was kept from a previous step with keep() or keepAs()', function () {
+    $step = helper_getInputReturningStep();
+
+    $step->useInputKey('bar');
+
+    $outputs = helper_invokeStepWithInput($step, new Input('value', keep: ['bar' => 'baz']));
+
+    expect($outputs[0]->get())->toBe('baz');
+});
+
 it(
     'also passes on kept data through further steps when they don\'t define any further data to keep',
     function () {
@@ -166,6 +192,8 @@ it(
             ->and($output[0]->keep)->toBe(['prevProperty' => 'foobar']);
     },
 );
+
+/* ------------------------------- uniqueInputs() ------------------------------- */
 
 it('doesn\'t invoke twice with duplicate inputs when uniqueInput was called', function () {
     $step = helper_getInputReturningStep();
@@ -247,6 +275,8 @@ it(
     },
 );
 
+/* ------------------------------- uniqueOutputs() ------------------------------- */
+
 it('makes outputs unique when uniqueOutput was called', function () {
     $step = helper_getStepYieldingMultipleNumbers();
 
@@ -309,6 +339,120 @@ it('makes object outputs unique when providing no key name to uniqueOutput', fun
 
     expect($output)->toHaveCount(8);
 });
+
+/* ----------------------------- oneOutputPerInput() ----------------------------- */
+
+test(
+    'when a step yields multiple outputs per input and the oneOutputPerInput() method was called, the step yields it ' .
+    'as a single output with an array of all the single output values',
+    function () {
+        $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+        $step->oneOutputPerInput();
+
+        $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+        expect($outputs)->toHaveCount(1)
+            ->and($outputs[0]->get())->toBe(['foo', 'bar', 'baz']);
+    },
+);
+
+test('when using oneOutputPerInput(), the combined output counts as one output for the max outputs limit', function () {
+    $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+    $step->oneOutputPerInput()->maxOutputs(2);
+
+    $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['foo', 'bar', 'baz']);
+
+    $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['foo', 'bar', 'baz']);
+
+    $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+    expect($outputs)->toHaveCount(0);
+});
+
+test('when using oneOutputPerInput(), refiners are applied to the single elements of the combined output', function () {
+    $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+    $step->oneOutputPerInput()->refineOutput('title', fn(mixed $outputValue) => $outputValue . '-hey');
+
+    $outputs = helper_invokeStepWithInput($step, [
+        ['title' => 'foo'],
+        ['title' => 'bar'],
+        ['title' => 'baz'],
+    ]);
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe([
+            ['title' => 'foo-hey'],
+            ['title' => 'bar-hey'],
+            ['title' => 'baz-hey'],
+        ]);
+});
+
+test('when using oneOutputPerInput(), filters are applied to the single elements of the combined output', function () {
+    $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+    $step->where('id', Filter::greaterThan(109))->oneOutputPerInput();
+
+    $outputs = helper_invokeStepWithInput($step, [
+        ['title' => 'foo', 'id' => 109],
+        ['title' => 'bar', 'id' => 110],
+        ['title' => 'baz', 'id' => 111],
+    ]);
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe([
+            ['title' => 'bar', 'id' => 110],
+            ['title' => 'baz', 'id' => 111],
+        ]);
+});
+
+test(
+    'when using oneOutputPerInput() in combination with outputKey(), the whole combined output is returned in an ' .
+    'array with the defined key',
+    function () {
+        $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+        $step->outputKey('test')->oneOutputPerInput();
+
+        $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+        expect($outputs)->toHaveCount(1)
+            ->and($outputs[0]->get())->toBe(['test' => ['foo', 'bar', 'baz']]);
+    },
+);
+
+test(
+    'when using oneOutputPerInput() in combination with uniqueOutputs(), the whole combined output is compared',
+    function () {
+        $step = helper_getStepYieldingInputArrayAsSeparateOutputs();
+
+        $step->oneOutputPerInput()->uniqueOutputs();
+
+        $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+        expect($outputs)->toHaveCount(1)
+            ->and($outputs[0]->get())->toBe(['foo', 'bar', 'baz']);
+
+        $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'quz']);
+
+        expect($outputs)->toHaveCount(1)
+            ->and($outputs[0]->get())->toBe(['foo', 'bar', 'quz']);
+
+        $outputs = helper_invokeStepWithInput($step, ['foo', 'bar', 'baz']);
+
+        expect($outputs)->toHaveCount(0);
+    },
+);
+
+/* -------------------------- validateAndSanitizeInput() -------------------------- */
 
 it('calls the validateAndSanitizeInput method', function () {
     $step = new class extends Step {
@@ -453,6 +597,8 @@ it('is possible that a step does not produce any output at all', function () {
         ->and($output[0]->get())->toBe('bar');
 });
 
+/* --------------------------- updateInputUsingOutput() --------------------------- */
+
 test('You can add and call an updateInputUsingOutput callback', function () {
     $step = helper_getValueReturningStep('something');
 
@@ -480,6 +626,8 @@ it('does not lose previously kept data, when updateInputUsingOutput() is called'
 
     expect($updatedInput->keep)->toBe(['foo' => 'bar']);
 });
+
+/* -------------------------------- maxOutputs() -------------------------------- */
 
 it('does not yield more outputs than defined via maxOutputs() method', function () {
     $step = helper_getValueReturningStep('yolo')->maxOutputs(3);
@@ -563,6 +711,8 @@ it('resets outputs count for maxOutputs rule when resetAfterRun() is called', fu
     expect(helper_invokeStepWithInput($step, new Input('three')))->toHaveCount(1);
 });
 
+/* -------------------------------- outputKey() -------------------------------- */
+
 it('converts non array output to array with a certain key using the outputKey() method', function () {
     $step = helper_getValueReturningStep('bar')->outputKey('foo');
 
@@ -595,16 +745,7 @@ test('keeping a scalar output value with keep() also works when outputKey() was 
     expect($outputs[0]->get())->toBe(['greeting' => 'hey']);
 });
 
-it('keeps the original input data when useInputKey() is used', function () {
-    $step = helper_getValueReturningStep(['baz' => 'three'])
-        ->keepFromInput()
-        ->useInputKey('bar');
-
-    $outputs = helper_invokeStepWithInput($step, ['foo' => 'one', 'bar' => 'two']);
-
-    expect($outputs[0]->get())->toBe(['baz' => 'three'])
-        ->and($outputs[0]->keep)->toBe(['foo' => 'one', 'bar' => 'two']);
-});
+/* -------------------------------- refineOutput() -------------------------------- */
 
 it('applies a Closure refiner to the steps output', function () {
     $step = helper_getValueReturningStep('output');
@@ -707,15 +848,7 @@ it(
     },
 );
 
-it('useInputKey() can be used to get data that was kept from a previous step with keep() or keepAs()', function () {
-    $step = helper_getInputReturningStep();
-
-    $step->useInputKey('bar');
-
-    $outputs = helper_invokeStepWithInput($step, new Input('value', keep: ['bar' => 'baz']));
-
-    expect($outputs[0]->get())->toBe('baz');
-});
+/* ------------------------------- outputKeyAliases() ------------------------------- */
 
 test('you can define aliases for output keys and they are considered when using keep()', function () {
     $step = new class extends Step {
