@@ -22,3 +22,4 @@ parameters:
         - "#^Access to an undefined property Dom\\\\.+::\\$.+\\.#"
         - "#^Function .+ has invalid return type Dom\\\\.+\\.#"
         - "#^(?:Used )?(?:C|c)onstant DOM\\\\.+ not found\\.#"
+        - "#^Instantiated class Dom\\\\.+ not found.#"

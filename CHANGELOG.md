@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* New Refiners:
+    * `DateTimeRefiner::reformat('Y-m-d H:i:s')` to reformat a date time string to a different format. Tries to automatically recognize the input format. If this does not work, you can provide an input format to use as the second argument.
+    * `HtmlRefiner::remove('#foo')` to remove nodes matching the given selector from selected HTML.
+
 ## [3.4.5] - 2025-04-09
 ### Fixed
 * When feeding an `Http` step with a string that is not a valid URL (e.g. `https://`), the exception when trying to parse it as a URL is caught, and an error logged.
