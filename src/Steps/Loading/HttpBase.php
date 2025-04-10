@@ -8,6 +8,7 @@ use Crwlr\Crawler\Loader\Http\HttpLoader;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Utils\HttpHeaders;
+use Crwlr\Crawler\Utils\TemplateString;
 use Exception;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
@@ -44,6 +45,8 @@ abstract class HttpBase extends Step
      * @var null|array<string, string|string[]>
      */
     protected ?array $inputHeaders = null;
+
+    protected ?string $staticUrl = null;
 
     /**
      * @var Closure[]
@@ -188,6 +191,13 @@ abstract class HttpBase extends Step
         return $this;
     }
 
+    public function staticUrl(string $url): static
+    {
+        $this->staticUrl = $url;
+
+        return $this;
+    }
+
     /**
      * @return UriInterface|UriInterface[]
      * @throws InvalidArgumentException
@@ -198,7 +208,7 @@ abstract class HttpBase extends Step
 
         $this->getHeadersFromArrayInput($input);
 
-        $input = $this->getUrlFromArrayInput($input);
+        $input = $this->staticUrl ? $this->resolveStaticUrl() : $this->getUrlFromArrayInput($input);
 
         if (is_array($input)) {
             foreach ($input as $key => $url) {
@@ -237,6 +247,8 @@ abstract class HttpBase extends Step
         $body = $this->inputBody ?? (property_exists($this, 'body') ? $this->body : '');
 
         $headers = $this->mergeHeaders();
+
+        list($body, $headers) = $this->resolveVarsInRequestProperties($body, $headers);
 
         return new Request($this->method, $uri, $headers, $body, $this->httpVersion);
     }
@@ -430,5 +442,59 @@ abstract class HttpBase extends Step
         $this->inputHeaders = null;
 
         $this->inputBody = null;
+    }
+
+    private function resolveStaticUrl(): string
+    {
+        $fullInput = $this->getFullOriginalInput();
+
+        $inputValue = $fullInput?->get();
+
+        if (!is_array($inputValue)) {
+            $inputValue = [];
+        }
+
+        return TemplateString::resolve($this->staticUrl ?? '', $inputValue);
+    }
+
+    /**
+     * @param StreamInterface|string|null $body
+     * @param array<string, string[]> $headers
+     * @return array{ 0: string|StreamInterface|null, 1: array<string, string[]> }
+     */
+    private function resolveVarsInRequestProperties(StreamInterface|string|null $body, array $headers): array
+    {
+        $fullInput = $this->getFullOriginalInput();
+
+        if (!$fullInput) {
+            return [$body, $headers];
+        }
+
+        $fullInputData = $fullInput->get();
+
+        if (!is_array($fullInputData)) {
+            return [$body, $headers];
+        }
+
+        return [
+            is_string($body) ? TemplateString::resolve($body, $fullInputData) : $body,
+            $this->resolveVarsInHeaders($headers, $fullInputData),
+        ];
+    }
+
+    /**
+     * @param array<string, string[]> $headers
+     * @param mixed[] $fullInputData
+     * @return array<string, string[]>
+     */
+    private function resolveVarsInHeaders(array $headers, array $fullInputData): array
+    {
+        foreach ($headers as $headerName => $headerValues) {
+            foreach ($headerValues as $key => $headerValue) {
+                $headers[$headerName][$key] = TemplateString::resolve($headerValue, $fullInputData);
+            }
+        }
+
+        return $headers;
     }
 }

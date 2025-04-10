@@ -34,6 +34,8 @@ final class Group extends BaseStep
             return;
         }
 
+        $this->storeOriginalInput($input);
+
         // When input is array and useInputKey() was used, invoke the steps only with that input array element,
         // but keep the original input, because we want to use it e.g. for the keepInputData() functionality.
         $inputForStepInvocation = $this->getInputKeyToUse($input);

@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.0] - 2025-04-10
 ### Added
+* Dynamically building request URLs from extracted data: `Http` steps now have a new `staticUrl()` method, and you can also use variables within that static URL - as well as in request headers and the body - like `https://www.example.com/foo/[crwl:some_extracted_property]`. These variables will be replaced with the corresponding properties from input data (also works with kept data).
 * New Refiners:
     * `DateTimeRefiner::reformat('Y-m-d H:i:s')` to reformat a date time string to a different format. Tries to automatically recognize the input format. If this does not work, you can provide an input format to use as the second argument.
     * `HtmlRefiner::remove('#foo')` to remove nodes matching the given selector from selected HTML.

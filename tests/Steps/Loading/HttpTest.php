@@ -475,6 +475,102 @@ it('gets multiple headers from an input array using useInputKeyAsHeaders()', fun
     helper_invokeStepWithInput($step, $inputArray);
 });
 
+it('uses a static URL when defined', function () {
+    $input = 'foo';
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) {
+            return $request->getUri()->__toString() === 'https://www.example.com/servus';
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/servus'), new Response(200)));
+
+    $step = Http::get()
+        ->setLoader($loader)
+        ->staticUrl('https://www.example.com/servus');
+
+    helper_invokeStepWithInput($step, $input);
+});
+
+it('resolves variables in a static URL from input data', function () {
+    $input = ['one' => 'foo', 'two' => 'bar'];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader->shouldReceive('usesHeadlessBrowser')->andReturn(false);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) {
+            return $request->getUri()->__toString() === 'https://www.example.com/foo/bar/baz';
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/foo/bar/baz'), new Response(200)));
+
+    $step = Http::get()
+        ->setLoader($loader)
+        ->staticUrl('https://www.example.com/[crwl:\'one\']/[crwl:two]/baz');
+
+    helper_invokeStepWithInput($step, $input);
+});
+
+it('resolves variables in the request body from input data', function () {
+    $input = [
+        'url' => 'https://www.example.com/foo',
+        'hey' => 'ho',
+        'yo' => 'lo',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader->shouldReceive('usesHeadlessBrowser')->andReturn(false);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) {
+            $bodyString = Http::getBodyString($request);
+
+            return $bodyString === 'Ho ho ho and lo asdf';
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/foo'), new Response(200)));
+
+    $step = Http::post(body: 'Ho ho [crwl:hey] and [crwl:yo] asdf')
+        ->setLoader($loader);
+
+    helper_invokeStepWithInput($step, $input);
+});
+
+it('resolves variables in request headers from input data', function () {
+    $input = [
+        'url' => 'https://www.example.com/foo',
+        'encoding' => 'deflate, br',
+        'language' => 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+    ];
+
+    $loader = Mockery::mock(HttpLoader::class);
+
+    $loader
+        ->shouldReceive('load')
+        ->withArgs(function (RequestInterface $request) {
+            return $request->getHeaderLine('Accept-Encoding') === 'gzip, deflate, br, zstd' &&
+                $request->getHeaderLine('Accept-Language') === 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7';
+        })
+        ->once()
+        ->andReturn(new RespondedRequest(new Request('GET', 'https://www.example.com/foo'), new Response(200)));
+
+    $step = Http::get([
+        'Accept-Encoding' => 'gzip, [crwl:"encoding"], zstd',
+        'Accept-Language' => '[crwl:language]',
+    ])
+        ->setLoader($loader);
+
+    helper_invokeStepWithInput($step, $input);
+});
+
 test(
     'the getBodyString() method does not generate a warning, when the response contains a ' .
     'Content-Type: application/x-gzip header, but the content actually isn\'t compressed',
