@@ -11,7 +11,6 @@ class TemplateString
      */
     public static function resolve(string $string, array $data = []): string
     {
-//        if (str_contains($string, '{{ crwl_var(') || str_contains($string, '{{crwl_var(')) {
         if (str_contains($string, '[crwl:')) {
             return preg_replace_callback('/\[crwl:(.+?)]/m', function ($matches) use ($data) {
                 $varName = self::trimAndUnescapeQuotes($matches[1]);
