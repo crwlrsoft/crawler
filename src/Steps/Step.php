@@ -43,6 +43,8 @@ abstract class Step extends BaseStep
             return;
         }
 
+        $this->storeOriginalInput($input);
+
         $inputForStepInvocation = $this->getInputKeyToUse($input);
 
         if ($inputForStepInvocation) {

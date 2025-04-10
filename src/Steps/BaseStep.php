@@ -82,6 +82,8 @@ abstract class BaseStep implements StepInterface
 
     protected int $currentOutputCount = 0;
 
+    private ?Input $fullOriginalInput = null;
+
     /**
      * @param Input $input
      * @return Generator<Output>
@@ -306,6 +308,24 @@ abstract class BaseStep implements StepInterface
         $this->subCrawlers[$for] = $crawlerBuilder;
 
         return $this;
+    }
+
+    /**
+     * In case useInputKey() was used, use this method to store the original input so you can still
+     * access it later.
+     */
+    protected function storeOriginalInput(Input $input): void
+    {
+        $this->fullOriginalInput = $input;
+    }
+
+    /**
+     * In case useInputKey() was used, this method shall still provide access to the full input object,
+     * that the step was last called with.
+     */
+    protected function getFullOriginalInput(): ?Input
+    {
+        return $this->fullOriginalInput;
     }
 
     protected function runSubCrawlersFor(Output $output): Output
