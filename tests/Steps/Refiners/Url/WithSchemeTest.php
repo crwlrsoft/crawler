@@ -37,3 +37,13 @@ it('replaces the scheme in a URL', function (mixed $value, string $expected) {
     [Url::parse('ftp://www.example.com/bar'), 'https://www.example.com/bar'],
     [Url::parsePsr7('http://www.example.com/baz'), 'https://www.example.com/baz'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withScheme('https')
+            ->refine([
+                'http://www.example.com/foo',
+                'https://www.example.com/bar',
+            ])
+    )->toBe(['https://www.example.com/foo', 'https://www.example.com/bar']);
+});

@@ -15,14 +15,22 @@ it('logs a warning and returns the unchanged value when $value is not of type st
 
     $logOutput = $this->getActualOutputForAssertion();
 
-    expect($logOutput)->toContain('Refiner StringRefiner::betweenLast() can\'t be applied to value of type ' . gettype($value));
-
-    expect($refinedValue)->toBe($value);
+    expect($logOutput)
+        ->toContain('Refiner StringRefiner::betweenLast() can\'t be applied to value of type ' . gettype($value))
+        ->and($refinedValue)->toBe($value);
 })->with([
     [123],
     [12.3],
     [true],
 ]);
+
+it('works with an array of strings as value', function () {
+    $refinedValue = StringRefiner::betweenLast('foo', 'bar')
+        ->addLogger(new CliLogger())
+        ->refine(['one foo two bar three foo four bar five', 'six foo seven bar eight foo nine bar ten']);
+
+    expect($refinedValue)->toBe(['four', 'nine']);
+});
 
 it('gets the (trimmed) string between the last occurrence of start and the next occurrence of end', function () {
     $refiner = StringRefiner::betweenLast('foo', 'bar');

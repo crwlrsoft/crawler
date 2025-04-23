@@ -44,3 +44,13 @@ it('resets any query', function (mixed $value, string $expected) {
     ['https://www.example.com/foo#bar', 'https://www.example.com/foo'],
     ['https://www.crwlr.software/#', 'https://www.crwlr.software/'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withFragment('#lorem')
+            ->refine([
+                'https://www.example.com/path#foo',
+                'https://www.example.com/path#bar',
+            ])
+    )->toBe(['https://www.example.com/path#lorem', 'https://www.example.com/path#lorem']);
+});

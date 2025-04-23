@@ -37,3 +37,13 @@ it('replaces the path in a URL', function (mixed $value, string $expected) {
     [Url::parse('https://www.crwlr.software/packages'), 'https://www.crwlr.software/some/path/123'],
     [Url::parsePsr7('https://www.crwl.io/'), 'https://www.crwl.io/some/path/123'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withPath('/hawedere')
+            ->refine([
+                'https://www.example.com/foo',
+                'https://www.example.com/bar',
+            ])
+    )->toBe(['https://www.example.com/hawedere', 'https://www.example.com/hawedere']);
+});

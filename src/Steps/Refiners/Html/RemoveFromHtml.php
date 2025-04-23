@@ -7,53 +7,58 @@ use Crwlr\Crawler\Steps\Dom\HtmlDocument;
 use Crwlr\Crawler\Steps\Html\CssSelector;
 use Crwlr\Crawler\Steps\Html\DomQuery;
 use Crwlr\Crawler\Steps\Html\Exceptions\InvalidDomQueryException;
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
+use Crwlr\Crawler\Steps\Refiners\String\AbstractStringRefiner;
 use Throwable;
 
-class RemoveFromHtml extends AbstractRefiner
+class RemoveFromHtml extends AbstractStringRefiner
 {
-    public function __construct(protected string|DomQuery $selector) {}
+    protected DomQuery $selector;
+
+    /**
+     * @throws InvalidDomQueryException
+     */
+    public function __construct(string|DomQuery $selector)
+    {
+        $selectorString = is_string($selector) ? $selector : $selector->query;
+
+        if (trim($selectorString) === '') {
+            $this->logger?->warning(
+                'Empty selector in remove HTML refiner. If you want HTML nodes to be removed, please define a ' .
+                'selector for those nodes.',
+            );
+        }
+
+        if (is_string($selector)) {
+            $selector = Dom::cssSelector($selector);
+        }
+
+        $this->selector = $selector;
+    }
 
     public function refine(mixed $value): mixed
     {
-        $selectorString = is_string($this->selector) ? $this->selector : $this->selector->query;
-
-        if (trim($selectorString) === '') {
-            $this->logger?->warning('If you want HTML nodes to be removed, please define a selector for those nodes.');
-
-            return $value;
-        }
-
-        if (is_string($this->selector)) {
+        return $this->apply($value, function ($value) {
             try {
-                $this->selector = Dom::cssSelector($this->selector);
-            } catch (InvalidDomQueryException $exception) {
-                $this->logger?->error('Invalid selector in refiner to remove HTML: ' . $exception->getMessage());
+                $document = new HtmlDocument($value);
+            } catch (Throwable $exception) {
+                $this->logger?->warning(
+                    'Failed parsing output as HTML in refiner to remove nodes from HTML: ' . $exception->getMessage(),
+                );
 
                 return $value;
             }
-        }
 
-        try {
-            $document = new HtmlDocument($value);
-        } catch (Throwable $exception) {
-            $this->logger?->warning(
-                'Failed parsing output as HTML in refiner to remove nodes from HTML: ' . $exception->getMessage(),
-            );
+            if ($this->selector instanceof CssSelector) {
+                $document->removeNodesMatchingSelector($this->selector->query);
+            } else {
+                $document->removeNodesMatchingXPath($this->selector->query);
+            }
 
-            return $value;
-        }
+            if (str_contains($value, '<html') || str_contains($value, '<HTML')) {
+                return $document->outerHtml();
+            }
 
-        if ($this->selector instanceof CssSelector) {
-            $document->removeNodesMatchingSelector($this->selector->query);
-        } else {
-            $document->removeNodesMatchingXPath($this->selector->query);
-        }
-
-        if (str_contains($value, '<html') || str_contains($value, '<HTML')) {
-            return $document->outerHtml();
-        }
-
-        return $document->querySelector('body')?->innerHtml() ?? $document->outerHtml();
+            return $document->querySelector('body')?->innerHtml() ?? $document->outerHtml();
+        }, 'HtmlRefiner::remove()');
     }
 }

@@ -2,9 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Refiners\String;
 
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
-
-class StrReplace extends AbstractRefiner
+class StrReplace extends AbstractStringRefiner
 {
     /**
      * @param string|string[] $search
@@ -17,14 +15,20 @@ class StrReplace extends AbstractRefiner
 
     public function refine(mixed $value): mixed
     {
-        if (!is_string($value)) {
-            $this->logTypeWarning('StringRefiner::replace()', $value);
+        return $this->apply($value, function ($value) {
+            $replaced = str_replace($this->search, $this->replace, $value);
 
-            return $value;
-        }
+            return trim($replaced);
+        }, 'StringRefiner::replace()');
 
-        $replaced = str_replace($this->search, $this->replace, $value);
-
-        return trim($replaced);
+        //        if (!is_string($value)) {
+        //            $this->logTypeWarning('StringRefiner::replace()', $value);
+        //
+        //            return $value;
+        //        }
+        //
+        //        $replaced = str_replace($this->search, $this->replace, $value);
+        //
+        //        return trim($replaced);
     }
 }

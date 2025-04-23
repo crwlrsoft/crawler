@@ -37,3 +37,13 @@ it('resets the port to null in a URL', function (mixed $value, string $expected)
     [Url::parse('https://www.crwlr.software:5678/bar'), 'https://www.crwlr.software/bar'],
     [Url::parsePsr7('https://crwl.io/quz'), 'https://crwl.io/quz'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withoutPort()
+            ->refine([
+                'https://www.example.com:8000/foo',
+                'https://www.example.com:8080/bar',
+            ])
+    )->toBe(['https://www.example.com/foo', 'https://www.example.com/bar']);
+});

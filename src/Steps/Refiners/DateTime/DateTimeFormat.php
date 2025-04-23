@@ -2,32 +2,34 @@
 
 namespace Crwlr\Crawler\Steps\Refiners\DateTime;
 
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
+use Crwlr\Crawler\Steps\Refiners\String\AbstractStringRefiner;
 use DateTime;
 
-class DateTimeFormat extends AbstractRefiner
+class DateTimeFormat extends AbstractStringRefiner
 {
     public function __construct(protected string $targetFormat, protected string|null $originFormat = null) {}
 
     public function refine(mixed $value): mixed
     {
-        if ($this->originFormat) {
-            $parsed = DateTime::createFromFormat($this->originFormat, $value);
-        } else {
-            $parsed = $this->parseFromUnknownFormat($value);
-        }
+        return $this->apply($value, function ($value) {
+            if ($this->originFormat) {
+                $parsed = DateTime::createFromFormat($this->originFormat, $value);
+            } else {
+                $parsed = $this->parseFromUnknownFormat($value);
+            }
 
-        if ($parsed === null) {
-            return $value;
-        } elseif ($parsed === false) {
-            $this->logger?->warning(
-                'Failed parsing date/time "' . $value . '", so can\'t reformat it to requested format.',
-            );
+            if ($parsed === null) {
+                return $value;
+            } elseif ($parsed === false) {
+                $this->logger?->warning(
+                    'Failed parsing date/time "' . $value . '", so can\'t reformat it to requested format.',
+                );
 
-            return $value;
-        }
+                return $value;
+            }
 
-        return $parsed->format($this->targetFormat);
+            return $parsed->format($this->targetFormat);
+        }, 'DateTimeRefiner::reformat()');
     }
 
     private function parseFromUnknownFormat(string $value): ?DateTime
