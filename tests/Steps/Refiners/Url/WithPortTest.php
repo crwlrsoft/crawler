@@ -44,6 +44,6 @@ it('refines an array of URLs', function () {
             ->refine([
                 'https://www.example.com/foo',
                 'https://www.example.com/bar',
-            ])
+            ]),
     )->toBe(['https://www.example.com:1234/foo', 'https://www.example.com:1234/bar']);
 });
