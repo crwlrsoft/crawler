@@ -37,3 +37,13 @@ it('replaces the host in a URL', function (mixed $value, string $expected) {
     [Url::parse('https://www.crwlr.software/baz'), 'https://www.crwlr.software/baz'],
     [Url::parsePsr7('https://crwl.io/quz'), 'https://www.crwlr.software/quz'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withHost('crwl.io')
+            ->refine([
+                'https://www.example.com/foo',
+                'https://www.example.com/bar',
+            ])
+    )->toBe(['https://crwl.io/foo', 'https://crwl.io/bar']);
+});

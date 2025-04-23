@@ -15,6 +15,14 @@ abstract class AbstractUrlRefiner extends AbstractRefiner
      */
     public function refine(mixed $value): mixed
     {
+        if (is_array($value)) {
+            foreach ($value as $key => $url) {
+                $value[$key] = $this->refine($url);
+            }
+
+            return $value;
+        }
+
         if (!is_string($value) && !$value instanceof Url && !$value instanceof UriInterface) {
             $this->logTypeWarning($this->staticRefinerMethod(), $value);
 

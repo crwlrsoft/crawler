@@ -2,28 +2,22 @@
 
 namespace Crwlr\Crawler\Steps\Refiners\String;
 
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
-
-class StrAfterFirst extends AbstractRefiner
+class StrAfterFirst extends AbstractStringRefiner
 {
     public function __construct(protected readonly string $first) {}
 
     public function refine(mixed $value): mixed
     {
-        if (!is_string($value)) {
-            $this->logTypeWarning('StringRefiner::afterFirst()', $value);
+        return $this->apply($value, function ($value) {
+            if ($this->first === '') {
+                return $value;
+            }
 
-            return $value;
-        }
+            $split = explode($this->first, $value, 2);
 
-        if ($this->first === '') {
-            return $value;
-        }
+            $lastPart = end($split);
 
-        $split = explode($this->first, $value, 2);
-
-        $lastPart = end($split);
-
-        return trim($lastPart);
+            return trim($lastPart);
+        }, 'StringRefiner::afterFirst()');
     }
 }

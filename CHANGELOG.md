@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.1] - 2025-04-23
+### Fixed
+* An issue that occurred, when a step uses the `PreStepInvocationLogger`. As refiners also use the logger, a newer logger (replacing the `PreStepInvocationLogger`) is now also passed to all registered refiners of a step.
+* Enable applying refiners to output properties with array value. E.g. if a step outputs an array of URLs (`['https://...', 'https://...']`), a `UrlRefiner` will be applied to all those URLs.
+
 ## [3.5.0] - 2025-04-10
 ### Added
 * Dynamically building request URLs from extracted data: `Http` steps now have a new `staticUrl()` method, and you can also use variables within that static URL - as well as in request headers and the body - like `https://www.example.com/foo/[crwl:some_extracted_property]`. These variables will be replaced with the corresponding properties from input data (also works with kept data).

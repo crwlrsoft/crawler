@@ -14,6 +14,7 @@ use Crwlr\Crawler\Steps\Exceptions\PreRunValidationException;
 use Crwlr\Crawler\Steps\Filters\Filter;
 use Crwlr\Crawler\Steps\Html;
 use Crwlr\Crawler\Steps\Loading\Http;
+use Crwlr\Crawler\Steps\Refiners\StringRefiner;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Exception;
@@ -222,6 +223,39 @@ it(
             ->and($crawlerLogger->messages[0]['message'])->toBe('test')
             ->and($crawlerLogger->messages[1]['level'])->toBe('warning')
             ->and($crawlerLogger->messages[1]['message'])->toBe('foo');
+    },
+);
+
+it(
+    'when using a PreStepInvocationLogger, the later created logger is also passed to refiners, so its log messages ' .
+    'won\'t be lost',
+    function () {
+        $step = new class extends Step {
+            public function __construct()
+            {
+                $this->addLogger(new PreStepInvocationLogger());
+
+                $this->logger?->info('test');
+            }
+
+            protected function invoke(mixed $input): Generator
+            {
+                yield $input;
+            }
+        };
+
+        $step->refineOutput('foo', StringRefiner::replace('foo', 'bar'));
+
+        $logger = new DummyLogger();
+
+        $step->addLogger($logger);
+
+        helper_invokeStepWithInput($step, ['foo' => 1.2]);
+
+        expect($logger->messages)->toHaveCount(2)
+            ->and($logger->messages[1]['message'])->toBe(
+                'Refiner StringRefiner::replace() can\'t be applied to value of type double',
+            );
     },
 );
 

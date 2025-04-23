@@ -65,3 +65,17 @@ it(
             ->and($refinedValue)->toBe('21. September 2024 um 13:55:41');
     },
 );
+
+it('reformats an array of date time strings', function () {
+    $refinedValue = DateTimeRefiner::reformat('Y-m-d H:i:s')->refine([
+        '2024-09-21T13:55:41Z',
+        '2024-09-21T13:55:41.000Z',
+        '2024-09-21',
+    ]);
+
+    expect($refinedValue)->toBe([
+        '2024-09-21 13:55:41',
+        '2024-09-21 13:55:41',
+        '2024-09-21 00:00:00',
+    ]);
+});

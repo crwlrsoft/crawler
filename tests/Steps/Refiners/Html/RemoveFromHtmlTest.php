@@ -79,3 +79,31 @@ it('removes multiple nodes from HTML by xpath query', function () {
         ->and($refinedValue)->toContain('<li>baz</li>')
         ->and($refinedValue)->not()->toContain('<html>');
 });
+
+it('removes node from an array of HTML snippets', function () {
+    $html = [
+        <<<HTML
+        <ul id="list">
+            <li>foo</li>
+            <li class="remove">bar</li>
+            <li>baz</li>
+            <li class="remove">quz</li>
+        </ul>
+        HTML,
+        <<<HTML
+        <ul id="list">
+            <li>lorem</li>
+            <li class="remove">ipsum</li>
+            <li>dolor</li>
+            <li class="remove">sit</li>
+        </ul>
+        HTML,
+    ];
+
+    $refinedValue = HtmlRefiner::remove('.remove')->refine($html);
+
+    expect($refinedValue[0])->not()->toContain('bar')
+        ->and($refinedValue[0])->not()->toContain('quz')
+        ->and($refinedValue[1])->not()->toContain('ipsum')
+        ->and($refinedValue[1])->not()->toContain('sit');
+});

@@ -2,32 +2,26 @@
 
 namespace Crwlr\Crawler\Steps\Refiners\String;
 
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
-
-class StrBetweenLast extends AbstractRefiner
+class StrBetweenLast extends AbstractStringRefiner
 {
     public function __construct(protected readonly string $start, protected readonly string $end) {}
 
     public function refine(mixed $value): mixed
     {
-        if (!is_string($value)) {
-            $this->logTypeWarning('StringRefiner::betweenLast()', $value);
+        return $this->apply($value, function ($value) {
+            if ($this->start === '') {
+                $splitAtStart = ['', $value];
+            } else {
+                $splitAtStart = explode($this->start, $value);
+            }
 
-            return $value;
-        }
+            $lastPart = end($splitAtStart);
 
-        if ($this->start === '') {
-            $splitAtStart = ['', $value];
-        } else {
-            $splitAtStart = explode($this->start, $value);
-        }
+            if ($this->end === '') {
+                return trim($lastPart);
+            }
 
-        $lastPart = end($splitAtStart);
-
-        if ($this->end === '') {
-            return trim($lastPart);
-        }
-
-        return trim(explode($this->end, $lastPart)[0]);
+            return trim(explode($this->end, $lastPart)[0]);
+        }, 'StringRefiner::betweenLast()');
     }
 }

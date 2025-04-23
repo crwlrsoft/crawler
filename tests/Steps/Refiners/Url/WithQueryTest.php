@@ -44,3 +44,13 @@ it('resets any query', function (mixed $value, string $expected) {
     ['https://www.example.com/foo?one=two', 'https://www.example.com/foo'],
     ['https://www.crwlr.software/?', 'https://www.crwlr.software/'],
 ]);
+
+it('refines an array of URLs', function () {
+    expect(
+        UrlRefiner::withoutQuery()
+            ->refine([
+                'https://www.example.com/foo?one=two',
+                'https://www.example.com/bar?three=four',
+            ])
+    )->toBe(['https://www.example.com/foo', 'https://www.example.com/bar']);
+});

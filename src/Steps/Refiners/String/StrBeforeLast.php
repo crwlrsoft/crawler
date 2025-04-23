@@ -2,32 +2,26 @@
 
 namespace Crwlr\Crawler\Steps\Refiners\String;
 
-use Crwlr\Crawler\Steps\Refiners\AbstractRefiner;
-
-class StrBeforeLast extends AbstractRefiner
+class StrBeforeLast extends AbstractStringRefiner
 {
     public function __construct(protected readonly string $last) {}
 
     public function refine(mixed $value): mixed
     {
-        if (!is_string($value)) {
-            $this->logTypeWarning('StringRefiner::beforeLast()', $value);
+        return $this->apply($value, function ($value) {
+            if ($this->last === '') {
+                return $value;
+            }
 
-            return $value;
-        }
+            $split = explode($this->last, $value);
 
-        if ($this->last === '') {
-            return $value;
-        }
+            if (count($split) === 1) {
+                return $value;
+            }
 
-        $split = explode($this->last, $value);
+            array_pop($split);
 
-        if (count($split) === 1) {
-            return $value;
-        }
-
-        array_pop($split);
-
-        return trim(implode($this->last, $split));
+            return trim(implode($this->last, $split));
+        }, 'StringRefiner::beforeLast()');
     }
 }

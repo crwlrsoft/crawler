@@ -98,6 +98,16 @@ abstract class BaseStep implements StepInterface
 
         $this->logger = $logger;
 
+        if (!empty($this->refiners)) {
+            foreach ($this->refiners as $refiner) {
+                if ($refiner instanceof RefinerInterface) {
+                    $refiner->addLogger($logger);
+                } elseif (is_array($refiner) && $refiner['refiner'] instanceof RefinerInterface) {
+                    $refiner['refiner']->addLogger($logger);
+                }
+            }
+        }
+
         return $this;
     }
 
