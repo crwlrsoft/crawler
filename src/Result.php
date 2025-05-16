@@ -2,6 +2,8 @@
 
 namespace Crwlr\Crawler;
 
+use Crwlr\Crawler\Utils\OutputTypeHelper;
+
 final class Result
 {
     /**
@@ -54,7 +56,17 @@ final class Result
      */
     public function toArray(): array
     {
-        return $this->data;
+        $data = OutputTypeHelper::recursiveChildObjectsToArray($this->data);
+
+        if (
+            count($data) === 1 &&
+            str_contains('unnamed', array_key_first($data)) &&
+            OutputTypeHelper::isAssociativeArray($data[array_key_first($data)])
+        ) {
+            return $data[array_key_first($data)];
+        }
+
+        return $data;
     }
 
     private function getUnnamedKey(): string
