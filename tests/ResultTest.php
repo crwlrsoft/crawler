@@ -7,7 +7,6 @@ use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Result;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use stdClass;
 
 test('You can set and get a property', function () {
     $result = new Result();
@@ -60,7 +59,7 @@ test('Converting to an array, also converts all objects at any level in the arra
         'bar',
         helper_getStdClassWithData([
             'a' => 'b',
-            'c' => helper_getStdClassWithData(['d' => 'e', 'f' => 'g'])
+            'c' => helper_getStdClassWithData(['d' => 'e', 'f' => 'g']),
         ]),
     );
 
@@ -95,7 +94,7 @@ test(
             ->and($resultArray['status'])->toBe(200)
             ->and($resultArray['body'])->toBe('Hello World!')
             ->and($resultArray['screenshots'][0])->toBe('/path/to/screenshot.png');
-    }
+    },
 );
 
 test(
@@ -108,7 +107,7 @@ test(
         $resultArray = $result->toArray();
 
         expect($resultArray)->toBe(['unnamed' => 'foo']);
-    }
+    },
 );
 
 test('when you add something with empty string as key it creates a name with incrementing number', function () {
