@@ -704,28 +704,11 @@ abstract class BaseStep implements StepInterface
             return $data[$this->getOutputKeyAliasRealKey($key)];
         }
 
-        $data = $this->recursiveChildObjectsToArray($data);
+        $data = OutputTypeHelper::recursiveChildObjectsToArray($data);
 
         $dot = new Dot($data);
 
         return $dot->get($key);
-    }
-
-    /**
-     * @param mixed[] $data
-     * @return mixed[]
-     */
-    protected function recursiveChildObjectsToArray(array $data): array
-    {
-        foreach ($data as $key => $value) {
-            if (is_object($value)) {
-                $data[$key] = $this->recursiveChildObjectsToArray(OutputTypeHelper::objectToArray($value));
-            } elseif (is_array($value)) {
-                $data[$key] = $this->recursiveChildObjectsToArray($value);
-            }
-        }
-
-        return $data;
     }
 
     protected function isOutputKeyAlias(string $key): bool

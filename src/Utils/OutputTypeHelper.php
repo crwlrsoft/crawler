@@ -42,4 +42,21 @@ class OutputTypeHelper
 
         return false;
     }
+
+    /**
+     * @param mixed[] $data
+     * @return mixed[]
+     */
+    public static function recursiveChildObjectsToArray(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_object($value)) {
+                $data[$key] = self::recursiveChildObjectsToArray(self::objectToArray($value));
+            } elseif (is_array($value)) {
+                $data[$key] = self::recursiveChildObjectsToArray($value);
+            }
+        }
+
+        return $data;
+    }
 }
