@@ -404,7 +404,7 @@ class HeadlessBrowserLoaderHelper
         $headers = $this->removeHeadersCausingErrorWithHeadlessBrowser($headers);
 
         return array_map(function ($headerValue) {
-            return is_array($headerValue) ? reset($headerValue) : $headerValue;
+            return is_array($headerValue) ? implode(';', $headerValue) : $headerValue;
         }, $headers);
     }
 

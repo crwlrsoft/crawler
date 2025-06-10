@@ -248,6 +248,40 @@ it('gets a cookie that is set via a click, executed via post browser navigate ho
         ->and($testCookie?->value())->toBe('javascriptcookie');
 });
 
+it(
+    'sending cookies works correctly when the loader is not configured to use the browser but two steps use the ' .
+    'browser by calling the useBrowser() method of Http steps',
+    function () {
+        $crawler = HttpCrawler::make()->withMozilla5CompatibleUserAgent();
+
+        $crawler
+            ->input('http://localhost:8000/set-multiple-js-cookies')
+            ->addStep(Http::get()->useBrowser())
+            ->addStep(new class extends Step {
+                protected function invoke(mixed $input): Generator
+                {
+                    yield 'http://localhost:8000/print-cookies';
+                }
+            })
+            ->addStep(Http::get()->useBrowser())
+            ->addStep((new GetStringFromResponseHtmlBody())->keepAs('printed-cookies'));
+
+        $results = helper_generatorToArray($crawler->run());
+
+        expect($results)->toHaveCount(1)
+            ->and($results[0]->get('printed-cookies'))->toBeString()
+            ->and($results[0]->get('printed-cookies'))
+            ->toBe('cookie3=cookie3value;cookie2=cookie2value;cookie1=cookie1value');
+
+        $cookiesInJar = helper_getCookiesByDomainFromLoader($crawler->getLoader(), 'localhost');
+
+        expect($cookiesInJar)->toHaveCount(3)
+            ->and($cookiesInJar['cookie1']->value())->toBe('cookie1value')
+            ->and($cookiesInJar['cookie2']->value())->toBe('cookie2value')
+            ->and($cookiesInJar['cookie3']->value())->toBe('cookie3value');
+    },
+);
+
 test(
     'BrowserAction::clickElement(), clickInsideShadowDom(), evaluate(), moveMouseToElement(), ' .
     'moveMouseToPosition(), scrollDown(), scrollUp() and typeText() work as expected',
