@@ -73,6 +73,10 @@ if ($route === '/set-delayed-js-cookie') {
     return include(__DIR__ . '/_Server/SetDelayedCookieJs.php');
 }
 
+if ($route === '/set-multiple-js-cookies') {
+    return include(__DIR__ . '/_Server/SetMultipleCookiesJs.php');
+}
+
 if (str_starts_with($route, '/browser-actions')) {
     if ($route === '/browser-actions') {
         return include(__DIR__ . '/_Server/BrowserActions/Main.php');
@@ -97,6 +101,10 @@ if (str_starts_with($route, '/browser-actions')) {
 
 if ($route === '/print-cookie') {
     return include(__DIR__ . '/_Server/PrintCookie.php');
+}
+
+if ($route === '/print-cookies') {
+    return include(__DIR__ . '/_Server/PrintCookies.php');
 }
 
 if (str_starts_with($route, '/crawling')) {

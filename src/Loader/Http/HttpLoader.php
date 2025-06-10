@@ -671,7 +671,7 @@ class HttpLoader extends Loader
      */
     protected function addCookiesToRequest(RequestInterface $request): RequestInterface
     {
-        if (!$this->useCookies || $this->usesHeadlessBrowser()) {
+        if (!$this->useCookies) {
             return $request;
         }
 
