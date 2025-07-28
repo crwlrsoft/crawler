@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.4] - 2025-07-28
+### Fixed
+* An issue in the `SimpleWebsitePaginator` when used with stop rules.
+
 ## [3.5.3] - 2025-06-10
 ### Fixed
 * Issues with passing cookies from the cookie jar to the headless browser when using the `useBrowser()` method on `Http` steps, in cases where the loader wasn’t globally configured to use the browser for all requests.

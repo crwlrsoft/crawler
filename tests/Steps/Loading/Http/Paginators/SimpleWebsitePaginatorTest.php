@@ -5,6 +5,7 @@ namespace tests\Steps\Loading\Http\Paginators;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Logger\CliLogger;
 use Crwlr\Crawler\Steps\Loading\Http\Paginators\SimpleWebsitePaginator;
+use Crwlr\Crawler\Steps\Loading\Http\Paginators\StopRules\PaginatorStopRules;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -335,4 +336,18 @@ it('cleans up the stored parent requests always when getting the next request to
     $paginator->processLoaded($respondedRequest->request, $respondedRequest);
 
     expect(count($paginator->parentRequests()))->toBe(0);
+});
+
+it('does not stop, when a response does not meet the stop rule criterion', function () {
+    $paginator = new SimpleWebsitePaginator('.pagination', 3);
+
+    $paginator->stopWhen(PaginatorStopRules::contains('hello world'));
+
+    $responseBody = helper_createResponseBodyWithPaginationLinks(['/listing?page=2' => 'Next page']);
+
+    $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing', $responseBody);
+
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
+
+    expect($paginator->hasFinished())->toBeFalse();
 });
