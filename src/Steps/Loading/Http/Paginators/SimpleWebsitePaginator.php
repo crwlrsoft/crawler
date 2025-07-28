@@ -80,7 +80,7 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
         RequestInterface $request,
         ?RespondedRequest $respondedRequest,
     ): void {
-        $this->registerLoadedRequest($request);
+        $this->registerLoadedRequest($respondedRequest ?? $request);
 
         if ($this->latestRequest) {
             $this->latestRequestKey = RequestKey::from($this->latestRequest);
