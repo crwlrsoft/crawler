@@ -47,9 +47,8 @@ it('only iterates pagination until max pages limit is reached', function () {
 
     $results = helper_generatorToArray($crawler->run());
 
-    expect($results)->toHaveCount(2);
-
-    expect($this->getActualOutputForAssertion())->toContain('Max pages limit reached');
+    expect($results)->toHaveCount(2)
+        ->and($this->getActualOutputForAssertion())->toContain('Max pages limit reached');
 });
 
 it('resets the finished paginating state after each processed (/paginated) input', function () {

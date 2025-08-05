@@ -51,6 +51,26 @@ it('paginates using query params sent in the request body', function () {
     expect($results)->toHaveCount(4);
 });
 
+it('also paginates using query params sent in the request body, when used in combination with static URL', function () {
+    $crawler = new QueryParamPaginationCrawler();
+
+    $crawler
+        ->input('foo')
+        ->addStep(
+            Http::post(body: 'page=1')
+                ->staticUrl('http://localhost:8000/query-param-pagination')
+                ->paginate(
+                    Paginator::queryParams(3)
+                        ->inBody()
+                        ->increase('page'),
+                )->keep(['body']),
+        );
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect($results)->toHaveCount(3);
+});
+
 it('paginates using URL query params', function () {
     $crawler = new QueryParamPaginationCrawler();
 
