@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.5] - 2025-08-05
+### Fixed
+* Removed the overriding `validateAndSanitizeInput()` method from the `Paginate` HTTP step to ensure features like `staticUrl()` and `useInputKeyAsUrl()` work correctly.
+* The `Paginate` HTTP step now also supports receiving an array of URLs, initiating pagination separately for each one.
+
+### Deprecated
+* The `Crwlr\Crawler\Steps\Loading\Http\Paginate` class. It shall be removed and its behavior implemented in the `Http` class directly, in the next major version.
+
 ## [3.5.4] - 2025-07-28
 ### Fixed
 * An issue in the `SimpleWebsitePaginator` when used with stop rules.

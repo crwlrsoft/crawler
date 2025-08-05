@@ -112,7 +112,9 @@ class Http extends HttpBase
             $paginator = Paginator::simpleWebsite($paginator, $defaultPaginatorMaxPages);
         }
 
-        return new Paginate($paginator, $this->method, $this->headers, $this->body, $this->httpVersion);
+        return $this->transferSettingsToPaginateStep(
+            new Paginate($paginator, $this->method, $this->headers, $this->body, $this->httpVersion),
+        );
     }
 
     public function outputType(): StepOutputType
@@ -138,5 +140,35 @@ class Http extends HttpBase
         }
 
         $this->resetInputRequestParams();
+    }
+
+    /**
+     * Temporary fix to transfer settings that may have already been defined on the current instance,
+     * to a new Paginate step instance. This shall be fixed in the next major version (v4) by removing
+     * the Paginate class and implementing it in the Http class directly.
+     */
+    private function transferSettingsToPaginateStep(Paginate $step): Paginate
+    {
+        $step->stopOnErrorResponse = $this->stopOnErrorResponse;
+
+        $step->yieldErrorResponses = $this->yieldErrorResponses;
+
+        $step->useAsUrl = $this->useAsUrl;
+
+        $step->useAsBody = $this->useAsBody;
+
+        $step->useAsHeaders = $this->useAsHeaders;
+
+        $step->useAsHeader = $this->useAsHeader;
+
+        $step->staticUrl = $this->staticUrl;
+
+        $step->postBrowserNavigateHooks = $this->postBrowserNavigateHooks;
+
+        $step->skipCache = $this->skipCache;
+
+        $step->forceBrowserUsage = $this->forceBrowserUsage;
+
+        return $step;
     }
 }
