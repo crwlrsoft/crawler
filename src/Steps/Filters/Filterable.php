@@ -2,6 +2,7 @@
 
 namespace Crwlr\Crawler\Steps\Filters;
 
+use Crwlr\Crawler\Steps\BaseStep;
 use Exception;
 use InvalidArgumentException;
 
@@ -17,11 +18,7 @@ trait Filterable
         if (is_string($keyOrFilter) && $filter === null) {
             throw new InvalidArgumentException('You have to provide a Filter (instance of FilterInterface)');
         } elseif (is_string($keyOrFilter)) {
-            if (
-                method_exists($this, 'isOutputKeyAlias') &&
-                method_exists($this, 'getOutputKeyAliasRealKey') &&
-                $this->isOutputKeyAlias($keyOrFilter)
-            ) {
+            if ($this instanceof BaseStep && $this->isOutputKeyAlias($keyOrFilter)) {
                 $keyOrFilter = $this->getOutputKeyAliasRealKey($keyOrFilter);
             }
 

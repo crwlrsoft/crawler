@@ -81,10 +81,14 @@ abstract class Node
                 $node->parentNode?->removeChild($node);
             }
         } else {
-            $xpath = new XPath($this->getParentDocumentOfNode($this->node));
+            $node = $this->getParentDocumentOfNode($this->node);
 
-            foreach ($xpath->query($query) as $node) {
-                $node->parentNode?->removeChild($node);
+            if ($node) {
+                $xpath = new XPath($node);
+
+                foreach ($xpath->query($query) as $node) {
+                    $node->parentNode?->removeChild($node);
+                }
             }
         }
     }
@@ -105,11 +109,11 @@ abstract class Node
         if ($this->node instanceof Crawler) {
             $text = $this->node->text();
         } else {
-            $text = $this->node->textContent ?? '';
+            $text = is_string($this->node->textContent) ? $this->node->textContent : '';
         }
 
         return trim(
-            preg_replace("/(?:[ \n\r\t\x0C]{2,}+|[\n\r\t\x0C])/", ' ', $text),
+            preg_replace("/(?:[ \n\r\t\x0C]{2,}+|[\n\r\t\x0C])/", ' ', $text) ?? $text,
             " \n\r\t\x0C",
         );
     }
@@ -140,7 +144,9 @@ abstract class Node
             if ($this->node instanceof \Dom\HTMLDocument) {
                 return $this->node->saveHTML($node);
             } elseif ($this->node instanceof \Dom\XMLDocument) {
-                return $this->node->saveXML($node);
+                $source = $this->node->saveXML($node);
+
+                return $source !== false ? $source : '';
             }
         }
 
@@ -150,7 +156,9 @@ abstract class Node
             if ($parentDocument instanceof \Dom\HTMLDocument) {
                 return $parentDocument->saveHTML($this->node);
             } elseif ($parentDocument instanceof \Dom\XMLDocument) {
-                return $parentDocument->saveXML($this->node);
+                $source = $parentDocument->saveXML($this->node);
+
+                return $source !== false ? $source : '';
             }
         }
 
@@ -167,7 +175,7 @@ abstract class Node
     }
 
     /**
-     * @param \Dom\NodeList|Crawler $nodeList
+     * @param \Dom\NodeList<\Dom\Node>|Crawler $nodeList
      */
     protected function makeNodeListInstance(object $nodeList): NodeList
     {

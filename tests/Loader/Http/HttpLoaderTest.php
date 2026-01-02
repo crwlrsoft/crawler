@@ -27,6 +27,7 @@ use tests\_Stubs\RespondedRequestChild;
 use Throwable;
 
 use function tests\helper_cachedir;
+use function tests\helper_dieDump;
 use function tests\helper_getFastLoader;
 use function tests\helper_nonBotUserAgent;
 use function tests\helper_resetCacheDir;
@@ -937,6 +938,8 @@ it('updates an existing cached response', function () {
 
     $cache = new FileCache(helper_cachedir());
 
+    $cache->clear();
+
     $httpLoader = new HttpLoader(helper_nonBotUserAgent(), $httpClient);
 
     $httpLoader->setCache($cache);
@@ -956,7 +959,6 @@ it('updates an existing cached response', function () {
     /** @var RespondedRequestChild $response */
 
     expect($response)->toBeInstanceOf(RespondedRequestChild::class)
-        ->and(method_exists($response, 'itseme'))->toBeTrue()
         ->and($response->itseme())->toBe('mario');
 });
 

@@ -5,6 +5,7 @@ namespace Crwlr\Crawler\Steps\Dom;
 use ArrayIterator;
 use Closure;
 use Countable;
+use Dom\Element;
 use DOMNode;
 use Exception;
 use Iterator;
@@ -18,7 +19,7 @@ use Symfony\Component\DomCrawler\Crawler;
 class NodeList implements IteratorAggregate, Countable
 {
     /**
-     * @param \Dom\NodeList|Crawler|array<Node> $nodeList
+     * @param \Dom\NodeList<\Dom\Node>|\Dom\NodeList<Element>|Crawler|array<Node> $nodeList
      */
     public function __construct(
         private readonly object|array $nodeList,
@@ -85,13 +86,16 @@ class NodeList implements IteratorAggregate, Countable
         return $data;
     }
 
+    /**
+     * @return int<0, max>
+     */
     public function count(): int
     {
         if (is_array($this->nodeList)) {
             return count($this->nodeList);
         }
 
-        return $this->nodeList->count();
+        return max(0, $this->nodeList->count());
     }
 
     public function getIterator(): Iterator
@@ -143,7 +147,7 @@ class NodeList implements IteratorAggregate, Countable
              */
             private function makeNodeInstance(mixed $node): ?Node
             {
-                if (!is_object($node)) {
+                if (!is_object($node)) { // @phpstan-ignore-line change when min. required PHP version is 8.4.
                     return null;
                 }
 

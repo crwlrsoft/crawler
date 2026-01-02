@@ -221,7 +221,7 @@ abstract class DomQuery
      * @return NodeList|null
      * @throws Exception
      */
-    protected function filterMatches(NodeList $matches): NodeList|null
+    protected function filterMatches(NodeList $matches): ?NodeList
     {
         if (
             $matches->count() === 0 ||
@@ -295,7 +295,11 @@ abstract class DomQuery
             $target = trim(
                 $this->attributeName ?
                     ($node->getAttribute($this->attributeName) ?? '') :
-                    $node->{strtolower($this->target->name)}(),
+                    (
+                        method_exists($node, strtolower($this->target->name)) ?
+                            $node->{strtolower($this->target->name)}() :
+                            ''
+                    ),
             );
         }
 
