@@ -34,7 +34,7 @@ abstract class Dom extends Step
      */
     protected array $mapping = [];
 
-    protected null|string|DomQuery $singleSelector = null;
+    protected string|DomQuery|null $singleSelector = null;
 
     protected ?string $baseUrl = null;
 
@@ -256,7 +256,7 @@ abstract class Dom extends Step
     /**
      * @throws Exception
      */
-    protected function getBase(DomDocument|Node $document): null|Node|NodeList
+    protected function getBase(DomDocument|Node $document): Node|NodeList|null
     {
         if ($this->root) {
             return $document;

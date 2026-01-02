@@ -13,6 +13,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function tests\helper_cachedir;
 use function tests\helper_resetCacheDir;
@@ -256,6 +257,10 @@ it('compresses cache data when useCompression() is used', function () {
 
     expect($uncompressedFileSize)->not()->toBeFalse();
 
+    if ($uncompressedFileSize === false) {
+        throw new RuntimeException('Unable to determine cache file size.');
+    }
+
     clearstatcache(); // Results of filesize() are cached. Clear that to get correct result for compressed file size.
 
     $cache->useCompression();
@@ -264,10 +269,13 @@ it('compresses cache data when useCompression() is used', function () {
 
     $compressedFileSize = filesize(helper_cachedir() . '/' . $respondedRequest->cacheKey());
 
-    /** @var int $uncompressedFileSize */
+    expect($compressedFileSize)->not()->toBeFalse();
 
-    expect($compressedFileSize)->not()->toBeFalse()
-        ->and($compressedFileSize)->toBeLessThan($uncompressedFileSize)
+    if ($compressedFileSize === false) {
+        throw new RuntimeException('Unable to determine cache file size.');
+    }
+
+    expect($compressedFileSize)->toBeLessThan($uncompressedFileSize)
         // Didn't want to check for exact numbers, because I guess they could be a bit different on different systems.
         // But thought the diff should at least be more than 30% for the test to succeed.
         ->and($uncompressedFileSize - $compressedFileSize)->toBeGreaterThan($uncompressedFileSize * 0.3);

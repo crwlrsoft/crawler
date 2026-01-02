@@ -183,6 +183,8 @@ it('gets cookies that are set via javascript', function () {
 
     $cache = new FileCache(helper_cachedir());
 
+    $cache->clear();
+
     $crawler->getLoader()->setCache($cache);
 
     $crawler

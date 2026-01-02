@@ -6,6 +6,7 @@ use Crwlr\Crawler\Steps\Dom\HtmlElement;
 use Crwlr\Crawler\Steps\Dom\Node;
 use Crwlr\Crawler\Steps\Dom\NodeList;
 use Crwlr\Crawler\Steps\Dom\XmlElement;
+use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\XMLDocument;
 use DOMNode;
@@ -35,14 +36,22 @@ function helper_getLegacyDomNodeInstanceFromSource(string $source, string $selec
     return $node;
 }
 
-function helper_getPhp84HtmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): \Dom\Node
+function helper_getPhp84HtmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): Element
 {
-    return HTMLDocument::createFromString($source, HTML_NO_DEFAULT_NS | LIBXML_NOERROR)->querySelector($selectNode);
+    $node = HTMLDocument::createFromString($source, HTML_NO_DEFAULT_NS | LIBXML_NOERROR)->querySelector($selectNode);
+
+    /** @var Element $node */
+
+    return $node;
 }
 
-function helper_getPhp84XmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): \Dom\Node
+function helper_getPhp84XmlDomNodeInstanceFromSource(string $source, string $selectNode = 'body'): Element
 {
-    return XMLDocument::createFromString($source, LIBXML_NOERROR)->querySelector($selectNode);
+    $node = XMLDocument::createFromString($source, LIBXML_NOERROR)->querySelector($selectNode);
+
+    /** @var Element $node */
+
+    return $node;
 }
 
 /**

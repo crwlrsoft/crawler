@@ -65,7 +65,7 @@ class Io
      * In case the output values are arrays or objects and contain a unique identifier that can be used, provide that
      * key name, so it doesn't need to create a key from the whole array/object.
      */
-    public function setKey(?string $useFromValue = null): string|int|float|bool|null
+    public function setKey(?string $useFromValue = null): string
     {
         if ($useFromValue && is_array($this->value) && array_key_exists($useFromValue, $this->value)) {
             $this->key = $this->valueToString($this->value[$useFromValue]);

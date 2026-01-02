@@ -198,7 +198,7 @@ abstract class BaseStep implements StepInterface
 
     public function refineOutput(
         string|Closure|RefinerInterface $keyOrRefiner,
-        null|Closure|RefinerInterface $refiner = null,
+        Closure|RefinerInterface|null $refiner = null,
     ): static {
         if ($refiner instanceof RefinerInterface && $this->logger) {
             $refiner->addLogger($this->logger);
@@ -465,7 +465,7 @@ abstract class BaseStep implements StepInterface
 
         $firstLevelParent = reset($parents);
 
-        if ($firstLevelParent && is_string($firstLevelParent) && !str_contains($firstLevelParent, '@anonymous')) {
+        if ($firstLevelParent && !str_contains($firstLevelParent, '@anonymous')) {
             return $firstLevelParent;
         }
 

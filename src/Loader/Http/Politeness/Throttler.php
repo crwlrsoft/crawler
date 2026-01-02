@@ -43,8 +43,8 @@ class Throttler
     public function __construct(
         Microseconds|MultipleOf|null $from = null,
         Microseconds|MultipleOf|null $to = null,
-        Microseconds|null $min = null,
-        protected Microseconds|null $max = null,
+        ?Microseconds $min = null,
+        protected ?Microseconds $max = null,
     ) {
         $this->from = $from ?? new MultipleOf(1.0);
 

@@ -35,12 +35,12 @@ class GetLink extends Step
 
     protected bool $withFragment = true;
 
-    protected null|string|CssSelector $selector = null;
+    protected string|CssSelector|null $selector = null;
 
     /**
      * @throws InvalidDomQueryException
      */
-    public function __construct(null|string|CssSelector $selector = null)
+    public function __construct(string|CssSelector|null $selector = null)
     {
         $this->selector = is_string($selector) ? new CssSelector($selector) : $selector;
     }

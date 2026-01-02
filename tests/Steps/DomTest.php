@@ -131,7 +131,7 @@ test('Extracting with single selector also works with last', function () {
 
 test('Extracting with single selector that doesn\'t match anything doesn\'t yield any output', function () {
     $outputs = helper_invokeStepWithInput(
-        helper_getDomStepInstance()::last('.list .item')->extract('.mätch'),
+        helper_getDomStepInstance()::last('.list .item')->extract('.m\ätch'),
         helper_getStepFilesContent('Html/basic.html'),
     );
 

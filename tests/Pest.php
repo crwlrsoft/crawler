@@ -18,6 +18,7 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Crawler\Utils\OutputTypeHelper;
 use Crwlr\Utils\Microseconds;
+use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -59,8 +60,8 @@ function helper_dump(mixed $var): void
 
 function helper_dieDump(mixed $var): void
 {
-    error_log(var_export($var, true));
-
+    var_dump($var);
+    ob_end_flush();
     exit;
 }
 

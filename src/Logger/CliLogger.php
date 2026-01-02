@@ -51,7 +51,7 @@ class CliLogger implements LoggerInterface
     }
 
     /**
-     * @param string $level
+     * @param mixed $level
      * @param mixed[] $context
      */
     public function log($level, string|Stringable $message, array $context = []): void

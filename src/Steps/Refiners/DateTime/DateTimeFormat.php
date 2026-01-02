@@ -7,7 +7,7 @@ use DateTime;
 
 class DateTimeFormat extends AbstractStringRefiner
 {
-    public function __construct(protected string $targetFormat, protected string|null $originFormat = null) {}
+    public function __construct(protected string $targetFormat, protected ?string $originFormat = null) {}
 
     public function refine(mixed $value): mixed
     {

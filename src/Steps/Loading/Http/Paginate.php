@@ -82,9 +82,7 @@ class Paginate extends Http
         if ($this->logger) {
             $this->paginator->logWhenFinished($this->logger);
 
-            if (method_exists($this->paginator, 'resetFinished')) {
-                $this->paginator->resetFinished();
-            }
+            $this->paginator->resetFinished();
         }
     }
 

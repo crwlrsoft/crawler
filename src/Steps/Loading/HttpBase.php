@@ -244,7 +244,7 @@ abstract class HttpBase extends Step
 
     protected function getRequestFromInputUri(UriInterface $uri): RequestInterface
     {
-        $body = $this->inputBody ?? (property_exists($this, 'body') ? $this->body : '');
+        $body = $this->inputBody ?? $this->body;
 
         $headers = $this->mergeHeaders();
 
