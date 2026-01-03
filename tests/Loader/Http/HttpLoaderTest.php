@@ -27,7 +27,6 @@ use tests\_Stubs\RespondedRequestChild;
 use Throwable;
 
 use function tests\helper_cachedir;
-use function tests\helper_dieDump;
 use function tests\helper_getFastLoader;
 use function tests\helper_nonBotUserAgent;
 use function tests\helper_resetCacheDir;

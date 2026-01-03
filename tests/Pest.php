@@ -18,7 +18,6 @@ use Crwlr\Crawler\UserAgents\UserAgent;
 use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Crawler\Utils\OutputTypeHelper;
 use Crwlr\Utils\Microseconds;
-use Exception;
 use Generator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
