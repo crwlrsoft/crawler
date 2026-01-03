@@ -3,6 +3,7 @@
 namespace Crwlr\Crawler\Steps\Dom;
 
 use Dom\Document;
+use Dom\Element;
 use Dom\XPath;
 use DOMNode;
 use Symfony\Component\DomCrawler\Crawler;
@@ -10,12 +11,12 @@ use Symfony\Component\DomCrawler\Crawler;
 abstract class Node
 {
     /**
-     * @var \Dom\Node|Crawler
+     * @var \Dom\Node|Element|Crawler
      */
     private object $node;
 
     /**
-     * @param \Dom\Node|DOMNode|Crawler $node
+     * @param \Dom\Node|Element|DOMNode|Crawler $node
      */
     public function __construct(object $node)
     {
@@ -189,7 +190,7 @@ abstract class Node
     }
 
     /**
-     * @param \Dom\Node $node
+     * @param \Dom\Node|Element $node
      * @return Document|null
      */
     private function getParentDocumentOfNode(object $node): ?object
