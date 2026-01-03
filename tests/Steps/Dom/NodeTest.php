@@ -55,7 +55,7 @@ function helper_getPhp84XmlDomNodeInstanceFromSource(string $source, string $sel
 }
 
 /**
- * @param \Dom\Node|DOMNode|Crawler $originalNode
+ * @param \Dom\Node|Element|DOMNode|Crawler $originalNode
  */
 function helper_getAbstractNodeInstance(object $originalNode, bool $html = true): HtmlNodeStub|XmlNodeStub
 {

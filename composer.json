@@ -75,9 +75,9 @@
         }
     },
     "scripts": {
-        "test": "pest --exclude-group integration,php84 --display-warnings --bail",
-        "test-php84": "pest --group php84 --display-warnings --bail",
-        "test-integration": "pest --group integration --display-warnings --bail",
+        "test": "./vendor/bin/pest --exclude-group=integration,php84 --display-warnings --bail",
+        "test-php84": "./vendor/bin/pest --group=php84 --display-warnings --bail",
+        "test-integration": "./vendor/bin/pest --group=integration --display-warnings --bail",
         "stan": "@php -d memory_limit=4G vendor/bin/phpstan analyse",
         "cs": "php-cs-fixer fix -v --dry-run",
         "cs-fix": "php-cs-fixer fix -v",
