@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.6] - 2026-01-05
+### Fixed
+* Potential issues found with PHPStan 2 on level 8.
+
 ## [3.5.5] - 2025-08-05
 ### Fixed
 * Removed the overriding `validateAndSanitizeInput()` method from the `Paginate` HTTP step to ensure features like `staticUrl()` and `useInputKeyAsUrl()` work correctly.
