@@ -50,10 +50,14 @@ class CookieJar
             if (!empty($cookieHeaders)) {
                 $url = !$url instanceof Url ? Url::parse($url) : $url;
 
-                foreach ($cookieHeaders as $cookieHeader) {
-                    $cookie = new Cookie($url, $cookieHeader);
+                $domain = $this->getForDomainFromUrl($url);
 
-                    $this->jar[$this->getForDomainFromUrl($url)][$cookie->name()] = $cookie;
+                if ($domain) {
+                    foreach ($cookieHeaders as $cookieHeader) {
+                        $cookie = new Cookie($url, $cookieHeader);
+
+                        $this->jar[$domain][$cookie->name()] = $cookie;
+                    }
                 }
             }
         }
@@ -73,10 +77,14 @@ class CookieJar
             $url = Url::parse($url);
         }
 
-        foreach ($collection as $cookie) {
-            $setCookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
+        $domain = $this->getForDomainFromUrl($url);
 
-            $this->jar[$this->getForDomainFromUrl($url)][$setCookie->name()] = $setCookie;
+        if ($domain) {
+            foreach ($collection as $cookie) {
+                $setCookie = new Cookie($url, $this->buildSetCookieHeaderFromBrowserCookie($cookie));
+
+                $this->jar[$domain][$setCookie->name()] = $setCookie;
+            }
         }
     }
 
