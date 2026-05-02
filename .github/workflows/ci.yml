@@ -19,6 +19,10 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
 
+      - name: Allow vulnerable phpunit on PHP 8.1 (CVE-2026-24765, dev-only)
+        if: matrix.php-versions == '8.1'
+        run: composer config --merge --json "audit.ignore" '["PKSA-z3gr-8qht-p93v"]'
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
@@ -61,7 +65,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           coverage: none
 
       - name: Install dependencies

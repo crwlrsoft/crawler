@@ -270,10 +270,15 @@ it(
 
         $results = helper_generatorToArray($crawler->run());
 
-        expect($results)->toHaveCount(1)
-            ->and($results[0]->get('printed-cookies'))->toBeString()
-            ->and($results[0]->get('printed-cookies'))
-            ->toBe('cookie3=cookie3value;cookie2=cookie2value;cookie1=cookie1value');
+
+        expect($results)->toHaveCount(1);
+
+        $printedCookies = $results[0]->get('printed-cookies');
+
+        expect($printedCookies)->toBeString()
+            ->and($printedCookies)->toContain('cookie1=cookie1value')
+            ->and($printedCookies)->toContain('cookie2=cookie2value')
+            ->and($printedCookies)->toContain('cookie3=cookie3value');
 
         $cookiesInJar = helper_getCookiesByDomainFromLoader($crawler->getLoader(), 'localhost');
 

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.7] - 2026-05-02
+### Fixed
+* Support usage with symfony v8 components. Thx to [@chr-hertel](https://github.com/chr-hertel)!
+
 ## [3.5.6] - 2026-01-05
 ### Fixed
 * Potential issues found with PHPStan 2 on level 8.
