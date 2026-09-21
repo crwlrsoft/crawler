@@ -3,8 +3,11 @@
 namespace Crwlr\Crawler\Steps\Sitemap;
 
 use Crwlr\Crawler\Cache\Exceptions\MissingZlibExtensionException;
+use Crwlr\Crawler\Loader\Http\HttpLoader;
+use Crwlr\Crawler\Loader\Http\Politeness\SitemapIndexHandler;
 use Crwlr\Crawler\Steps\Dom\XmlDocument;
 use Crwlr\Crawler\Steps\Dom\XmlElement;
+use Crwlr\Crawler\Steps\Loading\LoadingStep;
 use Crwlr\Crawler\Steps\Step;
 use Crwlr\Crawler\Steps\StepOutputType;
 use Crwlr\Utils\PhpVersion;
@@ -12,6 +15,11 @@ use Generator;
 
 class GetUrlsFromSitemap extends Step
 {
+    /**
+     * @use LoadingStep<HttpLoader>
+     */
+    use LoadingStep;
+
     protected bool $withData = false;
 
     /**
@@ -46,18 +54,10 @@ class GetUrlsFromSitemap extends Step
      */
     protected function invoke(mixed $input): Generator
     {
-        if (PhpVersion::isBelow(8, 4)) {
-            $input = self::fixUrlSetTag($input);
-        }
+        yield from $this->getUrlsFromSitemap($input);
 
-        foreach ($input->querySelectorAll('urlset url') as $urlNode) {
-            if ($urlNode->querySelector('loc')) {
-                if ($this->withData) {
-                    yield $this->getWithAdditionalData($urlNode);
-                } else {
-                    yield $urlNode->querySelector('loc')->text();
-                }
-            }
+        foreach ($this->getSitemapsFromSitemapIndex($input) as $sitemap) {
+            yield from $this->getUrlsFromSitemap($sitemap);
         }
     }
 
@@ -87,5 +87,52 @@ class GetUrlsFromSitemap extends Step
         }
 
         return $data;
+    }
+
+    protected function getUrlsFromSitemap(XmlDocument $sitemap): Generator
+    {
+        if (PhpVersion::isBelow(8, 4)) {
+            $sitemap = self::fixUrlSetTag($sitemap);
+        }
+
+        foreach ($sitemap->querySelectorAll('urlset url') as $urlNode) {
+            if ($urlNode->querySelector('loc')) {
+                if ($this->withData) {
+                    yield $this->getWithAdditionalData($urlNode);
+                } else {
+                    yield $urlNode->querySelector('loc')->text();
+                }
+            }
+        }
+    }
+
+    /**
+     * If the document is a sitemap index, load the sitemaps it references via the loader's SitemapIndexHandler.
+     *
+     * @return Generator<XmlDocument>
+     */
+    protected function getSitemapsFromSitemapIndex(XmlDocument $document): Generator
+    {
+        if (!SitemapIndexHandler::isSitemapIndex($document)) {
+            return;
+        }
+
+        $loader = $this->hasLoader() ? $this->getLoader() : null;
+
+        if (!$loader instanceof HttpLoader) {
+            $this->logger?->warning(
+                'The input is a sitemap index, but the step has no HttpLoader to load the referenced sitemaps. Add ' .
+                'the step to a crawler using an HttpLoader, or use the withLoader() method.',
+            );
+
+            return;
+        }
+
+        yield from $loader->sitemapIndex()->getSitemaps($document);
+    }
+
+    private function hasLoader(): bool
+    {
+        return $this->customLoader !== null || isset($this->loader);
     }
 }

@@ -4,6 +4,11 @@ namespace tests\Steps\Sitemap;
 
 use Crwlr\Crawler\Steps\Sitemap;
 
+use function tests\helper_generatorToArray;
+use function tests\helper_getFastLoader;
+use function tests\helper_getHttpClientWithResponses;
+use function tests\helper_getSitemapIndexXml;
+use function tests\helper_getSitemapXml;
 use function tests\helper_invokeStepWithInput;
 
 it('gets all urls from a sitemap XML', function () {
@@ -105,3 +110,104 @@ it(
         expect($outputs)->toHaveCount(3);
     },
 );
+
+it('loads the sitemaps referenced in a sitemap index (via the loader\'s SitemapIndexHandler) and gets all urls', function () {
+    $requestCounts = [];
+
+    $httpClient = helper_getHttpClientWithResponses([
+        'https://www.example.com/sitemap_main.xml' => helper_getSitemapXml(
+            'https://www.example.com/',
+            'https://www.example.com/pricing',
+        ),
+        'https://www.example.com/docs/sitemap.xml' => helper_getSitemapXml(
+            'https://www.example.com/docs',
+            'https://www.example.com/docs/getting-started',
+        ),
+    ], $requestCounts);
+
+    $step = Sitemap::getUrlsFromSitemap()->setLoader(helper_getFastLoader(httpClient: $httpClient));
+
+    $outputs = helper_invokeStepWithInput(
+        $step,
+        helper_getSitemapIndexXml('https://www.example.com/sitemap_main.xml', 'https://www.example.com/docs/sitemap.xml'),
+    );
+
+    expect(array_map(fn($output) => $output->get(), $outputs))->toBe([
+        'https://www.example.com/',
+        'https://www.example.com/pricing',
+        'https://www.example.com/docs',
+        'https://www.example.com/docs/getting-started',
+    ])
+        ->and($requestCounts)->toBe([
+            'https://www.example.com/sitemap_main.xml' => 1,
+            'https://www.example.com/docs/sitemap.xml' => 1,
+        ]);
+});
+
+it('gets all urls with additional data from the sitemaps referenced in a sitemap index', function () {
+    $httpClient = helper_getHttpClientWithResponses([
+        'https://www.example.com/sitemap1.xml' => helper_getSitemapXml('https://www.example.com/foo'),
+    ]);
+
+    $step = Sitemap::getUrlsFromSitemap()->withData()->withLoader(helper_getFastLoader(httpClient: $httpClient));
+
+    $outputs = helper_invokeStepWithInput($step, helper_getSitemapIndexXml('https://www.example.com/sitemap1.xml'));
+
+    expect($outputs)->toHaveCount(1)
+        ->and($outputs[0]->get())->toBe(['url' => 'https://www.example.com/foo', 'lastmod' => '2024-01-01']);
+});
+
+it('doesn\'t fail when it gets a sitemap index but has no loader, but logs a warning', function () {
+    $logger = \Mockery::mock(\Psr\Log\LoggerInterface::class);
+
+    $logger->shouldReceive('warning')->once()->withArgs(function (string $message) {
+        return str_contains($message, 'sitemap index') && str_contains($message, 'HttpLoader');
+    });
+
+    $step = Sitemap::getUrlsFromSitemap()->addLogger($logger);
+
+    $outputs = helper_invokeStepWithInput($step, helper_getSitemapIndexXml('https://www.example.com/sitemap1.xml'));
+
+    expect($outputs)->toHaveCount(0);
+});
+
+it('gets the loader from the crawler it is added to, so it can load sitemaps from a sitemap index', function () {
+    $httpClient = helper_getHttpClientWithResponses([
+        'https://www.example.com/sitemap.xml' => helper_getSitemapIndexXml('https://www.example.com/sitemap1.xml'),
+        'https://www.example.com/sitemap1.xml' => helper_getSitemapXml(
+            'https://www.example.com/foo',
+            'https://www.example.com/bar',
+        ),
+    ]);
+
+    $crawler = new class ($httpClient) extends \Crwlr\Crawler\HttpCrawler {
+        public function __construct(private readonly \GuzzleHttp\Client $httpClient)
+        {
+            parent::__construct();
+        }
+
+        protected function userAgent(): \Crwlr\Crawler\UserAgents\UserAgentInterface
+        {
+            return new \Crwlr\Crawler\UserAgents\UserAgent('TestBot');
+        }
+
+        protected function loader(
+            \Crwlr\Crawler\UserAgents\UserAgentInterface $userAgent,
+            \Psr\Log\LoggerInterface $logger,
+        ): \Crwlr\Crawler\Loader\LoaderInterface {
+            return helper_getFastLoader($userAgent, $logger, $this->httpClient);
+        }
+    };
+
+    $crawler
+        ->input('https://www.example.com/sitemap.xml')
+        ->addStep(\Crwlr\Crawler\Steps\Loading\Http::get())
+        ->addStep(Sitemap::getUrlsFromSitemap()->keepAs('url'));
+
+    $results = helper_generatorToArray($crawler->run());
+
+    expect(array_map(fn($result) => $result->get('url'), $results))->toBe([
+        'https://www.example.com/foo',
+        'https://www.example.com/bar',
+    ]);
+});

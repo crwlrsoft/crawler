@@ -8,6 +8,7 @@ use Crwlr\Crawler\Loader\Http\Exceptions\LoadingException;
 use Crwlr\Crawler\Loader\Http\Messages\RespondedRequest;
 use Crwlr\Crawler\Loader\Http\Politeness\RetryErrorResponseHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\RobotsTxtHandler;
+use Crwlr\Crawler\Loader\Http\Politeness\SitemapIndexHandler;
 use Crwlr\Crawler\Loader\Http\Politeness\Throttler;
 use Crwlr\Crawler\Loader\Loader;
 use Crwlr\Crawler\Steps\Filters\FilterInterface;
@@ -50,6 +51,8 @@ class HttpLoader extends Loader
     protected bool $useHeadlessBrowser = false;
 
     protected ?RobotsTxtHandler $robotsTxtHandler = null;
+
+    protected ?SitemapIndexHandler $sitemapIndexHandler = null;
 
     protected Throttler $throttler;
 
@@ -253,6 +256,15 @@ class HttpLoader extends Loader
         }
 
         return $this->robotsTxtHandler;
+    }
+
+    public function sitemapIndex(): SitemapIndexHandler
+    {
+        if (!$this->sitemapIndexHandler) {
+            $this->sitemapIndexHandler = new SitemapIndexHandler($this, $this->logger);
+        }
+
+        return $this->sitemapIndexHandler;
     }
 
     public function throttle(): Throttler

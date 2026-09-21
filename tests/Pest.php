@@ -19,10 +19,13 @@ use Crwlr\Crawler\UserAgents\UserAgentInterface;
 use Crwlr\Crawler\Utils\OutputTypeHelper;
 use Crwlr\Utils\Microseconds;
 use Generator;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use Mockery;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\Process\Process;
@@ -215,8 +218,12 @@ function helper_arrayToGenerator(array $array): Generator
 }
 
 /**
+ * Iterating the generator executes its body (e.g. runs a crawler), so calling this without
+ * using the returned array is a valid use-case.
+ *
  * @param Generator<mixed> $generator
  * @return mixed[]
+ * @phpstan-impure
  */
 function helper_generatorToArray(Generator $generator): array
 {
@@ -397,4 +404,49 @@ function helper_testfilesdir(?string $inDir = null): string
     }
 
     return $path;
+}
+
+/**
+ * Get a mocked HTTP client responding to the given URLs (for sitemap tests).
+ *
+ * @param array<string, string|int> $responses  Map of URL => response body (string) or response status code (int).
+ *                                              URLs not contained in the map get a 404 response.
+ * @param array<string, int> $requestCounts  Is filled with the number of requests sent per URL.
+ */
+function helper_getHttpClientWithResponses(array $responses, array &$requestCounts = []): Client
+{
+    $httpClient = Mockery::mock(Client::class);
+
+    $httpClient->shouldReceive('sendRequest')
+        ->andReturnUsing(function (RequestInterface $request) use ($responses, &$requestCounts) {
+            $url = $request->getUri()->__toString();
+
+            $requestCounts[$url] = ($requestCounts[$url] ?? 0) + 1;
+
+            $response = $responses[$url] ?? 404;
+
+            if (is_int($response)) {
+                return new Response($response);
+            }
+
+            return new Response(200, body: Utils::streamFor($response));
+        });
+
+    return $httpClient;
+}
+
+function helper_getSitemapIndexXml(string ...$sitemapUrls): string
+{
+    $sitemaps = implode('', array_map(fn($url) => "<sitemap><loc>{$url}</loc></sitemap>", $sitemapUrls));
+
+    return '<?xml version="1.0" encoding="UTF-8"?>' .
+        '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . $sitemaps . '</sitemapindex>';
+}
+
+function helper_getSitemapXml(string ...$urls): string
+{
+    $urlNodes = implode('', array_map(fn($url) => "<url><loc>{$url}</loc><lastmod>2024-01-01</lastmod></url>", $urls));
+
+    return '<?xml version="1.0" encoding="UTF-8"?>' .
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . $urlNodes . '</urlset>';
 }
