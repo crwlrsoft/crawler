@@ -87,3 +87,21 @@ test('the queryXPath() method returns a NodeList of HtmlElement objects', functi
 
     expect($anyNodesChecked)->toBeTrue();
 });
+
+test('getBaseHref() trims whitespace around the href value', function () {
+    $html = <<<HTML
+        <!doctype html>
+        <html>
+        <head>
+            <title>foo</title>
+            <base href="
+            /foo " />
+        </head>
+        <body>hey</body>
+        </html>
+        HTML;
+
+    $document = new HtmlDocument($html);
+
+    expect($document->getBaseHref())->toBe('/foo');
+});

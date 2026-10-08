@@ -410,3 +410,27 @@ it('ignores special non HTTP links', function () {
 
     expect($links[0]->get())->toBe('https://www.example.com/foo/bar');
 });
+
+it('trims whitespace around the href value before resolving it', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head></head>
+        <body>
+        <a href="
+        https://www.example.com/foo/bar">link</a>
+        </body>
+        </html>
+        HTML;
+
+    $step = (new GetLink());
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/home'),
+        new Response(200, [], $html),
+    );
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links[0]->get())->toBe('https://www.example.com/foo/bar');
+});

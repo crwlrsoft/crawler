@@ -47,7 +47,7 @@ class GetLink extends Step
 
     public static function isSpecialNonHttpLink(HtmlElement $linkElement): bool
     {
-        $href = $linkElement->getAttribute('href') ?? '';
+        $href = trim($linkElement->getAttribute('href') ?? '');
 
         return str_starts_with($href, 'mailto:') ||
             str_starts_with($href, 'tel:') ||
@@ -195,7 +195,7 @@ class GetLink extends Step
         }
 
         $linkUrl = $this->handleUrlFragment(
-            $this->baseUri->resolve($link->getAttribute('href') ?? ''),
+            $this->baseUri->resolve(trim($link->getAttribute('href') ?? '')),
         );
 
         if ($this->matchesAdditionalCriteria($linkUrl)) {

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+* Trim leading and trailing whitespace from `href` attribute values before resolving them (links found by `GetLink`/`GetLinks`, `Http::crawl()` and the `SimpleWebsitePaginator`, as well as `<base>` and `<link rel="canonical">` hrefs). Browsers strip this whitespace, but the crawler previously resolved an `href` like `"\nhttps://example.com"` as a relative path, producing URLs such as `https://www.example.com/foo/_https://example.com`.
 
 ### [3.5.8] - 2026-05-03
 ### Fixed

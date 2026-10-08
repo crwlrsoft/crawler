@@ -168,7 +168,7 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
             $baseUrl = $baseUrl->resolve($baseHref);
         }
 
-        $linkHref = $linkElement->getAttribute('href') ?? '';
+        $linkHref = trim($linkElement->getAttribute('href') ?? '');
 
         return $baseUrl->resolve($linkHref)->__toString();
     }
@@ -179,9 +179,9 @@ class SimpleWebsitePaginator extends Http\AbstractPaginator
             return false;
         }
 
-        $href = $element->getAttribute('href');
+        $href = trim($element->getAttribute('href') ?? '');
 
-        return !empty($href) && !str_starts_with($href, '#');
+        return $href !== '' && !str_starts_with($href, '#');
     }
 
     protected function addFoundUrl(string $url): void

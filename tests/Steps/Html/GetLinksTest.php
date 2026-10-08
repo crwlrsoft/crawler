@@ -425,3 +425,32 @@ it('ignores special non HTTP links', function () {
         ->and($links[1]->get())->toBe('https://www.example.com/two')
         ->and($links[2]->get())->toBe('https://www.example.com/three');
 });
+
+it('trims whitespace around href values before resolving them', function () {
+    $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head></head>
+        <body>
+        <a href="
+        https://www.example.com/one">link one</a>
+        <a href="  /two  ">link two</a>
+        <a href="
+        mailto:somebody@example.com">mailto link</a>
+        </body>
+        </html>
+        HTML;
+
+    $step = (new GetLinks());
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/home'),
+        new Response(200, [], $html),
+    );
+
+    $links = helper_invokeStepWithInput($step, $respondedRequest);
+
+    expect($links)->toHaveCount(2)
+        ->and($links[0]->get())->toBe('https://www.example.com/one')
+        ->and($links[1]->get())->toBe('https://www.example.com/two');
+});
