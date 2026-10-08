@@ -303,7 +303,7 @@ class HttpCrawl extends Http
             }
 
             try {
-                $url = $this->handleUrlFragment($document->baseUrl()->resolve($link->getAttribute('href') ?? ''));
+                $url = $this->handleUrlFragment($document->baseUrl()->resolve(trim($link->getAttribute('href') ?? '')));
             } catch (Throwable) {
                 $this->logger?->warning('Failed to resolve a link with href: ' . $link->getAttribute('href'));
 

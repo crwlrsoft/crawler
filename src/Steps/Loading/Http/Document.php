@@ -51,7 +51,7 @@ final class Document
             $canonicalLinkElement = $this->dom->querySelector('link[rel=canonical]');
 
             if ($canonicalLinkElement) {
-                $canonicalHref = $canonicalLinkElement->getAttribute('href');
+                $canonicalHref = trim($canonicalLinkElement->getAttribute('href') ?? '');
 
                 if ($canonicalHref) {
                     try {

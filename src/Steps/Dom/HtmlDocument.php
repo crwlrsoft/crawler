@@ -27,7 +27,9 @@ class HtmlDocument extends DomDocument
     {
         $baseTag = $this->querySelector('base');
 
-        return $baseTag?->getAttribute('href');
+        $href = $baseTag?->getAttribute('href');
+
+        return $href === null ? null : trim($href);
     }
 
     public function outerHtml(): string

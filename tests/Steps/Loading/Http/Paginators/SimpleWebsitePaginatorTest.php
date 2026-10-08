@@ -351,3 +351,16 @@ it('does not stop, when a response does not meet the stop rule criterion', funct
 
     expect($paginator->hasFinished())->toBeFalse();
 });
+
+it('trims whitespace around pagination link href values before resolving them', function () {
+    $paginator = new SimpleWebsitePaginator('.nextPageLink', 3);
+
+    $responseBody = '<a class="nextPageLink" href="
+    https://www.example.com/listing?page=2 ">Next Page</a>';
+
+    $respondedRequest = helper_getRespondedRequestWithResponseBody('/listing?page=1', $responseBody);
+
+    $paginator->processLoaded($respondedRequest->request, $respondedRequest);
+
+    expect($paginator->getNextRequest()?->getUri()->__toString())->toBe('https://www.example.com/listing?page=2');
+});

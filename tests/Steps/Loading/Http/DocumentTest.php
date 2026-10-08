@@ -94,3 +94,31 @@ it('returns the URL referenced in canonical link as canonicalUrl()', function ()
 
     expect($document->canonicalUrl())->toBe('https://www.example.com/quz');
 });
+
+it('trims whitespace around the base tag href before resolving it as baseUrl()', function () {
+    $body = '<!doctype html><html><head><title>foo</title><base href="
+    /baz " /></head><body>hello</body></html>';
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/foo'),
+        new Response(200, [], $body),
+    );
+
+    $document = new Document($respondedRequest);
+
+    expect((string) $document->baseUrl())->toBe('https://www.example.com/baz');
+});
+
+it('trims whitespace around the canonical link href before resolving it as canonicalUrl()', function () {
+    $body = '<!doctype html><html><head><title>foo</title><link rel="canonical" href="
+    https://www.example.com/quz " /></head><body>hello</body></html>';
+
+    $respondedRequest = new RespondedRequest(
+        new Request('GET', 'https://www.example.com/foo'),
+        new Response(200, [], $body),
+    );
+
+    $document = new Document($respondedRequest);
+
+    expect($document->canonicalUrl())->toBe('https://www.example.com/quz');
+});
